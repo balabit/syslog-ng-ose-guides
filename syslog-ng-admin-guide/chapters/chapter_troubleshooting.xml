@@ -1,0 +1,595 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]> 
+<chapter id="chapter_troubleshooting">
+	<title>Troubleshooting and performance tuning</title>
+	<section id="parallel_connections">
+		<title>Handling lots of parallel connections</title>
+		<indexterm>
+			<primary>parallel connections</primary>
+		</indexterm>
+		<indexterm>
+			<primary>batch processing</primary>
+		</indexterm>
+		<indexterm>
+			<primary>parameters</primary>
+			<secondary>time_sleep()</secondary>
+		</indexterm>
+		<indexterm>
+			<primary>parameters</primary>
+			<secondary>max_connections()</secondary>
+		</indexterm>
+		<para>When syslog-ng is receiving messages from a large number of TCP or unix-stream
+			connections, the CPU usage of syslog-ng might increase even if the number of messages is
+			low. By default, syslog-ng processes every message when it is received. To reduce the
+			CPU usage, process the incoming messages in batches. To accomplish this, instruct
+			syslog-ng to wait for a short time before processing a message. During this period
+			additional messages might arrive that can be processed together with the original
+			message. To process log messages in batches, set the <parameter>time_sleep()</parameter>
+			option (measured in milliseconds) to a non-zero value. Include the following line in
+			your syslog-ng configuration:</para>
+		<synopsis>	            
+options { time_sleep(20); };	            
+		</synopsis>
+		<note>
+			<para>It is not recommended to increase the <parameter>time_sleep()</parameter>
+				parameter above 100ms, as that might distort timestamps, slow down syslog-ng, and
+				cause messages to be dropped.</para>
+			<indexterm>
+				<primary>parameters</primary>
+				<secondary>log_fifo_size()</secondary>
+			</indexterm>
+			<indexterm>
+				<primary>parameters</primary>
+				<secondary>log_fetch_limit()</secondary>
+			</indexterm>
+			<para>When modifying the <parameter>time_sleep()</parameter> option, also adjust the
+					<parameter>log_fetch_limit()</parameter> and
+				<parameter>log_fifo_size()</parameter> options accordingly.</para>
+		</note>
+		<para>The <parameter>max_connections()</parameter> parameter limits the number of parallel
+			connections for the source. </para>
+		<para>If adjusting the <parameter>time_sleep()</parameter> option is not desired for some
+			reason, an alternative solution is to use <parameter>unix-stream()</parameter>,
+				<parameter>udp()</parameter> and <parameter>unix-dgram()</parameter> sources instead
+			of <parameter>tcp()</parameter> connections.</para>
+	</section>
+
+	<section id="handling_large_load">
+		<title>Handling large message load</title>
+		<indexterm>
+			<primary>optimizing syslog-ng performance</primary>
+		</indexterm>
+		<indexterm>
+			<primary>filters</primary>
+		</indexterm>
+		<indexterm>
+			<primary>regular expressions</primary>
+		</indexterm>
+		<para>This section provides tips on optimizing the performance of syslog-ng. Optimizing the
+			performance is important for syslog-ng hosts that handle large traffic.</para>
+		<itemizedlist>
+			<listitem>
+				<para>Disable DNS resolution, or resolve hostnames locally. See <xref
+						linkend="examples_dns"/> for details.</para>
+			</listitem>
+			<listitem>
+				<para>Enable flow-control for the TCP sources. See <xref linkend="flow_control"/>
+					for details.</para>
+			</listitem>
+			<listitem>
+				<para>Do not use the <parameter>usertty()</parameter> destination driver. Under
+					heavy load, the users are not be able to read the messages from the console, and
+					it slows down syslog-ng.</para>
+			</listitem>
+			<listitem>
+				<para>Do not use regular expressions in our filters. Evaluating general regular
+					expressions puts a high load on the CPU. Use simple filter functions and logical
+					operators instead. See <xref linkend="regular_expressions"/> for details.</para>
+			</listitem>
+			<listitem>
+				<para>When receiving lots of messages using the UDP protocol, increase the size of
+					the UDP receive buffer on the syslog-ng hosts. For information about sizing and
+					modifying the UDP buffer, see <ulink
+						url="http://www.29west.com/docs/THPM/udp-buffer-sizing.html"
+						>http://www.29west.com/docs/THPM/udp-buffer-sizing.html</ulink>.</para>
+			</listitem>
+		</itemizedlist>
+	</section>
+
+	<section id="flow_control">
+		<title>Managing incoming and outgoing messages with flow-control</title>
+		<indexterm>
+			<primary>log paths</primary>
+			<secondary>flow-control</secondary>
+		</indexterm>
+		<indexterm>
+			<primary>flow-control</primary>
+		</indexterm>
+		<indexterm>
+			<primary>preventing message loss</primary>
+			<see>flow-control</see>
+		</indexterm>
+		<indexterm>
+			<primary>parameters</primary>
+			<secondary>
+				<parameter>log_fetch_limit()</parameter>
+			</secondary>
+		</indexterm>
+		<indexterm>
+			<primary>parameters</primary>
+			<secondary>
+				<parameter>log_fifo_size()</parameter>
+			</secondary>
+		</indexterm>
+		<para>This section describes the internal message-processing model of syslog-ng, as well as
+			the flow-control feature that can prevent message losses. To use flow-control, the
+				<parameter>flow-control</parameter> flag must be enabled for the particular log
+			path.</para>
+		<para>The syslog-ng application monitors (polls) the sources defined in its configuration
+			file, periodically checking each source for messages. When a log message is found in one
+			of the sources, syslog-ng polls every source and reads the available messages. These
+			messages are processed and put into the output buffer of syslog-ng (also called fifo).
+			From the output buffer, the operating system sends the messages to the appropriate
+			destinations.</para>
+		<para>In large-traffic environments many messages can arrive during a single poll loop,
+			therefore syslog-ng reads only a fixed number of messages from each source. The
+				<parameter>log_fetch_limit()</parameter> option specifies the number of messages
+			read during a poll loop from a single source.</para>
+		<figure>
+			<title>Managing log messages in syslog-ng</title>
+			<mediaobject>
+				<imageobject role="html">
+					<imagedata format="PNG" align="center" fileref="io1.png"/>
+				</imageobject>
+				<imageobject role="fo">
+					<imagedata format="PNG" fileref="&imgroot;/io1.png" scale="80"/>
+				</imageobject>
+			</mediaobject>
+		</figure>
+		<note>
+			<para>The <parameter>log_fetch_limit()</parameter> parameter can be set as a global
+				option, or for every source individually.</para>
+		</note>
+		<indexterm>
+			<primary>output buffer</primary>
+		</indexterm>
+		<para>Every destination has its own output buffer. The output buffer is needed because the
+			destination might not be able to accept all messages immediately. The
+				<parameter>log_fifo_size()</parameter> parameter sets the size of the output buffer.
+			The output buffer must be larger than the <parameter>log_fetch_limit()</parameter> of
+			the sources, to ensure that every message read during the poll loop fits into the output
+			buffer. If the log path sends messages to a destination from multiple sources, the
+			output buffer must be large enough to store the incoming messages of every source.</para>
+		<para>TCP and unix-stream sources can receive the logs from several incoming connections
+			(e.g., many different clients or applications). For such sources, syslog-ng reads
+			messages from every connection, thus the <parameter>log_fetch_limit()</parameter>
+			parameter applies individually to every connection of the source.</para>
+		<indexterm>
+			<primary>parameters</primary>
+			<secondary>
+				<parameter>log_iw_size()</parameter>
+			</secondary>
+		</indexterm>
+		<indexterm>
+			<primary>parameters</primary>
+			<secondary>
+				<parameter>max_connections()</parameter>
+			</secondary>
+		</indexterm>
+		<para>The flow-control of syslog-ng introduces a control window to the source that tracks
+			how many messages can syslog-ng accept from the source. Every message that syslog-ng
+			reads from the source lowers the window size by one; every message that syslog-ng
+			successfully sends from the output buffer increases the window size by one. If the
+			window is full (i.e., its size decreases to zero), syslog-ng stops reading messages from
+			the source. The initial size of the control window is by default
+			<parameter>100</parameter>: the <parameter>log_fifo_size()</parameter> must be larger
+			than this value in order for flow-control to have any effect. If a source accepts
+			messages from multiple connections, all messages use the same control window.</para>
+		<para>When flow-control is used, every source has its own control window. As a worst-case
+			situation, the output buffer of the destination must be set to accommodate all messages
+			of every control window, that is, the <parameter>log_fifo_size()</parameter> of the
+			destination must be greater than
+				<parameter>number_of_sources</parameter>*<parameter>log_iw_size()</parameter>. This
+			applies to every source that sends logs to the particular destination, thus if two
+			sources having several connections and heavy traffic send logs to the same destination,
+			the control window of every connection of both sources must fit into the output buffer
+			of the destination. Otherwise, syslog-ng does not activate the flow-control, and
+			messages may be lost.</para>
+		<para>The summary of the main points is as follows:</para>
+		<itemizedlist>
+			<listitem>
+				<para>The syslog-ng application normally reads a maximum of
+						<parameter>log_fetch_limit()</parameter> number of messages from a
+				source.</para>
+			</listitem>
+			<listitem>
+				<para>From TCP and unix-stream sources, syslog-ng reads a maximum of
+						<parameter>log_fetch_limit()</parameter> from every connection of the
+					source. The number of connections to the source is set using the
+						<parameter>max_connections()</parameter> parameter.</para>
+			</listitem>
+			<listitem>
+				<para>Every destination has an output buffer
+					(<parameter>log_fifo_size()</parameter>).</para>
+			</listitem>
+			<listitem>
+				<para>Flow-control uses a control window to determine if there is free space in the
+					output buffer for new messages. Every source has its own control window;
+						<parameter>log_iw_size()</parameter> parameter sets the size of the control
+					window.</para>
+			</listitem>
+			<listitem>
+				<para>When a source accepts multiple connections, the messages of every connection
+					use the same control window. </para>
+			</listitem>
+			<listitem>
+				<para>The output buffer must be larger than the control window of every connection
+					that logs to the destination.</para>
+			</listitem>
+			<listitem>
+				<para>If the control window is full, syslog-ng stops reading messages from the
+					source until some messages are successfully sent to the destination.</para>
+			</listitem>
+			<listitem>
+				<para>If the output buffer becomes full, and neither disk-buffering nor flow-control
+					is used, messages may be lost.</para>
+			</listitem>
+		</itemizedlist>
+		<note>
+			<para>If you modify the <parameter>max_connections()</parameter> or the
+					<parameter>log_fetch_limit()</parameter> parameter, do not forget to adjust the
+					<parameter>log_iw_size()</parameter> and <parameter>log_fifo_size()</parameter>
+				parameters accordingly.</para>
+		</note>
+		<figure>
+			<title>Managing log messages of TCP sources in syslog-ng</title>
+			<mediaobject>
+				<imageobject role="html">
+					<imagedata format="PNG" align="center" fileref="io2.png"/>
+				</imageobject>
+				<imageobject role="fo">
+					<imagedata format="PNG" fileref="&imgroot;/io2.png" scale="80"/>
+				</imageobject>
+			</mediaobject>
+		</figure>
+		<example>
+			<title>Sizing parameters for flow-control</title>
+			<indexterm>
+				<primary>log paths</primary>
+				<secondary>flow-control</secondary>
+			</indexterm>
+			<indexterm>
+				<primary>flow-control</primary>
+				<secondary>example</secondary>
+			</indexterm>
+			<para>Suppose that syslog-ng has a source that must accept up to 300 parallel
+				connections. Such situation can arise when a network source receives connections
+				from many clients, or if many applications log to the same socket. Therefore, set
+				the <parameter>max_connections()</parameter> parameter of the source to
+					<parameter>300</parameter>. However, the
+				<parameter>log_fetch_limit()</parameter> (default value: 10) parameter applies to
+				every connection of the source individually, while the
+				<parameter>log_iw_size()</parameter> (default value: 100) parameter applies to the
+				source. In a worst-case scenario, the destination does not accept any messages,
+				while all 300 connections send at least <parameter>log_fetch_limit()</parameter>
+				number of messages to the source during every poll loop. Therefore, the control
+				window must accommodate at least
+					<parameter>max_connections()</parameter>*<parameter>log_fetch_limit()</parameter>
+				messages to be able to read every incoming message of a poll loop. In the current
+				example this means that (<parameter>log_iw_size()</parameter> should be greater than
+					<parameter>300*10=3000</parameter>. If the control window is smaller than this
+				value, the control window might fill up with messages from the first connections
+				&mdash; causing syslog-ng to read only one message of the last connections in
+				every poll loop. </para>
+			<para>The output buffer of the destination must accommodate at least
+					<parameter>log_iw_size()</parameter> messages, but use a greater value: in the
+				current example <parameter>3000*10=30000</parameter> messages. That way all incoming
+				messages of ten poll loops fit in the output buffer. If the output buffer is full,
+				syslog-ng does not read any messages from the source until some messages are
+				successfully sent to the destination.</para>
+			<synopsis>
+source s_localhost { 
+		  tcp(ip(127.0.0.1) port(1999) max-connections(300)); };
+destination d_tcp { 
+				tcp("10.1.2.3" port(1999); localport(999)); log_fifo_size(30000); };
+log { source(s_localhost); destination(d_tcp); flags(flow-control); };    
+			</synopsis>
+			<para>If other sources send messages to this destination, than the output buffer must be
+				further increased. For example, if a network host with maximum
+				<parameter>100</parameter> connections also logs into the destination, than increase
+				the <parameter>log_fifo_size()</parameter> by <parameter>10000</parameter>.</para>
+			<synopsis>
+source s_localhost { 
+			tcp(ip(127.0.0.1) port(1999) max-connections(300)); };
+source s_tcp { 
+			tcp(ip(192.168.1.5) port(1999) max-connections(100)); };
+destination d_tcp { 
+			tcp("10.1.2.3" port(1999); localport(999)); log_fifo_size(40000); };
+log { source(s_localhost); destination(d_tcp); flags(flow-control); };    
+			</synopsis>
+		</example>
+		<para>See also <xref linkend="parallel_connections"/>.</para>
+		<section>
+			<title>Flow-control and multiple destinations</title>
+			<indexterm>
+				<primary>flow-control</primary>
+				<secondary>multiple destinations</secondary>
+			</indexterm>
+			<para>Using flow-control on a source has an important side-effect if the messages of the
+				source are sent to multiple destinations. If flow-control is in use and one of the
+				destinations cannot accept the messages, the other destinations do not receive any
+				messages either, because syslog-ng stops reading the source. For example, if
+				messages from a source are sent to a remote server and also stored locally in a
+				file, and the network connection to the server becomes unavailable, neither the
+				remote server nor the local file will receive any messages. This side-effect of the
+				flow-control can be avoided by using the disk-based buffering feature of syslog-ng
+				Premium Edition.</para>
+			<note>
+				<para>Creating separate log paths for the destinations that use the same
+					flow-controlled source does not avoid the problem.</para>
+			</note>
+		</section>
+	</section>
+	<section id="diskbuffer">
+		<title>Using disk-based buffering</title>
+		<indexterm significance="preferred">
+			<primary>disk buffer</primary>
+		</indexterm>
+		<indexterm>
+			<primary>disk-based buffering</primary>
+		</indexterm>
+		<indexterm>
+			<primary>parameters</primary>
+			<secondary>log_disk_fifo_size()</secondary>
+		</indexterm>
+		<para>The Premium Edition of syslog-ng stores messages on the local hard disk if the central
+			log server or the network connection to the server becomes unavailable. The syslog-ng
+			application automatically sends the stored messages to the server when the connection is
+			reestablished. The disk buffer is used as a queue: when the connection to the server is
+			reestablished, syslog-ng sends the messages to the server in the order they were
+			received.</para>
+		<para>To enable disk-based buffering, use the <parameter>log_disk_fifo_size()</parameter>
+			parameter to set the size of the disk buffer in bytes. Disk buffers can be used only
+			with <parameter>tcp()</parameter> and <parameter>tcp6()</parameter> destinations. Every
+			such destination uses a separate disk buffer (similarly to the output buffers controlled
+			by <parameter>log_fifo_size()</parameter>). The hard disk space is not pre-allocated, so
+			ensure that there is always enough free space to store the disk buffers even when the
+			disk buffers are full.</para>
+		<para>If syslog-ng is restarted (using the <command>/etc/init.d/syslog-ng restart</command>
+			command), it automatically saves any unsent messages of the disk buffer and the output
+			queue. After the restart, syslog-ng sends the saved messages to the server. In other
+			words, the disk buffer is persistent.</para>
+		<table id="diskbuffer_location">
+			<title>The location of the disk buffer on different platforms</title>
+			<indexterm>
+				<primary>disk buffer</primary>
+				<secondary>location of</secondary>
+			</indexterm>
+			<tgroup cols="2">
+				<thead>
+					<row>
+						<entry>Operating System</entry>
+						<entry>Location</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Linux, AIX 5.x</entry>
+						<entry>
+							<filename>/var/lib/syslog-ng/</filename>
+						</entry>
+					</row>
+					<row>
+						<entry>Solaris, HP-UX</entry>
+						<entry>
+							<filename>/opt/syslog-ng/var/</filename>
+						</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</table>
+		<!-- FIXME sql destinationre is van disk buffer
+		-->
+		<para>The syslog-ng application handles outgoing messages the following way:</para>
+		<itemizedlist>
+			<listitem>
+				<indexterm>
+					<primary>output queue</primary>
+				</indexterm>
+				<para><emphasis>Output queue</emphasis>: Messages from the output queue are sent to
+					the target syslog-ng server. The syslog-ng application puts the outgoing
+					messages directly into the output queue, unless the output queue is full. The
+					output queue can hold 64 messages, this is a fixed value and cannot be
+				modified.</para>
+			</listitem>
+			<listitem>
+				<indexterm>
+					<primary>disk queue</primary>
+					<see>disk buffer</see>
+				</indexterm>
+				<para><emphasis>Disk buffer</emphasis>: If the output queue is full and
+					disk-buffering is enabled, syslog-ng puts the outgoing messages into the disk
+					buffer of the destination. The disk buffer is enabled if the
+						<parameter>log_disk_fifo_size()</parameter> parameter of the destination is
+					larger than <parameter>0</parameter>; the size of the disk buffer is specified
+					in bytes.</para>
+			</listitem>
+			<listitem>
+				<indexterm>
+					<primary>overflow queue</primary>
+					<see>output buffer</see>
+				</indexterm>
+				<para><emphasis>Overflow queue</emphasis>: If the output queue is full and the disk
+					buffer is disabled or full, syslog-ng puts the outgoing messages into the
+					overflow queue of the destination. (The overflow queue is identical to the
+					output buffer used by other destinations.) The
+					<parameter>log_fifo_size()</parameter> parameter specifies the number of
+					messages stored in the overflow queue. See also <xref linkend="flow_control"/>
+					for details on sizing the <parameter>log_fifo_size()</parameter>
+				parameter.</para>
+			</listitem>
+		</itemizedlist>
+		<para>The number of messages that the disk buffer can store depends on the size (length) of
+			the actual messages. The maximum length of a message is limited by the
+				<parameter>log_msg_size()</parameter> parameter, which is 8192 bytes by default. </para>
+		<example>
+			<title>Enabling disk-based buffering</title>
+			<para>The following example turns on disk-based buffering for the destination. The size
+				of the disk buffer is 4 194 304 bytes (4 megabytes). In a worst-case situation,
+				using the default value of the <parameter>log_msg_size()</parameter> parameter (8192
+				bytes), this disk buffer can store at least 512 messages. Typical log messages are
+				about 300-500 bytes long, so a disk buffer of 4 megabytes can store over 8000
+				messages. Set the size of the disk buffer based on the average size and number of
+				messages, and the longest estimated downtime of the server. </para>
+			<synopsis>
+destination d_tcp { 
+				tcp("10.1.2.3" port(1999) log_disk_fifo_size(4194304)); };
+			</synopsis>
+		</example>
+		<!-- FIXME abra fifo->disk-buffer->output queue
+		-->
+	</section>
+	<section id="sync">
+		<title>The sync() parameter</title>
+		<!-- FIXME a sync obsolete, updatelni a flush_lines parameterre -->
+		<indexterm>
+			<primary>parameters</primary>
+			<secondary>sync()</secondary>
+		</indexterm>
+		<para>The syslog-ng application buffers the log messages to be sent in an output queue. The
+				<parameter>sync()</parameter> parameter specifies the number of messages held in
+			this buffer.</para>
+		<para>Note that syslog-ng does not write all buffered messages into a single chunk; each
+			message is written with a single <parameter>write()</parameter> system call.</para>
+		<para>For file destinations, the received messages can be written to disk immediately after
+			the message is received. To accomplish this, set the <parameter>sync()</parameter>
+			option to zero.</para>
+		<synopsis>
+options { sync(0); };	
+</synopsis>
+	</section>
+	<section id="regular_expressions">
+		<title>Optimizing regular expressions in filters</title>
+		<indexterm>
+			<primary>filters</primary>
+		</indexterm>
+		<indexterm>
+			<primary>regular expressions</primary>
+		</indexterm>
+		<indexterm>
+			<primary>optimizing syslog-ng performance</primary>
+			<secondary>regular expressions</secondary>
+		</indexterm>
+		<para>Some filter functions accept regular expressions as parameters. But evaluating general
+			regular expressions puts a high load on the CPU, which can cause problems when the
+			message traffic is very high. Often the regular expression can be replaced with simple
+			filter functions and logical operators. Using simple filters and logical operators, the
+			same effect can be achieved at a much lower CPU load.</para>
+		<example>
+			<title>Optimizing regular expressions in filters</title>
+			<para>Suppose you need a filter that matches the following error message logged by the
+					<parameter>xntpd</parameter> NTP daemon:</para>
+			<synopsis>
+xntpd[1567]: time error -1159.777379 is too large (set clock manually);	
+</synopsis>
+			<para>The following filter uses regular expressions and matches every instance and
+				variant of this message.</para>
+			<synopsis>
+filter f_demo_regexp {
+			program("demo_program") and
+			match("time error .* is too large .* set clock manually"); };	
+</synopsis>
+			<para> Segmenting the <parameter>match()</parameter> part of this filter into separate
+					<parameter>match()</parameter> functions greatly improves the performance of the
+				filter. </para>
+			<synopsis>
+filter f_demo_optimized_regexp {
+			program("demo_program") and
+			match("time error") and 
+			match("is too large") and 
+			match("set clock manually"); };	
+			</synopsis>
+		</example>
+	</section>
+	<section id="losing_messages">
+		<title>Possible causes of losing log messages</title>
+		<indexterm>
+			<primary>losing messages</primary>
+		</indexterm>
+		<indexterm>
+			<primary>message loss</primary>
+		</indexterm>
+		<para>During the course of a message from the sending application to the final destination
+			of the message, there are a number of locations where a message may be lost, even though
+			syslog-ng does its best to avoid message loss. Usually losing messages can be avoided
+			with careful planning and proper configuration of syslog-ng and the hosts running
+			syslog-ng. The following list shows the possible locations where messages may be lost,
+			and provides methods to minimize the risk of losing messages.</para>
+		<note>
+			<para>The following list covers the main possibilities of losing messages, but does not
+				take into account the possible use of flow-control (see <xref linkend="flow_control"
+				/>). This topic will be addressed in more detail in the future releases of this
+				guide.</para>
+		</note>
+		<itemizedlist>
+			<listitem>
+				<para><emphasis>Between the application and the syslog-ng client</emphasis>: Make
+					sure to use an appropriate source to receive the logs from the application
+					(e.g., from <filename>/dev/log</filename>). For example, use
+						<parameter>unix-stream</parameter> instead of
+					<parameter>unix-dgram</parameter> whenever possible. </para>
+			</listitem>
+			<listitem>
+				<para><emphasis>When syslog-ng is sending messages</emphasis>: If syslog-ng cannot
+					send messages to the destination and the output buffer gets full, syslog-ng will
+					drop messages. The number of dropped messages is displayed per destination in
+					the log message statistics of syslog-ng (see <xref
+						linkend="reference_log_statistics"/> for details). To prevent such message
+					loss, use the disk buffer of syslog-ng Premium Edition to increase the capacity
+					of your output buffer beyond that would be feasible using only a memory-based
+					buffer.</para>
+			</listitem>
+			<listitem>
+				<para><emphasis>On the network</emphasis>: When transferring messages using the UDP
+					protocol, messages may be lost without any notice or feedback &mdash; such
+					is the nature of the UDP protocol. Always use the TCP protocol to transfer
+					messages over the network whenever possible.</para>
+			</listitem>
+			<listitem>
+				<para><emphasis>In the socket receive buffer</emphasis>: When transferring messages
+					using the UDP protocol, the UDP datagram (i.e., the message) that reaches the
+					receiving host placed in a memory area called the <parameter>socket receive
+						buffer</parameter>. If the host receives more messages than it can process,
+					this area overflows, and the kernel drops messages without letting syslog-ng
+					know about it. Using TCP instead of UDP prevents this issue. If you must use the
+					UDP protocol, increase the size of the receive buffer using the
+						<parameter>so_rcvbuf()</parameter> option.</para>
+			</listitem>
+			<listitem>
+				<para><emphasis>When syslog-ng is receiving messages</emphasis>: The receiving
+					syslog-ng (e.g., the syslog-ng server or relay) may drop messages if the fifo of
+					the destination file gets full. The number of dropped messages is displayed per
+					destination in the log message statistics of syslog-ng (see <xref
+						linkend="reference_log_statistics"/> for details). To prevent such message
+					loss, adjust the fifo appropriately for the message load and use the disk buffer
+					of syslog-ng Premium Edition. See <xref linkend="handling_large_load"/> and
+						<xref linkend="diskbuffer"/> for details.</para>
+			</listitem>
+			<listitem>
+				<para><emphasis>When the destination cannot handle large load</emphasis>: When
+					syslog-ng is sending messages at a high rate into an SQL database, a file, or
+					another destination, it is possible that the destination cannot handle the load,
+					and processes the messages slowly. As a result, the buffers of syslog-ng fill
+					up, syslog-ng cannot process the incoming messages, and starts to loose
+					messages. See the previous entry for details. Use the
+					<parameter>throttle</parameter> parameter (see <xref
+						linkend="reference_destination_common"/>) and the disk buffer of syslog-ng
+					Premium Edition (<xref linkend="diskbuffer"/>).</para>
+			</listitem>
+		</itemizedlist>
+
+	</section>
+
+</chapter>

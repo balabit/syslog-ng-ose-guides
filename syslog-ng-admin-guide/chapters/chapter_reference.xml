@@ -1,0 +1,2490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]> 
+<chapter id="chapter_reference">
+    <title>Reference</title>
+    <para>This chapter documents the drivers and options that can be used in the configuration file. </para>
+    <section id="reference_sourcedrivers">
+        <title>Source drivers</title>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary>reference</secondary>
+        </indexterm>
+        <para>The following drivers may be used in source statements, as described in <xref
+                linkend="sources"/>. The option <link linkend="reference_options">
+                <parameter>log_msg_size()</parameter>
+            </link> is available in each source: it specifies the maximum length of incoming log
+            messages in bytes. If not specified, the value of the global option is used (see <xref
+                linkend="reference_options"/>). </para>
+        <section id="reference_source_commonoptions">
+            <title>Options common for every source</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary>common options</secondary>
+            </indexterm>
+            <para>Some parameters affecting message parsing are common for all sources:</para>
+            <table id="sourcecommonopts">
+                <?dbfo keep-together="auto" ?>
+                <title>Common options for source drivers</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>flags()</entry>
+                            <entry>set of [no-parse,kernel]</entry>
+                            <entry>empty set</entry>
+                            <entry>Specifies log parsing flags. <parameter>no-parse</parameter>
+                                completely disables syslog message parsing and processes the
+                                complete line as the message part of a syslog message. Other
+                                information (timestamp, host, etc.) is added automatically. This
+                                flag is useful for parsing files not complying to the syslog format.
+                                    <parameter>kernel</parameter> makes the source default to the
+                                    <parameter>LOG_KERN | LOG_CRIT</parameter> priority if not
+                                specified otherwise. </entry>
+                        </row>
+                        <row>
+                            <entry>follow_freq()</entry>
+                            <entry>number</entry>
+                            <entry>-1</entry>
+                            <entry>Indicates that the source should be checked periodically instead
+                                of being polled. This is useful for files which always indicate
+                                readability, even though no new lines were appended. If this value
+                                is higher than zero, syslog-ng will not attempt to use
+                                    <parameter>poll()</parameter> on the file, but checks whether
+                                the file changed every time the <parameter>follow_freq()</parameter>
+                                interval (in seconds) has elapsed. </entry>
+                        </row>
+                        <row>
+                            <entry>keep_timestamp()</entry>
+                            <entry>yes or no</entry>
+                            <entry>yes</entry>
+                            <entry>Specifies whether syslog-ng should accept the timestamp received
+                                from the peer. If disabled, the time of reception will be used
+                                instead. </entry>
+                        </row>
+                        <row>
+                            <entry>log_fetch_limit()</entry>
+                            <entry>number</entry>
+                            <entry>The value specified by the global <link
+                                    linkend="reference_options">
+                                    <parameter>log_fetch_limit()</parameter>
+                                </link> option, which defaults to <parameter>10</parameter>.</entry>
+                            <entry>The maximum number of messages fetched from a source during a
+                                single poll loop. The destination queues might fill up before
+                                flow-control could stop reading if
+                                <parameter>log_fetch_limit()</parameter> is too high. </entry>
+                        </row>
+                        <row>
+                            <entry>log_iw_size()</entry>
+                            <entry>number</entry>
+                            <entry>100</entry>
+                            <entry>The size of the initial window, this value is used during flow
+                                control.</entry>
+                        </row>
+                        <row>
+                            <entry>log_msg_size()</entry>
+                            <entry>number</entry>
+                            <entry>The value specified by the global
+                                <parameter>log_msg_size()</parameter> option, which defaults to
+                                    <parameter>8192</parameter>.</entry>
+                            <entry>Specifies the maximum length of incoming log messages. Uses the
+                                value of the <link linkend="reference_options">global option</link>
+                                if not specified. </entry>
+                        </row>
+                        <row>
+                            <entry>log_prefix()</entry>
+                            <entry>string</entry>
+                            <entry/>
+                            <entry>A string added to the beginning of every log message. It can be
+                                used to add an arbitrary string to any log source, though it is most
+                                commonly used for adding <parameter>kernel:</parameter> to the
+                                kernel messages on Linux. </entry>
+                        </row>
+                        <row>
+                            <entry>optional()</entry>
+                            <entry>yes or no</entry>
+                            <entry/>
+                            <entry>Instruct syslog-ng to ignore the error if a specific source
+                                cannot be initialized. No other attempts to initialize the source
+                                will be made until the configuration is reloaded. This option
+                                currently applies to the <parameter>pipe()</parameter>,
+                                    <parameter>unix-dgram</parameter>, and
+                                <parameter>unix-stream</parameter> drivers.</entry>
+                        </row>
+                        <row>
+                            <entry>pad_size()</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies input padding. Some operating systems (such as HP-UX)
+                                pad all 0 messages to block boundary. This option can be used to
+                                specify the block size. (HP-UX uses 2048 bytes). Syslog-ng will pad
+                                reads from the associated device to the number of bytes set in
+                                    <parameter>pad_size()</parameter>. Mostly used on HP-UX where
+                                    <filename>/dev/log</filename> is a named pipe and every write is
+                                padded to 2048 bytes. </entry>
+                        </row>
+                        <row>
+                            <entry>time_zone()</entry>
+                            <entry>timezone in the form +/-HH:MM</entry>
+                            <entry/>
+                            <entry>The default timezone for messages read from the source. Applies
+                                only if no timezone is specified within the message itself. </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+        <section id="reference_source_file">
+            <title>file()</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>file()</parameter> driver</secondary>
+            </indexterm>
+            <para>The kernel usually sends log messages to a special file
+                (<parameter>/dev/kmsg</parameter> on BSDs, <parameter>/proc/kmsg</parameter> on
+                Linux). The <parameter>file()</parameter> driver reads log messages from such files.
+                The syslog-ng application can periodically check the file for new log messages if
+                the <parameter>follow_freq()</parameter> option is set. </para>
+            <para>The syslog-ng application notices if a file is renamed or replaced with a new
+                file, so it can correctly follow the file even if logrotation is used. When
+                syslog-ng is restarted, it records the position of the last sent log message, and
+                continues to send messages from this position after the restart.</para>
+            <para>The file driver has a single required parameter specifying the file to open, and
+                has only the common source specific options as specified in <xref
+                    linkend="sourcecommonopts"/>. </para>
+            <synopsis>Declaration:
+file(filename);</synopsis>
+            <example>
+                <title>Using the file() driver</title>
+                <synopsis>source s_file { file("/proc/kmsg" log_prefix("kernel: ")); };</synopsis>
+            </example>
+            <note>
+                <para>On Linux, the <parameter>klogd</parameter> daemon can be used in addition to
+                    syslog-ng to read kernel messages and forward them to syslog-ng.
+                        <parameter>klogd</parameter> used to preprocess kernel messages to resolve
+                    symbols etc., but as this is deprecated by <parameter>ksymoops</parameter> there
+                    is really no point in running both <parameter>klogd</parameter> and syslog-ng in
+                    parallel. Also note that running two processes reading
+                    <filename>/proc/kmsg</filename> at the same time might result in dead-locks.
+                </para>
+            </note>
+            <example>
+                <title>Tailing files</title>
+                <para>The following source checks the <filename>access.log</filename> file every
+                    second for new messages.</para>
+                <synopsis>source s_tail { file("/var/log/apache/access.log" 
+follow_freq(1) flags(no-parse)); };</synopsis>
+            </example>
+        </section>
+
+        <section id="reference_source_internal">
+            <title>internal()</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>internal()</parameter> driver</secondary>
+            </indexterm>
+            <para>All internally generated messages "come" from this special source. To collect
+                warnings, errors and notices from syslog-ng itself, include this source in one of
+                your source statements. </para>
+            <synopsis>internal()</synopsis>
+            <para>The syslog-ng application will issue a warning upon startup if this driver is not
+                referenced. </para>
+            <example>
+                <title>Using the internal() driver</title>
+                <synopsis>source s_local { internal(); };</synopsis>
+            </example>
+            <section id="reference_log_statistics">
+                <title>Log statistics</title>
+                <para>
+                    <indexterm>
+                        <primary>log statistics</primary>
+                    </indexterm>
+                    <indexterm>
+                        <primary>statistics</primary>
+                    </indexterm>Periodically, syslog-ng sends a message containing statistics about
+                    the received messages, and about any lost messages since the last such message.
+                    It includes a <parameter>processed</parameter> entry for every source and
+                    destination, listing the number of messages received or sent, and a
+                        <parameter>dropped</parameter> entry including the IP address of the server
+                    for every destination where syslog-ng has lost messages. The
+                        <parameter>center(received)</parameter> entry shows the total number of
+                    messages received from every configured sources.</para>
+                <para>The following is a sample log statistics message for a configuration that has
+                    a single source (<parameter>s_local</parameter>) and a network and a local file
+                    destination (<parameter>d_network</parameter> and
+                    <parameter>d_local</parameter>, respectively). All incoming messages are sent to
+                    both destinations.</para>
+                <synopsis>Log statistics;
+dropped='tcp(AF_INET(192.168.10.1:514))=6439',
+processed='center(received)=234413',
+processed='destination(d_tcp)=234413',
+processed='destination(d_local)=234413',
+processed='source(s_local)=234413'</synopsis>
+            </section>
+        </section>
+        <section id="reference_source_pipe">
+            <title>pipe()</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>pipe()</parameter> driver</secondary>
+            </indexterm>
+            <para>The pipe driver opens a named pipe with the specified name and listens for
+                messages. It is used as the native message delivery protocol on HP-UX.</para>
+            <para>The pipe driver has a single required parameter, specifying the filename of the
+                pipe to open. It has only the common source specific options as specified in <xref
+                    linkend="sourcecommonopts"/>. </para>
+            <para>Pipe is very similar to the <parameter>file()</parameter> driver, but there are a
+                few differences, for example <parameter>pipe()</parameter> opens its argument in
+                read-write mode, therefore it is not recommended to be used on special files like
+                    <filename>/proc/kmsg</filename>.</para>
+            <warning>
+                <para>It is not recommended to use <parameter>pipe()</parameter> on anything else
+                    than real pipes. </para>
+            </warning>
+            <synopsis>Declaration:
+pipe(filename);</synopsis>
+            <note>
+                <para>You have to create this pipe using <command>mkfifo(1)</command>. </para>
+            </note>
+            <example>
+                <title>Using the pipe() driver</title>
+                <synopsis>source s_pipe { pipe("/dev/log" pad_size(2048)); };</synopsis>
+            </example>
+        </section>
+        <section id="reference_source_sunstreams">
+            <title>sun-streams() driver</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>sun-streams()</parameter> driver</secondary>
+            </indexterm>
+            <para>Solaris uses its <parameter>STREAMS</parameter> framework to send messages to the
+                    <parameter>syslogd</parameter> process.</para>
+            <para>Newer versions of Solaris (2.5.1 and above), use a new IPC in addition to
+                    <parameter>STREAMS</parameter>, called door to confirm the delivery of a
+                message. The syslog-ng application supports this new IPC mechanism via the
+                    <parameter>door()</parameter> option (see below).</para>
+            <note>
+                <para>The <parameter>sun-streams()</parameter> driver must be enabled when the
+                    syslog-ng application is compiled (see <command>./configure
+                --help</command>).</para>
+            </note>
+            <para>The <parameter>sun-streams()</parameter> driver has a single required argument
+                specifying the <parameter>STREAMS</parameter> device to open, and the
+                    <parameter>door()</parameter> option.</para>
+            <example>
+                <title>Using the sun-streams() driver</title>
+                <synopsis>source s_stream { sun-streams("/dev/log" door("/etc/.syslog_door"); };</synopsis>
+            </example>
+            <table>
+                <title>Options for sun-streams</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>door()</entry>
+                            <entry>string</entry>
+                            <entry>none</entry>
+                            <entry>Specifies the filename of a door to open, needed on Solaris above
+                                2.5.1. </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+
+        <section id="reference_source_tcpudp">
+            <title>tcp(), tcp6(), udp() and udp6()</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>tcp()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>tcp6()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>udp()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>udp6()</parameter> driver</secondary>
+            </indexterm>
+            <para>These drivers enable to receive messages from the network. As the name of the
+                drivers implies, both UDP and TCP can be used to transport messages. The
+                    <parameter>tcp6()</parameter> and <parameter>udp6()</parameter> use the IPv6
+                network protocol.</para>
+            <para>UDP is a simple datagram oriented protocol, which provides "best effort service"
+                to transfer messages between hosts. It may lose messages, and no attempt is made at
+                the protocol level to retransmit such lost messages. The <emphasis>syslog</emphasis>
+                protocol traditionally uses UDP. </para>
+            <para>TCP provides connection-oriented service, which basically means a flow-controlled
+                message pipeline. In this pipeline each message is acknowledged, and retransmission
+                is done for lost packets. Generally it is safer to use TCP, because lost connections
+                can be detected, and no messages get lost, assuming that the TCP connection does not
+                break. When a TCP connection is broken the 'in-transit' messages that were sent by
+                syslog-ng but not yet received on the other side are lost. (Basically these messages
+                are still sitting in the socket buffer of the sending host and syslog-ng has no
+                information about the fate of these messages). </para>
+            <para>The <parameter>tcp()</parameter> and <parameter>udp()</parameter> drivers do not
+                require any positional parameters. By default they bind to
+                <parameter>0.0.0.0:514</parameter>, which means that syslog-ng will listen on all
+                available interfaces, port 514. To limit accepted connections to only one interface,
+                use the <parameter>localip()</parameter> parameter as described below. </para>
+            <note>
+                <para>The tcp port 514 is reserved for use with <command>rshell</command>, so select
+                    a different port if syslog-ng and <command>rshell</command> is used at the same
+                    time. </para>
+            </note>
+            <para>If you specify a multicast bind address to <parameter>udp()</parameter> and
+                    <parameter>udp6()</parameter>, syslog-ng will automatically join the necessary
+                multicast group. TCP does not support multicasting. </para>
+            <para>The syslog-ng Premium Edition application supports TLS (Transport Layer Security,
+                also known as SSL) for the tcp() and tcp6() drivers. See the TLS-specific options
+                below and <xref linkend="tls_serverauth"/> for details.</para>
+            <indexterm>
+                <primary>TLS</primary>
+            </indexterm>
+            <synopsis>Declaration:
+  tcp([options]);
+  udp([options]);</synopsis>
+            <para>The following options are valid for <parameter>tcp()</parameter>,
+                    <parameter>tcp6()</parameter>, <parameter>udp()</parameter>, and
+                    <parameter>udp6()</parameter>
+            </para>
+            <table>
+                <title>Options for tcp(), tcp6(), udp(), and udp6()</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>ip() or localip()</entry>
+                            <entry>string</entry>
+                            <entry>0.0.0.0</entry>
+                            <entry>The IP address to bind to. Note that this is not the address
+                                where messages are accepted from. </entry>
+                        </row>
+                        <row>
+                            <entry>ip_tos</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the Type-of-Service value of outgoing packets. </entry>
+                        </row>
+                        <row>
+                            <entry>ip_ttl</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the Time-To-Live value of outgoing packets. </entry>
+                        </row>
+                        <row>
+                            <entry>keep-alive()</entry>
+                            <entry>yes or no</entry>
+                            <entry>yes</entry>
+                            <entry>Available for <parameter>tcp()</parameter> only; specifies
+                                whether connections should be closed upon the receipt of a SIGHUP
+                                signal. Note that this applies to the source side of the syslog-ng
+                                connections, destination connections are always reopened after
+                                receiving a HUP signal.</entry>
+                        </row>
+                        <row>
+                            <entry>max-connections()</entry>
+                            <entry>number</entry>
+                            <entry>10</entry>
+                            <entry>Specifies the maximum number of simultaneous connections.</entry>
+                        </row>
+                        <row>
+                            <entry>port() or localport()</entry>
+                            <entry>number</entry>
+                            <entry>514</entry>
+                            <entry>The port number to bind to.</entry>
+                        </row>
+                        <row>
+                            <entry>so_broadcast</entry>
+                            <entry>yes or no</entry>
+                            <entry>no</entry>
+                            <entry>This option controls the <parameter>SO_BROADCAST</parameter>
+                                socket option required to make syslog-ng send messages to a
+                                broadcast address. See the <command>socket(7)</command> manual page
+                                for details. </entry>
+                        </row>
+                        <row>
+                            <entry>so_rcvbuf</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the size of the socket receive buffer in bytes.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>so_sndbuf</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the size of the socket send buffer in bytes. </entry>
+                        </row>
+                        <row>
+                            <entry>tcp-keep-alive()</entry>
+                            <entry>yes or no</entry>
+                            <entry>no</entry>
+                            <entry>Available for <parameter>tcp()</parameter> only; specifies
+                                whether TCP keep alive messages using the SO_KEEPALIVE socket option
+                                should be enabled. </entry>
+                        </row>
+                        <row>
+                            <entry>tls</entry>
+                            <entry>tls options</entry>
+                            <entry>n/a</entry>
+                            <entry>This option sets various TLS specific options like
+                                key/certificate files and trusted CA locations and can only be used
+                                with the tcp/tcp6 transport protocols. See <xref
+                                    linkend="tlsoptions"/> for more information.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <example>
+                <title>Using the udp() and tcp() drivers</title>
+                <synopsis># TCP source with the maximum number of simultaneous connections limited.
+source s_tcp { tcp(ip(127.0.0.1) port(1999) max-connections(10)); };
+
+# TCP source with TLS enabled
+source s_tcp { tcp(ip(127.0.0.1) port(1999) 
+                   tls(peer-verify('required-trusted' 
+                       key_file('/etc/syslog-ng/syslog-ng.key') 
+                   cert_file('/etc/syslog-ng/syslog-ng.crt')))); 
+};
+
+# UDP source with defaults.
+source s_udp { udp(); };</synopsis>
+            </example>
+        </section>
+        <section id="reference_source_unixstream">
+            <title>unix-stream() and unix-dgram()</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>unix-stream()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>unix-dgram()</parameter> driver</secondary>
+            </indexterm>
+            <para>These two drivers behave similarly: they open the given
+                <parameter>AF_UNIX</parameter> socket and start listening on it for messages.
+                    <parameter>unix-stream()</parameter> is primarily used on Linux and uses
+                    <parameter>SOCK_STREAM</parameter> semantics (connection oriented, no messages
+                are lost); while <parameter>unix-dgram()</parameter> is used on BSDs and uses
+                    <parameter>SOCK_DGRAM</parameter> semantics: this may result in lost local
+                messages if the system is overloaded. </para>
+            <para>To avoid denial of service attacks when using connection-oriented protocols, the
+                number of simultaneously accepted connections should be limited. This can be
+                achieved using the <parameter>max-connections()</parameter> parameter. The default
+                value of this parameter is quite strict, you might have to increase it on a busy
+                system. </para>
+            <para>Both unix-stream and unix-dgram have a single required positional argument,
+                specifying the filename of the socket to create, and several optional parameters. </para>
+            <note>
+                <para><parameter>syslogd</parameter> on Linux originally used
+                    <parameter>SOCK_STREAM</parameter> sockets, but some distributions switched to
+                        <parameter>SOCK_DGRAM</parameter> around 1999 to fix a possible DoS problem.
+                    On Linux you can choose to use whichever driver you like as syslog clients
+                    automatically detect the socket type being used. </para>
+            </note>
+            <para>The difference between the unix-stream and unix-dgram drivers is similar to the
+                difference between the TCP and UDP network protocols. Use the following guidelines
+                to select which driver to use in a particular situation:</para>
+            <para>Choose unix-stream if you would choose TCP (stream) instead of UDP (datagram). The
+                unix-stream driver offers the following features:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Increased reliability</para>
+                </listitem>
+                <listitem>
+                    <para>Ordered delivery of messages</para>
+                </listitem>
+                <listitem>
+                    <para>Client-side notification of failures</para>
+                </listitem>
+            </itemizedlist>
+            <para>Choose unix-dgram if you would choose TCP (stream) over UDP (datagram). The
+                unix-dgram driver offers the following features:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Decreased possibility of Dos by opening too many connections (a local
+                        vulnerability)</para>
+                </listitem>
+                <listitem>
+                    <para>Less overhead</para>
+                </listitem>
+            </itemizedlist>
+            <para>However, the client does not notice if a message is lost when using the unix-dgram
+                driver.</para>
+            <synopsis>Declaration: 
+unix-stream(filename [options]);
+unix-dgram(filename [options]);</synopsis>
+            <para>The following options can be specified for these divers:</para>
+            <table>
+                <title>Options for unix-stream() and unix-dgram()</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>group()</entry>
+                            <entry>string</entry>
+                            <entry>root</entry>
+                            <entry>Set the gid of the socket.</entry>
+                        </row>
+                        <row>
+                            <entry>keep-alive()</entry>
+                            <entry>yes or no</entry>
+                            <entry>yes</entry>
+                            <entry>Selects whether to keep connections open when syslog-ng is
+                                restarted; cannot be used with <parameter>unix-dgram()</parameter>.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>max-connections()</entry>
+                            <entry>number</entry>
+                            <entry>256</entry>
+                            <entry>Limits the number of simultaneously open connections. Cannot be
+                                used with <parameter>unix-dgram()</parameter>.</entry>
+                        </row>
+                        <row>
+                            <entry>owner()</entry>
+                            <entry>string</entry>
+                            <entry>root</entry>
+                            <entry>Set the uid of the socket.</entry>
+                        </row>
+                        <row>
+                            <entry>perm()</entry>
+                            <entry>number</entry>
+                            <entry>0666</entry>
+                            <entry>Set the permission mask. For octal numbers prefix the number with
+                                '0', e.g.: use 0755 for rwxr-xr-x.</entry>
+                        </row>
+                        <row>
+                            <entry>so_broadcast</entry>
+                            <entry>yes or no</entry>
+                            <entry>no</entry>
+                            <entry>This option controls the <parameter>SO_BROADCAST</parameter>
+                                socket option required to make syslog-ng send messages to a
+                                broadcast address. See the <command>socket(7)</command> manual page
+                                for details. </entry>
+                        </row>
+                        <row>
+                            <entry>so_keepalive</entry>
+                            <entry>yes or no</entry>
+                            <entry>0</entry>
+                            <entry>Enables keep-alive messages, keeping the socket open.</entry>
+                        </row>
+                        <row>
+                            <entry>so_rcvbuf</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the size of the socket receive buffer in bytes.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>so_sndbuf</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the size of the socket send buffer in bytes. </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <example>
+                <title>Using the unix-stream() and unix-dgram() drivers</title>
+                <synopsis># source declaration on Linux
+source s_stream { unix-stream("/dev/log" max-connections(10)); };
+                    
+# source declaration on BSD
+source s_dgram { unix-dgram("/var/run/log"); };</synopsis>
+            </example>
+        </section>
+
+    </section>
+    <section id="reference_destinationdrivers">
+        <title>Destination drivers</title>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary>reference</secondary>
+        </indexterm>
+        <para>Destination drivers output log messages to somewhere outside syslog-ng e.g., to a file
+            or a network socket. </para>
+        <section id="reference_destination_common">
+            <title>Options common for every destination</title>
+            <para>Some of the parameters affecting message formatting and sending are common for
+                almost all destinations. The following options are available for every destination,
+                except for <parameter>sql()</parameter> and <parameter>usertty()</parameter>.</para>
+            <!-- FIXME logstore-ra se lesz teljesen igaz, lasd http://bugzilla.balabit/bugzilla-3.0/show_bug.cgi?id=13640  -->
+            <table id="destcommonopts">
+                <?dbfo keep-together="auto" ?>
+                <title>Common options for destination drivers</title>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary>common options</secondary>
+                </indexterm>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>flags()</entry>
+                            <entry/>
+                            <entry>empty set</entry>
+                            <entry> </entry>
+                        </row>
+                        <row>
+                            <entry>flush_lines()</entry>
+                            <entry>number</entry>
+                            <entry>Use global setting. </entry>
+                            <entry>Specifies how many lines are flushed to a destination at a time.
+                                Syslog-ng waits for this number of lines to accumulate and sends
+                                them off in a single batch. Setting this number high increases
+                                throughput as fully filled frames are sent to the network, but also
+                                increases message latency. The latency can be limited by the use of
+                                the <parameter>flush_timeout</parameter> option.</entry>
+                        </row>
+                        <row>
+                            <entry>flush_timeout()</entry>
+                            <entry>time in milliseconds</entry>
+                            <entry>Use global setting. </entry>
+                            <entry>Specifies the time syslog-ng waits for lines to accumulate in its
+                                output buffer. See the <parameter>flush_lines</parameter> option for
+                                more information.</entry>
+                        </row>
+                        <row>
+                            <entry>frac_digits()</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>The syslog-ng application can store fractions of a second in the
+                                timestamps. The <parameter>frac_digits()</parameter> parameter
+                                specifies the number of digits stored. The digits storing the
+                                fractions are padded by zeros if the original timestamp of the
+                                message specifies only seconds. Fractions can always be stored for
+                                the time the message was received.</entry>
+                        </row>
+                        <row>
+                            <entry>fsync()</entry>
+                            <entry>yes or no</entry>
+                            <entry>no</entry>
+                            <entry>Forces an <parameter>fsync()</parameter> call on the destination
+                                fd after each write. Note: this may seriously degrade
+                            performance.</entry>
+                        </row>
+                        <row>
+                            <!-- FIXME copied to sql options -->
+                            <entry>log_fifo_size()</entry>
+                            <entry>number</entry>
+                            <entry>Use global setting. </entry>
+                            <entry>The number of entries in the output buffer (output fifo).
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>suppress()</entry>
+                            <entry>seconds</entry>
+                            <entry>0 (disabled) </entry>
+                            <entry>When enabled and syslog-ng would send several messages with
+                                identical content to the destination, syslog-ng sends only a single
+                                message and a line <parameter>Last message repeated n
+                                times.</parameter>. The parameter of this option specifies the
+                                number of seconds syslog-ng waits for identical messages. </entry>
+                        </row>
+                        <row>
+                            <entry>sync_freq()</entry>
+                            <entry>number</entry>
+                            <entry>Use global setting. </entry>
+                            <entry>This setting is an obsolete alias of the
+                                <parameter>flush_lines()</parameter> option. </entry>
+                        </row>
+                        <row>
+                            <entry>template()</entry>
+                            <entry>string</entry>
+                            <entry>A format conforming to the default logfile format. </entry>
+                            <entry>Specifies a template defining the logformat to be used in the
+                                destination. Macros are described in <xref linkend="macros"/>.
+                                Please note that for network destinations it might not be
+                                appropriate to change the template as it changes the on-wire format
+                                of the syslog protocol which might not be tolerated by stock syslog
+                                receivers (like <parameter>syslogd</parameter> or syslog-ng itself).
+                                For network destinations make sure the receiver can cope with the
+                                custom format defined. </entry>
+                        </row>
+                        <row>
+                            <entry>template_escape()</entry>
+                            <entry>yes or no</entry>
+                            <entry>yes</entry>
+                            <entry>Turns on escaping <parameter>'</parameter> and
+                                <parameter>"</parameter> in templated output files. This is useful
+                                for generating SQL statements and quoting string contents so that
+                                parts of the log message are not interpreted as commands to the SQL
+                                server.</entry>
+                        </row>
+                        <row>
+                            <entry>throttle()</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Sets the maximum number of messages sent to the destination per
+                                second. Use this output-rate-limiting functionality only when using
+                                disk-buffer as well to avoid the risk of losing messages. Specifying
+                                    <parameter>0</parameter> or a lower value sets the output limit
+                                to unlimited.</entry>
+                        </row>
+                        <row>
+                            <entry>timezone()</entry>
+                            <entry>timezone offset in seconds</entry>
+                            <entry>unspecified </entry>
+                            <entry>Convert timestamps to the timezone specified by this option. If
+                                this option is not set then the original timezone information in the
+                                message is used. </entry>
+                        </row>
+                        <row>
+                            <entry>ts_format()</entry>
+                            <entry>rfc3164, bsd, rfc3339, iso</entry>
+                            <entry>rfc3164</entry>
+                            <entry>Override the global timestamp format (set in the global
+                                    <parameter>ts_format()</parameter> parameter) for the specific
+                                destination. See also <xref linkend="example_timezones"/>.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <note>
+                <para>The <parameter>usertty</parameter> destination does not support
+                templates.</para>
+            </note>
+        </section>
+        <section id="reference_destination_file">
+            <title>file()</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>file()</parameter> driver</secondary>
+            </indexterm>
+            <para>The file driver is one of the most important destination drivers in syslog-ng. It
+                allows to output messages to the specified file, or to a set of files. </para>
+            <para>The destination filename may include macros which get expanded when the message is
+                written, thus a simple <parameter>file()</parameter> driver may crete several files.
+                For more information on available macros see <xref linkend="macros"/>. </para>
+            <para>If the expanded filename refers to a directory which does not exist, it will be
+                created depending on the <parameter>create_dirs()</parameter> setting (both global
+                and a per destination option).</para>
+            <note>
+                <para>When using the <parameter>file()</parameter> destination, update the
+                    configuration of your log rotation program to rotate these files. Otherwise, the
+                    log files can become very large.</para>
+            </note>
+            <warning>
+                <para>Since the state of each created file must be tracked by syslog-ng, it consumes
+                    some memory for each file. If no new messages are written to a file within 60
+                    seconds (controlled by the <parameter>time_reap()</parameter> global option), it
+                    is closed, and its state is freed. </para>
+                <para>Exploiting this, a DoS attack can be mounted against the system. If the number
+                    of possible destination files and its needed memory is more than the amount
+                    available on the syslog-ng server. </para>
+                <para>The most suspicious macro is <parameter>$PROGRAM</parameter>, where the number
+                    of possible variations is rather high. Do not use the
+                    <parameter>$PROGRAM</parameter> macro in insecure environments.</para>
+            </warning>
+            <para>Apart from the common destination options described in <xref
+                    linkend="destcommonopts"/> the <parameter>file()</parameter> destination has the
+                following options:</para>
+            <table>
+                <title>Options for file()</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>create_dirs()</entry>
+                            <entry>yes or no</entry>
+                            <entry> no </entry>
+                            <entry>Enable creating non-existing directories. </entry>
+                        </row>
+                        <row>
+                            <entry>dir_group()</entry>
+                            <entry>string</entry>
+                            <entry> root </entry>
+                            <entry>The group of directories created by syslog-ng. </entry>
+                        </row>
+                        <row>
+                            <entry>dir_owner()</entry>
+                            <entry>string</entry>
+                            <entry> root </entry>
+                            <entry>The owner of directories created by syslog-ng. </entry>
+                        </row>
+                        <row>
+                            <entry>dir_perm()</entry>
+                            <entry>number</entry>
+                            <entry> 0600 </entry>
+                            <entry>The permission mask of directories created by syslog-ng. Log
+                                directories are only created if a file after macro expansion refers
+                                to a non-existing directory, and directory creation is enabled (see
+                                the <parameter>create_dirs()</parameter> option below). For octal
+                                numbers prefix the number with <parameter>0</parameter>, e.g., use
+                                    <parameter>0755</parameter> for
+                                <parameter>rwxr-xr-x</parameter>. </entry>
+                        </row>
+                        <row>
+                            <entry>group()</entry>
+                            <entry>string</entry>
+                            <entry>root</entry>
+                            <entry>Set the group of the created file to the one specified. </entry>
+                        </row>
+                        <row>
+                            <entry>overwrite_if_older()</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+
+                            <entry>If set to a value higher than 0, before writing to a file,
+                                syslog-ng checks whether this file is older than the specified
+                                amount of time (specified in seconds). If so, it removes the
+                                existing file and the line to be written is the first line of a new
+                                file having the same name. In combination with e.g.: the
+                                    <parameter>$WEEKDAY</parameter> macro, this can be used for
+                                simple log rotation, in case not all history has to be kept.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>owner()</entry>
+                            <entry>string</entry>
+                            <entry>root</entry>
+                            <entry>Set the owner of the created file to the one specified. </entry>
+                        </row>
+                        <row>
+                            <entry>perm()</entry>
+                            <entry>number</entry>
+                            <entry> 0600 </entry>
+                            <entry>The permission mask of the file if it is created by syslog-ng.
+                                For octal numbers prefix the number with <parameter>0</parameter>,
+                                e.g., use <parameter>0755</parameter> for
+                                <parameter>rwxr-xr-x</parameter>. </entry>
+                        </row>
+                        <row>
+                            <entry>remove_if_older()</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Obsolete alias of the <parameter>overwrite_if_older()</parameter>
+                                option. </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <example>
+                <title>Using the file() driver</title>
+                <synopsis>destination d_file { file("/var/log/messages" ); };</synopsis>
+            </example>
+            <example>
+                <title>Using the file() driver with macros in the file name and a template for the
+                    message</title>
+                <synopsis>destination d_file {
+        file("/var/log/$YEAR.$MONTH.$DAY/messages"
+             template("$HOUR:$MIN:$SEC $TZ $HOST [$LEVEL] $MSG $MSG\n")
+             template_escape(no));
+};</synopsis>
+            </example>
+        </section>
+        <section id="reference_destination_pipe">
+            <title>pipe()</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>pipe()</parameter> driver</secondary>
+            </indexterm>
+            <para>This driver sends messages to a named pipe like
+                <filename>/dev/xconsole</filename>. </para>
+            <para>The pipe driver has a single required parameter, specifying the filename of the
+                pipe to open. </para>
+            <synopsis>Declaration:
+pipe(filename);</synopsis>
+            <note>
+                <para>You have to create this pipe using <command>mkfifo(1)</command>. </para>
+            </note>
+            <para>Apart from the common destination options described in <xref
+                    linkend="destcommonopts"/> the <parameter>pipe()</parameter> destination has the
+                following options:</para>
+            <table>
+                <title>Options for pipe()</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>group()</entry>
+                            <entry>string</entry>
+                            <entry> root </entry>
+                            <entry>Set the group of the pipe to the one specified. </entry>
+                        </row>
+                        <row>
+                            <entry>owner()</entry>
+                            <entry>string</entry>
+                            <entry> root </entry>
+                            <entry>Set the owner of the pipe to the one specified. </entry>
+                        </row>
+                        <row>
+                            <entry>perm()</entry>
+                            <entry>number</entry>
+                            <entry> 0600 </entry>
+                            <entry>The permission mask of the pipe. For octal numbers prefix the
+                                number with '0', e.g.: use 0755 for rwxr-xr-x. </entry>
+                        </row>
+                        <row>
+                            <entry>template()</entry>
+                            <entry>string</entry>
+                            <entry>A format conforming to the default logfile format. </entry>
+                            <entry>Specifies a template which defines the logformat to be used.
+                                Possible macros are the same as for the
+                                <parameter>file()</parameter> destination. </entry>
+                        </row>
+                        <row>
+                            <entry>template_escape()</entry>
+                            <entry>yes or no</entry>
+                            <entry> yes </entry>
+                            <entry>Turns on escaping ' and " in templated output files. This is
+                                useful for generating SQL statements and quoting string contents so
+                                that parts of the log message are not interpreted as commands to the
+                                SQL server.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <example>
+                <title>Using the pipe() driver</title>
+                <synopsis>destination d_pipe { pipe("/dev/xconsole"); };</synopsis>
+            </example>
+        </section>
+        <section id="reference_destination_program">
+            <title>program()</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>program()</parameter> driver</secondary>
+            </indexterm>
+            <para>This driver executes the specified program with the specified arguments and sends
+                messages to the standard input (<parameter>stdin</parameter>) of the child. </para>
+            <para>The <parameter>program()</parameter> driver has a single required parameter,
+                specifying a program name to start. The program is executed with the help of the
+                current shell, so the command may include both file patterns and I/O redirection,
+                they will be processed. </para>
+            <synopsis>Declaration: 
+program(command_to_run);</synopsis>
+            <note>
+                <para>Version 1.6 of syslog-ng executed the program once at startup, and kept it
+                    running until SIGHUP or exit. The reason was to prevent starting up a large
+                    number of programs for messages, which would have enabled an easy DoS attack. </para>
+                <para>Versions 2.0 and later restart the program if it exits for reliability
+                    reasons. However it is not recommended to launch programs for single messages as
+                    that might easily cause a DoS for the system. </para>
+            </note>
+
+            <para>The program destination supports all common destination options described in <xref
+                    linkend="destcommonopts"/>.</para>
+            <para>Note that the message format does not include the priority and facility values by
+                default (these values were automatically added in version 1.6.x of syslog-ng). To
+                add these values, specify a template for the program destination, as shown in the
+                following example.</para>
+            <example>
+                <title>Using the program() destination driver</title>
+                <synopsis>destination d_prog { program("/bin/script" template("&lt;$PRI&gt;$DATE $HOST $MSG\n"); };</synopsis>
+            </example>
+        </section>
+        <section id="reference_destination_sql">
+            <title>sql()</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>sql()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary>database driver</secondary>
+            </indexterm>
+            <para>This driver sends messages into an SQL database. Inserting the records into the
+                database is performed by a separate thread. The syslog-ng application automatically
+                performs the escaping required to insert the messages into the database. The
+                    <parameter>table</parameter> and <parameter>value</parameter> parameters can
+                include macros (see <xref linkend="macros"/> for details). </para>
+            <note>
+                <para>In order to use the <parameter>sql()</parameter> destination, syslog-ng
+                    Premium Edition must run in server mode. Typically, only the central syslog-ng
+                    Premium Edition server uses the <parameter>sql()</parameter> destination.
+                </para>
+            </note>
+            <synopsis>Declaration: 
+sql(database_type host_parameters database_parameters [options]);</synopsis>
+            <note>
+                <para>In addition to the standard syslog-ng packages, the
+                    <parameter>sql()</parameter> destination requires database-specific packages to
+                    be installed. Refer to the section appropriate for your platform in <xref
+                        linkend="chapter_install"/>.</para>
+                <para>The <parameter>sql()</parameter> driver is currently not available for every
+                    platform that is supported by syslog-ng. For a list of platforms that support
+                    the <parameter>sql()</parameter> driver, visit <ulink
+                        url="http://www.balabit.com/network-security/syslog-ng/central-syslog-server/"
+                        >http://www.balabit.com/network-security/syslog-ng/central-syslog-server/</ulink>.</para>
+            </note>
+            <para>The common destination options described in <xref linkend="destcommonopts"/> are
+                not available for the <parameter>sql()</parameter> destination. The
+                <parameter>sql()</parameter> destination has the following options:</para>
+            <table>
+                <title>Options for sql()</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>columns</entry>
+                            <entry>string list</entry>
+                            <entry>"date", "facility", "level", "host", "program", "pid", "message"</entry>
+                            <entry>Name of the columns storing the data in <parameter>fieldname
+                                    [dbtype]</parameter> format. The <parameter>[dbtype]</parameter>
+                                parameter is optional, and specifies the type of the field.</entry>
+                        </row>
+                        <row>
+                            <entry>database</entry>
+                            <entry>string</entry>
+                            <entry>n/a</entry>
+                            <entry>Name of the database that stores the logs.</entry>
+                        </row>
+                        <row>
+                            <entry>host</entry>
+                            <entry>hostname or IP address</entry>
+                            <entry>n/a</entry>
+                            <entry>Hostname of the database server. Note that Oracle destinations do
+                                not use this parameter, but retrieve the hostname from the
+                                    <filename>/etc/tnsnames.ora</filename> file.</entry>
+                        </row>
+                        <row>
+                            <entry>indexes</entry>
+                            <entry>string list</entry>
+                            <entry>"date", "facility", "host", "program"</entry>
+                            <entry>The list of columns that are indexed by the database to speed up
+                                searching.</entry>
+                        </row>
+                        <row>
+                            <!-- FIXME copied from common dest. options -->
+                            <entry>log_fifo_size()</entry>
+                            <entry>number</entry>
+                            <entry>Use global setting. </entry>
+                            <entry>The number of entries in the output buffer (output fifo).
+                            </entry>
+                        </row>
+                        <row>
+                            <!-- FIXME copied from tcp PE options -->
+                            <entry>log_disk_fifo_size()</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Size of the hard disk space in bytes that is used as disk buffer.
+                                Available only in syslog-ng Premium Edition. See <xref
+                                    linkend="diskbuffer"/> for details on using the disk
+                            buffer.</entry>
+                        </row>
+                        <row>
+                            <entry>password</entry>
+                            <entry>string</entry>
+                            <entry>n/a</entry>
+                            <entry>Password of the database user.</entry>
+                        </row>
+                        <row>
+                            <entry>table</entry>
+                            <entry>string</entry>
+                            <entry>n/a</entry>
+                            <entry>Name of the database table to use (can include macros). When
+                                using macros, note that some databases limit the length of table
+                                names.</entry>
+                        </row>
+                        <row>
+                            <entry>type</entry>
+                            <entry>freetds, mysql, oracle, pgsql, or 3</entry>
+                            <entry>n/a</entry>
+                            <entry>Specifies the type of the database, i.e., the DBI database driver
+                                to use. Use the <parameter>freetds</parameter> option to send logs
+                                to an MSSQL database. See the examples of the databases on the
+                                following sections for details.</entry>
+                        </row>
+                        <row>
+                            <entry>username</entry>
+                            <entry>string</entry>
+                            <entry>n/a</entry>
+                            <entry>Name of the database user.</entry>
+                        </row>
+                        <row>
+                            <entry>values</entry>
+                            <entry>string list</entry>
+                            <entry>"${R_YEAR}-${R_MONTH}-${R_DAY} ${R_HOUR}:${R_MIN}:${R_SEC}",
+                                "$FACILITY", "$LEVEL", "$HOST", "$PROGRAM", "$PID", "$MSGONLY"</entry>
+                            <entry>The values to store in the fields specified in the
+                                    <parameter>columns</parameter> parameter.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <warning>
+                <para>When using macros in table names, note that some databases limit the maximum
+                    allowed length of table names. Consult the documentation of the database for
+                    details.</para>
+            </warning>
+            <example>
+                <title>Using the sql() driver</title>
+                <indexterm>
+                    <primary>destinations</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>PostgreSQL</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <para>The following example sends the log messages into a PostgreSQL database
+                    running on the <parameter>logserver</parameter> host. The messages are inserted
+                    into the <parameter>logs</parameter> database, the name of the table includes
+                    the exact date and the name of the host sending the messages. The syslog-ng
+                    application automatically creates the required tables and columns, if the user
+                    account used to connect to the database has the required privileges.</para>
+                <synopsis>destination d_sql { 
+  sql(type(pgsql)
+  host("logserver") username("syslog-ng") password("password")
+  database("logs")
+  table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
+  columns("datetime", "host", "program", "pid", "message")
+  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  indexes("datetime", "host", "program", "pid", "message"));
+  };</synopsis>
+            </example>
+            <section id="example_oracle">
+                <title>Using the sql() driver with an Oracle database</title>
+                <indexterm>
+                    <primary>Oracle</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <para>The Oracle sql destination has some special aspects that are important to
+                    note.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Apart from the syslog-ng PE packages, it requires the Oracle Instant
+                            Client package from Oracle. See the platform-specific installation
+                            instructions in <xref linkend="chapter_install"/> for details.</para>
+                    </listitem>
+                    <listitem>
+                        <para>The hostname of the database server is set in the
+                                <filename>/etc/tnsnames.ora</filename> file, not in the
+                                <parameter>host</parameter> parameter of the
+                            <parameter>sql()</parameter> destination.</para>
+                    </listitem>
+                    <listitem>
+                        <para>As certain database versions limit the maximum length of table names,
+                            macros in the table names should be used with care.</para>
+                    </listitem>
+                    <listitem>
+                        <!-- FIXME kiszedni, ha megjavul -->
+                        <para>In the current version of syslog-ng PE, the types of database columns
+                            must be explicitly set for the Oracle destination. The column used to
+                            store the text part of the syslog messages should be able to store
+                            messages as long as the longest message permitted by syslog-ng,
+                            therefore it is usually recommended to use the
+                            <parameter>varchar2</parameter> or <parameter>clob</parameter> column
+                            type. (The maximum length of the messages can be set using the
+                                <parameter>log_msg_size()</parameter> option.) See the following
+                            example for details.</para>
+                    </listitem>
+                </itemizedlist>
+
+                <example>
+                    <title>Using the sql() driver with an Oracle database</title>
+                    <para>The following example sends the log messages into an Oracle database
+                        running on the <parameter>logserver</parameter> host, which must be set in
+                        the <filename>/etc/tnsnames.ora</filename> file. The messages are inserted
+                        into the <parameter>LOGS</parameter> database, the name of the table
+                        includes the exact date when the messages were sent. The syslog-ng
+                        application automatically creates the required tables and columns, if the
+                        user account used to connect to the database has the required privileges.</para>
+                    <synopsis>destination d_sql { 
+  sql(type(oracle)
+  username("syslog-ng") password("password")
+  database("LOGS")
+  table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")
+  columns("datetime varchar(16)", "host varchar(32)", "program varchar(32)", "pid varchar(8)", "message varchar2")                        
+  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  indexes("datetime", "host", "program", "pid", "message"));
+  };</synopsis>
+                    <para>The Oracle Instant Client retrieves the address of the database server
+                        from the <filename>/etc/tnsnames.ora</filename> file. Edit or create this
+                        file as needed for your configuration. A sample is provided below.</para>
+                    <synopsis>LOGS =
+(DESCRIPTION =
+(ADDRESS_LIST =
+(ADDRESS = (PROTOCOL = TCP)
+(HOST = logserver)
+(PORT = 1521))
+)
+(CONNECT_DATA =
+(SERVICE_NAME = EXAMPLE.SERVICE)
+)
+)</synopsis>
+                </example>
+            </section>
+
+            <section id="example_mssql">
+                <title>Using the sql() driver with a Microsoft SQL database</title>
+                <indexterm>
+                    <primary>Microsoft SQL</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>MSSQL</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <para>The <parameter>freetds</parameter> database driver can access Microsoft SQL
+                    (MSSQL) destinations. This driver has some special aspects that are important to
+                    note.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>The date format used by the MSSQL database must be explicitly set in
+                            the <filename>/etc/locales.conf</filename> file of the syslog-ng server.
+                            See the following example for details.</para>
+                    </listitem>
+                    <listitem>
+                        <para>As certain database versions limit the maximum length of table names,
+                            macros in the table names should be used with care.</para>
+                    </listitem>
+                    <listitem>
+                        <!-- FIXME kiszedni, ha megjavul -->
+                        <para>In the current version of syslog-ng PE, the types of database columns
+                            must be explicitly set for the MSSQL destination. The column used to
+                            store the text part of the syslog messages should be able to store
+                            messages as long as the longest message permitted by syslog-ng. The
+                                <parameter>varchar</parameter> column type can store maximum 4096
+                            bytes-long messages. The maximum length of the messages can be set using
+                            the <parameter>log_msg_size()</parameter> option. See the following
+                            example for details.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Remote access for SQL users must be explicitly enabled on the
+                            Microsoft Windows host running the Microsoft SQL Server. See <xref
+                                linkend="configure_mssql_server"/> for details.</para>
+                    </listitem>
+                </itemizedlist>
+                <example>
+                    <title>Using the sql() driver with an MSSQL database</title>
+                    <para>The following example sends the log messages into an MSSQL database
+                        running on the <parameter>logserver</parameter> host. The messages are
+                        inserted into the <parameter>syslogng</parameter> database, the name of the
+                        table includes the exact date when the messages were sent. The syslog-ng
+                        application automatically creates the required tables and columns, if the
+                        user account used to connect to the database has the required privileges.</para>
+                    <synopsis>destination d_mssql { 
+sql(type(freetds) host("logserver") port("1433") 
+  username("syslogng") password("syslogng") database("syslogng") 
+  table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")columns("datetime varchar(16)", "host varchar(32)",
+  "program varchar(32)", "pid varchar(8)", "message varchar(4096)")
+  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  indexes("datetime", "host", "program", "pid", "message"));
+  };</synopsis>
+                    <para>The date format used by the MSSQL database must be explicitly set in the
+                            <filename>/etc/locales.conf</filename> file of the syslog-ng server.
+                        Edit or create this file as needed for your configuration. A sample is
+                        provided below.</para>
+                    <synopsis>[default]
+date = "%Y-%m-%d %H:%M:%S"</synopsis>
+                </example>
+            </section>
+
+        </section>
+
+        <section id="reference_destination_tcp">
+            <title>tcp(), tcp6(), udp(), and udp6(),</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>tcp()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>tcp6()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>udp()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>udp6()</parameter> driver</secondary>
+            </indexterm>
+            <para>This driver sends messages to another host on the local intranet or internet using
+                the UDP or TCP protocol. The <parameter>tcp6()</parameter> and
+                <parameter>udp6()</parameter> drivers use the IPv6 network protocol.</para>
+            <para>Both drivers have a single required argument specifying the destination host
+                address, where messages should be sent, and several optional parameters. Note that
+                this differs from source drivers, where local bind address is implied, and none of
+                the parameters are required. </para>
+            <para>The <parameter>udp()</parameter> and <parameter>udp6()</parameter> drivers
+                automatically send multicast packets if a multicast destination address is
+                specified. The <parameter>tcp()</parameter> and <parameter>tcp6()</parameter>
+                drivers do not support multicasting.</para>
+            <synopsis>Declaration:
+tcp(host [options]);
+udp(host [options]);
+tcp6(host [options]);
+udp6(host [options]);</synopsis>
+            <para>Apart from the common destination options described in <xref
+                    linkend="destcommonopts"/> these destinations have the following options:</para>
+            <table>
+                <title>Options for udp(), udp6(), tcp() and tcp6()</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>ip_tos</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the Type-of-Service value of outgoing packets. </entry>
+                        </row>
+                        <row>
+                            <entry>ip_ttl</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the Time-To-Live value of outgoing packets. </entry>
+                        </row>
+                        <row>
+                            <entry>localip()</entry>
+                            <entry>string</entry>
+                            <entry>0.0.0.0</entry>
+                            <entry>The IP address to bind to before connecting to target. </entry>
+                        </row>
+                        <row>
+                            <entry>localport()</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>The port number to bind to. Messages are sent from this
+                            port.</entry>
+                        </row>
+                        <row>
+                            <entry>port() or destport()</entry>
+                            <entry>number</entry>
+                            <entry>514</entry>
+                            <entry>The port number to connect to.</entry>
+                        </row>
+                        <row>
+                            <entry>spoof_source</entry>
+                            <entry>yes or no</entry>
+                            <entry>no</entry>
+                            <entry>Enables source address spoofing. This means that the host running
+                                syslog-ng generates UDP packets with the source IP address matching
+                                the original sender of the message. It is useful when you want to
+                                perform some kind of preprocessing via syslog-ng then forward
+                                messages to your central log management solution with the source
+                                address of the original sender. This option only works for UDP
+                                destinations though the original message can be received by TCP as
+                                well. This option is only available if syslog-ng was compiled using
+                                the <parameter>--enable-spoof-source</parameter> configuration
+                                option. </entry>
+                        </row>
+                        <row>
+                            <entry>so_broadcast</entry>
+                            <entry>yes or no</entry>
+                            <entry>no</entry>
+                            <entry>This option controls the <parameter>SO_BROADCAST</parameter>
+                                socket option required to make syslog-ng send messages to a
+                                broadcast address. See the <command>socket(7)</command> manual page
+                                for details. </entry>
+                        </row>
+                        <row>
+                            <entry>so_rcvbuf</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the size of the socket receive buffer in bytes.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>so_sndbuf</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the size of the socket send buffer in bytes. </entry>
+                        </row>
+                        <row>
+                            <entry>tls</entry>
+                            <entry>tls options</entry>
+                            <entry>n/a</entry>
+                            <entry>This option sets various TLS specific options like
+                                key/certificate files and trusted CA locations. TLS can be used only
+                                with the tcp/tcp6 transport protocols. See <xref
+                                    linkend="tlsoptions"/> for more information.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <example>
+                <title>Using the tcp() driver</title>
+                <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999); localport(999)); };</synopsis>
+                <para>If name resolution is configured, the hostname of the target server can be
+                    used as well.</para>
+                <synopsis>destination d_tcp { tcp("target_host" port(1999); localport(999)); };</synopsis>
+            </example>
+            <para>The <parameter>tcp()</parameter> and <parameter>tcp6()</parameter> drivers of the
+                syslog-ng Premium Edition support disk-based buffering, and have the following
+                option:</para>
+            <table>
+                <title>Special options for tcp() and tcp6() in syslog-ng Premium Edition</title>
+                <indexterm>
+                    <primary>disk buffer</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>disk-based buffering</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>parameters</primary>
+                    <secondary>log_disk_fifo_size()</secondary>
+                </indexterm>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <!-- FIXME copied to sql options -->
+                        <row>
+                            <entry>log_disk_fifo_size()</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Size of the hard disk space in bytes that is used as disk buffer.
+                                Available only in syslog-ng Premium Edition. See <xref
+                                    linkend="diskbuffer"/> for details on using the disk
+                            buffer.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+
+        <section id="reference_destination_unix">
+            <title>unix-stream() &amp; unix-dgram()</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>unix-stream()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>unix-dgram()</parameter> driver</secondary>
+            </indexterm>
+            <para>This driver sends messages to a unix socket in either
+                <parameter>SOCK_STREAM</parameter> or <parameter>SOCK_DGRAM</parameter> mode. </para>
+            <para>Both drivers have a single required argument specifying the name of the socket to
+                connect to. </para>
+            <synopsis>Declaration: 
+  unix-stream(filename [options]);
+  unix-dgram(filename [options]);</synopsis>
+            <para>Apart from the common destination options described in <xref
+                    linkend="destcommonopts"/> the <parameter>unix-stream()</parameter> and
+                    <parameter>unix-dgram()</parameter> destinations has the following options:</para>
+            <table>
+                <title>Options for unix-stream() and unix-dgram()</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>so_broadcast</entry>
+                            <entry>yes or no</entry>
+                            <entry>no</entry>
+                            <entry>This option controls the <parameter>SO_BROADCAST</parameter>
+                                socket option required to make syslog-ng send messages to a
+                                broadcast address. See the <command>socket(7)</command> manual page
+                                for details. </entry>
+                        </row>
+                        <row>
+                            <entry>so_rcvbuf</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the size of the socket receive buffer in bytes.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>so_sndbuf</entry>
+                            <entry>number</entry>
+                            <entry>0</entry>
+                            <entry>Specifies the size of the socket send buffer in bytes. </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <example>
+                <title>Using the unix-stream() driver</title>
+                <synopsis>destination d_unix_stream { unix-stream("/var/run/logs"); };</synopsis>
+            </example>
+        </section>
+
+        <section id="reference_destination_usertty">
+            <title>usertty()</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>usertty()</parameter> driver</secondary>
+            </indexterm>
+            <para>This driver writes messages to the terminal of a logged-in user. </para>
+            <para>The <parameter>usertty()</parameter> driver has a single required argument,
+                specifying a username who should receive a copy of matching messages. </para>
+            <synopsis>Declaration: 
+  usertty(username);</synopsis>
+            <para>The <parameter>usertty()</parameter> does not have any further options; nor can it
+                use the common options available for other destinations..</para>
+            <note>
+                <para>The <parameter>usertty()</parameter> destination does not support
+                templates.</para>
+            </note>
+            <example>
+                <title>Using the usertty() driver</title>
+                <synopsis>destination d_usertty { usertty("root"); };</synopsis>
+            </example>
+        </section>
+
+    </section>
+    <section id="reference_logflags">
+        <title>Log path flags</title>
+        <para>Flags influence the behavior of syslog-ng, and the way it processes messages. The
+            following flags may be used in the log paths, as described in <xref linkend="logpath"/>.</para>
+        <!-- FIXME log path-os es flages peldat ide is -->
+        <table id="logflags">
+            <title>Log statement flags</title>
+            <indexterm>
+                <primary>log paths</primary>
+                <secondary>flags</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>flags</primary>
+            </indexterm>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Flag</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>catchall</entry>
+                        <entry>This flag means that the source of the message is ignored, only the
+                            filters are taken into account when matching messages. A log statement
+                            using the <parameter>catchall</parameter> flag processes every message
+                            that arrives to any of the defined sources.</entry>
+                    </row>
+                    <row>
+                        <entry>fallback</entry>
+                        <entry>This flag makes a log statement 'fallback'. Fallback log statements
+                            process messages that were not processed by other, 'non-fallback' log
+                            statements. </entry>
+                    </row>
+                    <row>
+                        <entry>final</entry>
+                        <entry>This flag means that the processing of log statements ends here. Note
+                            that this does not necessarily mean that matching messages will be
+                            stored only once, as there can be matching log statements processed
+                            prior the current one. </entry>
+                    </row>
+                    <row>
+                        <entry>flow-control</entry>
+                        <entry>Enables flow-control to the log path, meaning that syslog-ng will
+                            stop reading messages from the sources of this log statement if the
+                            destinations are not able to process the messages at the required speed.
+                            If disabled, syslog-ng will drop messages if the destination queues are
+                            full. If enabled, syslog-ng will only drop messages if the destination
+                            queues/window sizes are improperly sized. </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <example>
+            <title>Using log path flags</title>
+            <para>The following log path processes every message received to the
+                    <parameter>s_localhost</parameter> source that was not processed by earlier log
+                paths. As syslog-ng processes log paths in the order they appear in the
+                configuration file, place such log paths at the end of the file. A typical situation
+                is to use filters to select the most important messages and send them to specific
+                destinations, and process the remaining messages with a fallback log path.</para>
+            <synopsis>.
+.
+.
+log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
+        </example>
+    </section>
+    <section id="reference_filters">
+        <title>Filter functions</title>
+        <indexterm>
+            <primary>filters</primary>
+            <secondary>reference</secondary>
+        </indexterm>
+        <para>The following functions may be used in the filter statement, as described in <xref
+                linkend="filters"/>.</para>
+        <table id="filterfunc">
+            <title>Filter functions in syslog-ng</title>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Synopsis</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>facility</entry>
+                        <entry>facility(facility[,facility])</entry>
+                        <entry>Match messages having one of the listed facility code. An alternate
+                            syntax permits the use an arbitrary facility codes.</entry>
+                    </row>
+                    <row>
+                        <entry>facility</entry>
+                        <entry>facility(&lt;numeric facility code&gt;)</entry>
+                        <entry>An alternate syntax for <parameter>facility</parameter> permitting
+                            the use of an arbitrary facility code. Facility codes 0-23 are
+                            predefined and can be referenced by their usual name. Facility codes
+                            above 24 are not defined but can be used by this alternate syntax.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>filter()</entry>
+                        <entry>filter(filtername)</entry>
+                        <entry>Call another filter rule and evaluate its value.</entry>
+                    </row>
+                    <row>
+                        <entry>host()</entry>
+                        <entry>host(regexp)</entry>
+                        <entry>Match messages by using a regular expression against the hostname
+                            field of log messages. </entry>
+                    </row>
+                    <row>
+                        <entry>level() or priority()</entry>
+                        <entry>level(pri[,pri1..pri2[,pri3]])</entry>
+                        <entry>Match messages based on priority.</entry>
+                    </row>
+                    <row>
+                        <entry>match()</entry>
+                        <entry>match(regexp)</entry>
+                        <entry>Tries to match a regular expression to the message itself.</entry>
+                    </row>
+                    <row>
+                        <entry>netmask()</entry>
+                        <entry>netmask(ip/mask)</entry>
+                        <entry>Check the sender's IP address whether it is in the specified IP
+                            subnet.</entry>
+                    </row>
+                    <row>
+                        <entry>program()</entry>
+                        <entry>program(regexp)</entry>
+                        <entry>Match messages by using a regular expression against the program name
+                            field of log messages.</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and
+                <parameter>program()</parameter> filter functions accept extended regular
+            expressions (also called POSIX modern regular expressions) as parameters. The regular
+            expressions can use up to 255 regexp matches (<parameter>$1 ... $255</parameter>), but
+            only from the last filter. For case-insensitive searches, start the expression with the
+                <parameter>(?i)</parameter> string.</para>
+        <para>
+            <indexterm>
+                <primary>filters</primary>
+                <secondary>priorities</secondary>
+            </indexterm> The <parameter>level()</parameter> filter accepts the following levels:
+                <parameter>emerg</parameter>, <parameter>alert</parameter>,
+            <parameter>crit</parameter>, <parameter>err</parameter>, <parameter>warning</parameter>,
+                <parameter>notice</parameter>, <parameter>info</parameter>,
+            <parameter>debug</parameter>. </para>
+        <para>
+            <indexterm>
+                <primary>filters</primary>
+                <secondary>facilities, </secondary>
+            </indexterm> The <parameter>facility()</parameter> filter accepts both the name and the
+            numerical code of the facility or the importance level. The syslog-ng application
+            recognizes the following facilities: (Note that some of these facilities are available
+            only on specific platforms.)</para>
+        <!-- FIXME authpriv -->
+        <table>
+            <title>syslog Message Facilities recognized by the facility() filter</title>
+            <?dbfo keep-together="auto" ?>
+            <indexterm>
+                <primary>facilities</primary>
+            </indexterm>
+            <indexterm>
+                <primary>message facilities</primary>
+            </indexterm>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>Numerical Code</entry>
+                        <entry>Facility name</entry>
+                        <entry>Facility</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>0</entry>
+                        <entry>kern</entry>
+                        <entry>kernel messages</entry>
+                    </row>
+                    <row>
+                        <entry>1</entry>
+                        <entry>user</entry>
+                        <entry>user-level messages</entry>
+                    </row>
+                    <row>
+                        <entry>2</entry>
+                        <entry>mail</entry>
+                        <entry>mail system</entry>
+                    </row>
+                    <row>
+                        <entry>3</entry>
+                        <entry>daemon</entry>
+                        <entry>system daemons</entry>
+                    </row>
+                    <row>
+                        <entry>4</entry>
+                        <entry>auth</entry>
+                        <entry>security/authorization messages</entry>
+                    </row>
+                    <row>
+                        <entry>5</entry>
+                        <entry>syslog</entry>
+                        <entry>messages generated internally by syslogd</entry>
+                    </row>
+                    <row>
+                        <entry>6</entry>
+                        <entry>lpr</entry>
+                        <entry>line printer subsystem</entry>
+                    </row>
+                    <row>
+                        <entry>7</entry>
+                        <entry>news</entry>
+                        <entry>network news subsystem</entry>
+                    </row>
+                    <row>
+                        <entry>8</entry>
+                        <entry>uucp</entry>
+                        <entry>UUCP subsystem</entry>
+                    </row>
+                    <row>
+                        <entry>9</entry>
+                        <entry>cron</entry>
+                        <entry>clock daemon</entry>
+                    </row>
+                    <row>
+                        <entry>10</entry>
+                        <entry>auth</entry>
+                        <entry>security/authorization messages</entry>
+                    </row>
+                    <row>
+                        <entry>11</entry>
+                        <entry>ftp</entry>
+                        <entry>FTP daemon</entry>
+                    </row>
+                    <row>
+                        <entry>12</entry>
+                        <entry><!-- FIXME --></entry>
+                        <entry>NTP subsystem</entry>
+                    </row>
+                    <row>
+                        <entry>13</entry>
+                        <entry><!-- FIXME --></entry>
+                        <entry>log audit</entry>
+                    </row>
+                    <row>
+                        <entry>14</entry>
+                        <entry><!-- FIXME --></entry>
+                        <entry>log alert</entry>
+                    </row>
+                    <row>
+                        <entry>15</entry>
+                        <entry>cron</entry>
+                        <entry>clock daemon</entry>
+                    </row>
+                    <row>
+                        <entry>16-23</entry>
+                        <entry>local0..local7</entry>
+                        <entry>locally used facilities (local0-local7)</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+    <section id="macros">
+        <title>Macros</title>
+        <indexterm>
+            <primary>macros</primary>
+            <secondary>reference</secondary>
+        </indexterm>
+        <para>Certain parts of syslog-ng (e.g., destination filenames and message content templates)
+            can refer to one or more macros, which get expanded as a message is processed. The table
+            below summarizes the macros available in syslog-ng.</para>
+        <note>
+            <para>See <xref linkend="windows_message_format"/> for the macros available in the
+                syslog-ng Agent for Windows application.</para>
+        </note>
+        <para>Macros can be included by prefixing the macro name with a <parameter>$</parameter>
+            sign, just like in Bourne compatible shells. Regarding braces around macro names, the
+            following two formats are equivalent <parameter>"$MSG"</parameter> and
+                <parameter>"${MSG}"</parameter>. </para>
+        <para id="date_macros">The macros related to the date of the message (e.g.:
+                <parameter>ISODATE</parameter>, <parameter>HOUR</parameter>, etc.) have two further
+            versions each: one with the <parameter>S_</parameter> and one with the
+            <parameter>R_</parameter> prefix (e.g.: <parameter>S_DATE</parameter> and
+                <parameter>R_DATE</parameter> ). The <parameter>S_DATE</parameter> macro represents
+            the date found in the log message, i.e. when the message was sent by the original
+            application. <parameter>R_DATE</parameter> is the date when syslog has received the
+            message.</para>
+        <para><parameter>DATE</parameter> equals either <parameter>S_DATE</parameter> or
+                <parameter>R_DATE</parameter>, depending on the global option set in the now
+            deprecated <parameter>use_time_recvd()</parameter> parameter (see <xref
+                linkend="reference_options"/>). </para>
+        <warning>
+            <para>The hostname-related macros (<parameter>FULLHOST</parameter>,
+                    <parameter>FULLHOST_FROM</parameter>, <parameter>HOST</parameter>, and
+                    <parameter>HOST_FROM</parameter>) do not have any effect if the <link
+                    linkend="option_keep_hostname">
+                    <parameter>keep_hostname()</parameter>
+                </link> option is disabled.</para>
+        </warning>
+        <table>
+            <title>Available macros</title>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>BSDTAG</entry>
+                        <entry>Facility/priority information in the format used by the FreeBSD
+                            syslogd: a priority number followed by a letter that indicates the
+                            facility. The priority number can range from <parameter>0</parameter> to
+                                <parameter>7</parameter>. The facility letter can range from
+                                <parameter>A</parameter> to <parameter>Y</parameter>, where
+                                <parameter>A</parameter> corresponds to facility number zero
+                            (LOG_KERN), <parameter>B</parameter> corresponds to facility 1
+                            (LOG_USER), etc.</entry>
+                    </row>
+                    <row id="macro_date">
+                        <entry>DATE, R_DATE, S_DATE</entry>
+                        <entry>Date of the message using the BSD-syslog style timestamp format
+                            (month/day/hour/minute/second, each expressed in two digits). This is
+                            the original syslog time stamp without year information, e.g.:
+                                <parameter>Jun 13 15:58:00</parameter>. </entry>
+                    </row>
+                    <row id="macro_day">
+                        <entry>DAY, R_DAY, S_DAY</entry>
+                        <entry>The day the message was sent. </entry>
+                    </row>
+                    <row id="macro_facility">
+                        <entry>FACILITY</entry>
+                        <entry>The facility that sent the message.</entry>
+                    </row>
+                    <row id="macro_fulldate">
+                        <entry>FULLDATE, R_FULLDATE, S_FULLDATE</entry>
+                        <entry>A nonstandard format for the date of the message using the same
+                            format as <parameter>DATE</parameter>, but including the year as well,
+                            e.g.: <parameter>2006 Jun 13 15:58:00</parameter>.</entry>
+                    </row>
+                    <row>
+                        <entry>FULLHOST</entry>
+                        <entry>The full FQDN of the host name chain (without trimming chained
+                            hosts), including the domain name. To use this macro, make sure that the
+                                <link linkend="option_keep_hostname">
+                                <parameter>keep_hostname()</parameter>
+                            </link> option is enabled.</entry>
+                    </row>
+                    <row>
+                        <entry>FULLHOST_FROM</entry>
+                        <entry>FQDN of the host that sent the message to syslog-ng as resolved by
+                            syslog-ng using DNS. If the message traverses several hosts, this is the
+                            last host in the chain. To use this macro, make sure that the <link
+                                linkend="option_keep_hostname">
+                                <parameter>keep_hostname()</parameter>
+                            </link> option is enabled.</entry>
+                    </row>
+                    <row id="macro_hour">
+                        <entry>HOUR, R_HOUR, S_HOUR</entry>
+                        <entry>The hour of day the message was sent. </entry>
+                    </row>
+                    <row id="macro_host">
+                        <entry>HOST</entry>
+                        <entry>The name of the source host where the message originates from. If the
+                            message traverses several hosts and the <link
+                                linkend="option_chain_hostnames">
+                                <parameter>chain_hostnames()</parameter>
+                            </link> option is on, the first host in the chain is used. To use this
+                            macro, make sure that the <link linkend="option_keep_hostname">
+                                <parameter>keep_hostname()</parameter>
+                            </link> option is enabled.</entry>
+                    </row>
+                    <row>
+                        <entry>HOST_FROM</entry>
+                        <entry>Name of the host that sent the message to syslog-ng, as resolved by
+                            syslog-ng using DNS. If the message traverses several hosts, this is the
+                            last host in the chain. To use this macro, make sure that the <link
+                                linkend="option_keep_hostname">
+                                <parameter>keep_hostname()</parameter>
+                            </link> option is enabled.</entry>
+                    </row>
+                    <row id="macro_isodate">
+                        <entry>ISODATE, R_ISODATE, S_ISODATE</entry>
+                        <entry>Date of the message in the ISO 8601 compatible standard timestamp
+                            format (yyyy-mm-ddThh:mm:ss+-ZONE), e.g.:
+                                <parameter>2006-06-13T15:58:00.123+01:00</parameter>. If possible,
+                            it is recommended to use <parameter>ISODATE</parameter> for
+                            timestamping. Note that syslog-ng can produce fractions of a second
+                            (e.g., milliseconds) in the timestamp by using the
+                                <parameter>frac_digits()</parameter> global or per-destination
+                            option.</entry>
+                    </row>
+                    <row id="macro_min">
+                        <entry>MIN, R_MIN, S_MIN</entry>
+                        <entry>The minute the message was sent. </entry>
+                    </row>
+                    <row id="macro_month">
+                        <entry>MONTH, R_MONTH, S_MONTH</entry>
+                        <entry>The month the message was sent. </entry>
+                    </row>
+                    <row id="macro_msg">
+                        <entry>MSG or MESSAGE</entry>
+                        <entry>Message contents including the program name and pid. </entry>
+                    </row>
+                    <row>
+                        <entry>MSGONLY</entry>
+                        <entry>Message contents without the program name or pid. </entry>
+                    </row>
+                    <row>
+                        <entry>PID</entry>
+                        <entry>The PID of the program sending the message. </entry>
+                    </row>
+                    <row id="macro_pri">
+                        <entry>PRI</entry>
+                        <entry>The priority and facility encoded as a 2 or 3 digit decimal number as
+                            it is present in syslog messages. </entry>
+                    </row>
+                    <row id="macro_priority">
+                        <entry>PRIORITY or LEVEL</entry>
+                        <entry>The priority of the message. </entry>
+                    </row>
+                    <row>
+                        <entry>PROGRAM</entry>
+                        <entry>The name of the program sending the message. Note that the content
+                            of the $PROGRAM variable may not be completely trusted as it is
+                            provided by the client program that constructed the message.</entry>
+                    </row>
+                    <row id="macro_tag">
+                        <entry>TAG</entry>
+                        <entry>The priority and facility encoded as a 2 digit hexadecimal number.
+                        </entry>
+                    </row>
+                    <row id="macro_sec">
+                        <entry>SEC, R_SEC, S_SEC</entry>
+                        <entry>The second the message was sent. </entry>
+                    </row>
+                    <row>
+                        <entry>SOURCEIP</entry>
+                        <entry>IP address of the host that sent the message to syslog-ng. (I.e. the
+                            IP address of the host in the <parameter>FULLHOST_FROM</parameter>
+                            macro.) Please note that when a message traverses several relays, this
+                            macro contains the IP of the last relay. </entry>
+                    </row>
+                    <row id="macro_stamp">
+                        <entry>STAMP, R_STAMP, S_STAMP</entry>
+                        <entry>A timestamp formatted according to the <link
+                                linkend="reference_options">
+                                <parameter>ts_format()</parameter>
+                            </link> global or per-destination option.</entry>
+                    </row>
+                    <row id="macro_tz">
+                        <entry>TZ, R_TZ, S_TZ</entry>
+                        <entry>Equivalent to TZOFFSET, used to mean the time zone name abbreviation
+                            in syslog-ng 1.6.x. </entry>
+                    </row>
+                    <row id="macro_tzoffset">
+                        <entry>TZOFFSET, R_TZOFFSET, S_TZOFFSET</entry>
+                        <entry>The time-zone as hour offset from GMT; e.g.:
+                            <parameter>-07:00</parameter>. In syslog-ng 1.6.x this used to be
+                                <parameter>-0700</parameter> but as <parameter>ISODATE</parameter>
+                            requires the colon it was added to <parameter>TZOFFSET</parameter> as
+                            well. </entry>
+                    </row>
+                    <row id="macro_unixtime">
+                        <entry>UNIXTIME, R_UNIXTIME, S_UNIXTIME</entry>
+                        <entry>Standard unix timestamp, represented as the number of seconds since
+                                <parameter>1970-01-01T00:00:00</parameter>. </entry>
+                    </row>
+                    <row id="macro_year">
+                        <entry>YEAR, R_YEAR, S_YEAR</entry>
+                        <entry>The year the message was sent. </entry>
+                    </row>
+                    <row id="macro_week">
+                        <entry>WEEK, R_WEEK, S_WEEK</entry>
+                        <entry>The week number of the year. (The first Monday in the year marks the
+                            first week.)</entry>
+                    </row>
+                    <row id="macro_weekday">
+                        <entry>WEEKDAY, R_WEEKDAY, S_WEEKDAY</entry>
+                        <entry>The 3-letter name of the day of week the message was sent, e.g.
+                                <parameter>Thu</parameter>. </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+    <section id="reference_options">
+        <title>Options</title>
+        <indexterm>
+            <primary>options</primary>
+            <secondary>reference</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>global options</primary>
+            <secondary>reference</secondary>
+        </indexterm>
+        <para>The following options can be specified in the options statement, as described in <xref
+                linkend="options"/>.</para>
+        <table>
+            <title>List of global options supported in syslog-ng</title>
+            <tgroup cols="4">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Accepted values</entry>
+                        <entry>Default</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>bad_hostname()</entry>
+                        <entry>regular expression</entry>
+                        <entry>no</entry>
+                        <entry>A regexp containing hostnames which should not be handled as
+                            hostnames. </entry>
+                    </row>
+                    <row id="option_chain_hostnames">
+                        <entry>chain_hostnames()</entry>
+                        <entry>yes or no</entry>
+                        <entry>yes</entry>
+                        <entry>Enable or disable the chained hostname format.</entry>
+                    </row>
+                    <row>
+                        <entry>check_hostname()</entry>
+                        <entry>yes or no</entry>
+                        <entry>no</entry>
+                        <entry>Enable or disable checking whether the hostname contains valid
+                            characters.</entry>
+                    </row>
+                    <row>
+                        <entry>create_dirs()</entry>
+                        <entry>yes or no</entry>
+                        <entry>no</entry>
+                        <entry>Enable or disable directory creation for destination files.</entry>
+                    </row>
+                    <row>
+                        <entry>dir_group()</entry>
+                        <entry>groupid</entry>
+                        <entry>root</entry>
+                        <entry>The default group for newly created directories.</entry>
+                    </row>
+                    <row>
+                        <entry>dir_owner()</entry>
+                        <entry>userid</entry>
+                        <entry>root</entry>
+                        <entry>The default owner of newly created directories.</entry>
+                    </row>
+                    <row>
+                        <entry>dir_perm()</entry>
+                        <entry>permission value</entry>
+                        <entry>0700</entry>
+                        <entry>The default permission for newly created directories.</entry>
+                    </row>
+                    <row>
+                        <entry>dns_cache()</entry>
+                        <entry>yes or no</entry>
+                        <entry>yes</entry>
+                        <entry>Enable or disable DNS cache usage.</entry>
+                    </row>
+                    <row>
+                        <entry>dns_cache_expire()</entry>
+                        <entry>number</entry>
+                        <entry>3600</entry>
+                        <entry>Number of seconds while a successful lookup is cached.</entry>
+                    </row>
+                    <row>
+                        <entry>dns_cache_expire_failed()</entry>
+                        <entry>number</entry>
+                        <entry>60</entry>
+                        <entry>Number of seconds while a failed lookup is cached.</entry>
+                    </row>
+                    <row>
+                        <entry>dns_cache_hosts()</entry>
+                        <entry>filename</entry>
+                        <entry>unset</entry>
+                        <entry>Name of a file in <filename>/etc/hosts</filename> format that
+                            contains static IP->hostname mappings. Use this option to resolve
+                            hostnames locally without using a DNS. Note that any change to this file
+                            triggers a reload in syslog-ng and is instantaneous. </entry>
+                    </row>
+                    <row>
+                        <entry>dns_cache_size()</entry>
+                        <entry>number</entry>
+                        <entry>1007</entry>
+                        <entry>Number of hostnames in the DNS cache.</entry>
+                    </row>
+                    <row>
+                        <entry>frac_digits()</entry>
+                        <entry>number</entry>
+                        <entry>0</entry>
+                        <entry>The syslog-ng application can store fractions of a second in the
+                            timestamps according to the ISO8601 format. The
+                            <parameter>frac_digits()</parameter> parameter specifies the number of
+                            digits stored. The digits storing the fractions are padded by zeros if
+                            the original timestamp of the message specifies only seconds. Fractions
+                            can always be stored for the received time of the messages.</entry>
+                    </row>
+                    <row>
+                        <entry>flush_lines()</entry>
+                        <entry>number</entry>
+                        <entry>0</entry>
+                        <entry>Specifies how many lines are flushed to a destination at a time.
+                            Syslog-ng waits for this number of lines to accumulate and sends them
+                            off in a single batch. Setting this number high increases throughput as
+                            fully filled frames are sent to the network, but also increases message
+                            latency. The latency can be limited by the use of the
+                                <parameter>flush_timeout</parameter> option. </entry>
+                    </row>
+                    <row>
+                        <entry>flush_timeout()</entry>
+                        <entry>time in milliseconds</entry>
+                        <entry>10000</entry>
+                        <entry>Specifies the time syslog-ng waits for lines to accumulate in its
+                            output buffer. See the <parameter>flush_lines()</parameter> option for
+                            more information. </entry>
+                    </row>
+                    <row>
+                        <entry>gc_busy_threshold() (DEPRECATED)</entry>
+                        <entry>number</entry>
+                        <entry>n/a</entry>
+                        <entry>Has no meaning in syslog-ng 1.9.x and later. </entry>
+                    </row>
+                    <row>
+                        <entry>gc_idle_threshold() (DEPRECATED)</entry>
+                        <entry>number</entry>
+                        <entry>n/a</entry>
+                        <entry>Has no meaning in syslog-ng 1.9.x and later. </entry>
+                    </row>
+                    <row>
+                        <entry>group()</entry>
+                        <entry>groupid</entry>
+                        <entry>root</entry>
+                        <entry>The default group of output files.</entry>
+                    </row>
+                    <row id="option_keep_hostname">
+                        <entry>keep_hostname()</entry>
+                        <entry>yes or no</entry>
+                        <entry>no</entry>
+                        <entry>Enable or disable hostname rewriting. Enable this option to use
+                            hostname-related macros.</entry>
+                    </row>
+                    <row>
+                        <entry>log_fifo_size()</entry>
+                        <entry>number</entry>
+                        <entry>100</entry>
+                        <entry>The number of lines fitting to the output queue</entry>
+                    </row>
+                    <row>
+                        <entry>log_msg_size()</entry>
+                        <entry>number</entry>
+                        <entry>8192</entry>
+                        <entry>Maximum length of a message in bytes.</entry>
+                    </row>
+                    <row>
+                        <entry>normalize_hostnames()</entry>
+                        <entry>yes or no</entry>
+                        <entry>no</entry>
+                        <entry>Normalize hostnames, which currently translates to converting them to
+                            lower case. (requires 1.9.9)</entry>
+                    </row>
+                    <row>
+                        <entry>owner()</entry>
+                        <entry>userid</entry>
+                        <entry>root</entry>
+                        <entry>The default owner of output files.</entry>
+                    </row>
+                    <row>
+                        <entry>mark()</entry>
+                        <entry>number</entry>
+                        <entry>1200</entry>
+                        <entry>An alias for the obsolete <parameter>mark_freq()</parameter> option,
+                            retained for compatibility with syslog-ng version 1.6.x.</entry>
+                    </row>
+                    <row>
+                        <entry>mark_freq()</entry>
+                        <entry>number</entry>
+                        <entry>1200</entry>
+                        <entry>The number of seconds between two <parameter>MARK</parameter>
+                            messages. <parameter>MARK</parameter> messages are generated when there
+                            was no message traffic to inform the receiver that the connection is
+                            still alive. Note that only local messages postpone the sending of the
+                                <parameter>MARK</parameter> message, relayed messages do not. If set
+                            to zero (<parameter>0</parameter>), no <parameter>MARK</parameter>
+                            messages are sent. </entry>
+                    </row>
+                    <row>
+                        <entry>perm()</entry>
+                        <entry>permission value</entry>
+                        <entry>0600</entry>
+                        <entry>The default permission for output files.</entry>
+                    </row>
+                    <row>
+                        <entry>recv_time_zone()</entry>
+                        <entry>time offset (e.g.: <parameter>+03:00</parameter>)</entry>
+                        <entry>local timezone</entry>
+                        <entry>Specifies the time zone associated with the incoming messages, if not
+                            specified otherwise in the message or in the source driver. See also
+                                <xref linkend="timezone_handling"/> and <xref
+                                linkend="example_timezones"/> for details.</entry>
+                    </row>
+                    <row>
+                        <entry>send_time_zone()</entry>
+                        <entry>time offset (e.g.: <parameter>+03:00</parameter>)</entry>
+                        <entry>local timezone</entry>
+                        <entry>Specifies the time zone associated with the messages sent by
+                            syslog-ng, if not specified otherwise in the message or in the
+                            destination driver. See <xref linkend="timezone_handling"/> for
+                        details.</entry>
+                    </row>
+                    <row>
+                        <entry>stats_freq()</entry>
+                        <entry>number</entry>
+                        <entry>600</entry>
+                        <entry>The period between two STATS messages in seconds. STATS are log
+                            messages sent by syslog-ng, containing statistics about dropped log
+                            messages. This parameter is identical to the
+                            <parameter>stats()</parameter> option of <emphasis>syslog-ng
+                            1.6</emphasis>. In <emphasis>syslog-ng 2.0</emphasis>,
+                                <parameter>stats()</parameter> is an alias of
+                                <parameter>stats_freq()</parameter>.</entry>
+                    </row>
+                    <row>
+                        <entry>sync() or sync_freq() (DEPRECATED)</entry>
+                        <entry>number</entry>
+                        <entry>0</entry>
+                        <entry>Obsolete aliases for <parameter>flush_lines()</parameter></entry>
+                    </row>
+                    <row>
+                        <entry>time_reap()</entry>
+                        <entry>number</entry>
+                        <entry>60</entry>
+                        <entry>The time to wait in seconds before an idle destination file is
+                            closed.</entry>
+                    </row>
+                    <row>
+                        <entry>time_reopen()</entry>
+                        <entry>number</entry>
+                        <entry>60</entry>
+                        <entry>The time to wait in seconds before a dead connection is
+                            reestablished.</entry>
+                    </row>
+                    <row>
+                        <entry>time_sleep()</entry>
+                        <entry>number</entry>
+                        <entry>0</entry>
+                        <entry>The time to wait in milliseconds between each invocation of the
+                                <parameter>poll()</parameter> iteration.</entry>
+                    </row>
+                    <row>
+                        <entry>ts_format()</entry>
+                        <entry>rfc3164, bsd, rfc3339, iso</entry>
+                        <entry>rfc3164</entry>
+                        <entry>Specifies the timestamp format used when syslog-ng itself formats a
+                            timestamp and nothing else specifies a format (e.g.:
+                            <parameter>STAMP</parameter> macros, internal messages, messages without
+                            original timestamps). See also <xref linkend="example_timezones"
+                        />.</entry>
+                    </row>
+                    <row>
+                        <entry>use_dns()</entry>
+                        <entry>yes, no, persist_only</entry>
+                        <entry>yes</entry>
+                        <entry>Enable or disable DNS usage. The <para>persist_only</para> option
+                            attempts to resolve hostnames locally from file (e.g., from
+                                <filename>/etc/hosts</filename>). syslog-ng blocks on DNS queries,
+                            so enabling DNS may lead to a Denial of Service attack. To prevent DoS,
+                            protect your syslog-ng network endpoint with firewall rules, and make
+                            sure that all hosts which may get to syslog-ng are resolvable.</entry>
+                    </row>
+                    <row>
+                        <entry>use_fqdn()</entry>
+                        <entry>yes or no</entry>
+                        <entry>no</entry>
+                        <entry>Add Fully Qualified Domain Name instead of short hostname.</entry>
+                    </row>
+                    <row>
+                        <entry>use_time_recvd() (DEPRECATED)</entry>
+                        <entry>yes or no</entry>
+                        <entry>no</entry>
+                        <entry>
+                            <para>This option controls how the time related macros are expanded in
+                                filename and content templates. If set to yes, then the non-prefixed
+                                versions of the time related macros (e.g.:
+                                <parameter>HOUR</parameter> instead of <parameter>R_HOUR</parameter>
+                                and <parameter>S_HOUR</parameter>) refer to the time when the
+                                message was received, otherwise it refers to the timestamp which is
+                                in the message. </para>
+                            <para>NOTE: The timestamps in the messages are generated by the
+                                originating host and might not be accurate. </para>
+                            <para>This option is deprecated as many users assumed that it controls
+                                the timestamp as it is written to logfiles/destinations, which is
+                                not the case. To change how messages are formatted, specify a
+                                content-template referring to the appropriate prefixed
+                                    (<parameter>S_</parameter> or <parameter>R_</parameter>) time
+                                macro. </para>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+    <section id="tlsoptions">
+        <title>TLS options</title>
+        <indexterm>
+            <primary>TLS</primary>
+            <secondary>reference</secondary>
+        </indexterm>
+        <para>The Premium Edition of syslog-ng is able to encrypt incoming and outgoing syslog
+            message flows using SSL/TLS, if the TCP transport protocol (the
+            <parameter>tcp()</parameter> or <parameter>tcp6()</parameter> sources or destination) is
+            used. </para>
+        <note>
+            <para>The format of the TLS connections used by syslog-ng Premium Edition is similar to
+                using syslog-ng and stunnel, but the source IP information is not lost.
+                <!--It is
+                <emphasis>NOT</emphasis> compatible with latest standardization efforts of the IETF,
+            although support for that protocol might be added to syslog-ng at some later point.-->
+            </para>
+        </note>
+        <para>To encrypt connections, use the <parameter>tls()</parameter> option in the source and
+            destination statements. </para>
+        <para>The tls() option can include the following settings: </para>
+        <table>
+            <title>List of TLS options</title>
+            <tgroup cols="4">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Accepted values</entry>
+                        <entry>Default</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>ca_dir()</entry>
+                        <entry>Directory name</entry>
+                        <entry>none</entry>
+                        <entry>Name of a directory, that contains a set of trusted CA certificates
+                            in PEM format. The CA certificate files has to be named after the 32 bit
+                            hash of the subject's name. This naming can be created using the
+                            c_rehash utility in openssl. </entry>
+                    </row>
+                    <row>
+                        <entry>cert_file()</entry>
+                        <entry>Filename</entry>
+                        <entry>none</entry>
+                        <entry>Name of a file, that contains an X.509 certificate in PEM format,
+                            suitable as a TLS certificate, matching the private key. </entry>
+                    </row>
+                    <row>
+                        <entry>crl_dir()</entry>
+                        <entry>Directory name</entry>
+                        <entry>none</entry>
+                        <entry>Name of a directory that contains the Certificate Revocation Lists
+                            for trusted CAs. Similarly to <parameter>ca_dir()</parameter> files, use
+                            the 32bit hash of the name of issuing CAs as filenames. </entry>
+                    </row>
+                    <row>
+                        <entry>key_file()</entry>
+                        <entry>Filename</entry>
+                        <entry>none</entry>
+                        <entry>Name of a file, that contains an unencrypted private key in PEM
+                            format, suitable as a TLS key. </entry>
+                    </row>
+                    <row>
+                        <entry>peer_verify()</entry>
+                        <entry>optional-trusted | optional-untrusted | required-trusted |
+                            required-untrusted</entry>
+                        <entry>required-trusted</entry>
+                        <entry>Verification method of the peer, the four possible values is a
+                            combination of two properties of validation: whether the peer is
+                            required to provide a certificate (required or optional prefix), and
+                            whether the certificate provided needs to be trusted or not. </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+</chapter>

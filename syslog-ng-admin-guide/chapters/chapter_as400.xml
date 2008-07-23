@@ -1,0 +1,1621 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"[  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+%entities;]>  
+<chapter id="chapter_as400">
+    <title>Collecting logs from IBM System i</title>
+    <indexterm>
+        <primary>IBM System i</primary>
+    </indexterm>
+    <indexterm>
+        <primary>AS/400</primary>
+    </indexterm>
+    <indexterm>
+        <primary>IBM iSeries</primary>
+    </indexterm>
+    <indexterm>
+        <primary>syslog-ng Agent</primary>
+        <secondary>for IBM System i</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>syslog-ng Agent for IBM System i</primary>
+    </indexterm>
+    <!-- FIXME: mi ez az agent: egy kulon nativ progi, ami az as400 sajat logjait tovabbitani tudja egy helyi vagy kulso syslog szervernek.
+     a syslog-ng futhat a PASE-ban, es az ott futo alkalmazasok logjait ossze tudja gyujteni az agent nelkul is.-->
+    <para>The syslog-ng Agent for IBM System i application provides extended support for sending
+        security, operator, server, and user log information to a syslogd or syslog-ng server, or
+        any syslogd or syslog-ng compatible server. The syslog-ng Agent for IBM System i (also
+        called Alliance LogAgent for System i) application can help you bring your IBM System i into
+        your Security Information Management strategy to meet regulatory compliance requirements and
+        to properly monitor for potential security breaches.</para>
+    <para>
+        <indexterm>
+            <primary>syslog-ng Agent for IBM System i</primary>
+            <secondary>supported output formats</secondary>
+        </indexterm> The syslog-ng Agent for IBM System i application can output messages using the
+        standard syslog format and the ArcSight Common Event Format. The ArcSight ESM software
+        product is a security information and event management solution that uses a special log
+        format called the Common Event Format (CEF). </para>
+    <section id="system-i_sources">
+        <title>Supported sources</title>
+        <indexterm>
+            <primary>syslog-ng Agent for IBM System i</primary>
+            <secondary>supported log sources</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>System i security audit journal</primary>
+        </indexterm>
+        <indexterm>
+            <primary>QAUDJRN</primary>
+        </indexterm>
+        <para>The syslog-ng Agent for IBM System i application can read logs from the following
+            sources:</para>
+        <itemizedlist>
+            <listitem>
+                <para><emphasis>System audit journal</emphasis>: The system audit journal QAUDJRN
+                    can be configured to capture a large number of security and system management
+                    events. The syslog-ng Agent for IBM System i application can capture the entries
+                    in the QAUDJRN journal in real time, format them to syslog or CEF format, and
+                    send them to a syslog server. The syslog server can be running on the System i
+                    or any remote server. The IBM System i Security Reference Manual provides
+                    information on how to change system values, user profiles, and objects to
+                    capture various system change and security events.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>System i operator messages</emphasis>: The system operator message
+                    queue QSYSOPR receives application and system messages. The syslog-ng Agent for
+                    IBM System i application can capture the messages in the QSYSOPR message queue,
+                    format them to the syslog or CEF standard, and send them to a syslog server. The
+                    syslog server can be running on the System i or any remote server.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>User-generated logs</emphasis>: The syslog-ng Agent for IBM System i
+                    application provides command and API interfaces to allow a user program to
+                    create syslog or CEF event records. User applications can provide simple text
+                    values for messages and specify the priority and facility ID for the message.
+                    Any user application can be enabled for syslog or CEF application messages. See
+                        <xref linkend="system-i_api"/> for details.</para>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="system-i_filtering">
+        <title>Filtering log entries</title>
+        <indexterm>
+            <primary>syslog-ng Agent for IBM System i</primary>
+            <secondary>filtering</secondary>
+        </indexterm>
+        <para>The syslog-ng Agent for IBM System i application gives you the ability to filter the
+            system audit journal (QAUDJRN) entries that you want to send to a central log server.
+            This can reduce the amount of network traffic and the type of events you transmit to the
+            server. A complete list is available of log system security audit journal event types
+            that the security administrator can edit the events to suppress transmission to the
+            central log server. </para>
+        <!-- FIXME hogyan? link! -->
+    </section>
+    <section>
+        <!-- FIXME mashova -->
+        <title>Running a syslog-ng server on System i</title>
+        <para>Patrick Townsend &amp; Associates has partnered with Balabit IT Security to bring
+            the syslog-ng product to the System i platform. The syslog-ng PE application can be
+            installed and run as a service directly in the Portable Application Solutions
+            Environment (PASE) of the System i platform. </para>
+    </section>
+    <section id="system-i_installation">
+        <title>Installing the syslog-ng Agent for IBM System i</title>
+        <indexterm>
+            <primary>syslog-ng Agent for IBM System i</primary>
+            <secondary>installation</secondary>
+        </indexterm>
+        <para>The syslog-ng Agent for IBM System i product runs on any version of IBM OS/400 or
+            i5/OS from V5R1 and later. </para>
+        <note>
+            <para>Before you can configure and use the syslog-ng agent, you must enter a temporary
+                or permanent license code during the installation. Please contact your software
+                supplier to receive the license code.</para>
+        </note>
+        <section>
+            <title>Installing from an Internet download</title>
+            <!-- FIXME procba -->
+            <para>When you download the Alliance product from the web site, you must unzip the
+                product. Your software provider will supply a pass phrase for extracting the files.
+                See the Readme.txt file in the download for instructions on how to copy the software
+                to the System i using FTP. Once you transfer the Save file to the System i you will
+                restore the library <filename>ALLSYL100</filename>.</para>
+        </section>
+        <section>
+            <title>Installing from a product CD</title>
+            <!-- FIXME procba -->
+            <para>If you received the product on CD you can use the Load and Run
+                (<command>LODRUN</command>) command to install the software:</para>
+            <para>
+                <command>Lodrun dev(opt01) dir(‘/’)</command>
+            </para>
+            <para>A menu will be displayed that allows you to select the Alliance Syslog product for
+                installation.</para>
+        </section>
+        <section>
+            <title>Upgrading the syslog-ng Agent for IBM System i</title>
+            <indexterm>
+                <primary>syslog-ng Agent for IBM System i</primary>
+                <secondary>upgrading</secondary>
+            </indexterm>
+            <!-- FIXME hogy hivjuk az agentet, ha a telepito maskepp hivja? -->
+            <para>To upgrade the product, complete the following steps: </para>
+            <procedure>
+                <title>Upgrading the syslog-ng Agent for IBM System i</title>
+                <step>
+                    <para>End the ALLSYL100 subsystem: <command>Endsbs sbs(allsyl100)
+                        option(*immed)</command></para>
+                </step>
+                <step>
+                    <para>Rename the library: <command>Rnmobj obj(allsyl100) objtype(*lib)
+                            newobj(allsylold)</command></para>
+                </step>
+                <step>
+                    <para>Install the new version using the Internet download or Alliance product CD
+                        instructions above (see <xref linkend="system-i_installation"/>).</para>
+                </step>
+                <step>
+                    <!-- FIXME screenshot -->
+                    <para>Use the <guibutton>Apply Release Upgrade</guibutton> option on the
+                        Installation menu to copy your configuration information from the old
+                        library to the new version.</para>
+                </step>
+            </procedure>
+            <section>
+                <title>Reverting to a previous version after an upgrade</title>
+                <indexterm>
+                    <primary>syslog-ng Agent for IBM System i</primary>
+                    <secondary>downgrading</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>syslog-ng Agent for IBM System i</primary>
+                    <secondary>reverting to older version</secondary>
+                </indexterm>
+                <para>You can revert to a previous version of the product by renaming the new
+                    library to a save name, and then renaming the old version to the library
+                    ALLSYL100. This will restore the previous version.</para>
+            </section>
+        </section>
+    </section>
+
+    <section id="system-i_configuring">
+        <title>Configuring System i security auditing</title>
+        <indexterm>
+            <primary>System i</primary>
+            <secondary>security auditing</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>CHGSECAUD</primary>
+        </indexterm>
+        <indexterm>
+            <primary>QAUDJRN</primary>
+        </indexterm>
+        <para>The System i can log a wide variety of security events. You may wish to audit all
+            events, or a subset of security events. Please consult the <emphasis>IBM System i
+                Security Guide</emphasis> for a description of the events you can log.</para>
+        <para>To enable security auditing, use the <command>CHGSECAUD</command> command. The Change
+            Security Audit (CHGSECAUD) command performs many of the steps to implement security
+            audit through one command step. This command will create the journal receiver, the
+            QAUDJRN journal, and change system values to enable security auditing. The command
+            provides a fast way to implement system I security logging. If you use this command to
+            start security auditing you should review the <emphasis>IBM System i Security
+            Guide</emphasis> to determine if there are other security options you would like to
+            enable. You should especially review the Change User Audit (CHGUSRAUD) command and
+            consider logging security administrator user profiles. See <xref
+                linkend="system-i_user_auditing"/> and <xref linkend="system-i_object_auditing"/>.</para>
+        <note>
+            <para>If you will be sending system audit journal information to syslog-ng you may wish
+                to delete older journal receivers before starting the process. The syslog-ng Agent
+                collects journal entries from the beginning of the current chain of journal
+                receivers. The date of all log entries is the date of the actual journal entry, but
+                there may be a lot of historical information that you do not want to process. You
+                should consider making a permanent backup of system audit journals before deleting
+                them. Use the Work With Journal Attributes (WRKJRNA) command to view the journal
+                receivers for the QAUDJRN journal.</para>
+        </note>
+        <section id="system-i_security_audit_manual">
+            <title>Enabling security auditing manually</title>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>enabling security auditing</secondary>
+            </indexterm>
+            <para>If you want to manually enable security auditing instead of using the
+                    <command>CHGSECAUD</command> command, complete the following steps.</para>
+            <procedure id="proc_as400_security_audit_manual">
+                <step>
+                    <indexterm>
+                        <primary>System i</primary>
+                        <secondary>enabling security auditing manually</secondary>
+                    </indexterm>
+                    <para>Create the journal receiver for the security journal. It is recommended
+                        that you create a library to contain the journal receiver, and then create
+                        the receiver using a 4 digit sequence number in the name. Issue the
+                        following commands:</para>
+                    <synopsis>
+CRTLIB LIB(AUDJRN) TEXT(‘AUDIT JOURNALS’)
+CRTJRNRCV JRNRCV(AUDJRN/AUDRCV0001)
+THRESHOLD(100000) AUT(*EXCLUDE)
+TEXT(’Auditing Journal Receiver’)
+</synopsis>
+                </step>
+                <step>
+                    <para>Create the journal QAUDJRN in the system library QSYS and refer to the
+                        journal receiver you created above. It is recommended that you allow the
+                        system to manage the receivers. Issue the following commands:</para>
+                    <synopsis>
+CRTJRN JRN(QSYS/QAUDJRN) +
+JRNRCV(JRNLIB/AUDRCV0001) +
+MNGRCV(*SYSTEM)
+DLTRCV(*NO) +
+AUT(*EXCLUDE)
+TEXT(’Auditing Journal’)
+</synopsis>
+                    <warning>
+                        <para>The system will not automatically delete security audit journals. You
+                            will need to periodically backup and delete old journals.</para>
+                    </warning>
+                </step>
+                <step>
+                    <para>Change system values to enable security logging. You can now use the Work
+                        With System Values (WRKSYSVAL) command to change the QAUDLVL and QAUDLVL2
+                        settings. These settings are used to select the security audit features and
+                        begin security logging. Please see the <emphasis>IBM System i Security
+                        Guide</emphasis> for a complete description of the audit options.</para>
+                </step>
+            </procedure>
+        </section>
+        <section id="system-i_user_auditing">
+            <title>Enabling user auditing</title>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>enabling user auditing</secondary>
+            </indexterm>
+            <para>You can use the Change User Audit (CHGUSRAUD) command to enable the logging of
+                specific user activity. You should consider enabling user auditing for any user with
+                special privileges such as QSECOFR and any user with *SECADM and *AUDIT
+                capabilities. </para>
+        </section>
+        <section id="system-i_object_auditing">
+            <title>Enabling object auditing</title>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>enabling user auditing</secondary>
+            </indexterm>
+            <para>You may wish to enable specific object auditing using the Change Object Audit
+                (CHGOBJAUD), Change DLO audit (CHGDLOAUD), and Change Audit (CHGAUD) commands. These
+                commands can be use to enable the monitoring of specific objects on your
+            system.</para>
+        </section>
+
+        <section id="system-i_agent_configuration">
+            <title>Configuring syslog-ng Agent for IBM System i</title>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>configuring the syslog-ng Agent</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>syslog-ng Agent</primary>
+                <secondary>System i configuration</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>configuring syslog-ng</primary>
+                <secondary>on IBM System i</secondary>
+            </indexterm>
+            <para>The syslog-ng Agent for IBM System i can be configured fro a native System i
+                configuration interface. Configuring the syslog-ng Agent application involves
+                configuring the global options for collecting and sending syslog messages, and
+                configuring the communications client application to talk to the syslog server.</para>
+            <para>Issue the following commands to add the ALLSYL100 library to your library list and
+                display the main menu of the syslog-ng Agent for IBM System i: </para>
+            <synopsis>
+ADDLIBLE ALLSYL100
+GO SYMAIN
+</synopsis>
+            <figure>
+                <title>The main menu of syslog-ng Agent for IBM System i</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center" fileref="systemi_main_menu.png"/>
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" scale="50" fileref="&imgroot;/systemi_main_menu.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
+        </section>
+        <section id="system-i_configuration">
+            <title>Configuring Alliance Syslog for System i</title>
+
+            <para>Select the option for Configuration, then select the option to Configure Alliance
+                Syslog. The following panel is displayed:</para>
+
+            <figure>
+                <title>Global options of syslog-ng Agent for IBM System i</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center" fileref="systemi_global_options.png"
+                        />
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" scale="50" fileref="&imgroot;/systemi_global_options.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis>Enable diagnostic logging</emphasis>: Enter 1 for Yes to enable
+                        diagnostic logging. When diagnostic logging is enabled the job descriptions
+                        are set for maximum job logs. Enter 2 for No to disable application logging.
+                    </para>
+                </listitem>
+
+                <listitem>
+                    <para><emphasis>Enable QAUDJRN messages</emphasis>: Enter 1 for Yes to enable
+                        sending QAUDJRN messages to a syslog server. When enabled the system
+                        security audit journal reader job will be started in the Alliance subsystem
+                        ALLSYL100. Enter 2 for No to not send audit journal entries to the syslog
+                        server.</para>
+                </listitem>
+
+                <listitem>
+                    <para><emphasis>Enable QSYSOPR messages</emphasis>: Enter 1 for Yes to enable
+                        sending QSYSOPR messages to a syslog server. Enter 2 for No to not send
+                        QSYSOPR messages to the syslog server.</para>
+                </listitem>
+
+                <listitem>
+                    <para><emphasis>Message queue name</emphasis>: If you select the option to send
+                        QSYSOPR messages to a syslog server enter the name of the message queue. The
+                        default is QSYSOPR.</para>
+                </listitem>
+
+                <listitem>
+                    <para><emphasis>Format</emphasis>: Enter option 1 to create log messages in the
+                        Syslog format (RFC 3164). Enter option 2 to create log messages in Common
+                        Event Format (CEF).</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section id="system-i_destination">
+            <title>Configuring communication between the syslog-ng Agent and the server</title>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>destination server</secondary>
+            </indexterm>
+            <para>The syslog-ng Agent for IBM System i can send the log messages to a syslog or
+                syslog-ng server or relay destination. The server can be a remote server, or it can
+                run in the PASE of the System i. To configure the destination server, start the
+                configuration interface of the syslog-ng Agent (<command>GO SYMAIN</command>) and
+                select <guimenu>Configuration</guimenu> > <guimenu>Work With TCP Clients</guimenu>.
+                The following panel is displayed:</para>
+            <figure>
+                <title>Configuring communication between the syslog-ng Agent and the server</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center" fileref="systemi_global_options.png"
+                        />
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" scale="50" fileref="&imgroot;/systemi_global_options.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para>Three sample configurations are displayed:</para>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis>SYSLOG</emphasis>: Send log messages to a syslog-ng server using
+                        a standard TCP connection.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>SYSLOGD</emphasis>: Send log messages to a syslog-ng server
+                        using a standard UDP connection.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>SYSLOGSSL</emphasis>: Send log messages to a syslog-ng Premium
+                        Edition server using an SSL-encrypted connection.</para>
+                </listitem>
+            </itemizedlist>
+            <para>Use option 2 to change a configuration. Use option 3 to copy the configuration to
+                a new definition. Use option 4 to delete a configuration. Use option 6 to print the
+                configuration details.</para>
+            <para>When you select option 2 to change the TCP client configuration the following
+                panel is displayed:</para>
+            <figure>
+                <title>Configuring the destination</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center"
+                            fileref="systemi_configuring_destination.png"/>
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" scale="50"
+                            fileref="&imgroot;/systemi_configuring_destination.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para>The following parameters can be configured</para>
+            <!-- FIXME: proc, mit allitson be kulonbozo helyzetekben, ssl-nel a certekkel mi van, stb. -->
+            <table>
+                <title>Connection parameters of syslog-ng Agent for IBM System i</title>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Attribute</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>Client name</entry>
+                            <entry>The name of this configuration.</entry>
+                        </row>
+                        <row>
+                            <entry>Description</entry>
+                            <entry>Enter a description for this configuration.</entry>
+                        </row>
+                        <row>
+                            <entry>Status</entry>
+                            <entry>Enter 1 for Active or 2 for Inactive. When the status is inactive
+                                the TCP client application will not be enabled.</entry>
+                        </row>
+                        <row>
+                            <entry>Auto start client</entry>
+                            <entry>Enter 1 for Yes to automatically start the TCP client
+                                communications when the ALLSYL100 subsystem starts. Enter 2 for No
+                                to not automatically start the TCP client. Normally you will want to
+                                automatically start the TCP client application when the subsystem
+                                starts.</entry>
+                        </row>
+                        <row>
+                            <entry>Remote host name</entry>
+                            <entry>Enter the DNS name for the syslog server. Use the IP address
+                                field if you do not have a DNS name for the server.</entry>
+                        </row>
+                        <row>
+                            <entry>IP address</entry>
+                            <entry>Enter the IP address of the syslog server if you do not have a
+                                DNS name.</entry>
+                        </row>
+                        <row>
+                            <entry>Remote port number</entry>
+                            <entry>Enter the port number for the syslog server. Consult with your
+                                network administrator for the port number. This will be the port
+                                number for the source syslog TCP service.</entry>
+                        </row>
+                        <row>
+                            <entry>Application logging</entry>
+                            <entry>Enter 1 for Yes to enable application logging. Enter 2 for No to
+                                not enable application logging. When this option is enabled detailed
+                                log records are written to the file ALLOGA. These log entries are
+                                not sent to the syslog server.</entry>
+                        </row>
+                        <row>
+                            <entry>SSL Application ID</entry>
+                            <entry>If this client application will use secure SSL/TLS communications
+                                enter an Application ID. You can use the IBM Digital Certificate
+                                Manage to create certificates and associated Application
+                            Ids.</entry>
+                        </row>
+                        <row>
+                            <entry>SSL certification passthrough</entry>
+                            <entry>Enter 1 for Yes to enable certificate passthrough. Enter 2 for No
+                                to not allow certificate passthrough. Enabling certificate
+                                passthrough will disable certificate validity checking, but will not
+                                allow un-secure connections.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+        <section>
+            <title>Work with security types</title>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>security types</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>custom journal entries</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>user-created journal entries</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>QAUDJRN</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>QAUDJRN</primary>
+            </indexterm>
+            <para>Use this option to define user-created QAUDJRN journal entries. When a user
+                application sends an entry to the security journal QAUDJRN a user-defined journal
+                entry type is used. This is a two-character value and is different than the journal
+                entry types that are created by i5/OS. In order to report these events you need to
+                define them with this option and provide text and severity values.</para>
+            <figure>
+                <title>Configuring security types</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center" fileref="systemi_security_types.png"
+                        />
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" scale="50" fileref="&imgroot;/systemi_security_types.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <table>
+                <title>Parameters of user-created journal entries</title>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Attribute</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>Description</entry>
+                            <entry>Enter a description for this journal entry type</entry>
+                        </row>
+                        <row>
+                            <entry>Type</entry>
+                            <entry>The type indicates whether the event is a system provided event
+                                or a user defined event. This is an output field only.</entry>
+                        </row>
+                        <row>
+                            <entry>Security text</entry>
+                            <entry>Enter the text to be used with the log message. This text should
+                                be a brief description of the event type.</entry>
+                        </row>
+                        <row>
+                            <entry>Syslog severity</entry>
+                            <entry>Enter a value for the severity of this event type. The lower the
+                                value higher the severity level of the message.</entry>
+                        </row>
+                        <row>
+                            <entry>Syslog facility</entry>
+                            <entry>Enter a facility ID for this event type. See the documentation in
+                                RFC 3164 for information on facility Ids. Since the priority of an
+                                event is the result of adding the severity by the facility, the
+                                lower the facility number the higher the severity of the
+                            message.</entry>
+                        </row>
+                        <row>
+                            <entry>CEF severity</entry>
+                            <entry>If you are reporting log events in the Common Event Format enter
+                                the CEF severity level. The higher the severity number the more
+                                severe the event.</entry>
+                        </row>
+                        <row>
+                            <entry>CEF signature</entry>
+                            <entry>Enter a signature number for this event type. Alliance uses
+                                signature values from 1000 to 1999 so you should avoid signature
+                                values in this range.</entry>
+                        </row>
+                        <row>
+                            <entry>Send to log server</entry>
+                            <entry>Enter 1 for Yes to send this type of event to a log server. Enter
+                                2 for No to suppress sending this event type to the log server. The
+                                default is Yes.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+        <section id="system-i_start_subsystem">
+            <title>Starting the Alliance subsystem</title>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>starting the subsystem</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>ALLSYL100 subsystem</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>ALLSYL100</primary>
+            </indexterm>
+            <!-- FIXME glossarybe a fontosabb dolgokat! -->
+            <para>After configuring the global options and a TCP communications client, you must
+                start the Alliance subsystem ALLSYL100 to start collecting logs. On the
+                configuration menu take the option to <guimenu>Start Syslog Subsystem</guimenu>. The
+                following panel is displayed:</para>
+            <figure>
+                <title>Start sending logs to the syslog-ng server</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center" fileref="systemi_start.png"/>
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" scale="50" fileref="&imgroot;/systemi_start.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para>Press <guibutton>Enter</guibutton> to start the subsystem. Depending on the
+                configuration options you have selected, the following jobs will appear in the
+                subsystem:</para>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis>OPER_MESG</emphasis>: extracts messages from QSYSOPR and sends
+                        to the internal Syslog queue.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>QAUDJRN</emphasis>: extracts audit journal entries and sends to
+                        the internal Syslog queue.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>SYSLOG (2 instances)</emphasis>: receives Syslog messages from
+                        the Syslog queue and uses TCP or SSL/TLS TCP to send to a local or remote
+                        instance of Syslog-ng server.</para>
+                </listitem>
+            </itemizedlist>
+            <para>You can use options on the Configuration menu to view active jobs in the Alliance
+                ALLSYL100 subsystem, and to end the subsystem. You can also end the subsystem
+                ALLSYL100 manually using the End Subsystem (<command>ENDSBS</command>) command with
+                the *IMMED option.</para>
+            <note>
+                <para>The first time you start the Alliance subsystem the audit journal and operator
+                    message queue processes will begin collecting information starting from the
+                    earliest message. If there is a substantial amount of history in the journal or
+                    message queue it may take time for these messages to be sent to the syslog-ng
+                    server.</para>
+            </note>
+            <section id="system-i_start_subsystem_automatic">
+                <title>Automating the start of the Alliance subsystem ALLSYL100</title>
+                <para>Once you have the configuration the way you want you can automate the start of
+                    the ALLSYL100 subsystem by modifying the IPL start up program. The name of the
+                    IPL start up program is stored in system value QSTRUPPGM. The program is usually
+                    QSTRUP in library QGPL. You can modify this program to add the following
+                    statements to start the ALLSYL100 subsystem:</para>
+                <synopsis>
+QSYS/STRSBS SBSD(ALLSYL100/ALLSYL100)
+MONMSG MSGID(CPF0000)
+</synopsis>
+                <para>You should place these statements after any commands that start the TCP/IP
+                    network services.</para>
+                <para>If you do not have the source for the QSTRUP program you can retrieve the
+                    source using the Retrieve CL Source (<command>RTVCLSRC</command>)
+                command.</para>
+            </section>
+        </section>
+        <section>
+            <title>Application maintenance</title>
+            <para>The application maintenance option can be used to purge information from the
+                internal diagnostic logs, historical information, and to re-organize any physical
+                files used by the syslog-ng Agent for IBM System i application. From the main menu
+                select <guimenu>Application Maintenance</guimenu>, then option 1 to run maintenance.
+                The following panel is displayed:</para>
+            <figure>
+                <title>Application maintenance</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center" fileref="systemi_maintenance.png"/>
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" scale="50" fileref="&imgroot;/systemi_maintenance.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para>Enter the date in YYYYMMDD format into the <guilabel>Retain history after
+                date</guilabel> field to indicate the retention date. Log and historical information
+                more recent than this date will be retained, older data will be deleted. All
+                physical files will be re-organized. Note that you should run this option when the
+                Alliance subsystem ALLSYL100 is not active.</para>
+            <!-- FIXME hogy allitja le? linket! ez a QAUDJRN-bol is torli a regi dolgokat? akkor a kkorabbi warningbol kell ide egy link-->
+            <para>To clear Alliance diagnostic log information manually, issue the following
+                command:</para>
+            <indexterm>
+                <primary>System i</primary>
+                <secondary>clearing logs manually</secondary>
+            </indexterm>
+            <synopsis>
+clrpfm file(allsyl100/alloga)</synopsis>
+            <note>
+                <para>This command only clears the internal Alliance logs and does not delete any
+                    syslog information. </para>
+            </note>
+        </section>
+    </section>
+    <section id="system-i_view_logs">
+        <title>View application logs</title>
+        <para>The View Application Logs option can be used to view internal Alliance application
+            logs such as the TCP or SSL/TSL TCP application log. From the main menu take the option
+            for Inquiry, then option 1 to view the log. The following panel is displayed:</para>
+        <figure>
+            <title>Viewing application logs</title>
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata format="PNG" align="center" fileref="systemi_view_logs.png"/>
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata format="PNG" scale="50" fileref="&imgroot;/systemi_view_logs.png"/>
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <para>Use option 5 to view the log or option 6 to print the log. For large logs it is
+            recommended that you use option 6 to print the log and then use the Work With Spooled
+            Files (<command>WRKSPLF</command>) command to view the report</para>
+        <note>
+            <para>The application logs only contain internal Alliance diagnostic information and do
+                not contain Syslog information that has been collected.</para>
+        </note>
+    </section>
+    <section id="system-i_server_configuration">
+        <title>Configuring IBM System i Servers</title>
+        <!-- FIXME ez nem agent specifikus, a syslog*ng oldalon kell beallitani! -->
+        <para>This section describes how to enable logging on some applications running on the
+            System i.</para>
+        <section id="system-i_apache">
+            <title>Configuring Apache server logs</title>
+            <para>To enable logging in the Apache server complete the following steps:</para>
+            <procedure>
+                <title>Forwarding Apache server logs from System i</title>
+                <step>
+                    <para>Use the Work With Links (<command>WRKLNK</command>) command to edit the
+                            <filename>/www/(server-name)/conf/httpd_conf</filename> file.</para>
+                </step>
+                <step>
+                    <para>Add a <parameter>“LogCycle”</parameter> directive in order to force the
+                        Apache server to create one file:</para>
+                    <synopsis>            
+                        LogCycle Off
+                        CustomLog logs/access_log combined
+                    </synopsis>
+                    <para>Without this directive the log files will have an appended time stamp and
+                        the syslog-ng application will not be able to process them.</para>
+                </step>
+                <step>
+                    <para>Stop and re-start the Apache web server instance with the Start TCP Server
+                            (<command>STRTCPSVR</command>) command.</para>
+                </step>
+                <step>
+                    <para>Configure a source to read the file in syslog-ng. Apache logs will
+                        generally be placed in the <filename>/www/(server-name)/logs</filename>
+                        directory. See <xref linkend="chapter_configuration"/> for details.</para>
+                </step>
+            </procedure>
+        </section>
+        <section id="system-i_openssh">
+            <title>OpenSSH server logs</title>
+            <para>To enable logging in the OpenSSH server, complete the following steps: </para>
+            <procedure>
+                <title>Forwarding OpenSSH server logs from System i</title>
+                <step>
+                    <para>Use the Work With Links (<command>WRKLNK</command>) command to edit the
+                            <filename>/QopenSys/QIBM/
+                            /ProdData/SC1/OpenSSH/openssh-3.5p1/etc/sshd_conf</filename>
+                    file.</para>
+                </step>
+                <step>
+                    <para>Edit the file like this:</para>
+                    <synopsis>            
+SyslogFacility AUTH
+sLogLevel INFO
+                    </synopsis>
+                    <note>
+                        <para>Consult the documentation on the OpenSSH web site (<ulink
+                                url="http://www.openssh.org/">http://www.openssh.org</ulink>) for
+                            other syslog options.</para>
+                    </note>
+                </step>
+                <step>
+                    <para> Create an empty log file. Sign on as QSECOFR, use the
+                        <command>STRQSH</command> shell, and issue the following commands:</para>
+                    <synopsis>
+mkdir /var/adm 
+touch /var/adm/sshlog
+</synopsis>
+                </step>
+                <step>
+                    <para>Configure a source to read the <filename>/var/adm/sshlog</filename> file
+                        in syslog-ng. See <xref linkend="chapter_configuration"/> for
+                    details.</para>
+                </step>
+            </procedure>
+        </section>
+        <section>
+            <title>Other server logs</title>
+            <para>A number of other open systems and proprietary applications can be deployed on the
+                IBM System i including MySQL, PHP, Perl, and others. Most of these types of
+                applications can be enabled to collect system logs. Please consult the documentation
+                for these servers on the steps to take to start collecting logs. Once logging is
+                active you can configure a source statement in syslog-ng to capture the logs.</para>
+        </section>
+    </section>
+    <section id="system-i_troubleshooting">
+        <title>Troubleshooting the syslog-ng Agent for IBM System i</title>
+        <para>In the event you have difficulties with an Alliance Syslog application, the following
+            procedures may be helpful.</para>
+        <section>
+            <title>System operator messages</title>
+            <para>When Alliance encounters a problem processing a Syslog transaction it may send a
+                message to the system operator message queue. Use the <command>DSPMSG</command>
+                command to view these messages. Many of the messages have second level text. You can
+                use F1 or the HELP key to view this text.</para>
+
+        </section>
+        <section>
+            <title>Application logging</title>
+            <para>The Alliance TCP client applications will create extra diagnostic information when
+                the option for application logging is enabled. You should restart the subsystem when
+                changing the logging option. When application logging is enabled there will be
+                additional information written to the job log and to output spooled files in the
+                job.</para>
+        </section>
+        <section>
+            <title>Cannot install the product from CD</title>
+
+            <para>If you have a product CD with the LogAgent product, use the Load and Run (LODRUN)
+                command to install the product: <command>Lodrun dev(opt01) dir(‘/’)</command></para>
+
+            <para>Be sure that you are signed on as QSECOFR or similar profile that has authority to
+                restore objects from the optical CD. You can also install the product from an
+                Internet download. Contact your software provider for information on downloading the
+                product.</para>
+        </section>
+
+
+        <section>
+            <title>Logs are not being transferred to my log server</title>
+
+            <para>The subsystem ALLSYL100 must be started before logs will transfer. If the
+                subsystem is not started display the main menu SYMAIN and use option 2
+                (Configuration), then option 10 (Start the subsystem) to start the subsystem. Use
+                option 12 on this menu to view the active jobs in the subsystem.</para>
+
+            <para>You must configure at least one communications client in order to send logs to
+                your log server. Use the Configuration menu option to configure TCP clients.
+                Configure one TCP client (syslog, syslog-ng, or syslog-ng with SSL/TLS) and restart
+                the subsystem ALLSYL100 to activate the client. From the Configuration menu select
+                the option to Configure LogAgent. Be sure that you have enabled the option to send
+                security audit journal QAUDJRN messages. After enabling the option to send the
+                security journal messages, restart the ALLSYL100 subsystem.</para>
+        </section>
+
+        <section>
+            <title>I get a license error when trying to use configuration options</title>
+
+            <para>If error messages appear on your display or in the system operator message queue
+                about a license failure, you should contact your software provider for a temporary
+                or permanent license key. These keys are entered on the Installation menu. If you
+                upgrade your System i operating system or hardware you may need to contact your
+                software supplier for a new license key.</para>
+        </section>
+
+
+        <section>
+            <title>The product no longer works after a system upgrade</title>
+
+            <para>The LogAgent license key is tied to the system serial number, model number,
+                processor group, and logical partition number. If you upgrade your System i software
+                or hardware you may need to receive a new license key from your software
+            provider.</para>
+        </section>
+
+
+        <section>
+            <title>Security events are not being captured</title>
+
+            <para>The IBM security audit journal (QAUDJRN) is not automatically created by the
+                operating system. You must create the journal receivers and journal manually. For
+                information on creating the QAUDJRN journal please see the IBM iSeries Security
+                Reference manual. This IBM manual provides practical suggestions on creating and
+                managing the journal.</para>
+
+            <para>Security events will not be captured even after creating the QAUDJRN journal until
+                you change the security audit system values. There are multiple system values that
+                must be enabled before journal entries are captured. See the LogAgent Reference
+                manual and IBM iSeries Security Reference manual for information on changing the
+                system values for audit collection.</para>
+        </section>
+
+
+        <section>
+            <title>I am not capturing information about our security administrators</title>
+
+            <para>You must enable user security journal collection using the Change User Audit
+                (CHGUSRAUD) command in order to capture detailed information about security
+                administrators, or other users. See the IBM iSeries Security Reference manual for
+                information about capturing user information.</para>
+        </section>
+
+
+        <section>
+            <title>I am not capturing information about programs and files</title>
+
+            <para>If you have data in sensitive files and you want to capture information about the
+                use of the file, use the Change Object Audit (CHGOBJAUD) command to enable
+                information collection on a file or program. See the IBM iSeries Security Reference
+                manual for more information about this command.</para>
+        </section>
+
+        <section>
+            <title>I am not capturing QSYSOPR messages</title>
+
+            <para>From the Configuration menu select the option to Configure LogAgent. Be sure that
+                you have enabled the option to send system operator messages (QSYSOPR message
+                queue). After enabling the option to send the operator messages, restart the
+                ALLSYL100 subsystem.</para>
+        </section>
+
+
+        <section>
+            <title>I would like to turn off some audit journal events</title>
+
+            <para>You can filter the security audit journal events by changing the LogAgent
+                configuration settings using the Work With Security Types option on the
+                configuration menu. Change the option for Send To Log Server to 2 for No.</para>
+        </section>
+
+
+        <section>
+            <title>Where do I find error messages?</title>
+
+            <para>Alliance will write error messages to the system operator message queue QSYSOPR.
+                Use the Display Message (DSPMSG) command to view these messages. For more detailed
+                information about a communications error, you can enable application logging on the
+                TCP client definition. When you restart the TCP client it will write verbose
+                information to the log file ALLOGA. You can use the Inquiry menu to view and print
+                these logs.</para>
+        </section>
+    </section>
+</chapter>
+<!--FIXME appendixex kulon fileba a konyv vegere 
+    <appendix>        
+        <title>QAUDJRN entry type mappings for CEF</title>
+
+        <para>The following table describes the default system security audit journal (QAUDJRN)
+            mappings for the severity of messages assigned to Common Event Format (CEF) messages.
+            You can use the Work With Security Types option on the configuration menu to change
+            these values.</para>
+        <table>
+            <title>QAUDJRN entry type mappings for CEF</title>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry> Severity </entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+
+
+                    <row>
+                        <entry>7 </entry>
+                        <entry>Auditing change </entry>
+                    </row>
+                    <row>
+                        <entry>9 </entry>
+                        <entry>Authority failure </entry>
+                    </row>
+                    <row>
+                        <entry>6 </entry>
+                        <entry>Obtaining adopted authority </entry>
+                    </row>
+                    <row>
+                        <entry>4 </entry>
+                        <entry>Attribute changes </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>Authority changes </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Command string audit </entry>
+                    </row>
+                    <row>
+                        <entry>4 </entry>
+                        <entry>Create object </entry>
+                    </row>
+                    <row>
+                        <entry>10 </entry>
+                        <entry>User profile changed, created, or restored </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Change of *CRQD object </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Cluster operations </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Connection verification </entry>
+                    </row>
+                    <row>
+                        <entry>10 </entry>
+                        <entry>Cryptographic configuration </entry>
+                    </row>
+                    <row>
+                        <entry>2 </entry>
+                        <entry>Directory server </entry>
+                    </row>
+                    <row>
+                        <entry>5 </entry>
+                        <entry>Delete object </entry>
+                    </row>
+                    <row>
+                        <entry>10 </entry>
+                        <entry>DST security password set </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>System environment variables </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Generic record </entry>
+                    </row>
+                    <row>
+                        <entry>2 </entry>
+                        <entry>Socket description given to another job </entry>
+                    </row>
+                    <row>
+                        <entry>2 </entry>
+                        <entry>Interprocess communication </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>IP rules action </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Internet security management </entry>
+                    </row>
+                    <row>
+                        <entry>9 </entry>
+                        <entry>Change to user paramater of job description </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Actions that affect jobs </entry>
+                    </row>
+                    <row>
+                        <entry>9 </entry>
+                        <entry>Key ring file </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Link, unlink, or look up directory entry </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Office services mail action </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>Network attribute changed </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>APPN directory search filter violation </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>APPN end point filter violation </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Object move or rename </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>Object restore </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>Object ownership changed </entry>
+                    </row>
+                    <row>
+                        <entry>5 </entry>
+                        <entry>(Optical access) Single file or directory </entry>
+                    </row>
+                    <row>
+                        <entry>5 </entry>
+                        <entry>(Optical access) Dual file or directory </entry>
+                    </row>
+                    <row>
+                        <entry>5 </entry>
+                        <entry>(Optical access) Volume </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>Program changed to adopt authority </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>Change of an objects primary group </entry>
+                    </row>
+                    <row>
+                        <entry>2 </entry>
+                        <entry>Printed output </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>Profile swap </entry>
+                    </row>
+                    <row>
+                        <entry>10 </entry>
+                        <entry>Invalid user or password </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>Authority change during restore </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>Restoring job description with user profile specified </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>Change of object owner during restore </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>Restoring adopted authority program </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>Restoring a *CRQD object </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>Restoring user profile authority </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>Changing a primary group during restore </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>Changes to system distribution directory </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>Subsystem routing entry changed </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Actions to spool files </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Asynchronous signals </entry>
+                    </row>
+                    <row>
+                        <entry>2 </entry>
+                        <entry>Secure sockets connections </entry>
+                    </row>
+                    <row>
+                        <entry>5 </entry>
+                        <entry>Systems management changes </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>Server security user information actions </entry>
+                    </row>
+                    <row>
+                        <entry>10 </entry>
+                        <entry>Use of service tools </entry>
+                    </row>
+                    <row>
+                        <entry>9 </entry>
+                        <entry>System value changed </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>Changing an access control list </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Starting or ending a connection </entry>
+                    </row>
+                    <row>
+                        <entry>3 </entry>
+                        <entry>Closing server files </entry>
+                    </row>
+                    <row>
+                        <entry>5 </entry>
+                        <entry>Account limit exceeded </entry>
+                    </row>
+                    <row>
+                        <entry>2 </entry>
+                        <entry>Logging on and off the network </entry>
+                    </row>
+                    <row>
+                        <entry>5 </entry>
+                        <entry>Validation list actions </entry>
+                    </row>
+                    <row>
+                        <entry>10 </entry>
+                        <entry>Network password error </entry>
+                    </row>
+                    <row>
+                        <entry>8 </entry>
+                        <entry>Network resource access </entry>
+                    </row>
+                    <row>
+                        <entry>2 </entry>
+                        <entry>Starting or ending a server session </entry>
+                    </row>
+                    <row>
+                        <entry>7 </entry>
+                        <entry>Changing a network profile </entry>
+                    </row>
+                    <row>
+                        <entry>9 </entry>
+                        <entry>Changing service status </entry>
+                    </row>
+                    <row>
+                        <entry>5 </entry>
+                        <entry>Network authentication </entry>
+                    </row>
+                    <row>
+                        <entry>1 </entry>
+                        <entry>DLO object accessed (change) </entry>
+                    </row>
+                    <row>
+                        <entry>1 </entry>
+                        <entry>DLO object accessed (read) </entry>
+                    </row>
+                    <row>
+                        <entry>1 </entry>
+                        <entry>Object accessed (change) </entry>
+                    </row>
+                    <row>
+                        <entry>1 </entry>
+                        <entry>SOM access method </entry>
+                    </row>
+                    <row>
+                        <entry>1 </entry>
+                        <entry>Object accessed (read) </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+
+        </table>
+
+    </appendix>
+    <appendix id="system-i_api">
+        <title>Sending system logs from custom applications</title>
+        <para>The syslog-ng Agent for IBM System i application provides command and API interfaces
+            to allow a user program to create syslog or CEF event records. User applications can
+            provide simple text values for messages and specify the priority and facility ID for the
+            message. Any user application can be enabled for syslog or CEF application messages.</para>
+        <section>
+            <title>Send To Syslog (SNDSYSLOG) command</title>
+
+            <para>You can use the Send To Syslog (SNDSYSLOG) command to generate your own entries to
+                Syslog-ng. The command can be run from a command line, but you will probably want to
+                use it in your application programs. The command can be added to any CL program to
+                enable your applications to write to the Syslog-ng server. Note that the library
+                ALLSYL100 must be in your library list in order to use the SNDSYSLOG command.</para>
+
+            <section>
+                <title>Command parameters</title>
+
+                <para>SNDSYSLOGPRIORITY( priority-number )</para>
+                <para>FACILITY( facility-number )</para>
+                <para>DATE( date )</para>
+                <para>TIME( time )</para>
+                <para>HOST( host-name | blank )</para>
+                <para>TAG ( tag-name )</para>
+                <para>MSG( application-message )</para>
+                <para>JOB( job-name )</para>
+                <para>USER( user-name )</para>
+                <para>JOBNO( job-number )</para>
+
+                <section>
+                    <title>Priority</title>
+                    <para>This is the Syslog priority number in the range of 0 to 7. See the
+                        documentation in RFC 3164 for information on the meanings of the priority
+                        number.</para>
+
+                </section>
+                <section>
+                    <title>Facility</title>
+                    <para>This is the Syslog facility number in the range of 0 to 23. See the
+                        documentation in RFC 3164 for information on the meanings of the facility
+                        number.</para>
+
+                </section>
+                <section>
+                    <title>Date</title>
+                    <para>Provide the date in the format CCYYMMDD where CC is the Century, YY is the
+                        year, MM is the month, and DD is the day. This is a character field.</para>
+
+                </section>
+                <section>
+                    <title>Time</title>
+                    <para>Provide the time in the format HHMMSS using 24-hour time notation.</para>
+
+                </section>
+                <section>
+                    <title>Host</title>
+                    <para>Provide the host name or the IP address of the host. If you leave this
+                        field blank Alliance will use system name from the Network Attributes. Use
+                        the Display Network Attributes (DSPNETA) command to view the system name.</para>
+
+                </section>
+                <section>
+                    <title>Tag</title>
+                    <para>Enter the application name or tag name you want to use for this Syslog
+                        entry.</para>
+
+                </section>
+                <section>
+                    <title>Message</title>
+                    <para>Enter a message to be included in the Syslog entry. The message can be up
+                        to 1024 bytes in length. Please note that the maximum length of a Syslog
+                        entry, including the priority, date, host, tag, and message fields is 1024
+                        bytes. If the resulting message is longer than 1024 bytes it will be
+                        truncated to this length and no error message will be sent.</para>
+
+                </section>
+                <section>
+                    <title>Job</title>
+                    <para>Enter the job name for this Syslog entry. This is an optional field.</para>
+
+                </section>
+                <section>
+                    <title>User</title>
+                    <para>Enter the user name for this Syslog entry. This is an optional field.</para>
+
+                </section>
+                <section>
+                    <title>Job number</title>
+                    <para>Enter the job number for this Syslog entry. This is an optional
+                    field.</para>
+                </section>
+            </section>
+        </section>
+        <section>
+            <title>Send To CEF log (SNDCEFLOG) command</title>
+
+            <para>You can use the Send To CEF (SNDCEFLOG) command to generate your own entries to
+                ArcSight ESM or compatible server. The command can be run from a command line, but
+                you will probably want to use it in your application programs. The command can be
+                added to any CL program to enable your applications to write to the ArcSight ESM
+                server. Note that the library ALLSYL100 must be in your library list in order to use
+                the SNDCEFLOG command.</para>
+
+            <section>
+                <title>Command parameters</title>
+
+                <para>SNDCEFLOGHOST( Host-name or IP address )</para>
+                <para>DATE( date )</para>
+                <para>TIME( time )</para>
+                <para>VENDOR( vendor-name )</para>
+                <para>PRODUCT( product-name )</para>
+                <para>VERSION( product-version )</para>
+                <para>SIGNATURE( signature-number )</para>
+                <para>MSG( application-message )</para>
+                <para>SEVERITY ( event-severity )</para>
+                <para>EXTENSION( extended-message )</para>
+                <para>JOB( job-name )</para>
+                <para>USER( user-name )</para>
+                <para>JOBNO( job-number )</para>
+
+                <section>
+                    <title>Host</title>
+                    <para>Provide the host name or the IP address of the host. If you leave this
+                        field blank Alliance will use system name from the Network Attributes. Use
+                        the Display Network Attributes (DSPNETA) command to view the system name.</para>
+
+                </section>
+                <section>
+                    <title>Date</title>
+                    <para>Provide the date in the format CCYYMMDD where CC is the Century, YY is the
+                        year, MM is the month, and DD is the day. This is a character field.</para>
+
+                </section>
+                <section>
+                    <title>Time</title>
+                    <para>Provide the time in the format HHMMSS using 24-hour time notation.</para>
+
+                </section>
+                <section>
+                    <title>Vendor</title>
+                    <para>Enter the vendor name for this event. The vendor name should be your
+                        company name for any user applications, or the name of your software
+                        provider if the message is for a vendor software solution.</para>
+
+                </section>
+                <section>
+                    <title>Product</title>
+                    <para>Enter the name of the software product for this event. </para>
+
+                </section>
+                <section>
+                    <title>Version</title>
+                    <para>Enter the version number for the software product.</para>
+
+                </section>
+                <section>
+                    <title>Signature</title>
+                    <para>Enter a unique signature value for this event. This value should be unique
+                        for this type of event. You should signature values in the range of 1000 to
+                        1999.</para>
+
+                </section>
+                <section>
+                    <title>Message</title>
+                    <para>Enter a message to be included in the log entry. The message can be up to
+                        512 bytes in length. Please note that the maximum length of a log entry,
+                        including all fields is 1024 bytes. If the resulting message is longer than
+                        1024 bytes it will be truncated to this length and no error message will be
+                        sent.</para>
+
+                </section>
+                <section>
+                    <title>Severity</title>
+                    <para>Enter a severity value from 0 to 10 with 0 being the lowest severity and
+                        10 being the highest severity.</para>
+
+                </section>
+                <section>
+                    <title>Extension</title>
+                    <para>Enter additional text for this message.</para>
+
+                </section>
+                <section>
+                    <title>Job</title>
+                    <para>Enter the job name for this Syslog entry. This is an optional field.</para>
+
+                </section>
+                <section>
+                    <title>User</title>
+                    <para>Enter the user name for this Syslog entry. This is an optional field.</para>
+
+                </section>
+                <section>
+                    <title>Job number</title>
+                    <para>Enter the job number for this Syslog entry. This is an optional field.</para>
+
+
+                </section>
+            </section>
+        </section>
+        <section>
+            <title>Procedure ALLSysLog</title>
+
+            <para>You can use the Alliance procedure ALLSysLog in any ILE application to create
+                entries for Syslog-ng. The service program ALLSYSLOG in library ALLSYL100 can be
+                bound to your application to provide an interface to this procedure. </para>
+
+
+            <section>
+                <title/>
+                <section>
+                    <title>ILE C definition</title>
+
+                    <para>ALLSysLog(ULONG* pulPriority, </para>
+                    <para>ULONG* pulFacility, </para>
+                    <para>UCHAR* pcaTimestamp, </para>
+                    <para>UCHAR* pcaHost, </para>
+                    <para>UCHAR* pcaTag, </para>
+                    <para>UCHAR* pcaContent, </para>
+                    <para>ULONG* pulConvertOpt, </para>
+                    <para>UCHAR* pcaConvertTable, </para>
+                    <para>UCHAR* pcaMessage, </para>
+                    <para>ULONG* pulMessageLen, </para>
+                    <para>ULONG* pulReturn); </para>
+
+                </section>
+            </section>
+            <section>
+                <title/>
+                <section>
+                    <title>ILE RPG definition</title>
+
+                    <para>d Priority s 8b 0 inz(0) </para>
+                    <para>d Facility s 8b 0 inz(0) </para>
+                    <para>d Timestamp s 32a </para>
+                    <para>d Host s 64a </para>
+                    <para>d Tag s 64a </para>
+                    <para>d Content s 2048a </para>
+                    <para>d ConvertOpt s 8b 0 inz(0) </para>
+                    <para>d ConvertTbl s 32a inz('ANEB2AS *LIBL')</para>
+                    <para>d Message s 2048a </para>
+                    <para>d MessageLen s 8b 0 inz(0) </para>
+                    <para>d ReplyCode s 8b 0 inz(0) </para>
+
+
+                    <para>Callb(d) 'ALLFmtLog' </para>
+                    <para>Parm Priority </para>
+                    <para>Parm Facility </para>
+                    <para>Parm Timestamp </para>
+                    <para>Parm Host </para>
+                    <para>Parm Tag </para>
+                    <para>Parm Content </para>
+                    <para>Parm ConvertOpt </para>
+                    <para>Parm ConvertTbl </para>
+                    <para>Parm Message </para>
+                    <para>Parm MessageLen </para>
+                    <para>Parm ReplyCode </para>
+
+
+                    <para>See the documentation for the SNDSYSLOG command for information on the
+                        values of the parameters for this procedure.</para>
+                </section>
+            </section>
+        </section>
+        <section>
+            <title>Procedure ALLCefLog</title>
+
+            <para>You can use the Alliance procedure ALLCefLog in any ILE application to create log
+                entries for ArcSight ESM. The service program ALLCEF in library ALLSYL100 can be
+                bound to your application to provide an interface to this procedure. </para>
+
+
+            <section>
+                <title/>
+                <section>
+                    <title>ILE C definition</title>
+
+                    <para>ALLCefLog(ULONG* pcaHost, </para>
+                    <para>UCHAR* pcaTimestamp, </para>
+                    <para>UCHAR* pcaDeviceVendor, </para>
+                    <para>UCHAR* pcaDeviceProduct,</para>
+                    <para>UCHAR* pcaDeviceVersion,</para>
+                    <para>UCHAR* pcaSignature, </para>
+                    <para>UCHAR* pcaContent, </para>
+                    <para>ULONG* pulSeverity, </para>
+                    <para>UCHAR* pcaExtension, </para>
+                    <para>ULONG* pulConvertOpt, </para>
+                    <para>UCHAR* pcaConvertTable, </para>
+                    <para>UCHAR* pcaMessage, </para>
+                    <para>ULONG* pulMessageLen, </para>
+                    <para>ULONG* pulReturn) </para>
+
+                </section>
+            </section>
+            <section>
+                <title/>
+                <section>
+                    <title>ILE RPG definition</title>
+
+                    <para>d Host s 65a </para>
+                    <para>d Timestamp s 32a </para>
+                    <para>d Vendor s 33a </para>
+                    <para>d Product s 33a </para>
+                    <para>d Version s 33a </para>
+                    <para>d Signature s 33a </para>
+                    <para>d Content s 2048a </para>
+                    <para>d Severity s 8b 0 inz(0) </para>
+                    <para>d Extension s 1024a </para>
+                    <para>d ConvertOpt s 8b 0 inz(0) </para>
+                    <para>d ConvertTbl s 32a inz('ANEB2AS *LIBL') </para>
+                    <para>d Message s 2048a </para>
+                    <para>d MessageLen s 8b 0 inz(0) </para>
+                    <para>d ReplyCode s 8b 0 inz(0) </para>
+
+                    <para>Callb(d) 'ALLFmtCef' </para>
+                    <para>Parm Host </para>
+                    <para>Parm Timestamp </para>
+                    <para>Parm Vendor </para>
+                    <para>Parm Product </para>
+                    <para>Parm Version </para>
+                    <para>Parm Signature </para>
+                    <para>Parm Content </para>
+                    <para>Parm Severity </para>
+                    <para>Parm Extension </para>
+                    <para>Parm ConvertOpt </para>
+                    <para>Parm ConvertTbl </para>
+                    <para>Parm Message </para>
+                    <para>Parm MessageLen </para>
+                    <para>Parm ReplyCode </para>
+
+                    <para>See the documentation for the SNDSYSLOG command for information on the
+                        values of the parameters for this procedure.</para>
+
+
+                </section>
+            </section>
+        </section>
+    </appendix>
+-->

@@ -1,0 +1,756 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  
+ <!ENTITY % xinclude SYSTEM "../../xml-stylesheet/pdf/dtd/xinclude.mod" >
+ %xinclude;
+ <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]> 
+<chapter id="chapter_install">
+    <title>Installing syslog-ng</title>
+    <indexterm>
+        <primary>installing syslog-ng</primary>
+    </indexterm>
+    <para>This chapter explains how to install syslog-ng on the supported platforms using the
+        precompiled binary files. See <xref linkend="chapter_windows"/> on installing the syslog-ng
+        agent on Windows-based platforms.</para>
+    <!-- FIXME LFS install 
+        - installation: tar xfz syslog-ng-premium-edition_2.1.6b_i386.tgz -C /
+        - docs: /opt/syslog-ng/doc/lfs-packaging
+    -->
+    <!-- FIXME APParmor resz, ahova kell, pl. SLES 10-en
+        2. if you use Novel AppArmor:
+        2.1. download following file and overwrite  the  one on /etc/apparmor.d with it:
+        http://people.balabit.hu/folti/syslogng/sbin.syslog-ng <- EZ LEGYEN A CSOMAGOK RESZE! BUG 12752
+        2.2. restart apparmor:
+        /etc/init.d/boot.apparmor stop
+        /etc/init.d/boot.apparmor start
+    -->
+    <section id="install_rpm">
+        <title>Installing syslog-ng on RPM-based platforms (Red Hat, SUSE, AIX)</title>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>from RPM package</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>on Red Hat Enterprise Server</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>Red Hat Enterprise Server</primary>
+            <secondary>installing syslog-ng</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>on AIX</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>AIX</primary>
+            <secondary>installing syslog-ng</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>on SUSE Linux Enterprise Server</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>SUSE Linux Enterprise Server</primary>
+            <secondary>installing syslog-ng</secondary>
+        </indexterm>
+        <para>To install syslog-ng on operating systems that use the Red Hat Package Manager (RPM),
+            complete the following steps. Installing syslog-ng automatically replaces the original
+            syslog service. The following supported operating systems use RPM: </para>
+        <itemizedlist>
+            <listitem>
+                <para>Red Hat Enterprise Server 4 and 5</para>
+            </listitem>
+            <listitem>
+                <para>AIX 5.2</para>
+            </listitem>
+            <listitem>
+                <para>SUSE 10</para>
+            </listitem>
+        </itemizedlist>
+        <procedure>
+            <title>Installing syslog-ng on RPM-based systems</title>
+            <step>
+                <xi:include href="install_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
+                    xpointer="xpointer(//section[@id='install_downloads']/*)"/>
+            </step>
+            <step>
+                <para>Issue the following command as root:</para>
+                <para>
+                    <command>rpm -i[v] libdbi8_&lt;version&gt;_&lt;arch&gt;.rpm
+                        syslog-ng-premium-edition-&lt;version&gt;.&lt;arch&gt;.rpm</command>
+                </para>
+            </step>
+            <step>
+                <para>If you use an SQL destination, issue the command corresponding to the
+                    database:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>For MySQL:</para>
+                        <para>
+                            <command>rpm -i[v]
+                                libdbd8-mysql_&lt;version&gt;_&lt;arch&gt;.rpm</command>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>For MSSQL:</para>
+                        <para>
+                            <command>rpm -i[v]
+                                libdbd8-freetds_&lt;version&gt;_&lt;arch&gt;.rpm</command>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>For Oracle:</para>
+                        <para>
+                            <command>rpm -i[v]
+                                libdbd8-oracle_&lt;version&gt;_&lt;arch&gt;.rpm
+                            </command>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>For PostgreSQL:</para>
+                        <para>
+                            <command>rpm -i[v]
+                                libdbd8-pgsql_&lt;version&gt;_&lt;arch&gt;.rpm</command>
+                        </para>
+                    </listitem>
+                    <!-- <listitem>
+                        <para>For SQLite:</para>
+                        <para>
+                            <command>rpm -i[v]
+                                libdbd8-3_&lt;version&gt;_&lt;arch&gt;.rpm</command>
+                        </para>
+                    </listitem> -->
+                </itemizedlist>
+            </step>
+            <step>
+                <xi:include href="install_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
+                    xpointer="xpointer(//section[@id='install_oracle']/*)"/>
+            </step>
+            <step>
+                <indexterm>
+                    <primary>Novell AppArmor</primary>
+                </indexterm>
+                <para><emphasis>Optional step</emphasis>: If Novell AppArmor is used on the
+                    computer, copy the <filename>/usr/share/doc/syslog-ng/sbin.syslog-ng</filename>
+                    file into the <filename>/etc/apparmor.d/</filename> directory and restart
+                    AppArmor.</para>
+            </step>
+            <step>
+                <para><emphasis>Optional step</emphasis>: When installing syslog-ng to the central
+                    syslog-ng server, copy the <filename>license.txt</filename> license file to the
+                        <filename>/etc/syslog-ng/</filename> directory of the server.</para>
+            </step>
+            <step>
+                <para>
+                    <indexterm>
+                        <primary>AIX</primary>
+                        <secondary>redirecting errorlog to syslog-ng</secondary>
+                    </indexterm>
+                    <emphasis>Optional step for AIX systems</emphasis>: To redirect the messages of
+                    the AIX Error log into syslog, create a file (e.g.,
+                    <filename>/tmp/syslog-ng.add</filename>) with the following contents:</para>
+                <synopsis>
+errnotify:
+en_name = "syslog1"
+en_persistenceflg = 1
+en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTAMP'`"</synopsis>
+                <para>Then execute the following command as root: <command>odmadd
+                    /tmp/syslog-ng.add</command>.</para>
+            </step>
+        </procedure>
+    </section>
+    <section id="install_deb">
+        <title>Installing syslog-ng on Debian-based platforms</title>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>from DEB package</secondary>
+        </indexterm>
+        <para>To install syslog-ng on operating systems that use the Debian Software Package (deb)
+            format, complete the following steps. The following supported operating systems use this
+            format: </para>
+        <itemizedlist>
+            <listitem>
+                <para>Debian etch</para>
+            </listitem>
+        </itemizedlist>
+        <procedure>
+            <title>Installing syslog-ng on Debian-based systems</title>
+            <step>
+                <xi:include href="install_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
+                    xpointer="xpointer(//section[@id='install_downloads']/*)"/>
+            </step>
+            <step>
+                <para>Remove the existing system logging package from the host. Issue the following
+                    command as root if the host is running syslog: <command>dpkg -r
+                    sysklogd</command>, or <command>dpkg -r syslog-ng</command> if the host is
+                    running the open source version of syslog-ng.</para>
+            </step>
+            <step>
+                <para>Issue the following command as root: </para>
+                <para>
+                    <command>dpkg -i libdbi8_&lt;version&gt;_&lt;arch&gt;.deb
+                        syslog-ng-premium-edition_&lt;version&gt;_&lt;arch&gt;.deb</command>
+                </para>
+            </step>
+            <step>
+                <para>If you use an SQL destination, issue the command corresponding to the
+                    database:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>For MSSQL:</para>
+                        <para>
+                            <command>dpkg -i
+                                libdbd8-freetds_&lt;version&gt;_&lt;arch&gt;.deb</command>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>For MySQL:</para>
+                        <para>
+                            <command>dpkg -i
+                                libdbd8-mysql_&lt;version&gt;_&lt;arch&gt;.deb</command>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>For Oracle:</para>
+                        <para>
+                            <command>dpkg -i
+                                libdbd8-oracle_&lt;version&gt;_&lt;arch&gt;.deb</command>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>For PostgreSQL:</para>
+                        <para>
+                            <command>dpkg -i
+                                libdbd8-pgsql_&lt;version&gt;_&lt;arch&gt;.deb</command>
+                        </para>
+                    </listitem>
+                   <!-- <listitem>
+                        <para>For SQLite:</para>
+                        <para>
+                            <command>dpkg -i
+                                libdbd8-3_&lt;version&gt;_&lt;arch&gt;.deb</command>
+                        </para>
+                    </listitem> -->
+                </itemizedlist>
+            </step>
+            <step>
+                <xi:include href="install_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
+                    xpointer="xpointer(//section[@id='install_oracle']/*)"/>
+            </step>
+            <step>
+                <indexterm>
+                    <primary>Novell AppArmor</primary>
+                </indexterm>
+                <para><emphasis>Optional step</emphasis>: If Novell AppArmor is used on the
+                    computer, copy the <filename>/usr/share/doc/syslog-ng/sbin.syslog-ng</filename>
+                    file into the <filename>/etc/apparmor.d/</filename> directory and restart
+                    AppArmor.</para>
+            </step>
+            <step>
+                <para><emphasis>Optional step</emphasis>: When installing syslog-ng to the central
+                    syslog-ng server, copy the <filename>license.txt</filename> license file to the
+                        <filename>/etc/syslog-ng/</filename> directory of the server.</para>
+            </step>
+        </procedure>
+    </section>
+    <section id="install_freebsd">
+        <title>Installing syslog-ng on FreeBSD</title>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>on FreeBSD</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>FreeBSD</primary>
+            <secondary>installing syslog-ng</secondary>
+        </indexterm>
+        <para>To install syslog-ng on the FreeBSD operating systems, complete the following steps as
+            root.</para>
+        <procedure>
+            <title>Installing syslog-ng on FreeBSD systems</title>
+            <step>
+                <para>Use your username and password received together with your syslog-ng Premium
+                    Edition license to download the following binaries. Make sure to download the
+                    package specific for the processor architecture of the host.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>The syslog-ng Premium Edition package
+                                (<filename>syslog-ng-premium-edition_&lt;version&gt;</filename>)
+                            from </para>
+                        <para>
+                            <ulink
+                                url="http://www.balabit.com/downloads/files/syslog-ng/binaries/premium-edition/pool/s/syslog-ng-premium-edition/"
+                                >http://www.balabit.com/downloads/files/syslog-ng/binaries/premium-edition/pool/s/syslog-ng-premium-edition/</ulink>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>The <filename>libdbi8</filename> package from </para>
+                        <para>
+                            <ulink
+                                url="http://www.balabit.com/downloads/files/syslog-ng/binaries/premium-edition/pool/l/libdbi8/"
+                                >http://www.balabit.com/downloads/files/syslog-ng/binaries/premium-edition/pool/l/libdbi8/</ulink>
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </step>
+            <step>
+                <para>Unpack the downloaded syslog-ng package into the <filename>/</filename>
+                    directory. Issue the following commands as root: </para>
+                <synopsis>cd / 
+tar xfz /&lt;path_to_the_packages&gt;/syslog-ng-pe_&lt;version&gt;_&lt;arch&gt;.tgz /opt
+tar xfz /&lt;path_to_the_packages&gt;/libdbi8_&lt;version&gt;_&lt;arch&gt;.tgz /opt/syslog-ng</synopsis>
+            </step>
+            <step>
+                <para>Rename the <filename>/opt/syslog-ng/etc/syslog-ng.conf.example</filename> file
+                    to <filename>syslog-ng.conf</filename>. Edit the configuration file as needed.</para>
+                <synopsis>mv /opt/syslog-ng/etc/syslog-ng.conf.example /opt/syslog-ng/etc/syslog-ng.conf</synopsis>
+            </step>
+            <step>
+                <para>Copy the <filename>/opt/syslog-ng/doc/syslog-ng.rc.d</filename> file into the
+                        <filename>/etc/rc.d</filename> directory and set its properties to
+                        <parameter>755</parameter>.</para>
+                <synopsis>cp /opt/syslog-ng/doc/syslog-ng.rc.d /etc/rc.d
+chmod 755 /etc/rc.d/syslog-ng.rc.d</synopsis>
+            </step>
+            <step>
+                <para>Stop syslogd. Issue the following command:</para>
+                <synopsis>/etc/rc.d/syslogd stop</synopsis>
+            </step>
+            <step>
+                <para>Edit the <filename>/etc/rc.conf</filename> file with a text editor (e.g., vi)
+                    and add the following lines: </para>
+                <synopsis>syslogd_enable="NO"
+syslogng_enable="YES"</synopsis>
+            </step>
+            <step>
+                <para>Start syslog-ng.</para>
+                <synopsis>/etc/rc.d/syslog-ng start</synopsis>
+            </step>
+        </procedure>
+    </section>
+    <section id="install_hpux">
+        <title>Installing syslog-ng on HP-UX systems</title>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>on HP-UX</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>HP-UX</primary>
+            <secondary>installing syslog-ng</secondary>
+        </indexterm>
+        <para>To install syslog-ng on HP-UX operating systems, complete the following steps.</para>
+        <note>
+            <para>SQL destinations are currently not supported on HP-UX.</para>
+        </note>
+        <procedure>
+            <title>Installing syslog-ng on HP-UX systems</title>
+            <step>
+                <para>Use your username and password received together with your syslog-ng Premium
+                    Edition license to download the following binaries. Make sure to download the
+                    package specific for the processor architecture of the host.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>The syslog-ng Premium Edition package
+                                (<filename>syslog-ng-premium-edition_&lt;version&gt;</filename>)
+                            from </para>
+                        <para>
+                            <ulink
+                                url="http://www.balabit.com/downloads/files/syslog-ng/binaries/premium-edition/pool/s/syslog-ng-premium-edition/"
+                                >http://www.balabit.com/downloads/files/syslog-ng/binaries/premium-edition/pool/s/syslog-ng-premium-edition/</ulink>
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </step>
+            <step>
+                <para>Issue the following commands as root: </para>
+                <para>
+                    <synopsis>cd/ 
+gunzip -dc /path/to/syslog-ng-package.tar.gz | tar xf -</synopsis>
+                </para>
+            </step>
+            <step>
+                <para>Edit configuration file as required.</para>
+                <warning>
+                    <para>The default configuration uses the standard syslog port TCP/514, which
+                        HP-UX uses by default for other purposes.</para>
+                </warning>
+            </step>
+            <step>
+                <para><emphasis>Optional step</emphasis>: When installing syslog-ng to the central
+                    syslog-ng server, copy the <filename>license.txt</filename> license file to the
+                        <filename>/opt/syslog-ng/syslog-ng.conf</filename> directory of the
+                server.</para>
+            </step>
+            <step>
+                <para>Remove the symbolic links to syslogd from the init directories
+                        <filename>/sbin/rc1.d/</filename> and
+                <filename>/sbin/rc2.d/</filename>.</para>
+            </step>
+            <step>
+                <para>Create symbolic links to syslog-ng in the init directories:</para>
+                <para>
+                    <synopsis>ln -s /sbin/init.d/syslog-ng /sbin/rc2.d/S220syslog-ng
+ln -s /sbin/init.d/syslog-ng /sbin/rc1.d/K780syslog-ng</synopsis>
+                </para>
+            </step>
+            <step>
+                <para>Issue the following command to start syslog-ng:</para>
+                <para>
+                    <synopsis>/sbin/init.d/syslog-ng start</synopsis>
+                </para>
+            </step>
+        </procedure>
+    </section>
+    <section id="install_solaris_89">
+        <xi:include href="install_solaris.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
+            xpointer="xpointer(//section[@id='install_solaris_89']/*)"/>
+    </section>
+    <section id="install_solaris_10">
+        <xi:include href="install_solaris.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
+            xpointer="xpointer(//section[@id='install_solaris_10']/*)"/>
+    </section>
+    <section id="install_from_source">
+        <title>Compiling syslog-ng from source</title>
+        <indexterm>
+            <primary>compiling syslog-ng OSE</primary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng OSE from source</primary>
+        </indexterm>
+        <para>To compile syslog-ng Open Source Edition (OSE) from the source code, complete the
+            following steps. Alternatively, you can buy pre-compiled binary packages for various
+            platforms from the BalaBit webshop at <ulink url="http://www.balabit.com/shop/"
+                >http://www.balabit.com/shop/</ulink>. When you buy a binary package, you
+            automatically receive the latest version of syslog-ng OSE for your platform, and all
+            updates for a year.</para>
+        <procedure>
+            <title>Compiling syslog-ng from source</title>
+            <step>
+                <para>Download the latest version of syslog-ng OSE from <ulink
+                        url="https://www.balabit.com/downloads/files/syslog-ng/sources/stable/"
+                        >https://www.balabit.com/downloads/files/syslog-ng/sources/stable/</ulink>.
+                    The source code is available as a tar.gz archive file.</para>
+            </step>
+            <step>
+                <para>Download the latest version of the EventLog library available at <ulink
+                        url="https://www.balabit.com/downloads/files/eventlog/0.2/"
+                        >https://www.balabit.com/downloads/files/eventlog/0.2/</ulink>.</para>
+            </step>
+            <step>
+                <para>Install the following packages that are required to compile syslog-ng. These
+                    packages are available for most UNIX/Linux systems. Alternatively, you can also
+                    download the sources and compile them.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>the <emphasis>gcc</emphasis> C compiler (at least version
+                        2.7.2),</para>
+                    </listitem>
+                    <listitem>
+                        <para>the <emphasis>GNU flex</emphasis> lexical analyser generator,
+                            available at <ulink url="http://flex.sourceforge.net/"
+                                >http://flex.sourceforge.net/</ulink>;</para>
+                    </listitem>
+                    <listitem>
+                        <para>the <emphasis>bison</emphasis> parser generator, available at <ulink
+                                url="http://ftp.gnu.org/gnu/bison/"
+                            >http://ftp.gnu.org/gnu/bison/</ulink>;</para>
+                    </listitem>
+                    <listitem>
+                        <para>and the development files of the <emphasis>glib</emphasis> library,
+                            available at <ulink url="http://freshmeat.net/projects/glib/"
+                                >http://freshmeat.net/projects/glib/</ulink>.</para>
+                    </listitem>
+                </itemizedlist>
+            </step>
+            <step>
+                <para>If you want to use the spoof-source function of syslog-ng, install the
+                    development files of the <emphasis>libnet</emphasis> library, available at
+                        <ulink url="http://libnet.sourceforge.net"
+                    >http://libnet.sourceforge.net</ulink>.</para>
+            </step>
+            <step>
+                <para>If you want to use the <emphasis>/etc/hosts.deny</emphasis> and
+                        <emphasis>/etc/hosts.allow</emphasis> for TCP access, install the
+                    development files of the <emphasis>libwrap</emphasis> (also called TCP-wrappers)
+                    library, available at <ulink
+                        url="ftp://ftp.porcupine.org/pub/security/index.html">
+                        ftp://ftp.porcupine.org/pub/security/index.html</ulink>.</para>
+            </step>
+            <step>
+                <para>Uncompress the eventlog archive using the </para>
+                <synopsis>$ tar xvfz eventlog-x.x.x.x.tar.gz</synopsis>
+                <para>or the </para>
+                <synopsis>$ gunzip -c eventlog-x.x.x.x.tar.gz | tar xvf -</synopsis>
+                <para>command. A new directory containing the source code of eventlog will be
+                    created.</para>
+            </step>
+            <step>
+                <para>By default, eventlog creates a file used by the syslog-ng configure script in
+                    the <emphasis>/usr/local/lib/pkgconfig</emphasis> directory. Issue the following
+                    command to add this directory to your PKG_CONFIG_PATH:</para>
+                <synopsis>PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH</synopsis>
+
+            </step>
+            <step>
+                <para>Enter the new directory and issue the following commands:</para>
+                <synopsis>$ ./configure
+$ make
+$ make install</synopsis>
+            </step>
+            <step>
+                <para>Uncompress the syslog-ng archive using the</para>
+                <synopsis>tar xvfz syslog-ng-x.xx.tar.gz</synopsis>
+                <para>or the</para>
+                <synopsis>unzip -c syslog-ng-x.xx.tar.gz | tar xvf -</synopsis>
+                <para>command. A new directory containing the source code of syslog-ng will be
+                    created.</para>
+            </step>
+            <step>
+                <para>Enter the new directory and issue the following commands: </para>
+                <synopsis>$ ./configure
+$ make 
+$ make install</synopsis>
+                <para>These commands will build syslog-ng using its default options.</para>
+            </step>
+            <step>
+                <para>If needed, use the following options to change how syslog-ng is compiled using
+                    the following command syntax:</para>
+                <synopsis>$ ./configure --compile-time-option-name</synopsis>
+                <note>
+                    <para>You can also use <emphasis>--disable options</emphasis>, to explicitly
+                        disable a feature and override autodetection. For example, to disable the
+                        TCP-wrapper support, use the <emphasis>--disable-tcp-wrapper</emphasis>
+                        option. </para>
+                </note>
+                <note>
+                    <para>Note that the pre-compiled binary packages of syslog-ng Open Source
+                        Edition (OSE) and the syslog-ng Premium Edition packages (both available
+                        from the BalaBit webshop at <ulink url="http://www.balabit.com/shop/"
+                            >http://www.balabit.com/shop/</ulink>) are compiled with all options
+                        enabled. </para>
+                </note>
+                <itemizedlist>
+                    <listitem>
+                        <para><emphasis>--enable-debug</emphasis> Include debug information.</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>--enable-sun-streams</emphasis> Enable Sun STREAMS support
+                            even if not detected (autodetected by default).</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>--enable-sun-door</emphasis> Enable Sun door support even if
+                            not detected (autodetected by default).</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>--enable-tcp-wrapper</emphasis> Enable using
+                                <emphasis>/etc/hosts.deny</emphasis> and
+                            <emphasis>/etc/hosts.allow</emphasis> for TCP access (enabled
+                            automatically if the <parameter>libwrap</parameter> libraries are
+                            detected).</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>--enable-spoof-source</emphasis> Enable spoof_source feature
+                            (disabled by default).</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>--enable-ipv6 </emphasis> Enable IPv6 support.</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>--enable-static-linking</emphasis> Compile syslog-ng as a
+                            static binary.</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>--enable-dynamic-linking</emphasis> Compile syslog-ng as a
+                            completely dynamic binary. If not specified syslog-ng links dynamically
+                            to system libraries and statically to everything else.</para>
+                    </listitem>
+                </itemizedlist>
+            </step>
+        </procedure>
+        <para>For information on configuring syslog-ng, see the <xref
+                linkend="chapter_configuration"/>.</para>
+    </section>
+    <section id="configure_mssql_server">
+        <title>Configuring Microsoft SQL Server to accept logs from syslog-ng</title>
+        <indexterm>
+            <primary>destinations</primary>
+            <secondary>Microsoft SQL Server configuration</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>destinations</primary>
+            <secondary>MSSQL configuration</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>destinations</primary>
+            <secondary>FreeTDS configuration</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>Microsoft SQL Server configuration</primary>
+        </indexterm>
+        <para>Complete the following steps to configure your Microsoft SQL Server to enable remote
+            logins and accept log messages from syslog-ng.</para>
+        <procedure>
+            <title>Configuring Microsoft SQL Server to accept logs from syslog-ng</title>
+            <step>
+                <para>Start the SQL Server Management Studio application. Select <guimenu>Start >
+                        Programs > Microsoft SQL Server 2005 > SQL Server Management
+                    Studio</guimenu>.</para>
+            </step>
+            <step>
+                <para>Create a new database.</para>
+                <substeps>
+                    <step>
+                        <figure float="0">
+                            <title>Creating a new MSSQL database 1.</title>
+                            <mediaobject>
+                                <imageobject role="html">
+                                    <imagedata format="PNG" align="center"
+                                        fileref="mssql-newdb-select.png" width="90%"/>
+                                </imageobject>
+                                <imageobject role="fo">
+                                    <imagedata format="PNG"
+                                        fileref="&imgroot;/mssql-newdb-select.png" scale="35"/>
+                                </imageobject>
+                            </mediaobject>
+                        </figure>
+                        <para>In the Object Explorer, right-click on the
+                            <guilabel>Databases</guilabel> entry and select <guimenu>New
+                            Database</guimenu>.</para>
+                    </step>
+                    <step>
+                        <figure float="0">
+                            <title>Creating a new MSSQL database 2.</title>
+                            <mediaobject>
+                                <imageobject role="html">
+                                    <imagedata format="PNG" align="center"
+                                        fileref="mssql-newdb-create.png" width="90%"/>
+                                </imageobject>
+                                <imageobject role="fo">
+                                    <imagedata format="PNG"
+                                        fileref="&imgroot;/mssql-newdb-create.png" scale="35"/>
+                                </imageobject>
+                            </mediaobject>
+                        </figure>
+                        <para>Enter the name of the new database (e.g.,
+                            <parameter>syslogng</parameter>) into the <guilabel>Database
+                            name</guilabel> field and click <guibutton>OK</guibutton>.</para>
+                    </step>
+                </substeps>
+            </step>
+            <step>
+                <para>Create a new database user and associate it with the new database. </para>
+                <substeps>
+                    <step>
+                        <figure float="0">
+                            <title>Creating a new MSSQL user 1.</title>
+                            <mediaobject>
+                                <imageobject role="html">
+                                    <imagedata format="PNG" align="center"
+                                        fileref="mssql-newuser-select.png" width="90%"/>
+                                </imageobject>
+                                <imageobject role="fo">
+                                    <imagedata format="PNG"
+                                        fileref="&imgroot;/mssql-newuser-select.png" scale="35"
+                                    />
+                                </imageobject>
+                            </mediaobject>
+                        </figure>
+                        <para>In the Object Explorer, select <guilabel>Security</guilabel>,
+                            right-click on the <guilabel>Logins</guilabel> entry, then select
+                                <guimenu>New Login</guimenu>.</para>
+                    </step>
+                    <step>
+                        <figure float="0">
+                            <title>Creating a new MSSQL user 2.</title>
+                            <mediaobject>
+                                <imageobject role="html">
+                                    <imagedata format="PNG" align="center"
+                                        fileref="mssql-newuser-general.png" width="90%"/>
+                                </imageobject>
+                                <imageobject role="fo">
+                                    <imagedata format="PNG"
+                                        fileref="&imgroot;/mssql-newuser-general.png" scale="35"
+                                    />
+                                </imageobject>
+                            </mediaobject>
+                        </figure>
+                        <para>Enter a name (e.g., <parameter>syslog-ng</parameter>) for the user
+                            into the <guilabel>Login name</guilabel> field.</para>
+                    </step>
+                    <step>
+                        <para>Select the <guilabel>SQL Server Authentication</guilabel> option and
+                            enter a password for the user.</para>
+                    </step>
+                    <step>
+                        <para>In the <guilabel>Default database</guilabel> field, select the
+                            database created in Step 2 (e.g.,
+                        <parameter>syslogng</parameter>).</para>
+                    </step>
+                    <step>
+                        <para>In the <guilabel>Default language</guilabel> field, select the
+                            language of log messages that you want to store in the database, then
+                            click <guibutton>OK</guibutton>.</para>
+                        <warning>
+                            <para>Incorrect language settings may result in the database converting
+                                the messages to a different character-encoding format. That way the
+                                log messages may become unreadable, causing information loss.</para>
+                        </warning>
+                    </step>
+                    <step>
+                        <para>In the Object Explorer, select <guilabel>Security > Logins</guilabel>,
+                            then right-click on the new login created in the previous step, and
+                            select <guimenu>Properties</guimenu>.</para>
+                    </step>
+                    <step>
+                        <figure float="0">
+                            <title>Associating database with the new user</title>
+                            <mediaobject>
+                                <imageobject role="html">
+                                    <imagedata format="PNG" align="center"
+                                        fileref="mssql-newuser-setowner.png" width="90%"/>
+                                </imageobject>
+                                <imageobject role="fo">
+                                    <imagedata format="PNG"
+                                        fileref="&imgroot;/mssql-newuser-setowner.png"
+                                        scale="35"/>
+                                </imageobject>
+                            </mediaobject>
+                        </figure>
+                        <para>Select <guilabel>User Mapping</guilabel>. In the <guilabel>Users
+                                mapped to this login</guilabel> option, check the line corresponding
+                            to the new login (e.g., <parameter>syslogng</parameter>). In the
+                                <guilabel>Database role membership</guilabel> field, check the
+                                <guilabel>db_owner</guilabel> and <guilabel>public</guilabel>
+                            options.</para>
+                    </step>
+                </substeps>
+            </step>
+            <step>
+                <figure float="0">
+                    <title>Associating database with the new user</title>
+                    <mediaobject>
+                        <imageobject role="html">
+                            <imagedata format="PNG" align="center" fileref="mssql-newuser-login.png"
+                                width="90%"/>
+                        </imageobject>
+                        <imageobject role="fo">
+                            <imagedata format="PNG" fileref="&imgroot;/mssql-newuser-login.png"
+                                scale="35"/>
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+                <para>Enable remote logins for SQL users.</para>
+                <para>In the Object Explorer right-click on your database server, and select
+                        <guimenu>Properties > Security</guimenu>, and set the <guilabel>Server
+                        Authentication</guilabel> option to <guilabel>SQL Server and Windows
+                        Authentication mode</guilabel>. </para>
+            </step>
+        </procedure>
+    </section>
+
+
+    <!-- FIXME 
+    upgrading syslog-ng PE?
+    -->
+</chapter>

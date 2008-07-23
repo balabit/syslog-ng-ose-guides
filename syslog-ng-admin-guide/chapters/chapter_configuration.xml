@@ -1,0 +1,1243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]> 
+<chapter id="chapter_configuration">
+    <title>Configuring syslog-ng</title>
+    <indexterm>
+        <primary>configuring syslog-ng</primary>
+        <secondary>on Linux/Unix</secondary>
+    </indexterm>
+    <para>This chapter describes how to configure syslog-ng. </para>
+    <section id="config_file">
+        <title>The syslog-ng configuration file</title>
+        <indexterm significance="preferred">
+            <primary>syslog-ng.conf</primary>
+        </indexterm>
+        <para>The syslog-ng application is configured by editing the
+            <filename>syslog-ng.conf</filename> file. Use any regular text editor application to
+            modify the file. The precompiled syslog-ng packages include sample configuration files
+            as well.</para>
+        <para>All identifiers, option names and attributes, and any other strings used in the
+            syslog-ng configuration file are case sensitive. Objects must be defined before they are
+            referenced in another statement.</para>
+        <para>The following table lists the location of the <filename>syslog-ng.conf</filename> file
+            on the different platforms. The <filename>license.txt</filename> license file is also
+            located here.</para>
+        <table id="configfile_location">
+            <title>The location of syslog-ng.conf on different platforms</title>
+            <indexterm>
+                <primary>syslog-ng.conf</primary>
+                <secondary>location of</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>license</primary>
+                <secondary>location of</secondary>
+            </indexterm>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Operating System</entry>
+                        <entry>Location</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>Linux, AIX 5.x</entry>
+                        <entry>
+                            <filename>/etc/syslog-ng/syslog-ng.conf</filename>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Solaris, HP-UX, FreeBSD</entry>
+                        <entry>
+                            <filename>/opt/syslog-ng/syslog-ng.conf</filename>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <note>
+            <para>On HP-UX and Solaris operating systems the earlier versions of syslog-ng stored
+                the configuration file at
+                <filename>/opt/syslog-ng/etc/syslog-ng/syslog-ng.conf</filename>.</para>
+        </note>
+        <para>On Microsoft Windows platforms the syslog-ng agent stores its configuration in the
+            system registry, and can be configured from a graphical interface. See <xref
+                linkend="chapter_windows"/> for details.</para>
+    </section>
+
+    <section id="defining_global_objects">
+        <title>Defining global objects</title>
+        <indexterm>
+            <primary>global objects</primary>
+            <secondary>defining</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>defining global objects</primary>
+        </indexterm>
+        <para id="global_objects_para1">Global objects (e.g., sources, destinations, log paths, or
+            filters) are defined in the syslog-ng configuration file. Object definitions consist of
+            the following elements: </para>
+        <itemizedlist id="global_objects_syntax">
+            <listitem>
+                <para><emphasis>Type of the object</emphasis>: One of <parameter>source</parameter>,
+                        <parameter>destination</parameter>, <parameter>log</parameter>,
+                        <parameter>filter</parameter>, or <parameter>template</parameter>.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Identifier of the object</emphasis>: A unique name identifying the
+                    object. When using a reserved word as an identifier, enclose the identifier in
+                    quotation marks.</para>
+                <tip>
+                    <para>Use identifiers that refer to the type of the object they identify. For
+                        example, prefix source objects with <parameter>s_</parameter>, destinations
+                        with <parameter>d_</parameter>, and so on. </para>
+                </tip>
+            </listitem>
+            <listitem>
+                <para><emphasis>Parameters</emphasis>: The parameters of the object, enclosed in
+                    braces <parameter>{parameters}</parameter>.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Semicolon</emphasis>: Object definitions end with a semicolon
+                        (<parameter>;</parameter>).</para>
+            </listitem>
+        </itemizedlist>
+        <para id="global_objects_para2">The syntax is summarized as follows:
+            <synopsis>
+type identifier { parameters };
+</synopsis></para>
+        <para>Objects have parameters; some of them are required, others are optional. Required
+            parameters are positional, meaning that they must be specified in a defined order.
+            Optional arguments can be specified in any order using the
+            <literal>option(value)</literal> format. If a parameter (optional or required) is not
+            specified, its default value is used. The parameters and their default values are listed
+            in the reference section of the particular object. See <xref linkend="chapter_reference"
+            /> for details.</para>
+        <example>
+            <title>Using required and optional parameters</title>
+            <para>The <parameter>unix-stream()</parameter> source driver has a single required
+                argument: the name of the socket to listen on. Optional parameters follow the socket
+                name in any order, so the following source definitions have the same effect: </para>
+            <synopsis>
+source s_demo_stream1 { 
+           unix-stream("/dev/log" max-connections(10) group(log)); };
+source s_demo_stream2 { 
+           unix-stream("/dev/log" group(log) max-connections(10)); };
+                </synopsis>
+        </example>
+        <para>To add comments to the configuration file, start a line with <parameter>#</parameter>
+            and write your comments. These lines are ignored by syslog-ng.</para>
+        <synopsis>
+# Comment: This is a stream source
+source s_demo_stream { 
+           unix-stream("/dev/log" max-connections(10) group(log)); };
+        </synopsis>
+    </section>
+    <section id="sources">
+        <title>Sources and source drivers</title>
+        <indexterm significance="preferred">
+            <primary>sources</primary>
+        </indexterm>
+        <indexterm significance="preferred">
+            <primary>source drivers</primary>
+        </indexterm>
+        <para>A source is where syslog-ng receives log messages. Sources consist of one or more
+            drivers, each defining where and how messages are received.</para>
+        <para>To define a source, add a source statement to the syslog-ng configuration file using
+            the following syntax: <indexterm>
+                <primary>destinations</primary>
+                <secondary>defining</secondary>
+            </indexterm>
+            <synopsis>
+source &lt;identifier&gt; { source-driver(params); source-driver(params); ... };
+</synopsis>
+        </para>
+        <example>
+            <title>A simple source statement</title>
+            <para>The following source statement receives messages on the TCP port
+                <parameter>1999</parameter> of the interface having the
+                <parameter>10.1.2.3</parameter> IP address.</para>
+            <synopsis>
+source s_demo_tcp { tcp(ip(10.1.2.3) port(1999)); };
+                </synopsis>
+        </example>
+        <example>
+            <title>A source statement using two source drivers</title>
+            <para>The following source statement receives messages on the
+                <parameter>1999</parameter> TCP port and the <parameter>1999</parameter> UDP port of
+                the interface having the <parameter>10.1.2.3</parameter> IP address.</para>
+            <synopsis>
+source s_demo_two_drivers { 
+           tcp(ip(10.1.2.3) port(1999)); 
+           udp(ip(10.1.2.3) port(1999)); };
+            </synopsis>
+        </example>
+        <para>To collect log messages on a specific platform, it is important to know how the native
+                <parameter>syslogd</parameter> communicates on that platform. The following table
+            summarizes the operation methods of <parameter>syslogd</parameter> on some of the tested
+            platforms:</para>
+        <!-- FIXME belevenni a hianyzo, de tamogatott platformokat, es forrasokat pl. AIX, HP-UX, ... 
+        osszegyujteni, hogy az egyes platformokon milyen forrasokat kell felvenni ahhoz, 
+            hogy a syslog-ng a nativ syslog funkcionalitasat tudja 
+        -->
+        <table>
+            <title>Communication methods used between the applications and syslogd</title>
+            <indexterm>
+                <primary>sources</primary>
+                <secondary>on different platforms</secondary>
+            </indexterm>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Platform</entry>
+                        <entry>Method</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>Linux</entry>
+                        <entry>A <parameter>SOCK_STREAM</parameter> unix socket named
+                                <parameter>/dev/log</parameter>; some of the distributions switched
+                            over to using <parameter>SOCK_DGRAM</parameter>, though applications
+                            still work with either method. </entry>
+                    </row>
+                    <row>
+                        <entry>BSD flavors</entry>
+                        <entry>A <parameter>SOCK_DGRAM</parameter> unix socket named
+                                <parameter>/var/run/log</parameter>.</entry>
+                    </row>
+                    <row>
+                        <entry>Solaris (2.5 or below)</entry>
+                        <entry>An SVR4 style <parameter>STREAMS</parameter> device named
+                                <parameter>/dev/log</parameter>.</entry>
+                    </row>
+                    <row>
+                        <entry>Solaris (2.6 or above)</entry>
+                        <entry>In addition to the <parameter>STREAMS</parameter> device used in
+                            earlier versions, 2.6 uses a new multithreaded IPC method called door.
+                            By default the door used by <parameter>syslogd</parameter> is
+                                <parameter>/etc/.syslog_door</parameter>. </entry>
+                    </row>
+                    <row>
+                        <entry>HP-UX 11 or later</entry>
+                        <entry>HP-UX uses a named pipe called <filename>/dev/log</filename> that is
+                            padded to 2048 bytes, e.g., <parameter>source s_hp-ux {pipe ("/dev/log"
+                                pad_size(2048)}</parameter>.</entry>
+                    </row>
+                    <row>
+                        <!-- FIXME -->
+                        <entry>AIX 5.2 and 5.3</entry>
+                        <entry>A <parameter>SOCK_STREAM</parameter> or
+                            <parameter>SOCK_DGRAM</parameter> unix socket called
+                            <filename>/dev/log</filename>.</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <para>Each possible communication mechanism has a corresponding source driver in syslog-ng.
+            For example, to open a unix socket with <parameter>SOCK_DGRAM</parameter> style
+            communication use the driver <parameter>unix-dgram</parameter>. The same socket using
+            the <parameter>SOCK_STREAM</parameter> style &mdash; as used under Linux &mdash;
+            is called <parameter>unix-stream</parameter>. </para>
+        <example>
+            <title>Source statement on a Linux based operating system</title>
+            <para>The following source statement collects the following log messages:</para>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis>internal()</emphasis>: Messages generated by syslog-ng.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>udp(ip(0.0.0.0) port(514))</emphasis>: Messages arriving to the
+                            <parameter>514/UDP</parameter> port of any interface of the host.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>unix-stream("/dev/log");</emphasis>: Messages arriving to the
+                            <parameter>/dev/log</parameter> socket.</para>
+                </listitem>
+            </itemizedlist>
+            <synopsis>
+source s_demo { 
+           internal(); 
+           udp(ip(0.0.0.0) port(514)); 
+           unix-stream("/dev/log"); };
+				</synopsis>
+        </example>
+        <para>The following table lists the source drivers available in syslog-ng.</para>
+        <table id="table_source_drivers">
+            <title>Source drivers available in syslog-ng</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary>list of</secondary>
+            </indexterm>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>internal()</entry>
+                        <entry>Messages generated internally in syslog-ng.</entry>
+                    </row>
+                    <row>
+                        <entry>unix-stream()</entry>
+                        <entry>Opens the specified unix socket in <parameter>SOCK_STREAM</parameter>
+                            mode and listens for incoming messages.</entry>
+                    </row>
+                    <row>
+                        <entry>unix-dgram()</entry>
+                        <entry>Opens the specified unix socket in <parameter>SOCK_DGRAM</parameter>
+                            mode and listens for incoming messages.</entry>
+                    </row>
+                    <row>
+                        <entry>file()</entry>
+                        <entry>Opens the specified file and reads messages.</entry>
+                    </row>
+                    <row>
+                        <entry>pipe(), fifo</entry>
+                        <entry>Opens the specified named pipe and reads messages.</entry>
+                    </row>
+                    <row>
+                        <entry>tcp()</entry>
+                        <entry>Listens on the specified TCP port for incoming messages.</entry>
+                    </row>
+                    <row>
+                        <entry>udp()</entry>
+                        <entry>Listens on the specified UDP port for incoming messages.</entry>
+                    </row>
+                    <row>
+                        <entry>tcp6()</entry>
+                        <entry>Listens on the specified TCP port for incoming messages over
+                        IPv6.</entry>
+                    </row>
+                    <row>
+                        <entry>udp6()</entry>
+                        <entry>Listens on the specified UDP port for incoming messages over
+                        IPv6.</entry>
+                    </row>
+                    <row>
+                        <entry>sun-stream(), sun-streams()</entry>
+                        <entry>Opens the specified <parameter>STREAMS</parameter> device on Solaris
+                            systems and reads incoming messages.</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <para>For a complete description on the above drivers, see <xref
+                linkend="reference_sourcedrivers"/>. </para>
+        <para>Define a source only once. The same source can be used in several log paths.
+            Duplicating sources causes syslog-ng to open the source (TCP/IP port, file, etc.) more
+            than once, which might cause problems. For example, include the
+            <parameter>/dev/log</parameter> file source only in one source statement, and use this
+            statement in more than one log path if needed. </para>
+    </section>
+    <section id="destinations">
+        <title>Destinations and destination drivers</title>
+        <indexterm significance="preferred">
+            <primary>destinations</primary>
+        </indexterm>
+        <indexterm significance="preferred">
+            <primary>destination drivers</primary>
+        </indexterm>
+        <para>A destination is where a log message is sent if the filtering rules match. Similarly
+            to sources, destinations consist of one or more drivers, each defining where and how
+            messages are sent.</para>
+        <tip>
+            <para>If no drivers are defined for a destination, all messages sent to the destination
+                are discarded. This is equivalent to omitting the destination from the log
+                statement.</para>
+        </tip>
+        <para>To define a destination, add a destination statement to the syslog-ng configuration
+            file using the following syntax: <indexterm>
+                <primary>destinations</primary>
+                <secondary>defining</secondary>
+            </indexterm>
+            <synopsis>
+destination &lt;identifier&gt; { 
+                destination-driver(params); destination-driver(params); ... };
+            </synopsis>
+        </para>
+        <example>
+            <title>A simple destination statement</title>
+            <para>The following destination statement sends messages to the TCP port
+                <parameter>1999</parameter> of the <parameter>10.1.2.3</parameter> host.</para>
+            <synopsis>
+destination d_demo_tcp { tcp("10.1.2.3" port(1999)); };
+            </synopsis>
+            <para>If name resolution is configured, the hostname of the target server can be used as
+                well.</para>
+            <synopsis>
+destination d_tcp { tcp("target_host" port(1999); localport(999)); };
+            </synopsis>
+
+        </example>
+        <para>The following table lists the destination drivers available in syslog-ng.</para>
+        <table id="table_destination_drivers">
+            <title>Destination drivers available in syslog-ng</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary>list of</secondary>
+            </indexterm>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_file">file()</link>
+                        </entry>
+                        <entry>Writes messages to the specified file.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_pipe">fifo(), pipe()</link>
+                        </entry>
+                        <entry>Writes messages to the specified named pipe.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_program">program()</link>
+                        </entry>
+                        <entry>Forks and launches the specified program, and sends messages to its
+                            standard input.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_sql"
+                            >sql()<parameter>*</parameter></link>
+                        </entry>
+                        <entry>Sends messages into an SQL database.
+                            <parameter>*</parameter>Available only in syslog-ng Premium Edition. In
+                            addition to the standard syslog-ng packages, the
+                            <parameter>sql()</parameter> destination requires database-specific
+                            packages to be installed. Refer to the section appropriate for your
+                            platform in <xref linkend="chapter_install"/>.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_tcp">tcp()</link>
+                        </entry>
+                        <entry>Sends messages to the specified TCP port of a remote host.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_tcp">tcp6()</link>
+                        </entry>
+                        <entry>Sends messages to the specified TCP port of a remote host using
+                        IPv6.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_tcp">udp()</link>
+                        </entry>
+                        <entry>Sends messages to the specified UDP port of a remote host.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_tcp">udp6()</link>
+                        </entry>
+                        <entry>Sends messages to the specified UDP port of a remote host using
+                        IPv6.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_unix">unix-dgram()</link>
+                        </entry>
+                        <entry>Sends messages to the specified unix socket in
+                            <parameter>SOCK_DGRAM</parameter> style (BSD).</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_unix">unix-stream()</link>
+                        </entry>
+                        <entry>Sends messages to the specified unix socket in
+                            <parameter>SOCK_STREAM</parameter> style (Linux).</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_usertty">usertty()</link>
+                        </entry>
+                        <entry>Sends messages to the terminal of the specified user, if the user is
+                            logged in.</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <para>For detailed description of the supported drivers, see <xref
+                linkend="reference_destinationdrivers"/>. </para>
+        <note>
+            <para>When using the <parameter>file()</parameter> destination, update the configuration
+                of your log rotation program to rotate these files. Otherwise, the log files can
+                become very large.</para>
+        </note>
+    </section>
+    <section id="logpath">
+        <title>Log paths</title>
+        <indexterm significance="preferred">
+            <primary>log paths</primary>
+        </indexterm>
+        <para>Log paths determine what happens with the incoming log messages. Messages coming from
+            the sources listed in the log statement and matching all the filters are sent to the
+            listed destinations.</para>
+        <para>To define a log path, add a log statement to the syslog-ng configuration file using
+            the following syntax:</para>
+        <indexterm>
+            <primary>log paths</primary>
+            <secondary>defining</secondary>
+        </indexterm>
+        <synopsis id="log_path_synopsis">
+log {
+    source(s1); source(s2); ... 
+    filter(f1); filter(f2); ... 
+    destination(d1); destination(d2); ... 
+    flags(flag1[, flag2...]); 
+    };
+        </synopsis>
+        <warning>
+            <para>Log statements are processed in the order they appear in the configuration file.
+            </para>
+        </warning>
+        <example id="log_statement_example">
+            <title>A simple log statement</title>
+            <para>The following log statement sends all messages arriving to the localhost to a
+                remote server.</para>
+            <synopsis>
+source s_localhost { tcp(ip(127.0.0.1) port(1999) ); };
+destination d_tcp { tcp("10.1.2.3" port(1999); localport(999)); };
+log { source(s_localhost); destination(d_tcp); };    
+            </synopsis>
+        </example>
+        <para>All matching log statements are processed by default, so a single log message might be
+            sent to the same destination several times, provided the destination is listed in
+            several log statements. </para>
+        <indexterm>
+            <primary>log paths</primary>
+            <secondary>flags</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>flags</primary>
+        </indexterm>
+        <para>This default behavior can be changed using the <parameter>flags()</parameter>
+            parameter. Flags apply to individual log paths; they are not global options. The
+            following flags available in syslog-ng: </para>
+        <itemizedlist>
+            <listitem>
+                <para><emphasis>final</emphasis>: Do not send the message to any further
+                    destination.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>fallback</emphasis>: Process messages that were not processed by
+                    other log paths.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>catchall</emphasis>: Process every message, regardless of its
+                    source.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>flow-control</emphasis>: Stop reading messages from the source if
+                    the destination cannot accept them. See <xref linkend="flow_control"/>.</para>
+            </listitem>
+        </itemizedlist>
+        <para>For details on the individual flags, see <xref linkend="reference_logflags"/>. The
+            effect and use of the <parameter>flow-control</parameter> flag is detailed in <xref
+                linkend="flow_control"/>.</para>
+        <note>
+            <para>Note that a message goes to <emphasis>every</emphasis> matching destination by
+                default. To change this behavior, use the <parameter>final</parameter> flag. See
+                    <xref linkend="reference_logflags"/> for details.</para>
+        </note>
+    </section>
+    <section id="filters">
+        <title>Filters</title>
+        <indexterm significance="preferred">
+            <primary>filters</primary>
+        </indexterm>
+        <indexterm significance="preferred">
+            <primary>regular expressions</primary>
+        </indexterm>
+        <para>Filters perform log routing within syslog-ng: a message passes the filter if the
+            filter expression is true for the particular message. If a log statement includes
+            filters, the messages are sent to the destinations only if they pass all filters of the
+            log path. For example, a filter can select only the messages originating from a
+            particular host. Complex filters can be created using filter functions and logical
+            boolean expressions.</para>
+        <para>To define a filter, add a filter statement to the syslog-ng configuration file using
+            the following syntax:</para>
+        <indexterm>
+            <primary>filters</primary>
+            <secondary>defining</secondary>
+        </indexterm>
+        <synopsis>
+filter &lt;identifier&gt; { expression; };
+			</synopsis>
+        <para>The expression may contain the following elements: </para>
+        <itemizedlist>
+            <listitem>
+                <para>The functions listed in <xref linkend="filterfunc"/>. Some of the functions
+                    accept extended regular expressions as parameters.</para>
+            </listitem>
+            <listitem>
+                <para>Parentheses</para>
+            </listitem>
+            <listitem>
+                <para>The boolean operators <parameter>and</parameter>, <parameter>or</parameter>,
+                        <parameter>not</parameter></para>
+            </listitem>
+        </itemizedlist>
+        <example>
+            <title>A simple filter statement</title>
+            <para>The following filter statement selects the messages that contain the word
+                    <parameter>deny</parameter> and come from the host
+                <parameter>example</parameter>.</para>
+            <synopsis>
+filter demo_filter { host("example") and match("deny"); };
+            </synopsis>
+            <para>For the filter to have effect, include it in a log statement:</para>
+            <synopsis>
+log demo_filteredlog{
+        source(s1); source(s2); 
+        filter(demo_filter);
+        destination(d1); destination(d2); };                
+            </synopsis>
+            <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and
+                    <parameter>program()</parameter> filter functions accept regular expressions as
+                parameters.</para>
+            <synopsis>
+filter demo_regexp_filter { host("system.*1") and match("deny"); };
+            </synopsis>
+        </example>
+        <note>
+            <para>When a log statement includes multiple filter statements, syslog-ng sends a
+                message to the destination only if all filters are true for the message. In other
+                words, the filters are connected with the logical <parameter>AND</parameter>
+                operator. In the following example, no message arrives to the destination, because
+                the filters are exclusive (the hostname of a client cannot be
+                <parameter>example1</parameter> and <parameter>example2</parameter> at the same
+                time):</para>
+            <synopsis>
+                filter demo_filter1 { host("example1"); };
+                filter demo_filter2 { host("example2"); };
+
+                log demo_filteredlog{
+                source(s1); source(s2); 
+                filter(demo_filter1); filter(demo_filter2);
+                destination(d1); destination(d2); };                
+            </synopsis>
+            <para>To select the messages that come from either host <parameter>example1</parameter>
+                or <parameter>example2</parameter>, use a single filter expression:</para>
+            <synopsis>
+                filter demo_filter { host("example1") or host("example2"); };
+                
+                log demo_filteredlog{
+                source(s1); source(s2); 
+                filter(demo_filter);
+                destination(d1); destination(d2); };                
+            </synopsis>
+        </note>
+
+        <indexterm>
+            <primary>regular expressions</primary>
+            <secondary>case-insensitive</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>regular expressions</primary>
+            <secondary>escaping</secondary>
+        </indexterm>
+        <para>In the extended regular expressions, the characters <parameter>()[].*?+^$</parameter>
+            are used as special symbols. Therefore, these characters have to be preceded with a
+            backslash (<parameter>\</parameter>) if they are meant literally. For example, the
+                <parameter>\$40</parameter> expression matches the <parameter>$40</parameter>
+            string. Backslashes have to be escaped as well if they are meant literally. For example,
+            the <parameter>\\d</parameter> expression matches the <parameter>\d</parameter> string.</para>
+        <para>By default, all regular expressions are case sensitive. To disable the case
+            sensitivity of the expression, start the expression with the <parameter>(?i)</parameter>
+            string.</para>
+        <synopsis>
+filter demo_regexp_insensitive { host("(?i)system"); };   
+        </synopsis>
+        <note>
+            <indexterm>
+                <primary>filters</primary>
+                <secondary>wildcards</secondary>
+            </indexterm>
+            <para>In regular expressions, the asterisk (<parameter>*</parameter>) character means 0,
+                1 or any number of the previous expression. For example, in the
+                <parameter>f*ilter</parameter> expression the asterisk means 0 or more f letters.
+                This expression matches for the following strings: <parameter>ilter</parameter>,
+                    <parameter>filter</parameter>, <parameter>ffilter</parameter>, etc. To achieve
+                the wildcard functionality commonly represented by the asterisk character in other
+                applications, use <parameter>.*</parameter> in your expressions, e.g.,
+                    <parameter>f.*ilter</parameter>.</para>
+        </note>
+        <para>
+            <indexterm>
+                <primary>filters</primary>
+                <secondary>facility and priority (level) ranges</secondary>
+            </indexterm> The <parameter>level()</parameter> filter can select messages corresponding
+            to a single importance level, or a level-range. To select messages of a specific level,
+            use the name of the level as a filter parameter, e.g., use the following to select
+            warning messages:</para>
+        <synopsis>
+level(warning)            
+        </synopsis>
+        <para>To select a range of levels, include the beginning and the ending level in the filter,
+            separated with two dots (<parameter>..</parameter>). For example, to select every
+            message of error or higher level, use the following filter:</para>
+        <synopsis>
+level(err..emerg)            
+        </synopsis>
+        <para>Similarly, messages sent by a range of facilities can also be selected. Note that this
+            is only possible when using the name of the facilities. It is not possible to select
+            ranges the numerical codes of the facilities.</para>
+        <synopsis>
+facility(local0..local5)            
+        </synopsis>
+        <para>For a complete list of the available levels and facilities, see <xref
+                linkend="reference_filters"/>. </para>
+        <para>For a complete description on the above functions, see <xref
+                linkend="reference_filters"/>. </para>
+    </section>
+
+    <section id="templates">
+        <title>Template objects</title>
+        <indexterm significance="preferred">
+            <primary>templates</primary>
+        </indexterm>
+        <para>The syslog-ng application allows you to define message templates, and reference them
+            from every object that can use a template. Templates can be used to create standard
+            message formats or filenames. Templates can reference one or more macros (e.g., date,
+            the hostname, etc.). See <xref linkend="macros"/> for a list of macros available in the
+            Linux/Unix versions of syslog-ng, and <xref linkend="windows_message_format"/> for the
+            macros of the syslog-ng Agent for Windows application.</para>
+        <para>Template objects have a single option called <parameter>template_escape</parameter>,
+            which is turned on by default (<parameter>template_escape(yes)</parameter>). This causes
+            syslog-ng to escape the <parameter>'</parameter> and <parameter>"</parameter> characters
+            from the messages. This behavior might cause problems when the messages are passed to a
+            an application that cannot handle escaped characters properly. In such case, disable the
+            escape feature (<parameter>template_escape(no)</parameter>).</para>
+        <note>
+            <para>Earlier versions of syslog-ng used templates and scripts to send log messages into
+                SQL databases. Starting from version 2.1, syslog-ng natively supports direct
+                database access using the <parameter>sql()</parameter> destination. See <xref
+                    linkend="reference_destination_sql"/> for details.</para>
+        </note>
+        <indexterm>
+            <primary>templates</primary>
+            <secondary>defining</secondary>
+        </indexterm>
+        <example>
+            <title>Using templates</title>
+            <indexterm>
+                <primary>templates</primary>
+                <secondary>example</secondary>
+            </indexterm>
+            <para>The following template (<parameter>t_demo_filetemplate</parameter>) adds the date
+                of the message and the name of the host sending the message to the beginning of the
+                message text. The template is then used in a file destination: messages sent to this
+                destination (<parameter>d_file</parameter>) will use the message format defined in
+                the template. </para>
+            <synopsis>
+template t_demo_filetemplate { 
+             template("$ISODATE $HOST $MSG\n"); template_escape(no); };          
+destination d_file { 
+             file("/var/log/messages" template(t_demo_filetemplate)); };
+            </synopsis>
+            <para>Templates can also be used inline, if they are used only at a single location. The
+                following destination is equivalent with the previous example: </para>
+            <synopsis>
+destination d_file { 
+             file("/var/log/messages" 
+                template("$ISODATE $HOST $MSG\n"; template_escape(no))); };
+            </synopsis>
+        </example>
+        <!-- <example>
+            <title>Feeding messages into an SQL database</title>
+            <para>In order to record the log messages in a database, the messages have to be
+                formatted in a way recognized by the database application. This can be accomplished
+                using templates and macros. The following template creates an SQL
+                <parameter>INSERT</parameter> command formatted to fit a database that stores the
+                hostname, priority, date, application name, and message parts of the log messages in
+                separate fields. </para>
+            <synopsis>
+template t_sql { 
+    template("INSERT INTO logs (host, pri, datetime, program, msg) 
+    VALUES (
+      '$HOST', '$PRI', '$YEAR-$MONTH-$DAY $HOUR:$MIN:$SEC', '$PROGRAM', '$MSG');\n")
+    };</synopsis>
+            <para>The Premium Edition of syslog-ng natively supports logging into a database. See
+                    <xref linkend="reference_destination_sql"/> for details.
+                </para>
+        </example>-->
+    </section>
+
+    <section id="options">
+        <title>Configuring syslog-ng options</title>
+        <indexterm significance="preferred">
+            <primary>global options</primary>
+        </indexterm>
+        <para id="options_para1">The syslog-ng application has a number of global options governing
+            DNS usage, the timestamp format used, and other general points. Each option may have
+            parameters, similarly to driver specifications. To set global options, add an option
+            statement to the syslog-ng configuration file using the following syntax:</para>
+        <synopsis id="options_synopsis">
+options { option1(params); option2(params); ... };
+        </synopsis>
+        <example>
+            <title>Using global options</title>
+            <para>To disable domain name resolving, add the following line to the syslog-ng
+                configuration file:</para>
+            <synopsis>
+options { use_dns(no); };                
+            </synopsis>
+        </example>
+        <para>For a detailed list of the available options, see <xref linkend="reference_options"/>.
+            See <xref linkend="chapter_examples"/> for important global options and recommendations
+            on their use.</para>
+    </section>
+
+    <section id="tls_serverauth">
+        <title>Encrypting log messages with TLS</title>
+        <indexterm>
+            <primary>TLS</primary>
+            <secondary>configuring</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>authentication</primary>
+        </indexterm>
+        <indexterm>
+            <primary>encrypting log messages</primary>
+        </indexterm>
+        <para>This section describes how to configure TLS encryption in syslog-ng Premium Edition.
+            For the concepts of using TLS in syslog-ng, see <xref linkend="concepts_tls"/>.</para>
+        <para>Create an X.509 certificate for the syslog-ng server.</para>
+        <note id="cert_common_name">
+            <para>The <parameter>subject_alt_name</parameter> parameter (or the <parameter>Common
+                    Name</parameter> parameter if the <parameter>subject_alt_name</parameter>
+                parameter is empty) of the server's certificate must contain the hostname or the IP
+                address (as resolved from the syslog-ng clients and relays) of the server (e.g.,
+                    <parameter>syslog-ng.example.com</parameter>).</para>
+            <para>Alternatively, the <parameter>Common Name</parameter> or the
+                    <parameter>subject_alt_name</parameter> parameter can contain a generic
+                hostname, e.g., <parameter>*.example.com</parameter>.</para>
+            <para>Note that if the <parameter>Common Name</parameter> of the certificate contains a
+                generic hostname, do not specify a specific hostname or an IP address in the
+                    <parameter>subject_alt_name</parameter> parameter.</para>
+        </note>
+        <para>Complete the following steps on every syslog-ng client host:</para>
+        <!-- FIXME peldascenario a commonnevrr/altnevtre -->
+        <procedure>
+            <title>Configuring TLS on the syslog-ng clients</title>
+            <step>
+                <para>Copy the CA certificate (e.g., <filename>cacert.pem</filename>) of the
+                    Certificate Authority that issued the certificate of the syslog-ng server to the
+                    syslog-ng client hosts, for example into the
+                    <filename>/etc/syslog-ng/ca.d</filename> directory. </para>
+                <para>Issue the following command on the certificate: <command>openssl x509 -noout
+                        -hash -in cacert.pem</command> The result is a hash (e.g.,
+                        <parameter>6d2962a8</parameter>), a series of alphanumeric characters based
+                    on the Distinguished Name of the certificate. </para>
+                <para>Issue the following command to create a symbolic link to the certificate that
+                    uses the hash returned by the previous command and the <parameter>.0</parameter>
+                    suffix. </para>
+                <para>
+                    <command>ln -s cacert.pem 6d2962a8.0</command>
+                </para>
+            </step>
+            <step>
+                <para>Add a destination statement to the syslog-ng configuration file that uses the
+                        <parameter>tls( ca_dir(path_to_ca_directory) )</parameter> option and
+                    specify the directory using the CA certificate. The destination must use the
+                        <parameter>tcp()</parameter> or <parameter>tcpv6()</parameter> destination
+                    driver, and the IP address and port parameters of the driver must point to the
+                    syslog-ng server. </para>
+                <example>
+                    <title>A destination statement using TLS</title>
+                    <para>The following destination encrypts the log messages using TLS and sends
+                        them to the <parameter>1999/TCP</parameter> port of the syslog-ng server
+                        having the <parameter>10.1.2.3</parameter> IP address. </para>
+                    <synopsis>
+destination demo_tls_destination {
+                tcp("10.1.2.3" port(1999) 
+                    tls( ca_dir("/etc/syslog-ng/ca.d")) ); };
+                    </synopsis>
+                </example>
+            </step>
+            <step>
+                <para>Include the destination created in Step 2 in a log statement. </para>
+                <warning>
+                    <para>The encrypted connection between the server and the client fails if the
+                            <parameter>Common Name</parameter> or the
+                        <parameter>subject_alt_name</parameter> parameter of the server certificate
+                        does not the hostname or the IP address (as resolved from the syslog-ng
+                        clients and relays) of the server.</para>
+                    <para>Do not forget to update the certificate files when they expire.</para>
+                </warning>
+            </step>
+        </procedure>
+        <para>Complete the following steps on the syslog-ng server:</para>
+        <procedure>
+            <title>Configuring TLS on the syslog-ng server</title>
+            <step>
+                <para>Copy the certificate (e.g., <filename>syslog-ng.cert</filename>) of the
+                    syslog-ng server to the syslog-ng server host, for example into the
+                        <filename>/etc/syslog-ng/cert.d</filename> directory. The certificate must
+                    be a valid X.509 certificate in PEM format.</para>
+            </step>
+            <step>
+                <para>Copy the private key (e.g., <filename>syslog-ng.key</filename>) matching the
+                    certificate of the syslog-ng server to the syslog-ng server host, for example
+                    into the <filename>/etc/syslog-ng/key.d</filename> directory. The key must be in
+                    PEM format, and must not be password-protected.</para>
+            </step>
+            <step>
+                <para>Add a source statement to the syslog-ng configuration file that uses the
+                        <parameter>tls( key_file(key_file_fullpathname)
+                        cert_file(cert_file_fullpathname) )</parameter> option and specify the key
+                    and certificate files. The source must use the source driver
+                    (<parameter>tcp()</parameter> or <parameter>tcpv6()</parameter>) matching the
+                    destination driver used by the syslog-ng client. </para>
+                <example>
+                    <title>A source statement using TLS</title>
+                    <para>The following source receives log messages encrypted using TLS, arriving
+                        to the <parameter>1999/TCP</parameter> port of any interface of the
+                        syslog-ng server. </para>
+                    <synopsis>
+source demo_tls_source {
+           tcp(ip(0.0.0.0) port(1999) 
+               tls( key_file("/etc/syslog-ng/key.d/syslog-ng.key") 
+                    cert_file("/etc/syslog-ng/cert.d/syslog-ng.cert")) ); };
+                    </synopsis>
+                </example>
+            </step>
+            <step>
+                <para>Disable mutual authentication for the source by setting the following TLS
+                    option in the source statement: <parameter>tls(
+                    peer_verify(optional-untrusted);</parameter></para>
+                <para>To configure mutual authentication, see <xref linkend="tls_mutualauth"/>.</para>
+                <example>
+                    <title>Disabling mutual authentication</title>
+                    <para>The following source receives log messages encrypted using TLS, arriving
+                        to the <parameter>1999/TCP</parameter> port of any interface of the
+                        syslog-ng server. The identity of the syslog-ng client is not verified.</para>
+                    <synopsis>
+source demo_tls_source {
+           tcp(ip(0.0.0.0) port(1999) 
+               tls( key_file("/etc/syslog-ng/key.d/syslog-ng.key") 
+                    cert_file("/etc/syslog-ng/cert.d/syslog-ng.cert") 
+                    peer_verify(optional-untrusted))  ); };
+                    </synopsis>
+                </example>
+                <warning>
+                    <para>Do not forget to update the certificate and key files when they
+                    expire.</para>
+                </warning>
+            </step>
+        </procedure>
+        <para>For the details of the available <parameter>tls()</parameter> options, see <xref
+                linkend="tlsoptions"/>. </para>
+    </section>
+    <section id="tls_mutualauth">
+        <title>Mutual authentication using TLS</title>
+        <indexterm>
+            <primary>TLS</primary>
+            <secondary>configuring</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>mutual authentication</primary>
+        </indexterm>
+        <para>This section describes how to configure mutual authentication between the syslog-ng
+            server and the client using syslog-ng Premium Edition. Configuring mutual authentication
+            is similar to configuring TLS (see <xref linkend="tls_serverauth"/>), but the server
+            verifies the identity of the client as well. Therefore, each client must have a
+            certificate, and the server must have the certificate of the CA that issued the
+            certificate of the clients. For the concepts of using TLS in syslog-ng, see <xref
+                linkend="concepts_tls"/>.</para>
+
+        <para>Complete the following steps on every syslog-ng client host:</para>
+        <procedure>
+            <title>Configuring TLS on the syslog-ng clients</title>
+            <step>
+                <para>Create an X.509 certificate for the syslog-ng client. The
+                        <parameter>subject_alt_name</parameter> parameter (or the <parameter>Common
+                        Name</parameter> parameter if the <parameter>subject_alt_name</parameter>
+                    parameter is empty) must contain the hostname or the IP address (as resolved
+                    from the syslog-ng clients and relays) of the client.</para>
+            </step>
+            <step>
+                <para>Copy the certificate (e.g., <filename>client_cert.pem</filename>) and the
+                    matching private key (e.g., <filename>client.key</filename>) to the syslog-ng
+                    client host, for example into the <filename>/etc/syslog-ng/cert.d</filename>
+                    directory. The certificate must be a valid X.509 certificate in PEM format and
+                    must not be password-protected.</para>
+            </step>
+            <step>
+                <para>Copy the CA certificate of the Certificate Authority (e.g.,
+                        <filename>cacert.pem</filename>) that issued the certificate of the
+                    syslog-ng server to the syslog-ng client hosts, for example into the
+                        <filename>/etc/syslog-ng/ca.d</filename> directory.</para>
+                <para>Issue the following command on the certificate: <command>openssl x509 -noout
+                        -hash -in cacert.pem</command> The result is a hash (e.g.,
+                        <parameter>6d2962a8</parameter>), a series of alphanumeric characters based
+                    on the Distinguished Name of the certificate. </para>
+                <para>Issue the following command to create a symbolic link to the certificate that
+                    uses the hash returned by the previous command and the <parameter>.0</parameter>
+                    suffix. </para>
+                <para>
+                    <command>ln -s cacert.pem 6d2962a8.0</command>
+                </para>
+            </step>
+            <step>
+                <para>Add a destination statement to the syslog-ng configuration file that uses the
+                        <parameter>tls( ca_dir(path_to_ca_directory) )</parameter> option and
+                    specify the directory using the CA certificate. The destination must use the
+                        <parameter>tcp()</parameter> or <parameter>tcpv6()</parameter> destination
+                    driver, and the IP address and port parameters of the driver must point to the
+                    syslog-ng server. Include the client's certificate and private key in the
+                        <parameter>tls()</parameter> options.</para>
+                <example>
+                    <title>A destination statement mutual authentication</title>
+                    <para>The following destination encrypts the log messages using TLS and sends
+                        them to the <parameter>1999/TCP</parameter> port of the syslog-ng server
+                        having the <parameter>10.1.2.3</parameter> IP address. The private key and
+                        the certificate file authenticating the client is also specified.</para>
+                    <synopsis>
+destination demo_tls_destination {
+                tcp("10.1.2.3" port(1999) 
+                    tls( ca_dir("/etc/syslog-ng/ca.d") 
+                         key_file("/etc/syslog-ng/key.d/client.key")
+                         cert_file("/etc/syslog-ng/cert.d/client_cert.pem")) ); };
+                    </synopsis>
+                </example>
+            </step>
+            <step>
+                <para>Include the destination created in Step 2 in a log statement. </para>
+                <warning>
+                    <para>The encrypted connection between the server and the client fails if the
+                            <parameter>Common Name</parameter> or the
+                        <parameter>subject_alt_name</parameter> parameter of the server certificate
+                        does not the hostname or the IP address (as resolved from the syslog-ng
+                        clients and relays) of the server.</para>
+                    <para>Do not forget to update the certificate files when they expire.</para>
+                </warning>
+            </step>
+        </procedure>
+
+        <para>Complete the following steps on the syslog-ng server:</para>
+        <procedure>
+            <title>Configuring TLS on the syslog-ng server</title>
+            <step>
+                <para>Copy the certificate (e.g., <filename>syslog-ng.cert</filename>) of the
+                    syslog-ng server to the syslog-ng server host, for example into the
+                        <filename>/etc/syslog-ng/cert.d</filename> directory. The certificate must
+                    be a valid X.509 certificate in PEM format.</para>
+            </step>
+            <step>
+                <para>Copy the CA certificate (e.g., <filename>cacert.pem</filename>) of the
+                    Certificate Authority that issued the certificate of the syslog-ng clients to
+                    the syslog-ng server, for example into the
+                    <filename>/etc/syslog-ng/ca.d</filename> directory. </para>
+                <para>Issue the following command on the certificate: <command>openssl x509 -noout
+                        -hash -in cacert.pem</command> The result is a hash (e.g.,
+                        <parameter>6d2962a8</parameter>), a series of alphanumeric characters based
+                    on the Distinguished Name of the certificate. </para>
+                <para>Issue the following command to create a symbolic link to the certificate that
+                    uses the hash returned by the previous command and the <parameter>.0</parameter>
+                    suffix. </para>
+                <para>
+                    <command>ln -s cacert.pem 6d2962a8.0</command>
+                </para>
+            </step>
+            <step>
+                <para>Copy the private key (e.g., <filename>syslog-ng.key</filename>) matching the
+                    certificate of the syslog-ng server to the syslog-ng server host, for example
+                    into the <filename>/etc/syslog-ng/key.d</filename> directory. The key must be in
+                    PEM format, and must not be password-protected.</para>
+            </step>
+            <step>
+                <para>Add a source statement to the syslog-ng configuration file that uses the
+                        <parameter>tls( key_file(key_file_fullpathname)
+                        cert_file(cert_file_fullpathname) )</parameter> option and specify the key
+                    and certificate files. The source must use the source driver
+                    (<parameter>tcp()</parameter> or <parameter>tcpv6()</parameter>) matching the
+                    destination driver used by the syslog-ng client. Also specify the directory
+                    storing the certificate of the CA that issued the client's certificate.</para>
+                <example>
+                    <title>A source statement using TLS</title>
+                    <para>The following source receives log messages encrypted using TLS, arriving
+                        to the <parameter>1999/TCP</parameter> port of any interface of the
+                        syslog-ng server. </para>
+                    <synopsis>
+source demo_tls_source {
+           tcp(ip(0.0.0.0) port(1999) 
+               tls( key_file("/etc/syslog-ng/key.d/syslog-ng.key") 
+                    cert_file("/etc/syslog-ng/cert.d/syslog-ng.cert") 
+                    ca_dir("/etc/syslog-ng/ca.d")) ); };
+                    </synopsis>
+                </example>
+                <warning>
+                    <para>The encrypted connection between the server and the client fails if the
+                            <parameter>Common Name</parameter> or the
+                        <parameter>subject_alt_name</parameter> parameter of the client certificate
+                        does not the hostname or the IP address (as resolved from the syslog-ng
+                        clients and relays) of the server.</para>
+                    <para>Do not forget to update the certificate and key files when they
+                    expire.</para>
+                </warning>
+            </step>
+        </procedure>
+        <para>For the details of the available <parameter>tls()</parameter> options, see <xref
+                linkend="tlsoptions"/>. </para>
+    </section>
+
+    <section id="configure_clients">
+        <title>Configuring syslog-ng clients</title>
+        <indexterm>
+            <primary>syslog-ng clients</primary>
+            <secondary>configuring</secondary>
+        </indexterm>
+        <para>To configure syslog-ng on a client host, complete the following steps:</para>
+        <procedure>
+            <title>Configuring syslog-ng on client hosts</title>
+            <step>
+                <para>Install the syslog-ng application on the host. See <xref
+                        linkend="chapter_install"/> for details installing syslog-ng on specific
+                    operating systems.</para>
+            </step>
+            <step>
+                <para>Configure the local sources that collect the log messages of the host.</para>
+            </step>
+            <step>
+                <para>Create a network destination that points directly to the syslog-ng server, or
+                    to a local relay.</para>
+            </step>
+            <step>
+                <para>Create a log statement connecting the local sources to the syslog-ng server or
+                    relay.</para>
+            </step>
+            <step>
+                <para>If the logs will also be stored locally on the host, create local file
+                    destinations.</para>
+            </step>
+            <step>
+                <para>Create a log statement connecting the local sources to the file
+                destination.</para>
+            </step>
+            <step>
+                <para>Set filters and options (e.g., TLS encryption) as necessary.</para>
+            </step>
+        </procedure>
+    </section>
+
+    <section id="configure_relays">
+        <title>Configuring syslog-ng relays</title>
+        <indexterm>
+            <primary>syslog-ng relays</primary>
+            <secondary>configuring</secondary>
+        </indexterm>
+        <para>To configure syslog-ng on a relay host, complete the following steps:</para>
+        <procedure>
+            <title>Configuring syslog-ng on relay hosts</title>
+            <step>
+                <para>Install the syslog-ng application on the host. See <xref
+                        linkend="chapter_install"/> for details installing syslog-ng on specific
+                    operating systems.</para>
+            </step>
+            <step>
+                <para>Configure the network sources that collect the log messages sent by the
+                    clients.</para>
+            </step>
+            <step>
+                <para>Create a network destination that points to the syslog-ng server.</para>
+            </step>
+            <step>
+                <para>Create a log statement connecting the network sources to the syslog-ng
+                server.</para>
+            </step>
+            <step>
+                <para>Configure the local sources that collect the log messages of the relay
+                host.</para>
+            </step>
+            <step>
+                <para>Create a log statement connecting the local sources to the syslog-ng
+                server.</para>
+            </step>
+            <step>
+                <para>Set filters and options (e.g., TLS encryption) as necessary.</para>
+            </step>
+        </procedure>
+        <para>In relay mode, syslog-ng cannot write messages received from network sources into
+            files; the <parameter>file()</parameter> destination is disabled. The following sources
+            are network sources: <parameter>tcp()</parameter>, <parameter>tcp6()</parameter>,
+                <parameter>udp()</parameter>, <parameter>udp6()</parameter>.</para>
+    </section>
+
+    <section id="configure_servers">
+        <title>Configuring syslog-ng servers</title>
+        <indexterm>
+            <primary>syslog-ng servers</primary>
+            <secondary>configuring</secondary>
+        </indexterm>
+        <para>To configure syslog-ng on a server host, complete the following steps:</para>
+        <procedure>
+            <title>Configuring syslog-ng on server hosts</title>
+            <step>
+                <para>Install the syslog-ng application on the host. See <xref
+                        linkend="chapter_install"/> for details installing syslog-ng on specific
+                    operating systems.</para>
+            </step>
+            <step>
+                <para>Configure the network sources that collect the log messages sent by the
+                    clients and relays.</para>
+            </step>
+            <step>
+                <para>Create local destinations that will store the log messages, e.g., files or
+                    programs.</para>
+            </step>
+            <step>
+                <para>Create a log statement connecting the network sources to the local
+                    destinations.</para>
+            </step>
+            <step>
+                <para>Configure the local sources that collect the log messages of the syslog-ng
+                    server.</para>
+            </step>
+            <step>
+                <para>Create a log statement connecting the local sources to the local
+                destinations.</para>
+            </step>
+            <step>
+                <para>Set filters and options (e.g., TLS encryption) as necessary.</para>
+            </step>
+        </procedure>
+    </section>
+
+    <section id="license">
+        <title>Installing and upgrading the license</title>
+        <indexterm>
+            <primary>license</primary>
+            <secondary>installing</secondary>
+        </indexterm>
+        <para>The syslog-ng Premium Edition server operates only if a valid license file is present
+            on the host. The license file is called <filename>license.txt</filename>, and is located
+            in the same directory as the syslog-ng configuration file.</para>
+        <warning>
+            <para>The <filename>license.txt</filename> file must be readable to the user running the
+                syslog-ng process.</para>
+        </warning>
+        <para>To install a license file, copy it to the directory where the configuration file is
+            stored. See <xref linkend="configfile_location"/> for the location of the license file.</para>
+        <para>To upgrade a license file, simply overwrite the old license file with the new one.</para>
+        <note>
+            <para>The license file is needed only when running syslog-ng Premium Edition in server
+                mode.</para>
+        </note>
+    </section>
+</chapter>

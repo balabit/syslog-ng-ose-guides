@@ -1,0 +1,757 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"[  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+  %entities;]>  
+<chapter id="chapter_concepts">
+    <title>The concepts of syslog-ng</title>
+    <para>This chapter discusses the technical concepts of syslog-ng.</para>
+    <section>
+        <title>The philosophy of syslog-ng</title>
+        <para>Typically, syslog-ng is used to manage log messages and implement centralized logging,
+            where the aim is to collect the log messages of several devices on a single, central log
+            server. The different devices &mdash; called syslog-ng clients &mdash; all run
+            syslog-ng, and collect the log messages from the various applications, files, and other
+                <emphasis>sources</emphasis>. The clients send all important log messages to the
+            remote syslog-ng server, where the server sorts and stores them. </para>
+    </section>
+    <section id="concepts_logging_with_syslog_ng">
+        <title>Logging with syslog-ng</title>
+        <indexterm>
+            <primary>sources</primary>
+        </indexterm>
+        <para id="concepts_para1">The syslog-ng application reads incoming messages and forwards
+            them to the selected <emphasis>destinations</emphasis>. The syslog-ng application can
+            receive messages from files, remote hosts, and other <emphasis>sources</emphasis>.</para>
+        <indexterm>
+            <primary>destinations</primary>
+        </indexterm>
+        <para id="concepts_para2">Log messages enter syslog-ng in one of the defined sources, and
+            are sent to one or more <emphasis>destinations</emphasis>.</para>
+        <indexterm>
+            <primary>log paths</primary>
+        </indexterm>
+        <indexterm>
+            <primary>log statements</primary>
+            <see>log paths</see>
+        </indexterm>
+        <para id="concepts_para3">Sources and destinations are independent objects; <emphasis>log
+                paths</emphasis> define what syslog-ng does with a message, connecting the sources
+            to the destinations. A log path consists of one or more sources and one or more
+            destinations; messages arriving to a source are sent to every destination listed in the
+            log path. A log path defined in syslog-ng is called a <emphasis>log
+            statement</emphasis>.</para>
+        <indexterm>
+            <primary>filters</primary>
+        </indexterm>
+        <para id="concepts_para4">Optionally, log paths can include <emphasis>filters</emphasis>.
+            Filters are rules that select only certain messages, for example, selecting only
+            messages sent by a specific application. If a log path includes filters, syslog-ng sends
+            only the messages satisfying the filter rules to the destinations set in the log path.</para>
+
+        <para>The following procedure illustrates the route of a log message from its source on the
+            syslog-ng client to its final destination on the central syslog-ng server. </para>
+        <procedure id="concepts_route_of_a_message">
+            <title>The route of a log message in syslog-ng</title>
+            <indexterm>
+                <primary>logging procedure</primary>
+            </indexterm>
+            <figure>
+                <title>The route of a log message</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center" fileref="logging01.png"/>
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" fileref="&imgroot;/logging01.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <step>
+                <para>A device or application sends a log message to a source on the syslog-ng
+                    client. For example, an Apache web server running on Linux enters a message into
+                    the <filename>/var/log/apache</filename> file.</para>
+            </step>
+            <step>
+                <para>The syslog-ng client running on the web server reads the message from its
+                        <filename>/var/log/apache</filename> source. </para>
+            </step>
+            <step>
+                <para>The syslog-ng client processes the first log statement that includes the
+                        <filename>/var/log/apache</filename> source.</para>
+            </step>
+            <step>
+                <para>The syslog-ng client compares the message to the filters of the log statement
+                    (if any). If the message complies with all filter rules, syslog-ng sends the
+                    message to the destinations set in the log statement, for example, to the remote
+                    syslog-ng server.</para>
+                <note>
+                    <para>The syslog-ng client sends a message to <emphasis>all</emphasis> matching
+                        destinations by default. As a result, a message may be sent to a destination
+                        more than once, if the destination is used in multiple log statements. To
+                        prevent such situations, use the <parameter>final</parameter> flag in the
+                        destination statements. See <xref linkend="logflags"/> for details. </para>
+                </note>
+            </step>
+            <step>
+                <para>The syslog-ng client processes the next log statement that includes the
+                        <filename>/var/log/apache</filename> source, repeating Steps 3-4.</para>
+            </step>
+            <step>
+                <para>The message sent by the syslog-ng client arrives to a source set in the
+                    syslog-ng server.</para>
+            </step>
+            <step>
+                <para>The syslog-ng server reads the message from its source and processes the first
+                    log statement that includes that source.</para>
+            </step>
+            <step>
+                <para>The syslog-ng server compares the message to the filters of the log statement
+                    (if any). If the message complies with all filter rules, syslog-ng sends the
+                    message to the destinations set in the log statement. </para>
+            </step>
+            <step>
+                <para>The syslog-ng server processes the next log statement, repeating Steps
+                7-9.</para>
+            </step>
+        </procedure>
+        <note>
+            <para>The syslog-ng application can stop reading messages from its sources if the
+                destinations cannot process the sent messages. This feature is called flow-control
+                and is detailed in <xref linkend="flow_control"/>.</para>
+        </note>
+    </section>
+
+    <section id="concepts_modes_of_operation">
+        <title>Modes of operation</title>
+        <indexterm>
+            <primary>modes of operation</primary>
+        </indexterm>
+        <para>The syslog-ng Premium Edition application has three distinct modes of operation:
+                <emphasis>Client</emphasis>, <emphasis>Server</emphasis>, and
+            <emphasis>Relay</emphasis>. The syslog-ng application running on a host determines the
+            mode of operation automatically based on the license and the configuration file.</para>
+        <note>
+            <para>Microsoft Windows based hosts can run only the syslog-ng agent. The syslog-ng
+                agent operates only in client mode.</para>
+        </note>
+        <section id="concepts_client_mode">
+            <title>Client mode</title>
+            <indexterm>
+                <primary>client mode</primary>
+            </indexterm>
+            <indexterm>
+                <primary>modes of operation</primary>
+                <secondary>client mode</secondary>
+            </indexterm>
+            <figure>
+                <title>Client-mode operation</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center" fileref="client_mode01.png"/>
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" fileref="&imgroot;/client_mode01.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para>In client mode, syslog-ng collects the local logs generated by the host and
+                forwards them through a network connection to the central syslog-ng server or to a
+                relay. Clients can also log the messages locally into files.</para>
+            <para>No license file is required to run syslog-ng in client mode.</para>
+        </section>
+        <section id="concepts_relay_mode">
+            <title>Relay mode</title>
+            <indexterm>
+                <primary>relay mode</primary>
+            </indexterm>
+            <indexterm>
+                <primary>modes of operation</primary>
+                <secondary>relay mode</secondary>
+            </indexterm>
+            <figure>
+                <title>Relay-mode operation</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center" fileref="relay_mode01.png"/>
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" fileref="&imgroot;/relay_mode01.png" scale="75"
+                        />
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para>In relay mode, syslog-ng receives logs through the network from syslog-ng clients
+                and forwards them to the central syslog-ng server using a network connection. Relays
+                can also log the messages from the relay host into a local file, or forward these
+                messages to the central syslog-ng server.</para>
+            <para>Relays cannot write messages received from the network into local files, only
+                buffer the messages to the hard disk when disk-based buffering is used.</para>
+            <para>No license file is required to run syslog-ng in relay mode.</para>
+        </section>
+        <section id="concepts_server_mode">
+            <title>Server mode</title>
+            <indexterm>
+                <primary>server mode</primary>
+            </indexterm>
+            <indexterm>
+                <primary>modes of operation</primary>
+                <secondary>server mode</secondary>
+            </indexterm>
+            <figure>
+                <title>Server-mode operation</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center" fileref="server_mode01.png"/>
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" fileref="&imgroot;/server_mode01.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
+            <para>In server mode, syslog-ng acts as a central log-collecting server. It receives
+                messages from syslog-ng clients and relays over the network, and stores them locally
+                in files, or passes them to other applications, e.g., log analyzers.</para>
+            <indexterm>
+                <primary>license</primary>
+            </indexterm>
+            <para>Running syslog-ng Premium Edition in server mode requires a license file. The
+                license determines how many individual hosts can connect to the server.</para>
+            <para>Running syslog-ng Open Source Edition in server mode does not require a license
+                file.</para>
+        </section>
+    </section>
+
+    <section id="msgroute">
+        <title>Global objects</title>
+        <indexterm>
+            <primary>global objects</primary>
+        </indexterm>
+        <para>The syslog-ng application uses the following objects:</para>
+        <itemizedlist>
+            <listitem>
+                <indexterm>
+                    <primary>source drivers</primary>
+                </indexterm>
+                <para><emphasis>Source driver</emphasis>: A communication method used to receive log
+                    messages. For example, syslog-ng can receive messages from a remote host via
+                    TCP/IP, or read the messages of a local application from a file.</para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>sources</primary>
+                </indexterm>
+                <para><emphasis>Source</emphasis>: A named collection of configured source drivers.
+                </para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                </indexterm>
+                <para><emphasis>Destination driver</emphasis>: A communication method used to send
+                    log messages. For example, syslog-ng can send messages to a remote host via
+                    TCP/IP, or write the messages into a file.</para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>destinations</primary>
+                </indexterm>
+                <para><emphasis>Destination</emphasis>: A named collection of configured destination
+                    drivers.</para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>filters</primary>
+                </indexterm>
+                <para><emphasis>Filter</emphasis>: An expression to select messages. For example, a
+                    simple filter can select the messages received from a specific host.</para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>log paths</primary>
+                </indexterm>
+                <para><emphasis>Log path</emphasis>: A combination of sources, filters, and
+                    destinations: syslog-ng examines all messages arriving to the sources of the log
+                    path and sends the messages matching all filters to the defined destinations.
+                    Log paths are also called log statements.</para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>templates</primary>
+                </indexterm>
+                <para><emphasis>Template</emphasis>: A template is a user-defined structure that can
+                    be used to restructure log messages or automatically generate file names. For
+                    example, a template can add the hostname and the date to the beginning of every
+                    log message.</para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>options</primary>
+                </indexterm>
+                <para><emphasis>Option</emphasis>: Options set global parameters of syslog-ng, like
+                    the parameters of name resolution and timezone handling.</para>
+            </listitem>
+        </itemizedlist>
+        <para>For details on the above objects, see <xref linkend="defining_global_objects"
+        />.</para>
+    </section>
+
+    <section id="timezone_handling">
+        <title>Timezone handling</title>
+        <indexterm>
+            <primary>timezones</primary>
+        </indexterm>
+        <para>The syslog-ng application supports messages originating from different timezones. The
+            original syslog protocol does not include timezone information, but syslog-ng provides a
+            solution by extending the syslog protocol to include the timezone in the log messages.
+            The syslog-ng application also enables administrators to supply timezone information for
+            legacy devices which do not support the protocol extension. </para>
+        <para>Timezone information is associated with messages entering syslog-ng is selected using
+            the following algorithm:</para>
+        <procedure>
+            <step>
+                <para>The sender application or host specifies (e.g., the syslog-ng client) the
+                    timezone of the messages. If the incoming message includes a timezone it is
+                    associated with the message. Otherwise, the local timezone is assumed.</para>
+            </step>
+            <step>
+                <para>Specify the <link linkend="sourcecommonopts">
+                        <parameter>time_zone()</parameter>
+                    </link> parameter for the source driver that reads the message. This parameter
+                    overrides the original timezone of the message. Each source defaults to the
+                    value of the <link linkend="reference_options">
+                        <parameter>recv_time_zone()</parameter>
+                    </link> global option. </para>
+            </step>
+            <step>
+                <para>Specify the timezone in the destination driver using the <link
+                        linkend="destcommonopts">
+                        <parameter>time_zone()</parameter>
+                    </link> parameter. Each destination driver might have an associated timezone
+                    value; syslog-ng converts message timestamps to this timezone before sending the
+                    message to its destination (file or network socket). Each destination defaults
+                    to the value of the <link linkend="reference_options">
+                        <parameter>send_time_zone()</parameter>
+                    </link> global option.</para>
+                <note>
+                    <para>A message can be sent to multiple destination zones. The syslog-ng
+                        application converts the timezone information properly for every individual
+                        destination zone.</para>
+                </note>
+            </step>
+            <step>
+                <para>If the timezone is not specified, the message is left unchanged.</para>
+            </step>
+            <step>
+                <para>When macro expansions are used in the destination filenames, the local
+                    timezone is used. </para>
+            </step>
+        </procedure>
+    </section>
+    <section id="concepts_daylight_saving">
+        <title>Daylight saving changes</title>
+        <indexterm>
+            <primary>daylight saving changes</primary>
+        </indexterm>
+        <para>The syslog-ng application receives the timezone and daylight saving information from
+            the operating system it is installed on. If the operating system handles daylight saving
+            correctly, so does syslog-ng. </para>
+    </section>
+
+    <section id="concepts_tls">
+        <title>Secure logging using TLS</title>
+        <indexterm>
+            <primary>TLS</primary>
+        </indexterm>
+        <indexterm>
+            <primary>transport layer security</primary>
+            <see>TLS</see>
+        </indexterm>
+        <indexterm>
+            <primary>encrypting log messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>authentication</primary>
+        </indexterm>
+        <para>The Premium Edition of syslog-ng can send and receive log messages securely over the
+            network using the Transport Layer Security (TLS) protocol. TLS is an encryption protocol
+            over the TCP/IP network protocol, so it can be used only with TCP-based sources and
+            destinations ( <parameter>tcp()</parameter> and <parameter>tcp6()</parameter>).</para>
+        <para>TLS uses certificates to authenticate and encrypt the communication, as illustrated on
+            the following figure: </para>
+        <figure>
+            <title>Certificate-based authentication</title>
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata format="PNG" align="center"
+                        fileref="certificate-based_authentication01.png"/>
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata format="PNG"
+                        fileref="&imgroot;/certificate-based_authentication01"/>
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <indexterm>
+            <primary>certificates</primary>
+        </indexterm>
+        <para>The client authenticates the server by requesting its certificate and public key.
+            Optionally, the server can also request a certificate from the client, thus mutual
+            authentication is also possible.</para>
+        <para>In order to use TLS encryption in syslog-ng, the following elements are required:</para>
+        <itemizedlist>
+            <listitem>
+                <para>A certificate on the syslog-ng server that identifies the syslog-ng
+                server.</para>
+            </listitem>
+            <listitem>
+                <para>The certificate of the Certificate Authority that issued the certificate of
+                    the syslog-ng server must be available on the syslog-ng client.</para>
+            </listitem>
+        </itemizedlist>
+        <para>When using mutual authentication to verify the identity of the clients, the following
+            elements are required:</para>
+        <indexterm>
+            <primary>authentication</primary>
+        </indexterm>
+        <indexterm>
+            <primary>mutual authentication</primary>
+        </indexterm>
+        <itemizedlist>
+            <listitem>
+                <para>A certificate must be available on the syslog-ng client. This certificate
+                    identifies the syslog-ng client.</para>
+            </listitem>
+            <listitem>
+                <para>The certificate of the Certificate Authority that issued the certificate of
+                    the syslog-ng client must be available on the syslog-ng server.</para>
+            </listitem>
+        </itemizedlist>
+        <para>Mutual authentication ensures that the syslog-ng server accepts log messages only from
+            authorized clients. </para>
+        <para>See <xref linkend="tls_serverauth"/> for details on configuring TLS communication in
+            syslog-ng.</para>
+    </section>
+
+    <section id="concepts_licensing">
+        <title>Licensing</title>
+        <indexterm>
+            <primary>license</primary>
+        </indexterm>
+        <indexterm>
+            <primary>server license</primary>
+        </indexterm>
+        <para>The syslog-ng Premium Edition application is licensed on a per-host basis: the
+            syslog-ng server accepts connections only from the number of individual hosts (also
+            called log source hosts) specified in its license file.</para>
+        <para>A log source host is a host or network device (including syslog-ng clients and relays)
+            that sends logs to the syslog-ng server. Log source hosts can be servers, routers,
+            desktop computers, or other devices capable of sending syslog messages or running
+            syslog-ng. Log source hosts are identified by their IP addresses, so virtual machines
+            and vhosts are separately counted. Licenses are available for 5, 10, 25, 50, 100, 150,
+            200, 250, 300, 500, 750, 1000, and unlimited number of log source hosts.</para>
+        <para>Buying a syslog-ng server license permits you to perform the following:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Install the syslog-ng application in server mode to a single host. This host
+                    acts as the central log server of the network.</para>
+            </listitem>
+            <listitem>
+                <para>Install the syslog-ng application in relay or client mode on host computers.
+                    The total number of hosts permitted to run syslog-ng in relay or client mode is
+                    limited by the syslog-ng server license. The client and relay hosts may use any
+                    operating system supported by syslog-ng. See <xref linkend="supported_platforms"
+                    /> for details. </para>
+            </listitem>
+            <listitem>
+                <para>Download software updates for a year.</para>
+            </listitem>
+        </itemizedlist>
+        <example id="licensing_example">
+            <title>Counting log source hosts</title>
+
+            <para>Let's say that you have two facilities (e.g., data centers or server farms), and
+                you have 80 AIX servers and 20 Microsoft Windows host at Facility 1, and 5 HP-UX
+                servers and 40 Debian servers at Facility 2. That is 145 hosts altogether.</para>
+            <itemizedlist>
+                <listitem>
+                    <para>If you want to collect the log messages of these host to a single
+                        logserver, then you need a syslog-ng PE license that allows you to accept
+                        logs from at least 145 hosts. (In practice this means you have to buy a
+                        license for 150 hosts.)</para>
+                </listitem>
+                <listitem>
+                    <para>If you want each facility to have its own logserver, and do not want to
+                        have a central server that collects the log messages of both facilities, you
+                        need two separate licenses: a license for 100 hosts at Facility 1, and a
+                        license for at least 45 hosts at Facility 2 (actually you have to buy
+                        license for 50 hosts).</para>
+                </listitem>
+                <listitem>
+                    <para>If you want each facility to have its own local logserver that stores the
+                        logs locally, and also want to have a central logserver that collects every
+                        log message independently from the two local logserver, you need three
+                        licenses: a license for 100 hosts at Facility 1, and a license for at least
+                        45 hosts at Facility 2, and a license for the central logserver. The size of
+                        the license on the central logserver should be 100 (the hosts at Facility 1)
+                        + 45 (the hosts at Facility 2) + 2 (the two local logservers at each
+                        facility) = 147 &mdash; practically thats another 150-host license.</para>
+                    <note>
+                        <para>If, for example, the 40 Debian servers at Facility 2 are each running
+                            3 virtual hosts, then the total number of hosts at Facility 2 is 125,
+                            and the license sizes should be calculated accordingly.</para>
+                    </note>
+                </listitem>
+            </itemizedlist>
+        </example>
+        <para>The syslog-ng Open Source Edition application is distributed under version 2 of the
+            GNU General Public License. See <xref linkend="gpl"/> for details. </para>
+    </section>
+
+    <section id="concepts_high_availability">
+        <title>High availability support</title>
+        <indexterm>
+            <primary>fail-over</primary>
+        </indexterm>
+        <para>Multiple syslog-ng servers can be run in fail-over mode. The syslog-ng application
+            does not include any internal support for this, as clustering support must be
+            implemented on the operating system level. A tool that can be used to create UNIX
+            clusters is Heartbeat (see <ulink url="http://www.linux-ha.org/"
+                >http://www.linux-ha.org/</ulink> for details).</para>
+    </section>
+
+    <section id="concepts_message_structure">
+        <title>The structure of a log message</title>
+        <indexterm>
+            <primary>log messages, structure</primary>
+        </indexterm>
+        <para>This section describes the format of a syslog message, according to RFC 3164 (<ulink
+                url="http://www.ietf.org/rfc/rfc3164.txt"
+            >http://www.ietf.org/rfc/rfc3164.txt</ulink>). A syslog message consists of the
+            following parts: </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    <parameter>
+                        <link linkend="syslog_pri">PRI</link>
+                    </parameter>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <parameter>
+                        <link linkend="syslog_header">HEADER</link>
+                    </parameter>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <parameter>
+                        <link linkend="syslog_msg">MSG</link>
+                    </parameter>
+                </para>
+            </listitem>
+        </itemizedlist>
+        <para>The total message must be shorter than 1024 bytes.</para>
+        <para>The following is a sample syslog message: <parameter>&lt;133&gt;Feb 25
+                14:09:07 webserver syslogd: restart</parameter>. The message corresponds to the
+            following format: <parameter>&lt;priority&gt;timestamp hostname application:
+                message</parameter>. The different parts of the message are explained in the
+            following sections.</para>
+        <note>
+            <para>The syslog-ng application supports longer messages as well. For details, see the
+                    <parameter>log_msg_size()</parameter> option in <xref
+                    linkend="reference_options"/>. However, it is not recommended to enable messages
+                larger than the packet size when using UDP destinations.</para>
+        </note>
+        <section id="syslog_pri">
+            <title>The PRI message part</title>
+            <para>The PRI part of the syslog message (known as Priority value) represents the
+                Facility and Severity of the message. Facility represents the part of the system
+                sending the message, while severity marks its importance. The Priority value is
+                calculated by first multiplying the Facility number by 8 and then adding the
+                numerical value of the Severity. The possible facility and severity values are
+                presented below.</para>
+            <note>
+                <para>Facility codes may slightly vary between different platforms. The syslog-ng
+                    application accepts facility codes as numerical values as well. </para>
+            </note>
+            <table>
+                <title>syslog Message Facilities</title>
+                <?dbfo keep-together="auto" ?>
+                <indexterm>
+                    <primary>facilities</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>message facilities</primary>
+                </indexterm>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Numerical Code</entry>
+                            <entry>Facility</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>0</entry>
+                            <entry>kernel messages</entry>
+                        </row>
+                        <row>
+                            <entry>1</entry>
+                            <entry>user-level messages</entry>
+                        </row>
+                        <row>
+                            <entry>2</entry>
+                            <entry>mail system</entry>
+                        </row>
+                        <row>
+                            <entry>3</entry>
+                            <entry>system daemons</entry>
+                        </row>
+                        <row>
+                            <entry>4</entry>
+                            <entry>security/authorization messages</entry>
+                        </row>
+                        <row>
+                            <entry>5</entry>
+                            <entry>messages generated internally by syslogd</entry>
+                        </row>
+                        <row>
+                            <entry>6</entry>
+                            <entry>line printer subsystem</entry>
+                        </row>
+                        <row>
+                            <entry>7</entry>
+                            <entry>network news subsystem</entry>
+                        </row>
+                        <row>
+                            <entry>8</entry>
+                            <entry>UUCP subsystem</entry>
+                        </row>
+                        <row>
+                            <entry>9</entry>
+                            <entry>clock daemon</entry>
+                        </row>
+                        <row>
+                            <entry>10</entry>
+                            <entry>security/authorization messages</entry>
+                        </row>
+                        <row>
+                            <entry>11</entry>
+                            <entry>FTP daemon</entry>
+                        </row>
+                        <row>
+                            <entry>12</entry>
+                            <entry>NTP subsystem</entry>
+                        </row>
+                        <row>
+                            <entry>13</entry>
+                            <entry>log audit</entry>
+                        </row>
+                        <row>
+                            <entry>14</entry>
+                            <entry>log alert</entry>
+                        </row>
+                        <row>
+                            <entry>15</entry>
+                            <entry>clock daemon</entry>
+                        </row>
+                        <row>
+                            <entry>16-23</entry>
+                            <entry>locally used facilities (local0-local7)</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <para>The following table lists the severity values.</para>
+            <table>
+                <title>syslog Message Severities</title>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Numerical Code</entry>
+                            <entry>Severity</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>0</entry>
+                            <entry>Emergency: system is unusable</entry>
+                        </row>
+                        <row>
+                            <entry>1</entry>
+                            <entry>Alert: action must be taken immediately</entry>
+                        </row>
+                        <row>
+                            <entry>2</entry>
+                            <entry>Critical: critical conditions</entry>
+                        </row>
+                        <row>
+                            <entry>3</entry>
+                            <entry>Error: error conditions</entry>
+                        </row>
+                        <row>
+                            <entry>4</entry>
+                            <entry>Warning: warning conditions</entry>
+                        </row>
+                        <row>
+                            <entry>5</entry>
+                            <entry>Notice: normal but significant condition</entry>
+                        </row>
+                        <row>
+                            <entry>6</entry>
+                            <entry>Informational: informational messages</entry>
+                        </row>
+                        <row>
+                            <entry>7</entry>
+                            <entry>Debug: debug-level messages</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+        <section id="syslog_header">
+            <title>The HEADER message part</title>
+            <indexterm>
+                <primary>timestamp</primary>
+            </indexterm>
+            <indexterm>
+                <primary>local time</primary>
+            </indexterm>
+            <para> The HEADER part contains a timestamp and the hostname (without the domain name)
+                or the IP address of the device. The timestamp field is the local time in the
+                    <parameter>Mmm dd hh:mm:ss</parameter> format, where: </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <emphasis>Mmm</emphasis> is the English abbreviation of the month: Jan, Feb,
+                        Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec. </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <emphasis>dd</emphasis> is the day of the month on two digits. If the day of
+                        the month is less than 10, the first digit is replaced with a space. (E.g.,
+                            <parameter>Aug 7</parameter>.) </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <emphasis>hh:mm:ss</emphasis> is the local time. The hour (hh) is
+                        represented in a 24-hour format. Valid entries are between 00 and 23,
+                        inclusive. The minute (mm) and second (ss) entries are between 00 and 59
+                        inclusive. </para>
+                </listitem>
+            </itemizedlist>
+            <note>
+                <para>The syslog-ng application supports other timestamp formats as well, like ISO,
+                    or the PIX extended format. For details, see the
+                    <parameter>ts_format()</parameter> option in <xref linkend="reference_options"
+                    />.</para>
+            </note>
+        </section>
+        <section id="syslog_msg">
+            <title>The MSG message part</title>
+            <para>The MSG part contains the name of the program or process that generated the
+                message, and the text of the message itself. The MSG part is usually in the
+                following format: <parameter>program[pid]: message text</parameter>.</para>
+        </section>
+    </section>
+</chapter>

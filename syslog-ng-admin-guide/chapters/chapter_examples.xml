@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]> 
+<chapter id="chapter_examples">
+    <title>Best practices and examples</title>
+    <para>This chapter discusses some special examples and recommendations.</para>
+    <section id="example_general">
+        <title>General recommendations</title>
+        <para>This section provides general tips and recommendations on using syslog-ng. Some of the
+            recommendations are detailed in the subsequent sections.</para>
+        <itemizedlist>
+            <indexterm>
+                <primary>facilities</primary>
+            </indexterm>
+            <listitem>
+                <para>Do not base the separation of log messages into different files on the
+                        <parameter>facility</parameter> parameter. As several applications and
+                    processes can use the same facility, the facility does not identify the
+                    application that sent the message. By default, the
+                    <parameter>facility</parameter> parameter is not even included in the log
+                    message itself. In general, sorting the log messages into several different
+                    files can make finding specific log messages difficult. If you must create
+                    separate log files, use the application name.</para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>timestamp</primary>
+                </indexterm>
+                <para>Standard log messages include the local time of the sending host, without any
+                    time zone information. It is recommended to replace this timestamp with an
+                    ISODATE timestamp, because the ISODATE format includes the year and timezone as
+                    well. To convert all timestamps to the ISODATE format, include the following
+                    line in the syslog-ng configuration file:</para>
+                <synopsis>
+options {ts_format(iso)};
+                </synopsis>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>name resolution</primary>
+                </indexterm>
+                <para>Resolving the IP addresses of the clients to domain names can decrease the
+                    performance of syslog-ng. See <xref linkend="examples_dns"/> for details.
+                </para>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="examples_dns">
+        <title>Using name resolution in syslog-ng</title>
+        <indexterm>
+            <primary>name resolution</primary>
+        </indexterm>
+        <para>The syslog-ng application can resolve the hostnames of the clients and include them in
+            the log messages. However, the performance of syslog-ng is severely degraded if the
+            domain name server is unaccessible or slow. Therefore, it is not recommended to resolve
+            hostnames in syslog-ng. If you must use name resolution from syslog-ng, consider the
+            following: </para>
+        <itemizedlist>
+            <listitem>
+                <para>Use DNS caching. Verify that the DNS cache is large enough to store all
+                    important hostnames. (By default, the syslog-ng DNS cache stores
+                    <parameter>1007</parameter> entries.)</para>
+                <synopsis>
+options { dns_cache(2000); };
+                </synopsis>
+            </listitem>
+            <listitem>
+                <para>If the IP addresses of the clients change only rarely, set the expiry of the
+                    DNS cache large.</para>
+                <synopsis>
+options { dns_cache_expire(87600); };
+                </synopsis>
+            </listitem>
+            <listitem>
+                <para>If possible, resolve the hostnames locally. See <xref
+                        linkend="example_local_dns"/> for details. </para>
+            </listitem>
+        </itemizedlist>
+        <note>
+            <para>Domain name resolution is important mainly in relay and server mode.</para>
+        </note>
+        <section id="example_local_dns">
+            <title>Resolving hostnames locally </title>
+            <indexterm>
+                <primary>name resolution</primary>
+                <secondary>local</secondary>
+            </indexterm>
+            <para>Resolving hostnames locally enables you to display hostnames in the log files for
+                frequently used hosts, without having to rely on a DNS server. The known IP address
+                &ndash; hostname pairs are stored locally in a file. In the log messages,
+                syslog-ng will replace the IP addresses of known hosts with their hostnames. To
+                configure local name resolution, complete the following steps:</para>
+            <procedure>
+                <title>Resolving hostnames locally</title>
+                <step>
+                    <para>Add the hostnames and the respective IP addresses to the file used for
+                        local name resolution. On Linux and UNIX systems, this is the
+                            <filename>/etc/hosts</filename> file. Consult the documentation of your
+                        operating system for details.</para>
+                </step>
+                <step>
+                    <para>Instruct syslog-ng to resolve hostnames locally. Set the
+                            <parameter>use_dns()</parameter> option of syslog-ng to
+                            <parameter>persist_only</parameter>.</para>
+                </step>
+                <step>
+                    <para>Set the <parameter>dns_cache_hosts()</parameter> option to point to the
+                        file storing the hostnames. </para>
+                    <synopsis>
+options { 
+        use_dns(persist_only);
+        dns_cache_hosts(/etc/hosts); };   
+</synopsis>
+                </step>
+            </procedure>
+        </section>
+    </section>
+
+    <section id="example_chroot">
+        <title>Collecting logs from chroot</title>
+        <indexterm>
+            <primary>chroots</primary>
+        </indexterm>
+        <para>To collect logs from a chroot using a syslog-ng client running on the host, complete
+            the following steps:</para>
+        <figure>
+            <title>Collecting logs from chroot</title>
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata format="PNG" align="center" fileref="chroot01.png"/>
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata format="PNG" fileref="&imgroot;/chroot01.png" scale="75"/>
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <procedure>
+            <title>Collecting logs from chroot</title>
+            <step>
+                <para>Create a <filename>/dev</filename> directory within the chroot. The
+                    applications running in the chroot send their log messages here.</para>
+            </step>
+            <step>
+                <para>Create a local source in the configuration file of the syslog-ng application
+                    running outside the chroot. This source should point to the
+                    <filename>/dev/log</filename> file within the chroot (e.g., to the
+                        <filename>/chroot/dev/log</filename> directory).</para>
+            </step>
+            <step>
+                <para>Include the source in a log statement.</para>
+            </step>
+        </procedure>
+        <note>
+            <indexterm>
+                <primary>timezone</primary>
+                <secondary>in chroots</secondary>
+            </indexterm>
+            <para>You need to set up timezone information within your chroot as well. This usually
+                means creating a symlink to <filename>/etc/localtime</filename>.</para>
+        </note>
+    </section>
+    <section id="example_klogd">
+        <title>Replacing klogd on Linux</title>
+        <para>The syslog-ng application can replace both the syslogd and klogd daemons on Linux
+            hosts. To replace klogd, complete the following steps:</para>
+        <procedure>
+            <title>Replacing klogd on Linux</title>
+            <step>
+                <para>Add a file source pointing to <filename>/proc/kmsg</filename> to the syslog-ng
+                    configuration file.</para>
+                <synopsis>
+                      source s_kmsg { file("/proc/kmsg"); };            
+                  </synopsis>
+                <warning>
+                    <para>Do not use a pipe source to read <filename>/proc/kmsg</filename>; pipe
+                        opens the source in read-write mode and this may cause problems when using
+                        SELinux or similar security measures.</para>
+                </warning>
+            </step>
+            <step>
+                <para>Include the source defined in Step 1 in a log path.</para>
+            </step>
+            <step>
+                <para>Stop klogd.</para>
+                <warning>
+                    <para>Do not run klogd and syslog-ng simultaneously when using syslog-ng to read
+                            <filename>/proc/kmsg</filename>, as it might block syslog-ng.</para>
+                </warning>
+            </step>
+        </procedure>
+    </section>
+    <section id="example_timezones">
+        <title>A note on timezones and timestamps</title>
+        <indexterm>
+            <primary>timestamp</primary>
+        </indexterm>
+        <indexterm>
+            <primary>timezones</primary>
+        </indexterm>
+        <indexterm>
+            <primary>UTC</primary>
+        </indexterm>
+        <indexterm>
+            <primary>Coordinated Universal Time</primary>
+        </indexterm>
+        <para>If the clients run syslog-ng, then use the ISO timestamp, because it includes timezone
+            information. That way you do not need to adjust the
+            <parameter>recv_time_zone()</parameter> parameter of syslog-ng.</para>
+        <para>If you want syslog-ng to output timestamps in Unix (POSIX) time format, use the
+                <parameter>S_UNIXTIME</parameter> and <parameter>R_UNIXTIME</parameter> macros. You
+            do not need to change any of the timezone related parameters, because the timestamp
+            information of incoming messages is converted to Unix time internally, and Unix time is
+            a timezone-independent time representation. (Actually, Unix time measures the number of
+            seconds elapsed since midnight of Coordinated Universal Time (UTC) January 1, 1970, but
+            does not count leap seconds.) </para>
+    </section>
+    <section id="example_dropping messages">
+        <title>Dropping messages</title>
+        <indexterm>
+            <primary>skipping messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>dropping messages</primary>
+        </indexterm>        
+        <para>To skip the processing of a message without sending it to a destination, create a log statement with 
+            the appropriate filters, but do not include any destination in the statement, and use the <parameter>final</parameter> flag.         
+        </para>
+        <example>
+            <title>Skipping messages</title>
+            <para>The following log statement drops all <parameter>debug</parameter> level messages without any further processing.</para>
+            <synopsis>
+filter demo_debugfilter { level(debug); };
+log { source(s_all); filter(demo_debugfilter); flags(final); };    
+            </synopsis>            
+        </example>
+        
+    </section>
+    
+    
+</chapter>

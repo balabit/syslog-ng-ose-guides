@@ -1,0 +1,1733 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+[  
+  <!ENTITY % xinclude SYSTEM "../../xml-stylesheet/pdf/dtd/xinclude.mod" >
+  %xinclude;
+  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+  %entities;]> 
+<chapter id="chapter_windows">
+    <title>Collecting logs from Windows hosts</title>
+    <indexterm>
+        <primary>configuring syslog-ng</primary>
+        <secondary>on Windows</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>syslog-ng agent</primary>
+    </indexterm>
+    <para>This chapter describes how to install and configure the syslog-ng agent on Microsoft
+        Windows hosts.</para>
+    <para>The syslog-ng Agent for Windows is a log collector and forwarder application for the
+        Microsoft Windows platform. It collects the log messages of the Windows-based host and
+        forwards them to a syslog-ng server using regular or TLS-encrypted TCP connections.</para>
+    <para>The features and restrictions of the syslog-ng agent are summarized below:</para>
+    <itemizedlist>
+        <listitem>
+            <para>Reads messages from eventlog groups and log files.</para>
+        </listitem>
+        <listitem>
+            <para>Transfers log messages using TCP.</para>
+        </listitem>
+        <listitem>
+            <para>Supports TLS encryption.</para>
+        </listitem>
+        <listitem>
+            <para>Authenticates the server using X.509 certificates. Mutual authentication is also
+                supported.</para>
+        </listitem>
+        <listitem>
+            <para>The format of eventlog messages can be customized using macros.</para>
+        </listitem>
+        <listitem>
+            <para>Supports multiple destinations both in parallel and fail-over modes.</para>
+        </listitem>
+        <listitem>
+            <para>Can be managed from a domain controller using group policies.</para>
+        </listitem>
+        <listitem>
+            <para>Unique message IDs.</para>
+        </listitem>
+    </itemizedlist>
+    <para>The syslog-ng agent supports the following operating systems:</para>
+    <indexterm>
+        <primary>supported operating systems</primary>
+    </indexterm>
+    <itemizedlist>
+        <listitem>
+            <para>Microsoft Windows Server 2003</para>
+        </listitem>
+        <listitem>
+            <para>Microsoft Windows XP</para>
+        </listitem>
+        <listitem>
+            <para>Microsoft Windows Vista</para>
+        </listitem>
+    </itemizedlist>
+    <section id="windows_install">
+        <title>Installing the syslog-ng agent</title>
+        <indexterm>
+            <primary>syslog-ng agent</primary>
+            <secondary>installing</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>on Windows</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>syslog-ng agent on domain controllers</secondary>
+        </indexterm>
+        <para>The syslog-ng Agent for Windows can be installed in standalone mode on independent
+            hosts. If your hosts are members of a domain, install the syslog-ng agent on the domain
+            controller, as described in <xref linkend="windows_install_domain_controller"/>. The
+            syslog-ng agent requires about 1 MB hard disk space.</para>
+        <note>
+            <para>The syslog-ng Agent for Windows requires the Microsoft .NET Framework version 2.0.
+                This package is usually already installed on most hosts. It can be downloaded at:</para>
+            <para>
+                <ulink
+                    url="http://www.microsoft.com/downloads/details.aspx?FamilyID=0856EACB-4362-4B0D-8EDD-AAB15C5E04F5&amp;displaylang=en"
+                    >http://www.microsoft.com/downloads/details.aspx?FamilyID=0856EACB-4362-4B0D-8EDD-AAB15C5E04F5&amp;displaylang=en</ulink>
+            </para>
+        </note>
+
+        <para>To install the syslog-ng agent in standalone mode, complete the following steps:</para>
+        <procedure id="windows_install_standalone">
+            <title>Installing the syslog-ng agent in standalone mode</title>
+            <step>
+                <para>Start the installer. Run the
+                    <filename>syslog-ng-agent-2.2-setup.exe</filename> file.</para>
+                <note>
+                    <para>Installing the syslog-ng agent requires administrator privileges.</para>
+                </note>
+            </step>
+            <step>
+                <para>Read the End User License Agreement and select <guibutton>I
+                Agree</guibutton>.</para>
+            </step>
+            <step>
+                <para>Select the destination folder where you want to install the syslog-ng Agent
+                    for Windows application, then select <guibutton>Next</guibutton>.</para>
+            </step>
+            <step>
+                <para>Select <guilabel>Standalone mode</guilabel>, then click
+                    <guibutton>Install</guibutton>.</para>
+            </step>
+            <step>
+                <para>The installer automatically opens the configuration interface of the syslog-ng
+                    agent. As a minimum, you must set the IP address of the destination server, and
+                    the agent will automatically start sending eventlog messages to your central
+                    logserver from the Application, Security, ans System eventlog containers.</para>
+                <note>
+                    <para>The installation is completed only after you close the configuration
+                        interface.</para>
+                </note>
+            </step>
+        </procedure>
+        <indexterm>
+            <primary>configuring syslog-ng</primary>
+            <secondary>syslog-ng agent</secondary>
+        </indexterm>
+        <para>In standalone mode, to configure an already installed syslog-ng agent, select
+                <guibutton>Start Menu > Programs > syslog-ng Agent for Windows > Configure syslog-ng
+                Agent</guibutton>.</para>
+
+        <procedure id="windows_install_domain_controller">
+            <title>Installing the syslog-ng agent on the hosts of a domain</title>
+            <step>
+                <para>Download the Microsoft Installer (<parameter>.msi</parameter>) version of the
+                    syslog-ng agent installer to the domain controller host.</para>
+                <note>
+                    <para>Installing the syslog-ng agent requires administrator privileges, but
+                        configuring the related group policies on the domain controller requires
+                        domain administrator or higher (e.g., enterprise administrator)
+                    privileges.</para>
+                </note>
+            </step>
+            <step>
+                <para>Select <guimenu>Start > Control Panel > Administrative Tools > Active
+                        Directory Users and Computers</guimenu>, right-click on the Organizational
+                    Unit of the domain whose hosts you want to install the syslog-ng agent to, and
+                    select <guimenu>Properties</guimenu>.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>Group Policy</guibutton>, and select the Group Policy object
+                    you want to add the syslog-ng agent configuration to. Alternatively, you can
+                    create a new group policy object as well.</para>
+            </step>
+            <step>
+                <para>Select <guimenu>Computer Configuration</guimenu>, right-click on
+                        <guimenu>Software Settings</guimenu>, and select <guimenu>New >
+                    Package</guimenu>.</para>
+            </step>
+            <step>
+                <para>Navigate to the syslog-ng Agent for Windows installer and select
+                        <guibutton>Open</guibutton>. </para>
+            </step>
+            <step>
+                <para>Select <guibutton>Assigned</guibutton>, then <guibutton>OK</guibutton>.</para>
+            </step>
+        </procedure>
+        <indexterm>
+            <primary>configuring syslog-ng</primary>
+            <secondary>syslog-ng agent</secondary>
+        </indexterm>
+        <para>To configure an already installed syslog-ng agent from the domain controller, select
+                <guimenu>Start > Control Panel > Administrative Tools > Active Directory Users and
+                Computers</guimenu>, right-click on the Organizational Unit, select
+                <guimenu>Properties > Syslog-ng Agent Settings</guimenu>.</para>
+
+        <section id="windows_upgrade">
+            <title>Upgrading to syslog-ng Agent for Windows 2.2</title>
+            <!-- FIXME kesobb majd kell egy 2.2.x -rol 2.2x+1-re upgrade domain controlleren resz is -->
+            <para>To upgrade the syslog-ng agent application on hosts that are not members of a
+                domain, install the executable (<parameter>.exe</parameter>) version of the
+                syslog-ng Agent for Windows installer and select <guilabel>Standalone
+                mode</guilabel>. The installer automatically receives and converts every setting of
+                version 2.1.x, and continues to send the log messages to the configured destination.
+                At the end of the installation, the new configuration interface is displayed, where
+                you can start using the new features of the syslog-ng agent.</para>
+            <para>To upgrade the syslog-ng agent application on hosts that are members of a domain,
+                install the executable (<parameter>.exe</parameter>) version of the syslog-ng Agent
+                for Windows installer and select <guilabel>Manage syslog-ng Agent centrally using
+                    Group Policy</guilabel>. The installer automatically receives and converts every
+                setting of version 2.1.x, and also automatically downloads any group policies that
+                are configured on the domain controller.</para>
+            <warning>
+                <para>If there are any group policies for the syslog-ng agent configured on the
+                    domain controller, downloading the group policies to the clients will overwrite
+                    the local settings.</para>
+            </warning>
+        </section>
+
+
+    </section>
+    <section id="windows_destinations">
+        <title>Configuring destinations</title>
+        <indexterm>
+            <primary>syslog-ng agent</primary>
+            <secondary>destinations</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>syslog-ng agent</primary>
+            <secondary>configuring the logserver</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>destinations</primary>
+            <secondary>syslog-ng agent</secondary>
+        </indexterm>
+        <para>The syslog-ng Agent for Windows application can send the log messages of the Windows
+            host to a central log server or relay. It is possible to send the same messages to
+            multiple servers, when each server receives the same messages; and also to configure
+            failover servers, when the agent sends the messages to a primary server, or to a
+            failover server if the primary becomes unavailable.</para>
+        <para>Similarly to the Linux version, the agent now sends MARK messages to the server to
+            indicate that the client host is alive but there are no log messages to send. A MARK
+            message is sent every ten minutes.</para>
+        <para>To configure a new destination, complete the following steps:</para>
+        <procedure>
+            <title>Configuring the destination logservers</title>
+            <step>
+                <para>Start the configuration interface of the syslog-ng Agent for Windows
+                    application.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>syslog-ng Agent Settings > Destinations >
+                    Network</guibutton>, and double-click on <guimenu>IPv4</guimenu>.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>Add</guibutton>, and enter the hostname or the IP address of
+                    the logserver into the <guilabel>Server Name</guilabel> field. If your logserver
+                    is configured to accept messages on a non-standard port, type the port number
+                    into the <guilabel>Server Port</guilabel> field.</para>
+                <note>
+                    <para> The syslog-ng Agent for Windows application supports both the legacy
+                        syslog protocol specified in RFC3164 and the upcoming syslog protocol
+                        specified in
+                        http://www.ietf.org/internet-drafts/draft-ietf-syslog-protocol-23.txt and
+                        http://www.ietf.org/internet-drafts/draft-ietf-syslog-transport-tls-11.txt.
+                        Version 2.2 of syslog-ng will also support the new protocol, but the current
+                        2.1 version does not, so do not modify the <guilabel>Protocol</guilabel>
+                        field.</para>
+                </note>
+            </step>
+            <step>
+                <indexterm>
+                    <primary>syslog-ng agent</primary>
+                    <secondary>failover servers</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>syslog-ng agent</primary>
+                    <secondary>client-side failover</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>client-side failover</primary>
+                    <secondary>syslog-ng agent</secondary>
+                </indexterm>
+                <para>If you have a backup server that can accept log messages if the primary
+                    logserver becomes unavailable, select the <guilabel>Failover Servers</guilabel>
+                    tab, click <guibutton>Add</guibutton>, and enter the hostname or the IP address
+                    of the backup logserver into the <guilabel>Server Name</guilabel> field. Repeat
+                    this step if you have more than one backup servers.logserver2.balabit</para>
+            </step>
+            <step>
+                <para>If you want to send the log messages to more than on server in parallel, so
+                    that every server receives every message, repeat Steps 3-4 to add the secondary
+                    servers. Secondary servers may have failover servers as well.</para>
+                <note>
+                    <para>The syslog-ng Agent for Windows application considers a message received
+                        by the logserver if the primary server of the destination, or one of its
+                        failover servers receives it. To modify which server of a destination is the
+                        primary server, select <guimenu>syslog-ng Agent Settings > Destinations >
+                            Network > IPv4</guimenu>, select the server you want to be primary, and
+                        select <guibutton>Edit > Set Primary Server</guibutton>. </para>
+                </note>
+            </step>
+            <step>
+                <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                    activate the changes, restart the syslog-ng Agent service.</para>
+            </step>
+        </procedure>
+        <section id="windows_rate_limit">
+            <title>Limiting the rate of messages</title>
+            <indexterm>
+                <primary>throttle</primary>
+                <secondary>on Windows</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>message rate</primary>
+                <secondary>on Windows</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>syslog-ng agent</primary>
+                <secondary>throttle</secondary>
+            </indexterm>
+            <para>The syslog-ng Agent can control the rate of messages (message per second) sent to
+                the central server. That way sudden message-bursts can be avoided, and the load of
+                the server is decreased.</para>
+            <para>To limit the number of messages sent to a destination, complete the following
+                steps:</para>
+            <procedure>
+                <title>Limiting the number of messages</title>
+                <step>
+                    <para>Start the configuration interface of the syslog-ng Agent for Windows
+                        application.</para>
+                </step>
+                <step>
+                    <para>Select <guibutton>syslog-ng Agent Settings > Destinations >
+                        Network</guibutton>, and double-click on <guimenu>IPv4</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Select the destination server and select <guibutton>Edit</guibutton>. To
+                        limit the number of messages that the syslog-ng agent sends to the server
+                        per second, enter the desired limit into the <guilabel>Throttle</guilabel>
+                        field. By default (<parameter>0</parameter>), the syslog-ng agent does not
+                        limit the number of messages sent.</para>
+                    <note>
+                        <para>The throttling parameter applies to the total number of messages sent,
+                            not to every source independently. The same value applies to the
+                            failover servers of the destination.</para>
+                        <para>If you are sending messages to multiple servers, then the speed of the
+                            primary server is important: if the primary server cannot accept the
+                            messages fast enough, the syslog-ng agent will reduce the number of sent
+                            messages to match the speed of the primary server, even if the secondary
+                            servers could accept messages faster. If the secondary servers cannot
+                            accept messages as fast as the primary server, then the secondary
+                            servers will lose messages; the syslog-ng agent will not slow down to
+                            wait for them.</para>
+                    </note>
+                </step>
+                <step>
+                    <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                        activate the changes, restart the syslog-ng Agent service.</para>
+                </step>
+            </procedure>
+        </section>
+    </section>
+    <section id="windows_sources">
+        <title>Configuring message sources</title>
+        <para>The syslog-ng Agent for Windows application can read messages from eventlog containers
+            and text files. The following sections explain how to configure these message sources.
+            Some global settings can apply to both types of sources, these are described in <xref
+                linkend="windows_global_settings"/>.</para>
+        <section id="windows_sources_eventlog">
+            <title>Eventlog sources</title>
+            <indexterm>
+                <primary>syslog-ng agent</primary>
+                <secondary>eventlog sources</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>sources</primary>
+                <secondary>eventlog</secondary>
+            </indexterm>
+            <para>The syslog-ng Agent for Windows application can collect messages from the standard
+                Windows eventlog containers, as well as from custom containers. The agent
+                automatically forwards the messages from three standard eventlog containers
+                    (<parameter>Application, Security, System</parameter>). To enable or disable
+                these sources, or to add custom eventlog containers, complete the following steps:</para>
+            <procedure>
+                <title>Managing eventlog sources</title>
+                <step>
+                    <para>Start the configuration interface of the syslog-ng Agent for Windows
+                        application.</para>
+                </step>
+                <step>
+                    <para>Select <guibutton>syslog-ng Agent Settings > Eventlog Sources</guibutton>,
+                        and double-click on <guimenu>Eventlog Containers</guimenu>.</para>
+                    <!-- FIXME itt el van szurva, hogy a container neve is valaszthato - szerintem felesleges 
+                        inkabb a standardokat ne lehessen torolni, csak kiixszelni. -->
+                </step>
+                <step>
+                    <itemizedlist>
+                        <listitem>
+                            <para>To disable sending messages from an eventlog container, unselect
+                                the checkbox before the name of the container.</para>
+                        </listitem>
+                        <listitem>
+                            <para>To modify the log facility associated with the messages of the
+                                container, select the container, click <guibutton>Edit</guibutton>,
+                                and select the log facility to use in the <guilabel>Log
+                                Facility</guilabel> field.</para>
+                        </listitem>
+                        <listitem>
+                            <para>To add a custom container, select <guibutton>Add</guibutton>, and
+                                enter the name if the container into the <guilabel>Event Container
+                                    Name</guilabel> field.</para>
+                            <!-- Fixme ez nagyon bena, hogy a comboboxba kell beleirnis-->
+                        </listitem>
+                    </itemizedlist>
+                </step>
+                <step>
+                    <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                        activate the changes, restart the syslog-ng Agent service.</para>
+                </step>
+            </procedure>
+        </section>
+        <section id="windows_sources_file">
+            <title>File sources and logrotation</title>
+            <indexterm>
+                <primary>syslog-ng agent</primary>
+                <secondary>file sources</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>sources</primary>
+                <secondary>windows log files</secondary>
+            </indexterm>
+            <para>The syslog-ng Agent for Windows application can collect log messages from text
+                files, and supports the use of wildcards (<parameter>*</parameter>) in filenames and
+                foldernames to be able to follow log files that are automatically rotated. To
+                configure file sources, complete the following steps:</para>
+            <procedure>
+                <title>Managing file sources</title>
+                <step>
+                    <para>Start the configuration interface of the syslog-ng Agent for Windows
+                        application.</para>
+                </step>
+                <step>
+                    <para>Select <guibutton>syslog-ng Agent Settings > File Sources</guibutton>, and
+                        double-click on <guimenu>Sources</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Select <guibutton>Add</guibutton>, enter the path to the log files into
+                        the <guilabel>Base Directory</guilabel> field, and select or enter the name
+                        and extension of the log files in the <guilabel>File Name Filter</guilabel>
+                        field. Wildcards may be used. The syslog-ng agent will forward log messages
+                        from every file that is located in this folder and has a name that matches
+                        the filter expression.</para>
+                    <tip>
+                        <para>When specifying the Base Directory, you can use the environment
+                            variables of Windows, e.g., <parameter>%WINDIR%</parameter>,
+                                <parameter>%SYSTEMROOT%</parameter>,
+                            <parameter>%PROGRAMFILES%</parameter>, etc.</para>
+                        <!-- FIXME ha kell, akkor itt van ezekrol egy teljes lista, de csak XP-re:
+                        http://kennethhunt.com/archives/000933.html -->
+                    </tip>
+                </step>
+                <step>
+                    <itemizedlist>
+                        <listitem>
+                            <para>To send messages from the files located in the subfolders of the
+                                folder set as Base Directory, select the
+                                <guilabel>Recursive</guilabel> option.</para>
+                            <!-- Fixme ez a kisnagybetuzes szerintem nem hig compliant -->
+                        </listitem>
+                        <listitem>
+                            <para>To send messages only from the file that was last modified, select
+                                the <guilabel>Last Modified File Only</guilabel> option.</para>
+                            <note>
+                                <para>If this option is not selected, the syslog-ng agent monitors
+                                    every matching file in the folder for changes, and sends new log
+                                    messages from all files.</para>
+                            </note>
+                        </listitem>
+                        <listitem>
+                            <para>To send messages only from the file that was last modified of
+                                every subfolder of the Base Directory, select both the
+                                    <guilabel>Last Modified File Only</guilabel> and the
+                                    <guilabel>Recursive</guilabel> options.</para>
+                        </listitem>
+                        <listitem>
+                            <para>To change the log facility or the log priority associated to the
+                                file source, select the desired facility or priority from the
+                                    <guilabel>Log Facility</guilabel> or <guilabel>Log
+                                Priority</guilabel> fields, respectively.</para>
+                        </listitem>
+                    </itemizedlist>
+                </step>
+                <step>
+                    <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                        activate the changes, restart the syslog-ng Agent service.</para>
+                </step>
+            </procedure>
+            <note>
+                <para>If an application writes a message into a log file without ending the line
+                    with a new-line character, saves (closes) the file, and later continues to write
+                    into the same line, then this is visible in the file as a single line, but the
+                    syslog-ng agent interprets them as two separate messages.</para>
+            </note>
+            <example>
+                <title>Collecting the logs of multiple applications from a single folder</title>
+                <para>If two applications log into the same folder (e.g.,
+                    <filename>C:\logs</filename>), you have to create two file sources. For example,
+                    if the name of the log files is <parameter>application1-*.log</parameter> and
+                        <parameter>application2-*.log</parameter>, respectively, then create two
+                    file sources with the <filename>C:\logs</filename> Base Directory, but with
+                    different File Name Filter: <parameter>application1-*.log</parameter> and
+                        <parameter>application2-*.log</parameter>, respectively.</para>
+                <para>If other applications log into the <filename>C:\logs</filename> folder, add a
+                    separate expression for each application.</para>
+                <para>By default, the syslog-ng agent will send every message to the server that
+                    arrives into any of the monitored log files. To send only the messages that
+                    arrive into the latest file of the source, enable the <guilabel>Last Modified
+                        File Only</guilabel> option.</para>
+            </example>
+        </section>
+        <section id="windows_global_settings">
+            <title>Global settings of the syslog-ng agent</title>
+            <para>The syslog-ng Agent for Windows application has some global settings that can
+                apply to both eventlog and file sources. To configure the global settings, complete
+                the following procedure:</para>
+            <procedure>
+                <title>Configuring global settings</title>
+                <step>
+                    <para>Start the configuration interface of the syslog-ng Agent for Windows
+                        application.</para>
+                </step>
+                <step>
+                    <para>Select <guibutton>syslog-ng Agent Settings</guibutton> and double-click on
+                            <guimenu>Global Settings</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Set the default log facility and log priority associated to the messages
+                        in their respective fields.</para>
+                </step>
+                <step>
+                    <para>By default, the filters and regular expressions (see <xref
+                            linkend="windows_message_filtering"/>) used in the message filters are
+                        case-sensitive. To make them case-insensitive, select the <guilabel>Regular
+                            Expressions Ignore Case</guilabel> or the <guilabel>Filters Ignore
+                        Case</guilabel> options, or both.</para>
+                    <note>
+                        <para>The <guilabel>Regular Expressions Ignore Case</guilabel> option makes
+                            the <parameter>Message Contents</parameter> filter case-insensitive for
+                            both file and eventlog sources. The <guilabel>Filters Ignore
+                            Case</guilabel> option makes the <parameter>Computers</parameter>,
+                                <parameter>Event Sources and Categories</parameter>, and the
+                                <parameter>Users</parameter> filter case-insensitive.</para>
+                    </note>
+                </step>
+                <step>
+                    <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                        activate the changes, restart the syslog-ng Agent service.</para>
+                </step>
+            </procedure>
+            <para>Filters and sources can be disabled globally as well. Disabling filters or sources
+                means that the syslog-ng agent ignores the disabled settings: i.e., if the file
+                sources are disabled, the agent does not send the messages from the files to the
+                server. See the following procedure for details.</para>
+            <procedure>
+                <title>Disabling sources and filters globally</title>
+                <indexterm>
+                    <primary>syslog-ng agent</primary>
+                    <secondary>disabling sources and filters</secondary>
+                </indexterm>
+                <step>
+                    <para>Start the configuration interface of the syslog-ng Agent for Windows
+                        application.</para>
+                </step>
+                <step>
+                    <itemizedlist>
+                        <listitem>
+                            <para>To disable file sources, select <guibutton>syslog-ng Agent
+                                    Settings</guibutton>, right-click on <guimenu>File
+                                Sources</guimenu>, then select <guibutton>Properties >
+                                Disable</guibutton>. </para>
+                        </listitem>
+                        <listitem>
+                            <para>To disable eventlog sources, select <guibutton>syslog-ng Agent
+                                    Settings</guibutton>, right-click on <guimenu>Eventlog
+                                Sources</guimenu>, then select <guibutton>Properties >
+                                Disable</guibutton>. </para>
+                        </listitem>
+                        <listitem>
+                            <para>To disable file filters, select <guibutton>syslog-ng Agent
+                                    Settings > File Sources</guibutton>, right-click on
+                                    <guimenu>Filters</guimenu>, then select <guibutton>Properties >
+                                    Disable</guibutton>. </para>
+                        </listitem>
+                        <listitem>
+                            <para>To disable eventlog filters, select <guibutton>syslog-ng Agent
+                                    Settings > Eventlog Sources</guibutton>, right-click on
+                                    <guimenu>Filters</guimenu>, then select <guibutton>Properties >
+                                    Disable</guibutton>. </para>
+                        </listitem>
+                    </itemizedlist>
+                </step>
+                <step>
+                    <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                        activate the changes, restart the syslog-ng Agent service.</para>
+                </step>
+            </procedure>
+        </section>
+
+    </section>
+    <section id="windows_ssl">
+        <title>Using SSL-encrypted connections with the syslog-ng agent</title>
+        <indexterm>
+            <primary>authentication</primary>
+            <secondary>syslog-ng agent</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>TLS</primary>
+            <secondary>syslog-ng agent</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>certificates</primary>
+        </indexterm>
+        <para>When connecting to a syslog-ng server using an encrypted connection, the syslog-ng
+            agent verifies the certificate of the server. The connection is established only if the
+            Certificate Authority (CA) that issued the certificate of the server is available in the
+            Certificate Store (<guilabel>MMC > Certificates > Computer Account > Local Computer >
+                Trusted Root Certificates</guilabel>) of the Windows-based host.</para>
+        <note>
+            <para>This certificate (sometimes also called the CACert of the server) is not the
+                certificate of the server: it is the certificate of the CA that signed the
+                certificate of the server.</para>
+            <!-- FIXME errol csinaljunk egy abrat -->
+        </note>
+        <para>To enable SSL-encrypted connections to the server, complete the following steps:</para>
+        <procedure>
+            <title>Enabling encrypted connections</title>
+            <step>
+                <para>Start the configuration interface of the syslog-ng Agent for Windows
+                    application.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>syslog-ng Agent Settings > Destinations >
+                    Network</guibutton>, and double-click on <guimenu>IPv4</guimenu>.</para>
+            </step>
+            <step>
+                <para>Select the server that accepts encrypted connections and click
+                    <guibutton>Edit</guibutton>.</para>
+            </step>
+            <step>
+                <para>Select the <guibutton>Use SSL</guibutton> option.</para>
+                <warning>
+                    <para>The connection can be established only if the Certificate Authority (CA)
+                        that issued the certificate of the server is available in the Certificate
+                        Store (<guilabel>MMC > Certificates > Computer Account > Local Computer >
+                            Trusted Root Certificates</guilabel>) of the Windows-based host. See
+                            <xref linkend="windows_importcert"/> for details on importing
+                        certificates.</para>
+                </warning>
+                <xi:include href="chapter_configuration.xml"
+                    xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="element(cert_common_name)"
+                />
+            </step>
+            <step>
+                <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                    activate the changes, restart the syslog-ng Agent service.</para>
+            </step>
+        </procedure>
+        <section id="windows_ssl_mutual">
+            <title>Using mutual authentication with syslog-ng agent</title>
+            <indexterm>
+                <primary>syslog-ng agent</primary>
+                <secondary>mutual authentication</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>syslog-ng agent</primary>
+                <secondary>client authentication</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>mutual authentication</primary>
+                <secondary>syslog-ng agent</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>client authentication</primary>
+                <secondary>syslog-ng agent</secondary>
+            </indexterm>
+            <para>When the syslog-ng server is configured to use mutual authentication, it requests
+                a certificate from the syslog-ng clients. The syslog-ng agent can automatically show
+                the requested certificate to the server when the connection is established if it is
+                available in the <guilabel>Personal Certificates</guilabel> store (<guilabel>MMC >
+                    Certificates > Computer Account > Local Computer > Personal
+                Certificates</guilabel>) of the Local Computer. Use the <guibutton>Certificate
+                    Import Wizard</guibutton> to import this certificate. See <xref
+                    linkend="windows_importcert"/> for details.</para>
+            <note>
+                <para>If the syslog-ng agent cannot find a suitable certificate in the Local
+                    Computer/Personal Certificates store, it also checks the Personal Certificates
+                    store of the syslog-ng Agent service. If the syslog-ng agent was started
+                    manually, the Personal Certificates store of the current user is also
+                checked.</para>
+            </note>
+            <note>
+                <indexterm>
+                    <primary>syslog-ng agent</primary>
+                    <secondary>certificate revocation lists</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>syslog-ng agent</primary>
+                    <secondary>CRL</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>certificate revocation lists</primary>
+                    <secondary>syslog-ng agent</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>CRL</primary>
+                    <secondary>syslog-ng agent</secondary>
+                </indexterm>
+                <para>If a certificate revocation list (CRL) is available in the Local
+                    Computer/Personal Certificates store, the syslog-ng agent verifies that the
+                    certificate of the syslog-ng server is not on this list.</para>
+            </note>
+            <procedure id="proc_windows_ssl_mutual">
+                <title>Configuring mutual authentication with the syslog-ng Agent for Windows</title>
+                <para>If the syslog-ng server requests authentication from the syslog-ng Agent,
+                    complete the following steps.</para>
+                <step>
+                    <para>Create certificates for the clients. By default, the syslog-ng agent will
+                        look for a certificate that contains the hostname or IP address of the
+                        central syslog-ng server in its Common Name. If you use a different Common
+                        Name, do not forget to complete Step 3 to set the Common Name of the
+                        certificate.</para>
+                    <para>The certificate must contain the private key and must be in PKCS12 format.</para>
+                    <tip>
+                        <para>To convert a certificate and a key from PEM format to PKCS12 you can
+                            use the following command:</para>
+                        <synopsis>openssl pkcs12 -export -in agentcertificate.pem -inkey agentprivatekey.pem -out agentcertificatewithkey.pfx </synopsis>
+                    </tip>
+                </step>
+                <step>
+                    <para>Import this certificate into the <guilabel>Personal Certificate</guilabel>
+                        store of the Local Computer using the Certificate Import Wizard. See <xref
+                            linkend="windows_importcert"/> for details.</para>
+                </step>
+                <step>
+                    <para>By default, the syslog-ng agent will look for a certificate that contains
+                        the hostname or IP address of the central syslog-ng server in its Common
+                        Name. (The agent will look for the server name or address set in the
+                            <guilabel>Server Name</guilabel> field of the destination.) If the
+                        certificate of the client has a different Common Name, complete the
+                        following steps:</para>
+                    <para><emphasis>Optional step</emphasis>: To explicitly specify the certificate
+                        that the client shows to the server, complete the following steps: </para>
+                    <substeps>
+                        <step>
+                            <para>Start the configuration interface of the syslog-ng Agent for
+                                Windows application.</para>
+                        </step>
+                        <step>
+                            <para>Select <guibutton>syslog-ng Agent Settings > Destinations >
+                                    Network</guibutton>, and double-click on
+                                <guimenu>IPv4</guimenu>.</para>
+                        </step>
+                        <step>
+                            <para>Select the server that requires mutual authentication and click
+                                    <guibutton>Edit</guibutton>.</para>
+                        </step>
+                        <step>
+                            <para>Select the <guibutton>Use SSL</guibutton> option, then enter the
+                                contents of the <parameter>subject_alt_name</parameter> parameter
+                                (or the <parameter>Common Name</parameter> parameter if the
+                                    <parameter>subject_alt_name</parameter> parameter is empty) of
+                                the certificate into the <guilabel>Client Certificate
+                                Subject</guilabel> field.</para>
+                            <note>
+                                <para>A common way is to use the hostname or the IP address of the
+                                    agent as the Common Name of the certificate (e.g.,
+                                        <parameter>syslog-ng-agent1.example.com</parameter>).</para>
+                            </note>
+                        </step>
+                    </substeps>
+                </step>
+                <step>
+                    <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                        activate the changes, restart the syslog-ng Agent service.</para>
+                </step>
+            </procedure>
+        </section>
+        <section id="windows_importcert">
+            <title>Importing certificates with the Microsoft Management Console</title>
+            <indexterm>
+                <primary>certificates</primary>
+                <secondary>importing on Windows</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>syslog-ng agent</primary>
+                <secondary>importing certificates</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>importing certificates</primary>
+            </indexterm>
+            <para>To import a certificate, complete the following steps.</para>
+            <!-- FIXME leirni, hogy a Ca es kliens certeket hogyan lehet domain controllerbol 
+            letolni a kliensekre
+            CA: GPO > properties > edit > Windows Settings > Publi key policies > Trusted Root Certificates > Import
+            -->
+            <procedure>
+                <title>Importing certificates with MMC</title>
+                <step>
+                    <para>Start Microsoft Management Console by executing
+                        <filename>mmc.exe</filename> (<guimenu>Start</guimenu> menu <guimenu>Run
+                            application</guimenu>). </para>
+                    <note>
+                        <para>Running <filename>mmc.exe</filename> requires administrator
+                            privileges.</para>
+                    </note>
+                </step>
+                <step>
+                    <para>Click on the <guimenu>Add/Remove snap-in</guimenu> item of the
+                            <guimenu>File</guimenu> menu.</para>
+                </step>
+                <step>
+                    <para>Click <guimenu>Add</guimenu>, select the <guimenu>Certificates</guimenu>
+                        module, and click <guimenu>Add</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Select <guimenu>Computer account</guimenu> in the displayed window and
+                        click <guimenu>Next</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Select <guimenu>Local computer</guimenu> and click
+                        <guimenu>Close</guimenu>. </para>
+                </step>
+                <step>
+                    <para>To import the certificate of the syslog-ng server, navigate to
+                            <guimenu>Console Root > Certificates > Trusted Root Certificate
+                            Authorities > Certificates</guimenu>.</para>
+                    <para>To import a certificate for the syslog-ng agent to perform mutual
+                        authentication, navigate to <guimenu>Console Root > Certificates > Personal
+                            > Certificates</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Right-click on the <guibutton>Certificates</guibutton> folder and from the
+                        appearing menu select <guibutton>All tasks > Import</guibutton>. The
+                            <guibutton>Certificate Import Wizard</guibutton> will be displayed.
+                        Click <guibutton>Next</guibutton>.</para>
+                    <para><emphasis>Optional step</emphasis>: Certificates used to authenticate the
+                        syslog-ng agent in mutual authentication include the private key. Provide
+                        the password for the private key when requested.</para>
+                </step>
+                <step>
+                    <para>Windows offers a suitable certificate store by default, so click
+                            <guibutton>Next</guibutton>.</para>
+                </step>
+                <step>
+                    <para>Click <guibutton>Finish</guibutton> on the summary window and
+                            <guibutton>Yes</guibutton> on the window that marks the successful
+                        importing of the certificate.</para>
+                </step>
+            </procedure>
+        </section>
+
+    </section>
+    <section id="windows_message_filtering">
+        <title>Filtering messages</title>
+        <indexterm>
+            <primary>message filtering</primary>
+            <secondary>syslog-ng agent</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>syslog-ng agent</primary>
+            <secondary>filtering messages</secondary>
+        </indexterm>
+        <para>The syslog-ng Agent for Windows application can filter log messages in a
+            blacklist-fashion: you can define filters, and any message that matches the filters is
+            ignored by the agent &mdash; only messages that do not match the filters are sent to
+            the central server. In other words, the filters are connected to each other with logical
+            OR operations.</para>
+        <para>Different filters are available for eventlog- and file sources. When the syslog-ng
+            agent processes a message, it checks the relevant filters on-by-one: if it finds a
+            filter that matches the message, the agent stops processing the message without sending
+            it to the server.</para>
+        <note>
+            <para>By default, all filters are case sensitive. To change this behavior, see <xref
+                    linkend="windows_global_settings"/>.</para>
+        </note>
+        <para>The following types of filters are available for eventlog sources:</para>
+        <itemizedlist>
+            <!-- FIXME linkeket a makrokra -->
+            <listitem>
+                <para><emphasis>Event Sources and Event IDs</emphasis>: Filter on the application
+                    that created the message, and optionally on the identification number of the
+                    event. Corresponds with the EVENT_SOURCE and EVENT_ID macros.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Message Contents</emphasis>: Filter the text of the message, i.e.,
+                    the contents of the EVENT_MESSAGE macro.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Sources and Categories</emphasis>: Filter on the application that
+                    created the message, and optionally on the category of the event. Corresponds
+                    with the EVENT_SOURCE and EVENT_CATEGORY macros.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Users</emphasis>: Filter on the username associated with the event.
+                    Corresponds with the EVENT_USERNAME macro.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Computers</emphasis>: Filter on the name of the computer (host) that
+                    created the event. Corresponds with the HOST macro.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Event Types</emphasis>: Filter on the type of the event. Corresponds
+                    with the EVENT_TYPE macro.</para>
+            </listitem>
+        </itemizedlist>
+        <para>To modify the filters used for eventlog messages, complete the following procedure:</para>
+        <procedure>
+            <title>Filtering eventlog messages</title>
+            <step>
+                <para>Start the configuration interface of the syslog-ng Agent for Windows
+                    application.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>syslog-ng Agent Settings > Eventlog Sources >
+                    Filters</guibutton>, and double-click on the type of filter you want to
+                create.</para>
+            </step>
+            <step>
+                <itemizedlist>
+                    <!-- FIXME linkeket a makrokra -->
+                    <listitem>
+                        <para>To ignore messages sent by a specific application, or messages of the
+                            application with a specific event ID, double-click on <guibutton>Event
+                                Sources and Event IDs</guibutton>, select
+                            <guibutton>Add</guibutton>, and select the name of the application whose
+                            messages you want to ignore from the <guilabel>Application
+                            Name</guilabel> field. To ignore only specific messages of the
+                            application, enter the ID of the event into the <guilabel>Event
+                            ID</guilabel> field. Select <guimenu>Add > Apply</guimenu>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>To ignore messages that contain a specific string or text,
+                            double-click on <guimenu>Message Contents</guimenu>, enter the search
+                            term or a regular expression into the <guimenu>Regular
+                            Expression</guimenu> field, then select <guimenu>Add >
+                        Apply</guimenu>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>To ignore messages sent by a specific application, or messages of the
+                            application that fall into a specific category, double-click on
+                                <guibutton>Sources and Categories</guibutton>, select
+                            <guibutton>Add</guibutton>, and select the name of the application whose
+                            messages you want to ignore from the <guilabel>Application
+                            Name</guilabel> field. To ignore only those messages of the application
+                            that fall into a specific category, enter the name of the category into
+                            the <guilabel>Category</guilabel> field. Select <guimenu>Add >
+                            Apply</guimenu>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>To ignore messages sent by a specific user, double-click on
+                                <guimenu>Users</guimenu>, enter the name of the user into the
+                                <guimenu>User</guimenu> field, then select <guimenu>Add >
+                            Apply</guimenu>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>To ignore messages sent by a specific computer (host), double-click on
+                                <guimenu>Computers</guimenu>, enter the name of the user into the
+                                <guimenu>Computer</guimenu> field, then select <guimenu>Add >
+                            Apply</guimenu>.</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>Event Types</emphasis>: To ignore messages of a specific
+                            event-type, double-click on <guimenu>Event Types</guimenu>, select the
+                            event types to ignore, and select <guimenu>Ok > Apply</guimenu>.</para>
+                    </listitem>
+                </itemizedlist>
+            </step>
+            <step>
+                <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                    activate the changes, restart the syslog-ng Agent service.</para>
+            </step>
+        </procedure>
+        <para>The following types of filters are available for file sources:</para>
+        <itemizedlist>
+            <!-- FIXME linkeket a makrokra -->
+            <listitem>
+                <para><emphasis>Message Contents</emphasis>: Filter the text of the message, i.e.,
+                    the contents of the FILE_MESSAGE macro.</para>
+            </listitem>
+        </itemizedlist>
+        <para>To modify the filters used for file messages, complete the following procedure:</para>
+        <procedure>
+            <title>Filtering file messages</title>
+            <step>
+                <para>Start the configuration interface of the syslog-ng Agent for Windows
+                    application.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>syslog-ng Agent Settings > File Sources >
+                    Filters</guibutton>, and double-click on the type of filter you want to
+                create.</para>
+            </step>
+            <step>
+                <itemizedlist>
+                    <listitem>
+                        <para>To ignore messages that contain a specific string or text,
+                            double-click on <guimenu>Message Contents</guimenu>, enter the search
+                            term or a regular expression into the <guimenu>Regular
+                            Expression</guimenu> field, then select <guimenu>Add</guimenu>.</para>
+                    </listitem>
+                </itemizedlist>
+            </step>
+            <step>
+                <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                    activate the changes, restart the syslog-ng Agent service.</para>
+            </step>
+        </procedure>
+    </section>
+
+
+    <section id="windows_message_format">
+        <title>Customizing the message format</title>
+        <indexterm>
+            <primary>message format</primary>
+            <secondary>syslog-ng agent</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>syslog-ng agent</primary>
+            <secondary>message format</secondary>
+        </indexterm>
+        <para>The format of the messages received from the eventlog and the file sources can be
+            customized using templates. You can define separate message format for the eventlog and
+            the file sources. When creating a template to customiy the message format, you can use
+            macros, all alphanumeric characters, and the following special characters:
+                <parameter>&lt;&gt;,():;-+/_</parameter>.</para>
+        <para/>
+        <para>To create a template, complete the following procedure:</para>
+        <procedure>
+            <title>Customizing messages using templates</title>
+            <step>
+                <para>Start the configuration interface of the syslog-ng Agent for Windows
+                    application.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>syslog-ng Agent Settings > Destinations >
+                    Network</guibutton>, and double-click on <guimenu>IPv4</guimenu>. Select your
+                    logserver, and click <guibutton>Edit</guibutton>.</para>
+            </step>
+            <step>
+                <para>Type the message format you want to use into the <guilabel>Template</guilabel>
+                    field. Do not forget to add the <parameter>$</parameter> character before
+                    macros. See <xref linkend="windows_macros"/> for a complete list of the
+                    available macros.</para>
+                <para>For example, to send the messages in the <parameter>DATE HOSTNAME
+                    MESSAGE</parameter> format, type <parameter>Date:$DATE Hostname:$HOST
+                        Logmessage:$MESSAGE</parameter>.</para>
+                <para>Note that the $MESSAGE macro contains not only the text of the log message,
+                    but also additional information received from the message source, such as the
+                    name of the eventlog container, or the file, as set in the eventlog-specific and
+                    file-specific templates. See <xref linkend="windows_macros_eventlog"/> and <xref
+                        linkend="windows_macros_eventlog"/> for details on modifying the
+                    eventlog-specific and file-specific templates.</para>
+                <note>
+                    <para>Templates are assigned to a single destination server, so it is possible
+                        to use different templates for different servers. However, a server and its
+                        failover servers always receive the same message.</para>
+                </note>
+                <warning>
+                    <para>If you have more than one destination servers configured (separate
+                        servers, not in failover mode), and you want to use the same template for
+                        every server, you must manually copy the template into the configuration of
+                        each server. Template modifications are not applied automatically to every
+                        server.</para>
+                </warning>
+            </step>
+            <step>
+                <para>Click <guibutton>OK</guibutton>.</para>
+            </step>
+            <step>
+                <para>To activate the changes, restart the syslog-ng Agent service.</para>
+            </step>
+        </procedure>
+        <para>To customize the format of eventlog messages, complete the following procedure. This
+            template is applied by the $MESSAGE macro to format messages received from the eventlog.</para>
+        <procedure id="windows_macros_eventlog">
+            <title>Customizing eventlog messages</title>
+            <step>
+                <para>Start the configuration interface of the syslog-ng Agent for Windows
+                    application.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>syslog-ng Agent Settings</guibutton>, right-click on
+                        <guimenu>Eventlog Sources</guimenu> and select
+                    <guimenu>Properties</guimenu>.</para>
+            </step>
+            <step>
+                <para>Type the message format into the <guilabel>Message Template</guilabel> field.
+                    You can use date- and eventlog-related macros (see <xref
+                        linkend="windows_macros"/> for a list of macros).The message customized here
+                    is included in the server-specific templates using the
+                    <parameter>MESSAGE</parameter> macro.</para>
+                <!-- FIXME link -->
+                <para>By default, the following is sent about file messages:
+                        <parameter>${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}: [${EVENT_TYPE}]
+                        ${EVENT_MSG} (EventID ${EVENT_ID})</parameter>.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                    activate the changes, restart the syslog-ng Agent service.</para>
+            </step>
+        </procedure>
+        <para>To customize the format of file messages, complete the following procedure. This
+            template is applied by the $MESSAGE macro to format messages received from the log
+            files.</para>
+        <procedure id="windows_macros_file">
+            <title>Customizing file messages</title>
+            <step>
+                <para>Start the configuration interface of the syslog-ng Agent for Windows
+                    application.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>syslog-ng Agent Settings</guibutton>, right-click on
+                        <guimenu>File Sources</guimenu> and select
+                <guimenu>Properties</guimenu>.</para>
+            </step>
+            <step>
+                <para>Type the message format into the <guilabel>Message Template</guilabel> field.
+                    You can use date- and file-related macros (see <xref linkend="windows_macros"/>
+                    for a list of macros). The message customized here is included in the
+                    server-specific templates using the <parameter>MESSAGE</parameter> macro.</para>
+                <!-- FIXME link -->
+                <para>By default, the following is sent about file messages: <parameter>$FILE_NAME:
+                        $FILE_CURRENT_POSITION/$FILE_SIZE: $FILE_MESSAGE $DATE
+                        $R_DATE</parameter>.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
+                    activate the changes, restart the syslog-ng Agent service.</para>
+            </step>
+        </procedure>
+
+        <section id="windows_timestamp">
+            <title>Customizing the timestamp used by the syslog-ng Agent</title>
+            <indexterm>
+                <primary>timestamp</primary>
+                <secondary>syslog-ng agent</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>syslog-ng agent</primary>
+                <secondary>timestamp</secondary>
+            </indexterm>
+            <para>The syslog-ng agent can send the syslog messages using either the ISO or the BSD
+                timestamp format. It is recommended to use the ISO format, because it contains much
+                more information than the BSD format.</para>
+            <xi:include href="chapter_reference.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
+                xpointer="element(date_macros)"/>
+            <para>Note that in the syslog-ng agent, the macros without prefix (e.g.,
+                <parameter>DATE</parameter>) always refer to the receiving date of the message
+                (e.g., <parameter>R_DATE</parameter>) when it arrived into the event log container,
+                and are included only for compatibility reasons.</para>
+            <warning>
+                <indexterm>
+                    <primary>timezone</primary>
+                    <secondary>Windows</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>eventlog</primary>
+                    <secondary>remote logging</secondary>
+                </indexterm>
+                <para>If a remote host is logging into the event log of the local host that is
+                    running syslog-ng Agent for Windows, both hosts should be in the same timezone,
+                    because the event log message does not include the timezone information of the
+                    sender host. Otherwise, the date of the messages received from the remote host
+                    will be incorrect.</para>
+            </warning>
+        </section>
+        <section id="windows_macros">
+            <title>Macros available in the syslog-ng Agent</title>
+            <para>The following tables list the available macros:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <link linkend="macro_protocol_agent">Macros related to protocol
+                        headers</link>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <link linkend="macro_time_agent">Macros related to the date and time of the
+                            message</link>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <link linkend="macro_event_agent">Macros related to eventlog sources</link>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <link linkend="macro_file_agent">Macros related to file sources</link>
+                    </para>
+                </listitem>
+            </itemizedlist>
+            <!-- FIXME ezt updatelni, mi van file sourcenal -->
+            <para>By default, syslog-ng Agent uses the following format:
+                    <parameter>&lt;${PRI}&gt;$DATE $HOST $MESSAGE</parameter>, where
+                    <parameter>$MESSAGE</parameter> is <parameter>${EVENT_USERNAME}: ${EVENT_NAME}
+                    ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})</parameter>
+                for eventlog messages, and <parameter>$FILE_NAME:
+                    $FILE_CURRENT_POSITION/$FILE_SIZE: $FILE_MESSAGE $DATE
+                $R_DATE</parameter> for file messages.</para>
+            <indexterm>
+                <primary>syslog-ng agent</primary>
+                <secondary>default message format</secondary>
+            </indexterm>
+            <table id="macro_protocol_agent">
+                <title>Protocol-related macros of the syslog-ng agent</title>
+                <indexterm>
+                    <primary>macros</primary>
+                    <secondary>syslog-ng agent</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>macros</primary>
+                    <secondary>protocol</secondary>
+                </indexterm>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Macro</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>HOST</entry>
+                            <entry>Name of the host sending the message.</entry>
+                        </row>
+                        <row>
+                            <entry>MESSAGE</entry>
+                            <entry>The content of the message, including the text of the message and
+                                any file- or event-specific macros that are set for the
+                            source.</entry>
+                        </row>
+                        <row>
+                            <entry>MSG</entry>
+                            <entry>The content of the message.</entry>
+                            <!-- FIXME ez ugyanaz, mint a $MSGONLY ?? -->
+                        </row>
+                        <row>
+                            <entry>PRI</entry>
+                            <entry>Priority header of the message, storing the facility and the
+                                level of the message.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <table id="macro_time_agent">
+                <title>Time-related macros of the syslog-ng agent</title>
+                <indexterm>
+                    <primary>macros</primary>
+                    <secondary>syslog-ng agent</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>macros</primary>
+                    <secondary>date and time</secondary>
+                </indexterm>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Macro</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>BSDDATE, R_BSDDATE, S_BSDDATE</entry>
+                            <entry>Date of the message in BSD timestamp format
+                                (month/day/hour/minute/second, each expressed in two digits). This
+                                is the original syslog time stamp without year information, e.g.,
+                                    <parameter>Jun 13 15:58:00</parameter>. If possible, it is
+                                recommended to use <parameter>ISODATE</parameter> for
+                            timestamping.</entry>
+                        </row>
+                        <row>
+                            <entry>DATE</entry>
+                            <entry>An alias of the ISODATE macro. </entry>
+                        </row>
+                        <xi:include href="chapter_reference.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="element(macro_day)"/>
+                        <xi:include href="chapter_reference.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(macro_fulldate)"/>
+                        <xi:include href="chapter_reference.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(macro_hour)"/>
+                        <row>
+                            <entry>ISODATE, R_ISODATE, S_ISODATE</entry>
+                            <entry>Date of the message in the ISO 8601 compatible standard timestamp
+                                format (yyyy-mm-ddThh:mm:ss+-ZONE), e.g.:
+                                    <parameter>2006-06-13T15:58:00.123+01:00</parameter>. If
+                                possible, it is recommended to use <parameter>ISODATE</parameter>
+                                for timestamping. Note that the syslog-ng agent cannot produce
+                                fractions of a second (e.g., milliseconds) in the timestamp.</entry>
+                        </row>
+                        <xi:include href="chapter_reference.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="element(macro_min)"/>
+                        <xi:include href="chapter_reference.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(macro_month)"/>
+                        <row id="macro_monthname">
+                            <entry>MONTHNAME, R_MONTHNAME, S_MONTHNAME</entry>
+                            <entry>The English name of the month the message was sent, abbreviated
+                                to three characters (e.g., Jan, Feb, etc.). </entry>
+                        </row>
+                        <row>
+                            <entry>R_DATE</entry>
+                            <entry>Date when the message was recorded into the eventlog container.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>S_DATE</entry>
+                            <entry>Date when the message was created.</entry>
+                        </row>
+                        <xi:include href="chapter_reference.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="element(macro_sec)"/>
+                        <row>
+                            <entry>TZ, R_TZ, S_TZ</entry>
+                            <entry>The name of the time zone of the host. </entry>
+                        </row>
+                        <xi:include href="chapter_reference.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(macro_tzoffset)"/>
+                        <xi:include href="chapter_reference.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(macro_unixtime)"/>
+                        <xi:include href="chapter_reference.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(macro_year)"/>
+                        <xi:include href="chapter_reference.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(macro_week)"/>
+                        <xi:include href="chapter_reference.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(macro_weekday)"/>
+                    </tbody>
+                </tgroup>
+            </table>
+            <table id="macro_event_agent">
+                <title>Eventlog-related macros of the syslog-ng agent</title>
+                <indexterm>
+                    <primary>macros</primary>
+                    <secondary>syslog-ng agent</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>macros</primary>
+                    <secondary>eventlog sources</secondary>
+                </indexterm>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Macro</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>EVENT_CATEGORY</entry>
+                            <entry>The category of the event.</entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_FACILITY</entry>
+                            <entry>The facility that sent the message.</entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_ID</entry>
+                            <entry>The identification number of the event.</entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_LEVEL</entry>
+                            <entry>Importance level of the message represented as a number: 6 -
+                                Success, 5 - Informational, 4- Warning, or 3 - Error).</entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_MESSAGE</entry>
+                            <entry>The content of the message.</entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_MSG</entry>
+                            <entry><!--FIXME--></entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_NAME</entry>
+                            <entry>Name of the Windows event log container (e.g., Application or
+                                Security).</entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_REC_NUM</entry>
+                            <entry>The record number of the event in the event log.</entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_SID</entry>
+                            <entry>The security identification number of the event.</entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_SID_TYPE</entry>
+                            <entry>The security identification number resolved into name. One of the
+                                following: <parameter>User</parameter>,
+                                <parameter>Group</parameter>, <parameter>Domain</parameter>,
+                                    <parameter>Alias</parameter>
+                                <parameter>WellKnownGroup</parameter>,
+                                <parameter>DeletedAccount</parameter>,
+                                <parameter>Invalid</parameter>, <parameter>Unknown</parameter>,
+                                    <parameter>Computer</parameter>. </entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_SOURCE</entry>
+                            <entry>The application that created the message.</entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_TYPE</entry>
+                            <entry>The importance level of the message in text format.</entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_USERNAME</entry>
+                            <entry>The user running the application that created the
+                            message.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <table id="macro_file_agent">
+                <title>File-related macros of the syslog-ng agent</title>
+                <indexterm>
+                    <primary>macros</primary>
+                    <secondary>syslog-ng agent</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>macros</primary>
+                    <secondary>file sources</secondary>
+                </indexterm>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Macro</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>FILE_CURRENT_POSITION</entry>
+                            <entry>The position of the message from the beginning of the file in
+                                bytes.</entry>
+                        </row>
+                        <row>
+                            <entry>FILE_FACILITY</entry>
+                            <entry>The facility that sent the message.</entry>
+                        </row>
+                        <row>
+                            <entry>FILE_LEVEL</entry>
+                            <entry>Importance level of the message represented as a number: 6 -
+                                Success, 5 - Informational, 4- Warning, or 3 - Error).</entry>
+                        </row>
+                        <row>
+                            <entry>FILE_MESSAGE</entry>
+                            <entry>The content of the message.</entry>
+                        </row>
+                        <row>
+                            <entry>FILE_MSG</entry>
+                            <entry><!--FIXME--></entry>
+                        </row>
+                        <row>
+                            <entry>FILE_NAME</entry>
+                            <entry>Name of the log file (including its path) from where the
+                                syslog-ng Agent received the message.</entry>
+                        </row>
+                        <row>
+                            <entry>FILE_SIZE</entry>
+                            <entry>The current size of the file in bytes.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+    </section>
+    <section id="windows_service">
+        <title>Controlling the syslog-ng agent services</title>
+        <para>During installation, syslog-ng agent registers the <parameter>LogRelay</parameter>
+            service that is started automatically when the host boots. To disable the automatic
+            startup of the syslog-ng agent, or manually start or stop the service, use the
+                <guibutton>Start Menu > Control Panel > Administrative Tools > Services</guibutton>
+            interface. The service is running with the privileges of the <parameter>NT
+                AUTHORITY\SYSTEM</parameter> user.</para>
+        <warning>
+            <indexterm>
+                <primary>timezone</primary>
+                <secondary>Windows</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>syslog-ng Agent</primary>
+                <secondary>timezone</secondary>
+            </indexterm>
+            <para>If you change the timezone setting of the host while the syslog-ng Agent is
+                running, you have to restart the syslog-ng Agent. Otherwise, it will not receive the
+                updated timezone information and the date of the events will be incorrect.</para>
+        </warning>
+    </section>
+    <section id="windows_cpu">
+        <title>Sending messages and CPU load</title>
+        <para>The syslog-ng agent application can send messages to the server when the Windows
+            Scheduler provides resources to the syslog-ng agent. When there are many unsent log
+            messages in the log sources, and there is no other significant activity on the host,
+            syslog-ng will start to send the messages to the server, possibly increasing the CPU
+            load to 100%. After all messages have been sent, or if another application requires the
+            resources, the CPU load decreases back to normal.</para>
+        <tip>
+            <para>To avoid the initial large load on the CPU, limit the rate of message sending
+                temporarily. You can remove the limit after the old messages have been sent. See
+                    <xref linkend="windows_rate_limit"/> for details.</para>
+        </tip>
+        <para>When relaying the messages from multiple sources, the syslog-ng agent sends one
+            message at a time from each source. That way a single source with a large log traffic
+            does not block other log sources. </para>
+    </section>
+    <section id="windows_troubleshooting">
+        <title>Troubleshooting syslog-ng Agent for Windows</title>
+        <indexterm>
+            <primary>syslog-ng agent</primary>
+            <secondary>troubleshooting</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>troubleshooting</primary>
+            <secondary>syslog-ng agent</secondary>
+        </indexterm>
+        <para>In case you experience problems with the syslog-ng agent, the following points may be
+            of help.</para>
+        <note>
+            <para>The followings address only problems specific to the syslog-ng agent, and assume
+                that communication between the server and the client is otherwise possible (that is,
+                the server is properly configured to receive messages and is available on the
+                network, and name resolution is properly configured on the client).</para>
+        </note>
+        <itemizedlist>
+            <listitem>
+                <para><emphasis>Configuration changes do not take effect</emphasis>: Configuration
+                    changes take effect only after restarting the syslog-ng service or rebooting the
+                    system. Also restart the system after changing the timezone settings of the
+                    host, or importing a certificate that you want to use to authenticate the
+                    communication between the agent and the server. If the configuration of the
+                    agent has changed since the last restart, the syslog-ng agent sends a message of
+                    the change, including the MD5 hash of the new configuration.</para>
+                <para>Also note that if your clients are managed from a Domain Controller,
+                    configuration changes are not instantly downloaded to the client hosts, only at
+                    the time of the next group policy update. To update the configuration of a
+                    client host earlier, open a command prompt on the client host, and issue the
+                        <command>gpupdate /force</command> command.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>The syslog-ng agent does not send messages to the server</emphasis>:
+                    Check the Application eventlog for messages of the syslog-ng agent (the agent
+                    sends messages using the LogRelay source). In case of connection errors and
+                    certificate problems, the syslog-ng agent sends error messages into the
+                    eventlog. Ensure that the destination address of the server is correctly set. If
+                    you use SSL encryption, verify that the certificate of the Certificate Authority
+                    of the server and that the certificate of the client are properly imported. If
+                    there are no error messages, check the logs on your logserver: the syslog-ng
+                    agent sends a MARK message every ten minutes even if there are no other messages
+                    to send.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>The syslog-ng agent sends only MARK messages to the
+                    server</emphasis>: Verify that you have configured the eventlog and file
+                    sources, and that they have not been disabled globally. If these settings are
+                    correct but the server still does not send any messages, temporarily disable all
+                    filters to see that they are not configured to ignore every message. When using
+                    filter, it is also recommended to check the global case-sensitivity
+                settings.</para>
+            </listitem>
+        </itemizedlist>
+
+
+    </section>
+    <section id="windows_auditing">
+        <title>Configuring the auditing policy on Windows</title>
+        <indexterm>
+            <primary>auditing policy</primary>
+        </indexterm>
+        <indexterm>
+            <primary>Windows auditing policy</primary>
+        </indexterm>
+        <para>This section describes how to configure the logging and auditing policy on various
+            versions of Microsoft Windows. The syslog-ng agent can transfer log messages only about
+            those events that are actually logged, so the audit policy has to be configured to log
+            the important events.</para>
+        <para>Microsoft Windows operating systems can record a range of event types, from a
+            system-wide event such as a user logging on, to an attempt by a particular user to read
+            a specific file. Both successful and unsuccessful attempts to perform an action can be
+            recorded. The audit policy specifies the types of events to be audited. When such an
+            event occurs, an entry is added to the log file of the computer.</para>
+        <para>Following is a brief overview on how to configure the audit policy on various versions
+            of Microsoft Windows. For details, consult the documentation of your operating system,
+            or visit Microsoft TechNet at <ulink url="http://technet.microsoft.com/"
+                >http://technet.microsoft.com/</ulink>. For details on configuring the auditing and
+            logging of various applications, like the IIS Server or the ISA Server, consult your
+            product documentation. </para>
+        <section id="windows_auditing_xp">
+            <title>Turning on security logging on Windows XP</title>
+            <para>The following procedure describes how to enable security logging on Windows XP
+                Professional hosts.</para>
+            <procedure>
+                <title>Turning on security logging on Windows XP</title>
+                <indexterm>
+                    <primary>auditing policy</primary>
+                    <secondary>configuring on Windows XP</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>Windows auditing policy</primary>
+                    <secondary>configuring on Windows XP</secondary>
+                </indexterm>
+                <step>
+                    <para>Login as an administrator.</para>
+                </step>
+                <step>
+                    <para>Click <guibutton>Start</guibutton>, click <guibutton>Run</guibutton>, and
+                        type <guibutton>mmc /a</guibutton>.</para>
+                </step>
+                <step>
+                    <para>On the <guimenu>File</guimenu> menu, click <guimenu>Add/Remove
+                        Snap-in</guimenu>, and click <guimenu>Add</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Under <guimenu>Snap-in</guimenu>, click <guibutton>Group
+                        Policy</guibutton>, and click <guimenu>Add</guimenu>. </para>
+                </step>
+                <step>
+                    <para>In <guimenu>Select Group Policy Object</guimenu>, select <guimenu>Local
+                            Computer</guimenu>, then click <guibutton>Finish</guibutton>, click
+                            <guibutton>Close</guibutton>, and click
+                    <guibutton>OK</guibutton>.</para>
+                </step>
+                <step>
+                    <para>In <guimenu>Console Root</guimenu>, select <guimenu>Local Computer
+                        Policy</guimenu>, then click <guibutton>Audit Policy</guibutton>.</para>
+                </step>
+                <step>
+                    <para>Right-click the attribute or event you want to audit on the details pane.
+                    </para>
+                </step>
+                <step>
+                    <para>Set the desired options in the <guibutton>Properties</guibutton>.</para>
+                </step>
+                <step>
+                    <para>Repeat Steps 7-8 for every other event you want to audit.</para>
+                </step>
+            </procedure>
+            <note>
+                <para>To remotely enable security logging for workstations, member servers, and
+                    domain controllers, see <xref linkend="windows_auditing_domain"/>.</para>
+            </note>
+        </section>
+        <section id="windows_auditing_domain">
+            <title>Turning on security logging for domain controllers</title>
+            <para>The following procedure describes how to enable security logging on a Windows XP
+                Professional domain controller. </para>
+            <procedure>
+                <title>Turning on security logging for domain controllers</title>
+                <indexterm>
+                    <primary>auditing policy</primary>
+                    <secondary>configuring on Windows XP</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>Windows auditing policy</primary>
+                    <secondary>configuring on Windows XP</secondary>
+                </indexterm>
+                <step>
+                    <para>Login as an administrator.</para>
+                </step>
+                <step>
+                    <para>Click <guibutton>Start</guibutton>, point to <guimenu>Programs</guimenu>,
+                        point to <guimenu>Administrative Tools</guimenu>, and click <guimenu>Active
+                            Directory Users and Computers</guimenu>. </para>
+                </step>
+                <step>
+                    <para>In the console tree, click <guimenu>Domain Controllers</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Click <guibutton>Action</guibutton>, then click
+                        <guimenu>Properties</guimenu>.</para>
+                </step>
+                <step>
+                    <para>On the <guimenu>Group Policy</guimenu> tab, select the policy you want to
+                        change, and click <guibutton>Edit</guibutton>.</para>
+                </step>
+                <step>
+                    <para>In the <guimenu>Group Policy</guimenu> window, in the console tree, click
+                            <guimenu>Audit Policy</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Right-click the attribute or event you want to audit on the details pane.
+                    </para>
+                </step>
+                <step>
+                    <para>Set the desired options in the <guibutton>Properties</guibutton>.</para>
+                </step>
+                <step>
+                    <para>Repeat Steps 7-8 for every other event you want to audit.</para>
+                </step>
+            </procedure>
+        </section>
+        <section id="windows_auditing_2003">
+            <title>Turning on auditing on Windows 2003 Server</title>
+            <para>The following procedure describes how to configure auditing on a Windows 2003
+                Server host. </para>
+            <procedure>
+                <title>Turning on auditing on Windows 2003 Server</title>
+                <indexterm>
+                    <primary>auditing policy</primary>
+                    <secondary>configuring on Windows 2003 Server</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>Windows auditing policy</primary>
+                    <secondary>configuring on Windows 2003 Server</secondary>
+                </indexterm>
+                <step>
+                    <para>Login as an administrator.</para>
+                </step>
+                <step>
+                    <para>Click <guibutton>Start</guibutton>, point to <guimenu>Programs</guimenu>,
+                        point to <guimenu>Administrative Tools</guimenu>, and click <guimenu>Domain
+                            Security Policy</guimenu>.</para>
+                </step>
+                <step>
+                    <para>In the console tree, click <guimenu>Local Policies</guimenu>, then
+                            <guimenu>Audit Policy</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Double-click on an event and select the <guilabel>Define these policy
+                            settings</guilabel> option.</para>
+                </step>
+                <step>
+                    <para>Select the type of event to log: <guilabel>Success</guilabel> or
+                            <guilabel>Failure</guilabel>.</para>
+                </step>
+                <step>
+                    <para>Repeat Steps 4-5 for every other event you want to audit.</para>
+                </step>
+            </procedure>
+        </section>
+
+    </section>
+</chapter>
