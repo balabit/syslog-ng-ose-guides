@@ -39,16 +39,33 @@
                     <tbody>
                         <row>
                             <entry>flags()</entry>
-                            <entry>set of [no-parse,kernel]</entry>
+                            <entry>no-parse, kernel, syslog-protocol, no_multi_line, validate-utf8</entry>
                             <entry>empty set</entry>
-                            <entry>Specifies log parsing flags. <parameter>no-parse</parameter>
-                                completely disables syslog message parsing and processes the
-                                complete line as the message part of a syslog message. Other
-                                information (timestamp, host, etc.) is added automatically. This
-                                flag is useful for parsing files not complying to the syslog format.
-                                    <parameter>kernel</parameter> makes the source default to the
-                                    <parameter>LOG_KERN | LOG_CRIT</parameter> priority if not
-                                specified otherwise. </entry>
+                            <entry>
+                                <para>Specifies log parsing flags.</para>
+                                <para>The <parameter>no-parse</parameter> flag completely disables
+                                    syslog message parsing and processes the complete line as the
+                                    message part of a syslog message. Other information (timestamp,
+                                    host, etc.) is added automatically. This flag is useful for
+                                    parsing files not complying to the syslog format. </para>
+                                <para>The <parameter>kernel</parameter> flag makes the source
+                                    default to the <parameter>LOG_KERN | LOG_CRIT</parameter>
+                                    priority if not specified otherwise. </para>
+                                <para>The <parameter>syslog-protocol</parameter> flag specifies that
+                                    incoming messages are expected to to be formatted according to
+                                    the new IETF syslog protocol standard. Note that this flag is
+                                    not needed for the <parameter>syslog</parameter>
+                                    driver.<!-- FIXME link--></para>
+                                <para>The <parameter>no-multi-line</parameter> flag disables
+                                    line-breaking in the messages; the entire message is converted
+                                    to a single line.</para>
+                                <para>The <parameter>validate-utf8</parameter> flag enables
+                                    encoding-verification for messages formatted according to the
+                                    new IETF syslog standard.<!-- FIXME link--> If the BOM character
+                                    is missing, but the message is otherwise UTF-8 compliant,
+                                    syslog-ng automatically adds the BOM character to the
+                                message.</para>
+                            </entry>
                         </row>
                         <row>
                             <entry>follow_freq()</entry>
@@ -157,15 +174,9 @@
                 file, so it can correctly follow the file even if logrotation is used. When
                 syslog-ng is restarted, it records the position of the last sent log message, and
                 continues to send messages from this position after the restart.</para>
-            <para>The file driver has a single required parameter specifying the file to open, and
-                has only the common source specific options as specified in <xref
-                    linkend="sourcecommonopts"/>. </para>
+            <para>The file driver has a single required parameter specifying the file to open.</para>
             <synopsis>Declaration:
 file(filename);</synopsis>
-            <example>
-                <title>Using the file() driver</title>
-                <synopsis>source s_file { file("/proc/kmsg" log_prefix("kernel: ")); };</synopsis>
-            </example>
             <note>
                 <para>On Linux, the <parameter>klogd</parameter> daemon can be used in addition to
                     syslog-ng to read kernel messages and forward them to syslog-ng.
@@ -173,15 +184,80 @@ file(filename);</synopsis>
                     symbols etc., but as this is deprecated by <parameter>ksymoops</parameter> there
                     is really no point in running both <parameter>klogd</parameter> and syslog-ng in
                     parallel. Also note that running two processes reading
-                    <filename>/proc/kmsg</filename> at the same time might result in dead-locks.
-                </para>
+                    <filename>/proc/kmsg</filename> at the same time might result in dead-locks. </para>
+                <para>When using syslog-ng to read messages from the <filename>/proc/kmsg</filename>
+                    file, syslog-ng automatically disables the <parameter>follow_freq()</parameter>
+                    parameter to avoid blocking the file.</para>
             </note>
+            <indexterm>
+                <primary>wildcards</primary>
+                <secondary>in file sources</secondary>
+            </indexterm>
+            <para>The filename may include wildcard characters (e.g., <parameter>*</parameter>).
+                Note that when using wildcards in filenames, always set how often syslog-ng should
+                check the file for new messages using the <parameter>follow_freq()</parameter>
+                parameter.</para>
+            <para>The <parameter>file()</parameter> driver has the common source specific options as
+                specified in <xref linkend="sourcecommonopts"/>, and also the following options:</para>
+            <table>
+                <title>Options for syslog() sources</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>file</entry>
+                            <entry>filename with path</entry>
+                            <entry/>
+                            <entry>The file to read messages from. </entry>
+                        </row>
+                        <row>
+                            <entry>recursive</entry>
+                            <entry>yes or no</entry>
+                            <entry>no</entry>
+                            <entry>When enabled, syslog-ng monitors every subdirectory of the
+                                directory set in the path of the <parameter>file</parameter>
+                                parameter, and reads log messages from files with the set filename.
+                                The <parameter>recursive</parameter> option can be used together
+                                with wildcards in the filename. </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <example>
+                <title>Using the file() driver</title>
+                <synopsis>source s_file { file("/var/log/messages"};</synopsis>
+            </example>
             <example>
                 <title>Tailing files</title>
                 <para>The following source checks the <filename>access.log</filename> file every
                     second for new messages.</para>
                 <synopsis>source s_tail { file("/var/log/apache/access.log" 
-follow_freq(1) flags(no-parse)); };</synopsis>
+                    follow_freq(1) flags(no-parse)); };</synopsis>
+            </example>
+            <example>
+                <title>Using wildcards in the filename</title>
+                <para>The following example monitors every file with the <filename>.log</filename>
+                    extension in the <filename>/var/application</filename> directory for log
+                    messages.</para>
+                <synopsis>source s_file { file("/var/application/*.log" follow_freq(1)};</synopsis>
+            </example>
+            <example>
+                <title>Monitoring multiple directories</title>
+                <para>The following example reads files having the <parameter>.log</parameter>
+                    extension from the <parameter>/var/application/</parameter> directory and its
+                    subdirectories.</para>
+                <synopsis>source s_file_subdirectories { file("/var/application/*.log"
+                    recursive(yes) 
+                    follow_freq(1) 
+                    log_fetch_limit(100)
+                    );};</synopsis>
             </example>
         </section>
 
@@ -257,6 +333,99 @@ pipe(filename);</synopsis>
             <example>
                 <title>Using the pipe() driver</title>
                 <synopsis>source s_pipe { pipe("/dev/log" pad_size(2048)); };</synopsis>
+            </example>
+        </section>
+        <section id="reference_source_syslog">
+            <title>syslog()</title>
+            <!-- FIXME update ha lesz syslog6 -->
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>syslog()</parameter> driver</secondary>
+            </indexterm>
+            <para>This driver enables to receive messages from the network using the new standard
+                syslog protocol and message format. <!-- FIXME xref a protocol leirasra --> UDP,
+                TCP, and TLS-encrypted TCP can all be used to transport the messages.</para>
+            <indexterm>
+                <primary>TLS</primary>
+            </indexterm>
+            <synopsis>Declaration:
+                syslog(ip() port() transport() options());</synopsis>
+            <table>
+                <title>Options for syslog() sources</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_ip)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_ip_tos)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_ip_ttl)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_keep_alive)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_max_connections)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_port)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_so_broadcast)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_so_rcvbuf)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_so_sndbuf)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_so_broadcast)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_tcp_keepalive)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_option_tls)"/>
+                        <row>
+                            <entry>transport</entry>
+                            <entry>udp, tcp, or tls</entry>
+                            <entry>tcp</entry>
+                            <entry>Specifies the protocol used to receive messages from the source.
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <example>
+                <title>Using the syslog() driver</title>
+                <para>TCP source listening on the localhost on port 1999.</para>
+                <synopsis>source s_syslog { ip(127.0.0.1) port(1999) transport("tcp"); };</synopsis>
+                <para>UDP source with defaults.</para>
+                <synopsis>source s_udp { transport("udp"); };</synopsis>
+                <para>Encrypted source where the client is also authenticated. See <xref
+                        linkend="tlsoptions"/> for details on the encryption settings.</para>
+                <synopsis>source s_syslog_tls{ syslog(
+                        "10.100.20.40"
+                        transport("tls")
+                        tls(
+                        peer-verify(required-trusted)
+                        ca_dir('/etc/syslog-ng/keys/ca.d/')
+                        key_file('/etc/syslog-ng/keys/server_privatekey.pem')
+                        cert_file('/etc/syslog-ng/keys/server_certificate.pem')
+                        )
+                        );};</synopsis>
             </example>
         </section>
         <section id="reference_source_sunstreams">
@@ -367,101 +536,8 @@ pipe(filename);</synopsis>
                     <parameter>tcp6()</parameter>, <parameter>udp()</parameter>, and
                     <parameter>udp6()</parameter>
             </para>
-            <table>
-                <title>Options for tcp(), tcp6(), udp(), and udp6()</title>
-                <tgroup cols="4">
-                    <thead>
-                        <row>
-                            <entry>Name</entry>
-                            <entry>Type</entry>
-                            <entry>Default</entry>
-                            <entry>Description</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>ip() or localip()</entry>
-                            <entry>string</entry>
-                            <entry>0.0.0.0</entry>
-                            <entry>The IP address to bind to. Note that this is not the address
-                                where messages are accepted from. </entry>
-                        </row>
-                        <row>
-                            <entry>ip_tos</entry>
-                            <entry>number</entry>
-                            <entry>0</entry>
-                            <entry>Specifies the Type-of-Service value of outgoing packets. </entry>
-                        </row>
-                        <row>
-                            <entry>ip_ttl</entry>
-                            <entry>number</entry>
-                            <entry>0</entry>
-                            <entry>Specifies the Time-To-Live value of outgoing packets. </entry>
-                        </row>
-                        <row>
-                            <entry>keep-alive()</entry>
-                            <entry>yes or no</entry>
-                            <entry>yes</entry>
-                            <entry>Available for <parameter>tcp()</parameter> only; specifies
-                                whether connections should be closed upon the receipt of a SIGHUP
-                                signal. Note that this applies to the source side of the syslog-ng
-                                connections, destination connections are always reopened after
-                                receiving a HUP signal.</entry>
-                        </row>
-                        <row>
-                            <entry>max-connections()</entry>
-                            <entry>number</entry>
-                            <entry>10</entry>
-                            <entry>Specifies the maximum number of simultaneous connections.</entry>
-                        </row>
-                        <row>
-                            <entry>port() or localport()</entry>
-                            <entry>number</entry>
-                            <entry>514</entry>
-                            <entry>The port number to bind to.</entry>
-                        </row>
-                        <row>
-                            <entry>so_broadcast</entry>
-                            <entry>yes or no</entry>
-                            <entry>no</entry>
-                            <entry>This option controls the <parameter>SO_BROADCAST</parameter>
-                                socket option required to make syslog-ng send messages to a
-                                broadcast address. See the <command>socket(7)</command> manual page
-                                for details. </entry>
-                        </row>
-                        <row>
-                            <entry>so_rcvbuf</entry>
-                            <entry>number</entry>
-                            <entry>0</entry>
-                            <entry>Specifies the size of the socket receive buffer in bytes.
-                            </entry>
-                        </row>
-                        <row>
-                            <entry>so_sndbuf</entry>
-                            <entry>number</entry>
-                            <entry>0</entry>
-                            <entry>Specifies the size of the socket send buffer in bytes. </entry>
-                        </row>
-                        <row>
-                            <entry>tcp-keep-alive()</entry>
-                            <entry>yes or no</entry>
-                            <entry>no</entry>
-                            <entry>Available for <parameter>tcp()</parameter> only; specifies
-                                whether TCP keep alive messages using the SO_KEEPALIVE socket option
-                                should be enabled. </entry>
-                        </row>
-                        <row>
-                            <entry>tls</entry>
-                            <entry>tls options</entry>
-                            <entry>n/a</entry>
-                            <entry>This option sets various TLS specific options like
-                                key/certificate files and trusted CA locations and can only be used
-                                with the tcp/tcp6 transport protocols. See <xref
-                                    linkend="tlsoptions"/> for more information.</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
+            <xi:include href="reference_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
+                xpointer="element(table_source_tcp_options)"/>
             <example>
                 <title>Using the udp() and tcp() drivers</title>
                 <synopsis># TCP source with the maximum number of simultaneous connections limited.
@@ -642,7 +718,7 @@ source s_dgram { unix-dgram("/var/run/log"); };</synopsis>
             <title>Options common for every destination</title>
             <para>Some of the parameters affecting message formatting and sending are common for
                 almost all destinations. The following options are available for every destination,
-                except for <parameter>sql()</parameter> and <parameter>usertty()</parameter>.</para>
+                except <parameter>sql()</parameter> and <parameter>usertty()</parameter>.</para>
             <!-- FIXME logstore-ra se lesz teljesen igaz, lasd http://bugzilla.balabit/bugzilla-3.0/show_bug.cgi?id=13640  -->
             <table id="destcommonopts">
                 <?dbfo keep-together="auto" ?>
@@ -663,9 +739,21 @@ source s_dgram { unix-dgram("/var/run/log"); };</synopsis>
                     <tbody>
                         <row>
                             <entry>flags()</entry>
-                            <entry/>
+                            <entry>syslog-protocol, no_multi_line</entry>
                             <entry>empty set</entry>
-                            <entry> </entry>
+                            <entry>
+                                <para>Flags influence the behavior of the driver. </para>
+                                <para>The <parameter>syslog-protocol</parameter> flag instructs the
+                                    driver to format the messages according to the new IETF syslog
+                                    protocol standard. <!-- FIXME link--> If this flag is enabled,
+                                    macros used for the message have effect only for the text of the
+                                    message, the message header is formatted to the new standard.
+                                    Note that this flag is not needed for the
+                                    <parameter>syslog</parameter> driver.</para>
+                                <para>The <parameter>no-multi-line</parameter> flag disables
+                                    line-breaking in the messages; the entire message is sent as a
+                                    single line.</para>
+                            </entry>
                         </row>
                         <row>
                             <entry>flush_lines()</entry>
@@ -920,6 +1008,215 @@ source s_dgram { unix-dgram("/var/run/log"); };</synopsis>
              template("$HOUR:$MIN:$SEC $TZ $HOST [$LEVEL] $MSG $MSG\n")
              template_escape(no));
 };</synopsis>
+            </example>
+        </section>
+        <section id="reference_destination_logstore">
+            <title>logstore()</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>logstore()</parameter> driver</secondary>
+            </indexterm>
+            <para>The logstore driver stores log messages in binary files that can be encrypted,
+                compressed, checked for integrity, and timestamped by an external Timestamping
+                Authority (TSA). Otherwise, it is very similar to the <parameter>file()</parameter>
+                destination.</para>
+            <para>Logstore files consist of individual chunks, every chunk can be encrypted,
+                compressed, and timestamped separately. Chunks contain log message data, chunk size
+                defaults to 128k (about 1MB worth of compressed logs).</para>
+            <para>To display the contents of a logstore file, use the <command>logcat</command>
+                command supplied with syslog-ng, e.g., <command>logcat
+                /var/log/messages.lgs</command>. For files that are in use by syslog-ng, the last
+                chunk that is open cannot be read. Chunks are closed when their size reaches the
+                limit set in the <parameter>chunk_size</parameter> parameter, or when the time limit
+                set in the <parameter>chunk_time</parameter> parameter expires and no new message
+                arrives.</para>
+            <para>When the logstore file is encrypted, a hash is also generated for every chunk to
+                verify the integrity of the chunk. The hashes of the chunks are chained together to
+                prevent injecting chunks into the logstore file. The encryption algorithm used is
+                    <parameter>aes128</parameter> in CBC mode, the hashing (HMAC) algorithm is
+                    <parameter>hmac-sha1</parameter>.</para>
+            <warning>
+                <para>If the syslog-ng Premium Edition application or the computer crashes, an
+                    unclosed chunk remains at the end of the file. This chunk is marked as broken,
+                    its data stays there but is not shown by <command>logcat</command>.</para>
+                <!-- FIXME akkor hogy lehet megnezni? -->
+            </warning>
+            <para>The destination filename may include macros which get expanded when the message is
+                written, thus a simple <parameter>logstore()</parameter> driver may create several
+                files. For more information on available macros see <xref linkend="macros"/>. </para>
+            <para>If the expanded filename refers to a directory which does not exist, it will be
+                created depending on the <parameter>create_dirs()</parameter> setting (both global
+                and a per destination option).</para>
+            <note>
+                <para>When using the <parameter>logstore()</parameter> destination, update the
+                    configuration of your log rotation program to rotate these files. Otherwise, the
+                    log files can become very large.</para>
+            </note>
+            <warning>
+                <para>Since the state of each created file must be tracked by syslog-ng, it consumes
+                    some memory for each file. If no new messages are written to a file within 60
+                    seconds (controlled by the <parameter>time_reap()</parameter> global option), it
+                    is closed, and its state is freed. </para>
+                <para>Exploiting this, a DoS attack can be mounted against the system. If the number
+                    of possible destination files and its needed memory is more than the amount
+                    available on the syslog-ng server. </para>
+                <para>The most suspicious macro is <parameter>$PROGRAM</parameter>, where the number
+                    of possible variations is rather high. Do not use the
+                    <parameter>$PROGRAM</parameter> macro in insecure environments.</para>
+            </warning>
+            <para>Apart from the common destination options described in <xref
+                    linkend="destcommonopts"/> the <parameter>logstore()</parameter> destination has
+                the following options:</para>
+            <table>
+                <title>Options for logstore()</title>
+                <!-- FIXME a file driverrel kozos opciokat xincludolni 
+                    Global options for destinations files should be cleaned up
+                -->
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>chunk_size()</entry>
+                            <entry>number</entry>
+                            <entry>128</entry>
+                            <entry>Size of a logstore chunk in kilobytes. Note that this size refers
+                                to the compressed size of the chunk. Also, the gzip library used for
+                                compressing the messages has a 32k long buffer; messages may not
+                                appear in the actual logfile until this buffer is not filled.
+                                Logstore chunks are closed when they reach the specified size, or
+                                when the time limit set in <parameter>chunk_time</parameter>
+                                expires. </entry>
+                        </row>
+                        <row>
+                            <entry>chunk_time()</entry>
+                            <entry>number</entry>
+                            <entry>5</entry>
+                            <entry>Time limit in seconds: syslog-ng PE closes the chunk if no new
+                                messages arrive until the time limit expires. Logstore chunks are
+                                closed when the time limit expires, or when they reach the size
+                                specified in the <parameter>chunk_size</parameter> parameter. If the
+                                time limit set in the <parameter>time_reap</parameter> parameter
+                                expires, the entire file is closed.</entry>
+                        </row>
+                        <row>
+                            <entry>compress()</entry>
+                            <entry>number between 0-9</entry>
+                            <entry> 3 </entry>
+                            <entry>Compression level. <parameter>0</parameter> means uncompressed
+                                files, while 1-9 is the compression level used by gzip
+                                (<parameter>9</parameter> means the highest but slowest compression,
+                                    <parameter>3</parameter> is usually a good compromise). </entry>
+                        </row>
+                        <row>
+                            <entry>create_dirs()</entry>
+                            <entry>yes or no</entry>
+                            <entry> no </entry>
+                            <entry>Enable creating non-existing directories. </entry>
+                        </row>
+                        <row>
+                            <entry>dir_group()</entry>
+                            <entry>string</entry>
+                            <entry> root </entry>
+                            <entry>The group of the directories created by syslog-ng. </entry>
+                        </row>
+                        <row>
+                            <entry>dir_owner()</entry>
+                            <entry>string</entry>
+                            <entry> root </entry>
+                            <entry>The owner of directories created by syslog-ng. </entry>
+                        </row>
+                        <row>
+                            <entry>dir_perm()</entry>
+                            <entry>number</entry>
+                            <entry> 0600 </entry>
+                            <entry>The permission mask of directories created by syslog-ng. Log
+                                directories are only created if a file after macro expansion refers
+                                to a non-existing directory, and directory creation is enabled (see
+                                the <parameter>create_dirs()</parameter> option below). For octal
+                                numbers prefix the number with <parameter>0</parameter>, e.g., use
+                                    <parameter>0755</parameter> for
+                                <parameter>rwxr-xr-x</parameter>. </entry>
+                        </row>
+                        <row>
+                            <entry>encrypt_certificate()</entry>
+                            <entry>filename</entry>
+                            <entry> none </entry>
+                            <entry>Name of a file, that contains an X.509 certificate (and the
+                                public key) in PEM format. The syslog-ng application uses this
+                                certificate to encrypt the logstore files which can be decrypted
+                                using the private key of the certificate. </entry>
+                        </row>
+                        <row>
+                            <entry>group()</entry>
+                            <entry>string</entry>
+                            <entry>root</entry>
+                            <entry>Set the group of the created file to the one specified. </entry>
+                        </row>
+                        <row>
+                            <entry>owner()</entry>
+                            <entry>string</entry>
+                            <entry>root</entry>
+                            <entry>Set the owner of the created file to the one specified. </entry>
+                        </row>
+                        <row>
+                            <entry>perm()</entry>
+                            <entry>number</entry>
+                            <entry> 0600 </entry>
+                            <entry>The permission mask of the file if it is created by syslog-ng.
+                                For octal numbers prefix the number with <parameter>0</parameter>,
+                                e.g., use <parameter>0755</parameter> for
+                                <parameter>rwxr-xr-x</parameter>. </entry>
+                        </row>
+                        <row>
+                            <!-- FIXME copied from global options. -->
+                            <entry>time_reap()</entry>
+                            <entry>number</entry>
+                            <entry>60</entry>
+                            <entry>The time to wait in seconds before an idle destination file is
+                                closed.</entry>
+                        </row>
+                        <row>
+                            <entry>timestamp-url()</entry>
+                            <entry>string</entry>
+                            <entry>Use global setting.</entry>
+                            <entry>The URL of the Timestamping Authority used to request timestamps
+                                to sign logstore chunks.</entry>
+                        </row>
+                        <row>
+                            <entry>timestamp-freq()</entry>
+                            <entry>number in seconds</entry>
+                            <entry>Use global setting.</entry>
+                            <entry>The minimum time that should expire between two timestamping
+                                requests. When syslog-ng closes a chunk, it checks how much time has
+                                expired since the last timestamping request: if it is higher than
+                                the value set in the <parameter>timestamp-freq</parameter>
+                                parameter, it requests a new timestamp from the authority set in the
+                                    <parameter>timestamp-url</parameter> parameter. </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <example id="example_logstore">
+                <title>Using the logstore() driver</title>
+                <para>A simple example saving and compressing log messages.</para>
+                <synopsis>destination d_logstore { file("/var/log/messages.lgs" compress(5) ); };</synopsis>
+                <para>A more detailed example that encrypts messages, modifies the parameters for
+                    closing chunks, and sets file privileges.</para>
+                <synopsis>destination d_logstore { logstore("/var/log/messages-logstore.lgs"
+    encrypt_certificate("/etc/syslog-ng/keys/10-100-20-40/public-certificate-of-the-server.pem")			
+    chunk_size(100) 
+    chunk_time(5)
+    owner("balabit")
+    group("balabit")
+    perm(0777)
+); };</synopsis>
             </example>
         </section>
         <section id="reference_destination_pipe">
@@ -1337,6 +1634,103 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
 
         </section>
 
+        <section id="reference_destination_syslog">
+            <title>syslog()</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>syslog()</parameter> driver</secondary>
+            </indexterm>
+            <para>This driver sends messages to another host on the local intranet or internet using
+                the new syslog protocol standard via the UDP, TCP, or the encrypted TLS networking
+                protocols. </para>
+            <para>The required arguments of the driver are the destination host address, where
+                messages should be sent, the transport method (protocol). Note that this differs
+                from source drivers, where local bind address is implied, and none of the parameters
+                are required. </para>
+            <para>The <parameter>udp</parameter> transport method
+                <!-- FIXME ez erre a driverre is igaz? --> automatically send multicast packets if a
+                multicast destination address is specified. The <parameter>tcp</parameter> and
+                    <parameter>tls</parameter> methods do not support multicasting.</para>
+            <synopsis>Declaration:
+                syslog(host transport [options]);</synopsis>
+            <para>Apart from the common destination options described in <xref
+                    linkend="destcommonopts"/> these destinations have the following options:</para>
+            <table id="table_destination_syslog_options">
+                <title>Options for syslog() destinations</title>
+                <tgroup cols="4">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Type</entry>
+                            <entry>Default</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_option_ip_tos)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_option_ip_ttl)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_option_localip)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_option_localport)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(diskbuffer_option_log_disk_fifo)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_option_port)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_option_spoof_source)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_option_so_broadcast)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_option_so_rcvbuf)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_option_so_sndbuf)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_option_tls)"/>
+                        <row>
+                            <entry>transport</entry>
+                            <entry>udp, tcp, or tls</entry>
+                            <entry>tcp</entry>
+                            <entry>Specifies the protocol used to receive messages from the source.
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <example>
+                <title>Using the syslog() driver</title>
+                <synopsis>destination d_tcp { syslog(ip"10.1.2.3" transport("tcp") port(1999); localport(999)); };</synopsis>
+                <para>If name resolution is configured, the hostname of the target server can be
+                    used as well.</para>
+                <synopsis>destination d_tcp { syslog(ip"target_host" transport("tcp") port(1999); localport(999)); };</synopsis>
+                <para>Send the log messages using TLS encryption and use mutual authentication. See
+                        <xref linkend="tlsoptions"/> for details on the encryption and
+                    authentication options.</para>
+                <synopsis>destination d_syslog_tls{ 
+                syslog("10.100.20.40"
+                transport("tls")
+                port(3214)
+                tls(peer-verify(required-trusted)
+                ca_dir('/etc/syslog-ng/keys/ca.d/')
+                key_file('/etc/syslog-ng/keys/client_key.pem')
+                cert_file('/etc/syslog-ng/keys/client_certificate.pem'))
+                );};</synopsis>
+            </example>
+        </section>
+
         <section id="reference_destination_tcp">
             <title>tcp(), tcp6(), udp(), and udp6(),</title>
             <indexterm>
@@ -1373,105 +1767,8 @@ tcp6(host [options]);
 udp6(host [options]);</synopsis>
             <para>Apart from the common destination options described in <xref
                     linkend="destcommonopts"/> these destinations have the following options:</para>
-            <table>
-                <title>Options for udp(), udp6(), tcp() and tcp6()</title>
-                <tgroup cols="4">
-                    <thead>
-                        <row>
-                            <entry>Name</entry>
-                            <entry>Type</entry>
-                            <entry>Default</entry>
-                            <entry>Description</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>ip_tos</entry>
-                            <entry>number</entry>
-                            <entry>0</entry>
-                            <entry>Specifies the Type-of-Service value of outgoing packets. </entry>
-                        </row>
-                        <row>
-                            <entry>ip_ttl</entry>
-                            <entry>number</entry>
-                            <entry>0</entry>
-                            <entry>Specifies the Time-To-Live value of outgoing packets. </entry>
-                        </row>
-                        <row>
-                            <entry>localip()</entry>
-                            <entry>string</entry>
-                            <entry>0.0.0.0</entry>
-                            <entry>The IP address to bind to before connecting to target. </entry>
-                        </row>
-                        <row>
-                            <entry>localport()</entry>
-                            <entry>number</entry>
-                            <entry>0</entry>
-                            <entry>The port number to bind to. Messages are sent from this
-                            port.</entry>
-                        </row>
-                        <row>
-                            <entry>port() or destport()</entry>
-                            <entry>number</entry>
-                            <entry>514</entry>
-                            <entry>The port number to connect to.</entry>
-                        </row>
-                        <row>
-                            <entry>spoof_source</entry>
-                            <entry>yes or no</entry>
-                            <entry>no</entry>
-                            <entry>Enables source address spoofing. This means that the host running
-                                syslog-ng generates UDP packets with the source IP address matching
-                                the original sender of the message. It is useful when you want to
-                                perform some kind of preprocessing via syslog-ng then forward
-                                messages to your central log management solution with the source
-                                address of the original sender. This option only works for UDP
-                                destinations though the original message can be received by TCP as
-                                well. This option is only available if syslog-ng was compiled using
-                                the <parameter>--enable-spoof-source</parameter> configuration
-                                option. </entry>
-                        </row>
-                        <row>
-                            <entry>so_broadcast</entry>
-                            <entry>yes or no</entry>
-                            <entry>no</entry>
-                            <entry>This option controls the <parameter>SO_BROADCAST</parameter>
-                                socket option required to make syslog-ng send messages to a
-                                broadcast address. See the <command>socket(7)</command> manual page
-                                for details. </entry>
-                        </row>
-                        <row>
-                            <entry>so_rcvbuf</entry>
-                            <entry>number</entry>
-                            <entry>0</entry>
-                            <entry>Specifies the size of the socket receive buffer in bytes.
-                            </entry>
-                        </row>
-                        <row>
-                            <entry>so_sndbuf</entry>
-                            <entry>number</entry>
-                            <entry>0</entry>
-                            <entry>Specifies the size of the socket send buffer in bytes. </entry>
-                        </row>
-                        <row>
-                            <entry>tls</entry>
-                            <entry>tls options</entry>
-                            <entry>n/a</entry>
-                            <entry>This option sets various TLS specific options like
-                                key/certificate files and trusted CA locations. TLS can be used only
-                                with the tcp/tcp6 transport protocols. See <xref
-                                    linkend="tlsoptions"/> for more information.</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-            <example>
-                <title>Using the tcp() driver</title>
-                <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999); localport(999)); };</synopsis>
-                <para>If name resolution is configured, the hostname of the target server can be
-                    used as well.</para>
-                <synopsis>destination d_tcp { tcp("target_host" port(1999); localport(999)); };</synopsis>
-            </example>
+            <xi:include href="reference_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
+                xpointer="element(table_destination_tcp_options)"/>
             <para>The <parameter>tcp()</parameter> and <parameter>tcp6()</parameter> drivers of the
                 syslog-ng Premium Edition support disk-based buffering, and have the following
                 option:</para>
@@ -1510,6 +1807,13 @@ udp6(host [options]);</synopsis>
                     </tbody>
                 </tgroup>
             </table>
+            <example>
+                <title>Using the tcp() driver</title>
+                <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999); localport(999)); };</synopsis>
+                <para>If name resolution is configured, the hostname of the target server can be
+                    used as well.</para>
+                <synopsis>destination d_tcp { tcp("target_host" port(1999); localport(999)); };</synopsis>
+            </example>
         </section>
 
         <section id="reference_destination_unix">
@@ -1720,7 +2024,22 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                     <row>
                         <entry>match()</entry>
                         <entry>match(regexp)</entry>
-                        <entry>Tries to match a regular expression to the message itself.</entry>
+                        <entry>Match a regular expression to the headers and the message itself
+                            (i.e., the values returned by the <parameter>MSGHDR</parameter> and
+                                <parameter>MSG</parameter> macros). Note that in syslog-ng version
+                            2.1 and earlier, the <parameter>match()</parameter> filter was applied
+                            only to the text of the message, excluding the headers. This
+                            functionality has been moved to the <parameter>message()</parameter>
+                            filter.</entry>
+                    </row>
+                    <row>
+                        <entry>message()</entry>
+                        <entry>message(regexp)</entry>
+                        <entry>Match a regular expression the text of the log message, excluding the
+                            headers (i.e., the value returned by the <parameter>MSG</parameter>
+                            macros). Note that in syslog-ng version 2.1 and earlier, this
+                            functionality was performed by the <parameter>match()</parameter>
+                            filter.</entry>
                     </row>
                     <row>
                         <entry>netmask()</entry>
@@ -1740,9 +2059,9 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
         <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and
                 <parameter>program()</parameter> filter functions accept extended regular
             expressions (also called POSIX modern regular expressions) as parameters. The regular
-            expressions can use up to 255 regexp matches (<parameter>$1 ... $255</parameter>), but
-            only from the last filter. For case-insensitive searches, start the expression with the
-                <parameter>(?i)</parameter> string.</para>
+            expressions can use up to 255 regexp matches (<parameter>${1} ... ${255}</parameter>),
+            but only from the last filter. For case-insensitive searches, start the expression with
+            the <parameter>(?i)</parameter> string.</para>
         <para>
             <indexterm>
                 <primary>filters</primary>
@@ -1885,6 +2204,9 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
             sign, just like in Bourne compatible shells. Regarding braces around macro names, the
             following two formats are equivalent <parameter>"$MSG"</parameter> and
                 <parameter>"${MSG}"</parameter>. </para>
+        <para>Default values for macros can also be specified by appending the
+            <parameter>:-</parameter> characters and the default value to the macro, e.g.,</para>
+        <synopsis>${HOST:-default_hostname}</synopsis>
         <para id="date_macros">The macros related to the date of the message (e.g.:
                 <parameter>ISODATE</parameter>, <parameter>HOUR</parameter>, etc.) have two further
             versions each: one with the <parameter>S_</parameter> and one with the
@@ -1905,6 +2227,8 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                     <parameter>keep_hostname()</parameter>
                 </link> option is disabled.</para>
         </warning>
+        <para>By default, syslog-ng sends messages using the following template: <parameter>$ISODATE
+                $HOST $MSGHDR $MSG\n</parameter>.</para>
         <table>
             <title>Available macros</title>
             <tgroup cols="2">
@@ -2009,7 +2333,18 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                     </row>
                     <row id="macro_msg">
                         <entry>MSG or MESSAGE</entry>
-                        <entry>Message contents including the program name and pid. </entry>
+                        <entry>Text contents of the log message without the program name and pid.
+                            Note that this has changed in syslog-ng version 3.0; in earlier versions
+                            this macro included the program name and the pid. In syslog-ng 3.0, the
+                                <parameter>MSG</parameter> macro became equivalent with the
+                                <parameter>MSGONLY</parameter> macro. The program name and the pid
+                            together are available in the <parameter>MSGHDR</parameter>
+                        macro.</entry>
+                    </row>
+                    <row>
+                        <entry>MSGHDR</entry>
+                        <entry>The name and the pid of the program that sent the log message in
+                                <parameter>PROGRAM[PID]</parameter> format. </entry>
                     </row>
                     <row>
                         <entry>MSGONLY</entry>
@@ -2030,9 +2365,9 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                     </row>
                     <row>
                         <entry>PROGRAM</entry>
-                        <entry>The name of the program sending the message. Note that the content
-                            of the $PROGRAM variable may not be completely trusted as it is
-                            provided by the client program that constructed the message.</entry>
+                        <entry>The name of the program sending the message. Note that the content of
+                            the $PROGRAM variable may not be completely trusted as it is provided by
+                            the client program that constructed the message.</entry>
                     </row>
                     <row id="macro_tag">
                         <entry>TAG</entry>
@@ -2093,8 +2428,243 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
             </tgroup>
         </table>
     </section>
+    <section id="reference_parsers">
+        <title>Message parsers</title>
+        <indexterm>
+            <primary>parsers</primary>
+            <secondary>reference</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>message parsing</primary>
+        </indexterm>
+        <indexterm>
+            <primary>parsing messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>segmenting messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>splitting messages</primary>
+        </indexterm>
+        <para>The syslog-ng application can separate parts of log messages (i.e., the contents of
+            the $MSG macro) to named fields (columns). These fields act as user-defined macros that
+            can be referenced in message templates, file- and tablenames, etc. </para>
+        <para>Parsers are similar to filters: they must be defined in the syslog-ng configuration
+            file and used in the log statement.</para>
+        <!-- FIXME parsert/rewriteot is lehet inline definialni? -->
+        <note>
+            <para>The order of filters, rewriting rules, and parsers in the log statement is
+                important, as they are processed sequentially.
+                <!-- FIXME bovebben, peldaval, filterekhez/rewrite sectionbe is -->
+            </para>
+        </note>
+        <para>To create a parser, define the columns of the message, the delimiter or separator
+            characters, and optionally the characters that are used to escape the delimiter
+            characters (quote-pairs).</para>
+        <synopsis>Declaration:
+parser parser_name {
+    csv-parser(column1, column2, ...
+    )
+    delimiters()
+    quote-pairs()
+    };</synopsis>
+        <para>Column names work like macros. Always use a prefix to identify the columns of the
+            parsers, e.g., <parameter>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</parameter>, etc. Column
+            names starting with a dot (e.g., <parameter>.HOST</parameter>) are reserved for use by
+            syslog-ng. </para>
+        <table id="parser_options">
+            <title>Parser parameters</title>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Synopsis</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>csv-parser</entry>
+                        <entry>csv-parser(columns("PARSER.COLUMN1", "PARSER.COLUMN2", ...))</entry>
+                        <entry>Specifies the type of parser to use, and the name of the columns to
+                            separate messages to. Currently only the
+                            <parameter>csv-parser</parameter> is implemented, which can separate
+                            columns based on delimiter characters and strings.</entry>
+                    </row>
+                    <row>
+                        <entry>delimiters</entry>
+                        <entry>delimiters("&lt;delimiter_characters&gt;")</entry>
+                        <entry>The character that separates the columns in the message. </entry>
+                    </row>
+                    <row>
+                        <entry>flags()</entry>
+                        <entry>flags(escape-none,escape-backslash,escape-double-char,strip-whitespace
+                            )</entry>
+                        <entry>Escaping rules used by the parser. The
+                            <parameter>strip-whitespace</parameter> flag removes trailing
+                            whitespaces from the beginning and the end of the columns.</entry>
+                    </row>
+                    <row>
+                        <entry>quote-pairs()</entry>
+                        <entry>quote-pairs('&lt;quote_pairs&gt;')</entry>
+                        <entry>List quote-pairs between single quotes. Delimiter characters enclosed
+                            between quote characters are ignored. Note that the beginning and ending
+                            quote character does not have to be identical, e.g.,
+                            <parameter>[}</parameter> can also be a quote-pair.</entry>
+                    </row>
+                    <row>
+                        <entry>template()</entry>
+                        <entry>template("${&lt;macroname&gt;}")</entry>
+                        <entry>The macro that contains the part of the message that the parser will
+                            process. It can also be a macro created by a previous parser of the log
+                            path. By default, this is empty and the parser processes the entire
+                            message.</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+
+        <example>
+            <title>Segmenting hostnames separated with a dash</title>
+            <para>The following example separates hostnames like <parameter>example-1</parameter>
+                and <parameter>example-2</parameter> into two parts.</para>
+            <synopsis>parser p_hostname_segmentation {
+    csv-parser(columns("HOSTNAME.NAME", "HOSTNAME.ID")
+    delimiters("-")
+    flags(escape-none)
+    template("${HOST}"));
+};
+destination d_file { file("/var/log/messages-${HOSTNAME.NAME:-examplehost}"); };
+log { source(s_local); parser(p_hostname_segmentation); destination(d_file);};</synopsis>
+        </example>
+        <example>
+            <title>Parsing Apache log files</title>
+            <para>The following parser processes the log of Apache web servers and separates them
+                into different fields. Apache log messages look like: <parameter>"%h %l %u %t \"%r\"
+                    %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %T %v" 192.168.1.1 - -
+                    [31/Dec/2007:00:17:10 +0100] "GET /cgi-bin/example.cgi HTTP/1.1" 200 2708 "-"
+                    "curl/7.15.5 (i4 86-pc-linux-gnu) libcurl/7.15.5 OpenSSL/0.9.8c zlib/1.2.3
+                    libidn/0.6.5" 2 example.balabit</parameter>. </para>
+            <para>To parse such logs, the delimiter character is set to a single whitespace
+                    (<parameter>delimiters(" ")</parameter>). Whitespaces between quotes and
+                brackets are ignored (<parameter>quote-pairs('""[]')</parameter>).</para>
+            <synopsis>parser p_apache {
+    csv-parser(columns("APACHE.CLIENT_IP", "APACHE.IDENT_NAME", "APACHE.USER_NAME",
+        "APACHE.TIMESTAMP", "APACHE.REQUEST_URL", "APACHE.REQUEST_STATUS",
+        "APACHE.CONTENT_LENGTH", "APACHE.REFERER", "APACHE.USER_AGENT",
+        "APACHE.PROCESS_TIME", "APACHE.SERVER_NAME")
+         flags(escape-double-char,strip-whitespace)
+         delimiters(" ")
+         quote-pairs('""[]')
+         );
+};</synopsis>
+            <para>The results can be used for example to separate log messages into different files
+                based on the APACHE.USER_NAME field. If the field is empty, the
+                <parameter>nouser</parameter> name is assigned.</para>
+            <synopsis>log { source(s_local);
+    parser(p_apache); destination(d_file);};
+};
+destination d_file { file("/var/log/messages-${APACHE.USER_NAME:-nouser}"); };</synopsis>
+        </example>
+
+        <para>Multiple parsers can be used to split a part of an already parsed message into further
+            segments.</para>
+        <example>
+            <title>Segmenting a part of a message</title>
+            <para>The following example splits the timestamp of a parsed Apache log message into
+                separate fields.</para>
+            <synopsis>parser p_apache_timestamp {
+    csv-parser(columns("APACHE.TIMESTAMP.DAY", "APACHE.TIMESTAMP.MONTH", "APACHE.TIMESTAMP.YEAR", "APACHE.TIMESTAMP.HOUR", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.ZONE")
+    delimiters("/: ")
+    flags(escape-none)
+    template("${APACHE.TIMESTAMP}"));
+    };
+log { source(s_local);
+    log { parser(p_apache); parser(p_apache_timestamp); destination(d_file);};
+};
+</synopsis>
+        </example>
+    </section>
+    <section id="reference_rewrite">
+        <title>Rewriting messages</title>
+        <indexterm>
+            <primary>rewrite</primary>
+            <secondary>reference</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>rewriting messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>sedding messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>replacing message text</primary>
+        </indexterm>
+        <para>The syslog-ng application can rewrite parts of log
+            messages<!--( i.e., the contents of
+        the $MSG macro)-->: it can search and
+            replace text, and also set a specific field to a specified value. Rewriting messages is
+            often used in conjunction with message parsing <xref linkend="reference_parsers"/>.</para>
+        <para>Rewrite rules are similar to filters: they must be defined in the syslog-ng
+            configuration file and used in the log statement.</para>
+        <!-- FIXME parsert/rewriteot is lehet inline definialni? -->
+        <note>
+            <para>The order of filters, rewriting rules, and parsers in the log statement is
+                important, as they are processed sequentially.
+                <!-- FIXME bovebben, peldaval, filterekhez/rewrite sectionbe is -->
+            </para>
+        </note>
+        <para>To create replace a part of the log message, define the string or regular expression
+            to replace, the string to replace the original text (macros can be used as well), and
+            the field of the message that the rewrite rule should process. Substitution rules can
+            operate on any value available via macros, e.g., HOST, MESSAGE, PROGRAM, or any
+            user-defined macros created using parsers (see <xref linkend="reference_parsers"/> for
+            details.). Substitution rules use the following syntax:</para>
+        <synopsis>Declaration:
+rewrite &lt;name_of_the_rule&gt;{subst("&lt;string or regular expression to find&gt;", "&lt;replacement string&gt;", value(&lt;field name&gt;));};</synopsis>
+        <para>A single substitution rule can include multiple substitutions that are applied
+            sequentially to the message. Note that rewriting rules must be included in the log
+            statement to have any effect.</para>
+        <tip>
+            <!-- FIXME ez le van irva valahol mashol is, ill. le kellene legyen -->
+            <para>For case-insensitive searches, add <parameter>(?i)</parameter> to the string to
+                replace. To replace every occurrence of the string, add
+            <parameter>(?g)</parameter>.</para>
+        </tip>
+        <example>
+            <title>Using substitution rules</title>
+            <para>The following example replaces the first occurrence of the string
+                <parameter>IP</parameter> in the text of the message with the string
+                    <parameter>IP-Address</parameter>.</para>
+            <synopsis>rewrite r_rewrite_subst{subst("IP", "IP-Address", value("MESSAGE"));};</synopsis>
+            <para>To replace every occurrence, use:</para>
+            <synopsis>rewrite r_rewrite_subst{subst("(?g)IP", "IP-Address", value("MESSAGE"));};</synopsis>
+            <para>Multiple substitution rules are applied sequentially; the following rules replace
+                the first occurrence of the string <parameter>IP</parameter> with the string
+                    <parameter>IP-Addresses</parameter>. </para>
+            <synopsis>rewrite r_rewrite_subst{subst("IP", "IP-Address", value("MESSAGE")); subst("Address", "Addresses", field("message"));};</synopsis>
+        </example>
+        <indexterm>
+            <primary>setting message fields</primary>
+        </indexterm>
+        <para>To set a field of the message to a specific value, define the string to include in the
+            message, and the field where it should be included. Setting a field can operate on any
+            value available via macros, e.g., HOST, MESSAGE, PROGRAM, or any user-defined macros
+            created using parsers (see <xref linkend="reference_parsers"/> for details.). Note that
+            this operation completely replaces any previous value of that field. Use the following
+            syntax:</para>
+        <synopsis>Declaration:
+rewrite &lt;name_of_the_rule&gt;{set("&lt;string to include&gt;", value(&lt;field name&gt;));};</synopsis>
+        <example>
+            <title>Setting message fields to a particular value</title>
+            <para>The following example sets the HOST field of the message to
+                <parameter>myhost</parameter>. </para>
+            <synopsis>rewrite r_rewrite_set{set("myhost", value("HOST"));};</synopsis>
+        </example>
+    </section>
+
     <section id="reference_options">
-        <title>Options</title>
+        <title>Global options</title>
         <indexterm>
             <primary>options</primary>
             <secondary>reference</secondary>
