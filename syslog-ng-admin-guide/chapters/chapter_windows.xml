@@ -183,15 +183,15 @@
                 domain, install the executable (<parameter>.exe</parameter>) version of the
                 syslog-ng Agent for Windows installer and select <guilabel>Standalone
                 mode</guilabel>. The installer automatically receives and converts every setting of
-                version 2.1.x and 2.2beta, and continues to send the log messages to the configured destination.
-                At the end of the installation, the new configuration interface is displayed, where
-                you can start using the new features of the syslog-ng agent.</para>
+                version 2.1.x and 2.2beta, and continues to send the log messages to the configured
+                destination. At the end of the installation, the new configuration interface is
+                displayed, where you can start using the new features of the syslog-ng agent.</para>
             <para>To upgrade the syslog-ng agent application on hosts that are members of a domain,
                 install the executable (<parameter>.exe</parameter>) version of the syslog-ng Agent
                 for Windows installer and select <guilabel>Manage syslog-ng Agent centrally using
                     Group Policy</guilabel>. The installer automatically receives and converts every
-                setting of version 2.1.x and 2.2beta, and also automatically downloads any group policies that
-                are configured on the domain controller.</para>
+                setting of version 2.1.x and 2.2beta, and also automatically downloads any group
+                policies that are configured on the domain controller.</para>
             <warning>
                 <para>If there are any group policies for the syslog-ng agent configured on the
                     domain controller, downloading the group policies to the clients will overwrite
@@ -1112,7 +1112,7 @@
                 <!-- FIXME link -->
                 <para>By default, the following is sent about file messages: <parameter>$FILE_NAME:
                         $FILE_CURRENT_POSITION/$FILE_SIZE: $FILE_MESSAGE $DATE
-                        $R_DATE</parameter>.</para>
+                $R_DATE</parameter>.</para>
             </step>
             <step>
                 <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
@@ -1158,6 +1158,13 @@
         <section id="windows_macros">
             <title>Macros available in the syslog-ng Agent</title>
             <para>The following tables list the available macros:</para>
+            <warning>
+                <para>These macros are available only in the syslog-ng Agent for Windows. To
+                    recognize Windows-specific elements of the log message (e.g., eventlog-related
+                    macros) in syslog-ng, you have to use parsers on the syslog-ng server. The
+                    parser must be configured to match the message format set in the syslog-ng
+                    Agent. See <xref linkend="configuring_parsers"/> for details.</para>
+            </warning>
             <itemizedlist>
                 <listitem>
                     <para>
@@ -1187,9 +1194,8 @@
                     <parameter>&lt;${PRI}&gt;$DATE $HOST $MESSAGE</parameter>, where
                     <parameter>$MESSAGE</parameter> is <parameter>${EVENT_USERNAME}: ${EVENT_NAME}
                     ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})</parameter>
-                for eventlog messages, and <parameter>$FILE_NAME:
-                    $FILE_CURRENT_POSITION/$FILE_SIZE: $FILE_MESSAGE $DATE
-                $R_DATE</parameter> for file messages.</para>
+                for eventlog messages, and <parameter>$FILE_NAME: $FILE_CURRENT_POSITION/$FILE_SIZE:
+                    $FILE_MESSAGE $DATE $R_DATE</parameter> for file messages.</para>
             <indexterm>
                 <primary>syslog-ng agent</primary>
                 <secondary>default message format</secondary>
@@ -1214,7 +1220,8 @@
                     <tbody>
                         <row>
                             <entry>HOST</entry>
-                            <entry>Name of the host sending the message.</entry>
+                            <entry>Name of the host sending the message. Hostnames are automatically
+                                converted to lowercase.</entry>
                         </row>
                         <row>
                             <entry>MESSAGE</entry>
@@ -1465,12 +1472,15 @@
     </section>
     <section id="windows_service">
         <title>Controlling the syslog-ng agent services</title>
-        <para>During installation, syslog-ng agent registers the <parameter>LogRelay</parameter>
-            service that is started automatically when the host boots. To disable the automatic
-            startup of the syslog-ng agent, or manually start or stop the service, use the
-                <guibutton>Start Menu > Control Panel > Administrative Tools > Services</guibutton>
+        <para>During installation, syslog-ng agent registers the <parameter>syslog-ng
+            Agent</parameter> service that is started automatically when the host boots. To disable
+            the automatic startup of the syslog-ng agent, or manually start or stop the service, use
+            the <guibutton>Start Menu > Control Panel > Administrative Tools > Services</guibutton>
             interface. The service is running with the privileges of the <parameter>NT
                 AUTHORITY\SYSTEM</parameter> user.</para>
+        <para>When the syslog-ng Agent service is started or stopped, it sends a syslog message to
+            the central log server and an eventlog message to the Application eventlog container of
+            the host.</para>
         <warning>
             <indexterm>
                 <primary>timezone</primary>
@@ -1528,24 +1538,25 @@
                     host, or importing a certificate that you want to use to authenticate the
                     communication between the agent and the server. If the configuration of the
                     agent has changed since the last restart, the syslog-ng agent sends a message of
-                    the change, including the MD5 hash of the new configuration.</para>
+                    the change, including the SHA-1 hash of the new configuration.</para>
                 <para>Also note that if your clients are managed from a Domain Controller,
                     configuration changes are not instantly downloaded to the client hosts, only at
                     the time of the next group policy update. To update the configuration of a
                     client host earlier, open a command prompt on the client host, and issue the
                         <command>gpupdate /force</command> command.</para>
+                <para>After downloading the configuration from the Domain Controller, the syslog-ng
+                    Agent service is automatically restarted.</para>
             </listitem>
             <listitem>
                 <para><emphasis>The syslog-ng agent does not send messages to the server</emphasis>:
-                    Check the Application eventlog for messages of the syslog-ng agent (the agent
-                    sends messages using the LogRelay source). In case of connection errors and
-                    certificate problems, the syslog-ng agent sends error messages into the
-                    eventlog. Ensure that the destination address of the server is correctly set. If
-                    you use SSL encryption, verify that the certificate of the Certificate Authority
-                    of the server and that the certificate of the client are properly imported. If
-                    there are no error messages, check the logs on your logserver: the syslog-ng
-                    agent sends a MARK message every ten minutes even if there are no other messages
-                    to send.</para>
+                    Check the Application eventlog for messages of the syslog-ng agent. In case of
+                    connection errors and certificate problems, the syslog-ng agent sends error
+                    messages into the eventlog. Ensure that the destination address of the server is
+                    correctly set. If you use SSL encryption, verify that the certificate of the
+                    Certificate Authority of the server and that the certificate of the client are
+                    properly imported. If there are no error messages, check the logs on your
+                    logserver: the syslog-ng agent sends a MARK message every ten minutes even if
+                    there are no other messages to send.</para>
             </listitem>
             <listitem>
                 <para><emphasis>The syslog-ng agent sends only MARK messages to the

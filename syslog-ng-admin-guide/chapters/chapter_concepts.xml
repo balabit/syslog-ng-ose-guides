@@ -46,6 +46,16 @@
             Filters are rules that select only certain messages, for example, selecting only
             messages sent by a specific application. If a log path includes filters, syslog-ng sends
             only the messages satisfying the filter rules to the destinations set in the log path.</para>
+        <indexterm>
+            <primary>parsers</primary>
+        </indexterm>
+        <indexterm>
+            <primary>rewrite rules</primary>
+        </indexterm>
+        <para>Other optional elements that can appear in log statements are
+            <emphasis>parsers</emphasis> and <emphasis>rewriting rules</emphasis>. Parsers segment
+            messages into different fields to help processing the messages, while rewrite rules
+            modify the messages by adding, replacing, or removing parts of the messages.</para>
 
         <para>The following procedure illustrates the route of a log message from its source on the
             syslog-ng client to its final destination on the central syslog-ng server. </para>
@@ -79,10 +89,15 @@
                         <filename>/var/log/apache</filename> source.</para>
             </step>
             <step>
-                <para>The syslog-ng client compares the message to the filters of the log statement
-                    (if any). If the message complies with all filter rules, syslog-ng sends the
-                    message to the destinations set in the log statement, for example, to the remote
-                    syslog-ng server.</para>
+                <para>The syslog-ng client performs optional operations (message filtering, parsing,
+                    and rewriting) on the message; for example, it compares the message to the
+                    filters of the log statement (if any). If the message complies with all filter
+                    rules, syslog-ng sends the message to the destinations set in the log statement,
+                    for example, to the remote syslog-ng server.</para>
+                <warning>
+                    <para>Message filtering, parsing, and rewriting is performed in the order that
+                        the operations appear in the log statement.</para>
+                </warning>
                 <note>
                     <para>The syslog-ng client sends a message to <emphasis>all</emphasis> matching
                         destinations by default. As a result, a message may be sent to a destination
@@ -104,9 +119,14 @@
                     log statement that includes that source.</para>
             </step>
             <step>
-                <para>The syslog-ng server compares the message to the filters of the log statement
-                    (if any). If the message complies with all filter rules, syslog-ng sends the
-                    message to the destinations set in the log statement. </para>
+                <para>The syslog-ng server performs optional operations (message filtering, parsing,
+                    and rewriting) on the message; for example, it compares the message to the
+                    filters of the log statement (if any). If the message complies with all filter
+                    rules, syslog-ng sends the message to the destinations set in the log statement. </para>
+                <warning>
+                    <para>Message filtering, parsing, and rewriting is performed in the order that
+                        the operations appear in the log statement.</para>
+                </warning>
             </step>
             <step>
                 <para>The syslog-ng server processes the next log statement, repeating Steps
@@ -118,6 +138,61 @@
                 destinations cannot process the sent messages. This feature is called flow-control
                 and is detailed in <xref linkend="flow_control"/>.</para>
         </note>
+        <section id="concepts_logpipes">
+            <title>Embedded log statements</title>
+            <indexterm>
+                <primary>embedded log statements</primary>
+            </indexterm>
+            <indexterm>
+                <primary>log pipes</primary>
+                <see>embedded log statements</see>
+            </indexterm>
+            <indexterm significance="preferred">
+                <primary>log statements</primary>
+                <secondary>embedded</secondary>
+            </indexterm>
+            <para>Starting from version 3.0, syslog-ng can handle embedded log statements (also
+                called log pipes). Embedded log statements are useful for creating complex,
+                multi-level log paths with several destinations and use filters, parsers, and
+                rewrite rules.</para>
+            <para>For example, if you want to filter your incoming messages based on the facility
+                parameter, and then use further filters to send messages arriving from different
+                hosts to different destinations, you would use embedded log statements.</para>
+            <para>Embedded log statements include sources &mdash; and usually filters, parsers,
+                rewrite rules, or destinations &mdash; and other log statements that can include
+                filters, parsers, rewrite rules, and destinations. The following rules apply to
+                embedded log statements:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Only the beginning (also called top-level) log statement can include
+                        sources.</para>
+                </listitem>
+                <listitem>
+                    <para>Embedded log statements can include multiple log statements on the same
+                        level (i.e., a top-level log statement can include two or more log
+                        statements).</para>
+                </listitem>
+                <listitem>
+                    <para>Embedded log statements can include several levels of log statements
+                        (i.e., a top-level log statement can include a log statement that includes
+                        another log statement, and so on).</para>
+                </listitem>
+                <listitem>
+                    <para>Only another log statement can follow an embedded log statement, filters
+                        or other rules cannot.</para>
+                </listitem>
+                <listitem>
+                    <para>Embedded log statements that are on the same level receive the same
+                        messages from the higher-level log statement. For example, if the top-level
+                        log statement includes a filter, the lower-level log statements receive only
+                        the messages that pass the filter.</para>
+                </listitem>
+            </itemizedlist>
+            <!-- FIXME abra -->
+            <para>Embedded log filters can be used to optimize the processing of log messages, for
+                example, to re-use the results of filtering and rewriting operations.</para>
+        </section>
+
     </section>
 
     <section id="concepts_modes_of_operation">
@@ -248,7 +323,7 @@
                 </indexterm>
                 <para><emphasis>Destination driver</emphasis>: A communication method used to send
                     log messages. For example, syslog-ng can send messages to a remote host via
-                    TCP/IP, or write the messages into a file.</para>
+                    TCP/IP, or write the messages into a file or database.</para>
             </listitem>
             <listitem>
                 <indexterm>
@@ -266,21 +341,47 @@
             </listitem>
             <listitem>
                 <indexterm>
-                    <primary>log paths</primary>
+                    <primary>macros</primary>
                 </indexterm>
-                <para><emphasis>Log path</emphasis>: A combination of sources, filters, and
-                    destinations: syslog-ng examines all messages arriving to the sources of the log
-                    path and sends the messages matching all filters to the defined destinations.
-                    Log paths are also called log statements.</para>
+                <para><emphasis>Macro</emphasis>: An identifier that refers to a part of the log
+                    message. For example, the <parameter>$HOST</parameter> macro returns the name of
+                    the host that sent the message. Macros are often used in templates and
+                    filenames.</para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>parsers</primary>
+                </indexterm>
+                <para><emphasis>Parser</emphasis>: A rule that segments messages into separate
+                    columns at a predefined separator character (e.g., a comma). Every column has a
+                    unique name that can be used as a macro.</para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>rewrite rules</primary>
+                </indexterm>
+                <para><emphasis>Rewrite rule</emphasis>: A rule modifies a part of the message, for
+                    example, replaces a string, or sets a field to a specified value.</para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>log statements</primary>
+                </indexterm>
+                <para><emphasis>Log paths</emphasis>: A combination of sources, destinations, and
+                    other objects like filters, parsers, and rewrite rules. The syslog-ng
+                    application sends messages arriving to the sources of the log paths to the
+                    defined destinations, and performs filtering, parsing, and rewriting of the
+                    messages. Log paths are also called log statements. Log statements can include
+                    other (embedded) log statements to create complex log paths.</para>
             </listitem>
             <listitem>
                 <indexterm>
                     <primary>templates</primary>
                 </indexterm>
-                <para><emphasis>Template</emphasis>: A template is a user-defined structure that can
-                    be used to restructure log messages or automatically generate file names. For
-                    example, a template can add the hostname and the date to the beginning of every
-                    log message.</para>
+                <para><emphasis>Template</emphasis>: A template is a set of macros that can be used
+                    to restructure log messages or automatically generate file names. For example, a
+                    template can add the hostname and the date to the beginning of every log
+                    message.</para>
             </listitem>
             <listitem>
                 <indexterm>
@@ -313,7 +414,7 @@
                     associated with the message. Otherwise, the local timezone is assumed.</para>
             </step>
             <step>
-                <para>Specify the <link linkend="sourcecommonopts">
+                <para>Specify the <link linkend="source_commonoption_time_zone">
                         <parameter>time_zone()</parameter>
                     </link> parameter for the source driver that reads the message. This parameter
                     overrides the original timezone of the message. Each source defaults to the
@@ -323,7 +424,7 @@
             </step>
             <step>
                 <para>Specify the timezone in the destination driver using the <link
-                        linkend="destcommonopts">
+                        linkend="destination_commonoption_timezone">
                         <parameter>time_zone()</parameter>
                     </link> parameter. Each destination driver might have an associated timezone
                     value; syslog-ng converts message timestamps to this timezone before sending the
@@ -430,7 +531,44 @@
         <para>See <xref linkend="tls_serverauth"/> for details on configuring TLS communication in
             syslog-ng.</para>
     </section>
-
+    <section id="concepts_logstore">
+        <title>Secure storage of log messages</title>
+        <indexterm>
+            <primary>logstore</primary>
+        </indexterm>
+        <indexterm>
+            <primary>encrypting log messages</primary>
+            <secondary>on the hard disk</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>encrypting log files</primary>
+        </indexterm>
+        <indexterm>
+            <primary>signing log files</primary>
+        </indexterm>
+        <indexterm>
+            <primary>file encryption</primary>
+        </indexterm>
+        <indexterm>
+            <primary>Timestamping Authority</primary>
+        </indexterm>
+        <indexterm>
+            <primary>TSA</primary>
+        </indexterm>
+        <para>The Premium Edition of syslog-ng can store log messages securely in encrypted,
+            compressed, and timestamped binary files. Timestamps can be requested from an external
+            Timestamping Authority (TSA).</para>
+        <para>Logstore files consist of individual chunks, every chunk can be encrypted, compressed,
+            and timestamped separately. Chunks contain log message data, chunk size defaults to 128k
+            (about 1MB worth of compressed logs). Chunks are closed when their size reaches the
+            limit set in the <parameter>chunk_size</parameter> parameter, or when the time limit set
+            in the <parameter>chunk_time</parameter> parameter expires and no new message arrives.</para>
+        <para>When the logstore file is encrypted, a hash is also generated for every chunk to
+            verify the integrity of the chunk. The hashes of the chunks are chained together to
+            prevent injecting chunks into the logstore file. The encryption algorithm used is
+                <parameter>aes128</parameter> in CBC mode, the hashing (HMAC) algorithm is
+                <parameter>hmac-sha1</parameter>.</para>
+    </section>
     <section id="concepts_licensing">
         <title>Licensing</title>
         <indexterm>
@@ -523,235 +661,538 @@
         <indexterm>
             <primary>log messages, structure</primary>
         </indexterm>
-        <para>This section describes the format of a syslog message, according to RFC 3164 (<ulink
-                url="http://www.ietf.org/rfc/rfc3164.txt"
-            >http://www.ietf.org/rfc/rfc3164.txt</ulink>). A syslog message consists of the
-            following parts: </para>
+        <para>The following sections describe the structure of log messages. Currently there are two
+            standard syslog message formats: </para>
         <itemizedlist>
             <listitem>
-                <para>
-                    <parameter>
-                        <link linkend="syslog_pri">PRI</link>
-                    </parameter>
-                </para>
+                <para>The old standard described in RFC 3164 (also called the BSD-syslog or the
+                    legacy-syslog protocol): see <xref linkend="concepts_message_bsdsyslog"/></para>
             </listitem>
             <listitem>
-                <para>
-                    <parameter>
-                        <link linkend="syslog_header">HEADER</link>
-                    </parameter>
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    <parameter>
-                        <link linkend="syslog_msg">MSG</link>
-                    </parameter>
-                </para>
+                <para>The new standard described in <ulink
+                        url="http://www.ietf.org/internet-drafts/draft-ietf-syslog-protocol-23.txt"
+                        >http://www.ietf.org/internet-drafts/draft-ietf-syslog-protocol-23.txt</ulink>:
+                    see <xref linkend="concepts_message_ietfsyslog"/></para>
             </listitem>
         </itemizedlist>
-        <para>The total message must be shorter than 1024 bytes.</para>
-        <para>The following is a sample syslog message: <parameter>&lt;133&gt;Feb 25
-                14:09:07 webserver syslogd: restart</parameter>. The message corresponds to the
-            following format: <parameter>&lt;priority&gt;timestamp hostname application:
-                message</parameter>. The different parts of the message are explained in the
-            following sections.</para>
-        <note>
-            <para>The syslog-ng application supports longer messages as well. For details, see the
-                    <parameter>log_msg_size()</parameter> option in <xref
-                    linkend="reference_options"/>. However, it is not recommended to enable messages
-                larger than the packet size when using UDP destinations.</para>
-        </note>
-        <section id="syslog_pri">
-            <title>The PRI message part</title>
-            <para>The PRI part of the syslog message (known as Priority value) represents the
-                Facility and Severity of the message. Facility represents the part of the system
-                sending the message, while severity marks its importance. The Priority value is
-                calculated by first multiplying the Facility number by 8 and then adding the
-                numerical value of the Severity. The possible facility and severity values are
-                presented below.</para>
-            <note>
-                <para>Facility codes may slightly vary between different platforms. The syslog-ng
-                    application accepts facility codes as numerical values as well. </para>
-            </note>
-            <table>
-                <title>syslog Message Facilities</title>
-                <?dbfo keep-together="auto" ?>
-                <indexterm>
-                    <primary>facilities</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>message facilities</primary>
-                </indexterm>
-                <tgroup cols="2">
-                    <thead>
-                        <row>
-                            <entry>Numerical Code</entry>
-                            <entry>Facility</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>0</entry>
-                            <entry>kernel messages</entry>
-                        </row>
-                        <row>
-                            <entry>1</entry>
-                            <entry>user-level messages</entry>
-                        </row>
-                        <row>
-                            <entry>2</entry>
-                            <entry>mail system</entry>
-                        </row>
-                        <row>
-                            <entry>3</entry>
-                            <entry>system daemons</entry>
-                        </row>
-                        <row>
-                            <entry>4</entry>
-                            <entry>security/authorization messages</entry>
-                        </row>
-                        <row>
-                            <entry>5</entry>
-                            <entry>messages generated internally by syslogd</entry>
-                        </row>
-                        <row>
-                            <entry>6</entry>
-                            <entry>line printer subsystem</entry>
-                        </row>
-                        <row>
-                            <entry>7</entry>
-                            <entry>network news subsystem</entry>
-                        </row>
-                        <row>
-                            <entry>8</entry>
-                            <entry>UUCP subsystem</entry>
-                        </row>
-                        <row>
-                            <entry>9</entry>
-                            <entry>clock daemon</entry>
-                        </row>
-                        <row>
-                            <entry>10</entry>
-                            <entry>security/authorization messages</entry>
-                        </row>
-                        <row>
-                            <entry>11</entry>
-                            <entry>FTP daemon</entry>
-                        </row>
-                        <row>
-                            <entry>12</entry>
-                            <entry>NTP subsystem</entry>
-                        </row>
-                        <row>
-                            <entry>13</entry>
-                            <entry>log audit</entry>
-                        </row>
-                        <row>
-                            <entry>14</entry>
-                            <entry>log alert</entry>
-                        </row>
-                        <row>
-                            <entry>15</entry>
-                            <entry>clock daemon</entry>
-                        </row>
-                        <row>
-                            <entry>16-23</entry>
-                            <entry>locally used facilities (local0-local7)</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-            <para>The following table lists the severity values.</para>
-            <table>
-                <title>syslog Message Severities</title>
-                <tgroup cols="2">
-                    <thead>
-                        <row>
-                            <entry>Numerical Code</entry>
-                            <entry>Severity</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>0</entry>
-                            <entry>Emergency: system is unusable</entry>
-                        </row>
-                        <row>
-                            <entry>1</entry>
-                            <entry>Alert: action must be taken immediately</entry>
-                        </row>
-                        <row>
-                            <entry>2</entry>
-                            <entry>Critical: critical conditions</entry>
-                        </row>
-                        <row>
-                            <entry>3</entry>
-                            <entry>Error: error conditions</entry>
-                        </row>
-                        <row>
-                            <entry>4</entry>
-                            <entry>Warning: warning conditions</entry>
-                        </row>
-                        <row>
-                            <entry>5</entry>
-                            <entry>Notice: normal but significant condition</entry>
-                        </row>
-                        <row>
-                            <entry>6</entry>
-                            <entry>Informational: informational messages</entry>
-                        </row>
-                        <row>
-                            <entry>7</entry>
-                            <entry>Debug: debug-level messages</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-        </section>
-        <section id="syslog_header">
-            <title>The HEADER message part</title>
+
+        <section id="concepts_message_bsdsyslog">
+            <title>BSD-syslog or legacy-syslog messages</title>
             <indexterm>
-                <primary>timestamp</primary>
+                <primary>log messages, structure</primary>
+                <secondary>BSD-syslog protocol</secondary>
             </indexterm>
             <indexterm>
-                <primary>local time</primary>
+                <primary>log messages, structure</primary>
+                <secondary>legacy-syslog protocol</secondary>
             </indexterm>
-            <para> The HEADER part contains a timestamp and the hostname (without the domain name)
-                or the IP address of the device. The timestamp field is the local time in the
-                    <parameter>Mmm dd hh:mm:ss</parameter> format, where: </para>
+            <indexterm>
+                <primary>log messages, structure</primary>
+                <secondary>RFC 3164</secondary>
+            </indexterm>
+            <para>This section describes the format of a syslog message, according to the
+                legacy-syslog or BSD-syslog protocol (see RFC 3164 <ulink
+                    url="http://www.ietf.org/rfc/rfc3164.txt"
+                >http://www.ietf.org/rfc/rfc3164.txt</ulink>). A syslog message consists of the
+                following parts: </para>
             <itemizedlist>
                 <listitem>
                     <para>
-                        <emphasis>Mmm</emphasis> is the English abbreviation of the month: Jan, Feb,
-                        Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec. </para>
+                        <parameter>
+                            <link linkend="bsdsyslog_pri">PRI</link>
+                        </parameter>
+                    </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <emphasis>dd</emphasis> is the day of the month on two digits. If the day of
-                        the month is less than 10, the first digit is replaced with a space. (E.g.,
-                            <parameter>Aug 7</parameter>.) </para>
+                        <parameter>
+                            <link linkend="bsdsyslog_header">HEADER</link>
+                        </parameter>
+                    </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <emphasis>hh:mm:ss</emphasis> is the local time. The hour (hh) is
-                        represented in a 24-hour format. Valid entries are between 00 and 23,
-                        inclusive. The minute (mm) and second (ss) entries are between 00 and 59
-                        inclusive. </para>
+                        <parameter>
+                            <link linkend="bsdsyslog_msg">MSG</link>
+                        </parameter>
+                    </para>
                 </listitem>
             </itemizedlist>
+            <para>The total message must be shorter than 1024 bytes.</para>
+            <para>The following is a sample syslog message: <parameter>&lt;133&gt;Feb 25
+                    14:09:07 webserver syslogd: restart</parameter>. The message corresponds to the
+                following format: <parameter>&lt;priority&gt;timestamp hostname application:
+                    message</parameter>. The different parts of the message are explained in the
+                following sections.</para>
             <note>
-                <para>The syslog-ng application supports other timestamp formats as well, like ISO,
-                    or the PIX extended format. For details, see the
-                    <parameter>ts_format()</parameter> option in <xref linkend="reference_options"
-                    />.</para>
+                <para>The syslog-ng application supports longer messages as well. For details, see
+                    the <parameter>log_msg_size()</parameter> option in <xref
+                        linkend="reference_options"/>. However, it is not recommended to enable
+                    messages larger than the packet size when using UDP destinations.</para>
             </note>
+            <section id="bsdsyslog_pri">
+                <title>The PRI message part</title>
+                <para>The PRI part of the syslog message (known as Priority value) represents the
+                    Facility and Severity of the message. Facility represents the part of the system
+                    sending the message, while severity marks its importance. The Priority value is
+                    calculated by first multiplying the Facility number by 8 and then adding the
+                    numerical value of the Severity. The possible facility and severity values are
+                    presented below.</para>
+                <note>
+                    <para>Facility codes may slightly vary between different platforms. The
+                        syslog-ng application accepts facility codes as numerical values as well.
+                    </para>
+                </note>
+                <table>
+                    <title>syslog Message Facilities</title>
+                    <?dbfo keep-together="auto" ?>
+                    <indexterm>
+                        <primary>facilities</primary>
+                    </indexterm>
+                    <indexterm>
+                        <primary>message facilities</primary>
+                    </indexterm>
+                    <tgroup cols="2">
+                        <thead>
+                            <row>
+                                <entry>Numerical Code</entry>
+                                <entry>Facility</entry>
+                            </row>
+                        </thead>
+                        <tbody>
+                            <row>
+                                <entry>0</entry>
+                                <entry>kernel messages</entry>
+                            </row>
+                            <row>
+                                <entry>1</entry>
+                                <entry>user-level messages</entry>
+                            </row>
+                            <row>
+                                <entry>2</entry>
+                                <entry>mail system</entry>
+                            </row>
+                            <row>
+                                <entry>3</entry>
+                                <entry>system daemons</entry>
+                            </row>
+                            <row>
+                                <entry>4</entry>
+                                <entry>security/authorization messages</entry>
+                            </row>
+                            <row>
+                                <entry>5</entry>
+                                <entry>messages generated internally by syslogd</entry>
+                            </row>
+                            <row>
+                                <entry>6</entry>
+                                <entry>line printer subsystem</entry>
+                            </row>
+                            <row>
+                                <entry>7</entry>
+                                <entry>network news subsystem</entry>
+                            </row>
+                            <row>
+                                <entry>8</entry>
+                                <entry>UUCP subsystem</entry>
+                            </row>
+                            <row>
+                                <entry>9</entry>
+                                <entry>clock daemon</entry>
+                            </row>
+                            <row>
+                                <entry>10</entry>
+                                <entry>security/authorization messages</entry>
+                            </row>
+                            <row>
+                                <entry>11</entry>
+                                <entry>FTP daemon</entry>
+                            </row>
+                            <row>
+                                <entry>12</entry>
+                                <entry>NTP subsystem</entry>
+                            </row>
+                            <row>
+                                <entry>13</entry>
+                                <entry>log audit</entry>
+                            </row>
+                            <row>
+                                <entry>14</entry>
+                                <entry>log alert</entry>
+                            </row>
+                            <row>
+                                <entry>15</entry>
+                                <entry>clock daemon</entry>
+                            </row>
+                            <row>
+                                <entry>16-23</entry>
+                                <entry>locally used facilities (local0-local7)</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </table>
+                <para>The following table lists the severity values.</para>
+                <table>
+                    <title>syslog Message Severities</title>
+                    <tgroup cols="2">
+                        <thead>
+                            <row>
+                                <entry>Numerical Code</entry>
+                                <entry>Severity</entry>
+                            </row>
+                        </thead>
+                        <tbody>
+                            <row>
+                                <entry>0</entry>
+                                <entry>Emergency: system is unusable</entry>
+                            </row>
+                            <row>
+                                <entry>1</entry>
+                                <entry>Alert: action must be taken immediately</entry>
+                            </row>
+                            <row>
+                                <entry>2</entry>
+                                <entry>Critical: critical conditions</entry>
+                            </row>
+                            <row>
+                                <entry>3</entry>
+                                <entry>Error: error conditions</entry>
+                            </row>
+                            <row>
+                                <entry>4</entry>
+                                <entry>Warning: warning conditions</entry>
+                            </row>
+                            <row>
+                                <entry>5</entry>
+                                <entry>Notice: normal but significant condition</entry>
+                            </row>
+                            <row>
+                                <entry>6</entry>
+                                <entry>Informational: informational messages</entry>
+                            </row>
+                            <row>
+                                <entry>7</entry>
+                                <entry>Debug: debug-level messages</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </table>
+            </section>
+            <section id="bsdsyslog_header">
+                <title>The HEADER message part</title>
+                <indexterm>
+                    <primary>timestamp</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>local time</primary>
+                </indexterm>
+                <para> The HEADER part contains a timestamp and the hostname (without the domain
+                    name) or the IP address of the device. The timestamp field is the local time in
+                    the <parameter>Mmm dd hh:mm:ss</parameter> format, where: </para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <emphasis>Mmm</emphasis> is the English abbreviation of the month: Jan,
+                            Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec. </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <emphasis>dd</emphasis> is the day of the month on two digits. If the
+                            day of the month is less than 10, the first digit is replaced with a
+                            space. (E.g., <parameter>Aug 7</parameter>.) </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <emphasis>hh:mm:ss</emphasis> is the local time. The hour (hh) is
+                            represented in a 24-hour format. Valid entries are between 00 and 23,
+                            inclusive. The minute (mm) and second (ss) entries are between 00 and 59
+                            inclusive. </para>
+                    </listitem>
+                </itemizedlist>
+                <note>
+                    <para>The syslog-ng application supports other timestamp formats as well, like
+                        ISO, or the PIX extended format. For details, see the
+                        <parameter>ts_format()</parameter> option in <xref
+                            linkend="reference_options"/>.</para>
+                </note>
+            </section>
+            <section id="bsdsyslog_msg">
+                <title>The MSG message part</title>
+                <para>The MSG part contains the name of the program or process that generated the
+                    message, and the text of the message itself. The MSG part is usually in the
+                    following format: <parameter>program[pid]: message text</parameter>.</para>
+            </section>
         </section>
-        <section id="syslog_msg">
-            <title>The MSG message part</title>
-            <para>The MSG part contains the name of the program or process that generated the
-                message, and the text of the message itself. The MSG part is usually in the
-                following format: <parameter>program[pid]: message text</parameter>.</para>
+        <section id="concepts_message_ietfsyslog">
+            <title>IETF-syslog messages</title>
+            <para>This section describes the format of a syslog message, according to the
+                IETF-syslog protocol (see <ulink
+                    url="http://www.ietf.org/internet-drafts/draft-ietf-syslog-protocol-23.txt"
+                    >http://www.ietf.org/internet-drafts/draft-ietf-syslog-protocol-23.txt</ulink>).A
+                syslog message consists of the following parts: </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <parameter>
+                            <link linkend="ietfsyslog_pri">PRI</link>
+                        </parameter>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <parameter>
+                            <link linkend="ietfsyslog_header">HEADER</link>
+                        </parameter>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <parameter>
+                            <link linkend="ietfsyslog_msg">MSG</link>
+                        </parameter>
+                    </para>
+                </listitem>
+            </itemizedlist>
+            <!--FIXME update
+                <para>The total message must be shorter than 1024 bytes.</para>
+            <note>
+                <para>The syslog-ng application supports longer messages as well. For details, see
+                    the <parameter>log_msg_size()</parameter> option in <xref
+                        linkend="reference_options"/>. However, it is not recommended to enable
+                    messages larger than the packet size when using UDP destinations.</para>
+            </note>
+            -->
+            <para>The following is a sample syslog message:<footnote>
+                    <para>Source:
+                        http://www.ietf.org/internet-drafts/draft-ietf-syslog-protocol-23.txt</para>
+                </footnote></para>
+            <synopsis>&lt;34&gt;1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - BOM'su root' failed for lonvick on /dev/pts/8</synopsis>
+            <para>The message corresponds to the following format: </para>
+            <synopsis>&lt;priority&gt;VERSION ISOTIMESTAMP HOSTNAME APPLICATION PID MESSAGEID STRUCTURED-DATA MSG</synopsis>
+            <para>In this example, the Facility has the value of 4, severity is 2, so PRI is 34. The
+                VERSION is 1. The message was created on 11 October 2003 at 10:14:15pm UTC, 3
+                milliseconds into the next second. The message originated from a host that
+                identifies itself as "mymachine.example.com". The APP-NAME is "su" and the PROCID is
+                unknown. The MSGID is "ID47". The MSG is "'su root' failed for lonvick...", encoded
+                in UTF-8. The encoding is defined by the BOM. There is no STRUCTURED-DATA present in
+                the message, this is indicated by "-" in the STRUCTURED-DATA field. The MSG is "'su
+                root' failed for lonvick...".</para>
+            <para>The HEADER part of the message must be in plain ASCII format, while the MSG part
+                must be in UTF-8. The different parts of the message are explained in the following
+                sections.</para>
+            <section id="ietfsyslog_pri">
+                <title>The PRI message part</title>
+                <para>The PRI part of the syslog message (known as Priority value) represents the
+                    Facility and Severity of the message. Facility represents the part of the system
+                    sending the message, while severity marks its importance. The Priority value is
+                    calculated by first multiplying the Facility number by 8 and then adding the
+                    numerical value of the Severity. The possible facility and severity values are
+                    presented below.</para>
+                <note>
+                    <para>Facility codes may slightly vary between different platforms. The
+                        syslog-ng application accepts facility codes as numerical values as well.
+                    </para>
+                </note>
+                <table>
+                    <title>syslog Message Facilities</title>
+                    <?dbfo keep-together="auto" ?>
+                    <indexterm>
+                        <primary>facilities</primary>
+                    </indexterm>
+                    <indexterm>
+                        <primary>message facilities</primary>
+                    </indexterm>
+                    <tgroup cols="2">
+                        <thead>
+                            <row>
+                                <entry>Numerical Code</entry>
+                                <entry>Facility</entry>
+                            </row>
+                        </thead>
+                        <tbody>
+                            <row>
+                                <entry>0</entry>
+                                <entry>kernel messages</entry>
+                            </row>
+                            <row>
+                                <entry>1</entry>
+                                <entry>user-level messages</entry>
+                            </row>
+                            <row>
+                                <entry>2</entry>
+                                <entry>mail system</entry>
+                            </row>
+                            <row>
+                                <entry>3</entry>
+                                <entry>system daemons</entry>
+                            </row>
+                            <row>
+                                <entry>4</entry>
+                                <entry>security/authorization messages</entry>
+                            </row>
+                            <row>
+                                <entry>5</entry>
+                                <entry>messages generated internally by syslogd</entry>
+                            </row>
+                            <row>
+                                <entry>6</entry>
+                                <entry>line printer subsystem</entry>
+                            </row>
+                            <row>
+                                <entry>7</entry>
+                                <entry>network news subsystem</entry>
+                            </row>
+                            <row>
+                                <entry>8</entry>
+                                <entry>UUCP subsystem</entry>
+                            </row>
+                            <row>
+                                <entry>9</entry>
+                                <entry>clock daemon</entry>
+                            </row>
+                            <row>
+                                <entry>10</entry>
+                                <entry>security/authorization messages</entry>
+                            </row>
+                            <row>
+                                <entry>11</entry>
+                                <entry>FTP daemon</entry>
+                            </row>
+                            <row>
+                                <entry>12</entry>
+                                <entry>NTP subsystem</entry>
+                            </row>
+                            <row>
+                                <entry>13</entry>
+                                <entry>log audit</entry>
+                            </row>
+                            <row>
+                                <entry>14</entry>
+                                <entry>log alert</entry>
+                            </row>
+                            <row>
+                                <entry>15</entry>
+                                <entry>clock daemon</entry>
+                            </row>
+                            <row>
+                                <entry>16-23</entry>
+                                <entry>locally used facilities (local0-local7)</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </table>
+                <para>The following table lists the severity values.</para>
+                <table>
+                    <title>syslog Message Severities</title>
+                    <tgroup cols="2">
+                        <thead>
+                            <row>
+                                <entry>Numerical Code</entry>
+                                <entry>Severity</entry>
+                            </row>
+                        </thead>
+                        <tbody>
+                            <row>
+                                <entry>0</entry>
+                                <entry>Emergency: system is unusable</entry>
+                            </row>
+                            <row>
+                                <entry>1</entry>
+                                <entry>Alert: action must be taken immediately</entry>
+                            </row>
+                            <row>
+                                <entry>2</entry>
+                                <entry>Critical: critical conditions</entry>
+                            </row>
+                            <row>
+                                <entry>3</entry>
+                                <entry>Error: error conditions</entry>
+                            </row>
+                            <row>
+                                <entry>4</entry>
+                                <entry>Warning: warning conditions</entry>
+                            </row>
+                            <row>
+                                <entry>5</entry>
+                                <entry>Notice: normal but significant condition</entry>
+                            </row>
+                            <row>
+                                <entry>6</entry>
+                                <entry>Informational: informational messages</entry>
+                            </row>
+                            <row>
+                                <entry>7</entry>
+                                <entry>Debug: debug-level messages</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </table>
+            </section>
+            <section id="ietfsyslog_header">
+                <title>The HEADER message part</title>
+                <indexterm>
+                    <primary>timestamp</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>local time</primary>
+                </indexterm>
+                <para>The HEADER part contains the following elements:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para><emphasis>VERSION</emphasis>: Version number of the syslog protocol
+                            standard. Currently this can only be <parameter>1</parameter>.</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>ISOTIMESTAMP</emphasis>: The time when the message was
+                            generated in the ISO 8601 compatible standard timestamp format
+                            (yyyy-mm-ddThh:mm:ss+-ZONE), e.g.:
+                                <parameter>2006-06-13T15:58:00.123+01:00</parameter>.</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>HOSTNAME</emphasis>: The machine that originally sent the
+                            message.</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>APPLICATION</emphasis>: The device or application that
+                            generated the message</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>PID</emphasis>: The process name or process ID of the syslog
+                            application that sent the message. It is not necessarily the process ID
+                            of the application that generated the message.</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>MESSAGEID</emphasis>: The ID number of the message.</para>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>STRUCTURED-DATA</emphasis>: STRUCTURED-DATA may contain
+                            meta- information about the syslog message, or application-specific
+                            information such as traffic counters or IP addresses. STRUCTURED-DATA
+                            consists of data blocks enclosed in brackets
+                            (<parameter>[]</parameter>). Every block include the ID of the block,
+                            and one or more <parameter>name=value</parameter> pairs. The syslog-ng
+                            application automatically parses the STRUCTURED-DATA part of syslog
+                            messages, which can be referenced in macros (see <xref
+                                linkend="configuring_macros"/> for details). An example
+                            STRUCTURED-DATA block looks like:</para>
+                        <synopsis>[exampleSDID@0 iut="3" eventSource="Application"
+                            eventID="1011"][examplePriority@0 class="high"]</synopsis>
+                    </listitem>
+                </itemizedlist>
+                <note>
+                    <para>The syslog-ng application supports other timestamp formats as well, like
+                        ISO, or the PIX extended format. For details, see the
+                        <parameter>ts_format()</parameter> option in <xref
+                            linkend="reference_options"/>.</para>
+                </note>
+            </section>
+            <section id="ietfsyslog_msg">
+                <title>The MSG message part</title>
+                <para>The MSG part contains the text of the message itself. The encoding of the text
+                    must be UTF-8.</para>
+            </section>
+            <!-- FIXME help needed -->
         </section>
+
     </section>
 </chapter>

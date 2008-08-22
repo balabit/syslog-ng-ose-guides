@@ -187,11 +187,11 @@
             </tbody>
         </tgroup>
     </table>
-    <table>
+    <table id="table_disk_buffering">
         <title>Disk-buffering options</title>
         <tgroup cols="4">
             <tbody>
-                <row id="diskbuffer_option_log_disk_fifo">
+                <row id="diskbuffer_option_log_disk_fifo_size">
                     <indexterm>
                         <primary>disk buffer</primary>
                     </indexterm>
@@ -210,6 +210,279 @@
                         <parameter>tcp</parameter> or <parameter>tls</parameter> transport method.
                         See <xref linkend="diskbuffer"/> for details on using the disk
                     buffer.</entry>
+                </row>
+            </tbody>
+        </tgroup>
+    </table>
+
+    <table id="table_source_commonoptions">
+        <?dbfo keep-together="auto" ?>
+        <title>Common options for source drivers</title>
+        <tgroup cols="4">
+            <thead>
+                <row>
+                    <entry>Name</entry>
+                    <entry>Type</entry>
+                    <entry>Default</entry>
+                    <entry>Description</entry>
+                </row>
+            </thead>
+            <tbody>
+                <row id="source_commonoption_flags">
+                    <entry>flags()</entry>
+                    <entry>no-parse, kernel, syslog-protocol, no_multi_line, validate-utf8</entry>
+                    <entry>empty set</entry>
+                    <entry>
+                        <para>Specifies log parsing flags.</para>
+                        <para>The <parameter>no-parse</parameter> flag completely disables syslog
+                            message parsing and processes the complete line as the message part of a
+                            syslog message. Other information (timestamp, host, etc.) is added
+                            automatically. This flag is useful for parsing files not complying to
+                            the syslog format. </para>
+                        <para>The <parameter>kernel</parameter> flag makes the source default to the
+                                <parameter>LOG_KERN | LOG_CRIT</parameter> priority if not specified
+                            otherwise. </para>
+                        <para>The <parameter>syslog-protocol</parameter> flag specifies that
+                            incoming messages are expected to to be formatted according to the new
+                            IETF syslog protocol standard. Note that this flag is not needed for the
+                                <parameter>syslog</parameter> driver.<!-- FIXME link--></para>
+                        <para>The <parameter>no-multi-line</parameter> flag disables line-breaking
+                            in the messages; the entire message is converted to a single line.</para>
+                        <para>The <parameter>validate-utf8</parameter> flag enables
+                            encoding-verification for messages formatted according to the new IETF
+                            syslog standard.<!-- FIXME link--> If the BOM character is missing, but
+                            the message is otherwise UTF-8 compliant, syslog-ng automatically adds
+                            the BOM character to the message.</para>
+                    </entry>
+                </row>
+                <row id="source_commonoption_follow_freq">
+                    <entry>follow_freq()</entry>
+                    <entry>number</entry>
+                    <entry>-1</entry>
+                    <entry>Indicates that the source should be checked periodically instead of being
+                        polled. This is useful for files which always indicate readability, even
+                        though no new lines were appended. If this value is higher than zero,
+                        syslog-ng will not attempt to use <parameter>poll()</parameter> on the file,
+                        but checks whether the file changed every time the
+                        <parameter>follow_freq()</parameter> interval (in seconds) has elapsed.
+                    </entry>
+                </row>
+                <row id="source_commonoption_keep_timestamp">
+                    <entry>keep_timestamp()</entry>
+                    <entry>yes or no</entry>
+                    <entry>yes</entry>
+                    <entry>Specifies whether syslog-ng should accept the timestamp received from the
+                        peer. If disabled, the time of reception will be used instead. </entry>
+                </row>
+                <row id="source_commonoption_log_fetch_limit">
+                    <entry>log_fetch_limit()</entry>
+                    <entry>number</entry>
+                    <entry>The value specified by the global <link linkend="reference_options">
+                            <parameter>log_fetch_limit()</parameter>
+                        </link> option, which defaults to <parameter>10</parameter>.</entry>
+                    <entry>The maximum number of messages fetched from a source during a single poll
+                        loop. The destination queues might fill up before flow-control could stop
+                        reading if <parameter>log_fetch_limit()</parameter> is too high. </entry>
+                </row>
+                <row id="source_commonoption_log_iw_size">
+                    <entry>log_iw_size()</entry>
+                    <entry>number</entry>
+                    <entry>100</entry>
+                    <entry>The size of the initial window, this value is used during flow
+                    control.</entry>
+                </row>
+                <row id="source_commonoption_log_msg_size">
+                    <entry>log_msg_size()</entry>
+                    <entry>number</entry>
+                    <entry>Use the global <parameter>log_msg_size()</parameter> option, which
+                        defaults to <parameter>8192</parameter>.</entry>
+                    <entry>Specifies the maximum length of incoming log messages. Uses the value of
+                        the <link linkend="reference_options">global option</link> if not specified.
+                    </entry>
+                </row>
+                <row id="source_commonoption_log_prefix">
+                    <entry>log_prefix()</entry>
+                    <entry>string</entry>
+                    <entry/>
+                    <entry>A string added to the beginning of every log message. It can be used to
+                        add an arbitrary string to any log source, though it is most commonly used
+                        for adding <parameter>kernel:</parameter> to the kernel messages on Linux.
+                    </entry>
+                </row>
+                <row id="source_commonoption_optional">
+                    <entry>optional()</entry>
+                    <entry>yes or no</entry>
+                    <entry/>
+                    <entry>Instruct syslog-ng to ignore the error if a specific source cannot be
+                        initialized. No other attempts to initialize the source will be made until
+                        the configuration is reloaded. This option currently applies to the
+                            <parameter>pipe()</parameter>, <parameter>unix-dgram</parameter>, and
+                            <parameter>unix-stream</parameter> drivers.</entry>
+                </row>
+                <row id="source_commonoption_pad_size">
+                    <entry>pad_size()</entry>
+                    <entry>number</entry>
+                    <entry>0</entry>
+                    <entry>Specifies input padding. Some operating systems (such as HP-UX) pad all 0
+                        messages to block boundary. This option can be used to specify the block
+                        size. (HP-UX uses 2048 bytes). Syslog-ng will pad reads from the associated
+                        device to the number of bytes set in <parameter>pad_size()</parameter>.
+                        Mostly used on HP-UX where <filename>/dev/log</filename> is a named pipe and
+                        every write is padded to 2048 bytes. </entry>
+                </row>
+                <row id="source_commonoption_time_zone">
+                    <entry>time_zone()</entry>
+                    <entry>timezone in the form +/-HH:MM</entry>
+                    <entry/>
+                    <entry>The default timezone for messages read from the source. Applies only if
+                        no timezone is specified within the message itself. </entry>
+                </row>
+            </tbody>
+        </tgroup>
+    </table>
+
+    <table id="table_destination_commonoptions">
+        <?dbfo keep-together="auto" ?>
+        <title>Common options for destination drivers</title>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary>common options</secondary>
+        </indexterm>
+        <tgroup cols="4">
+            <thead>
+                <row>
+                    <entry>Name</entry>
+                    <entry>Type</entry>
+                    <entry>Default</entry>
+                    <entry>Description</entry>
+                </row>
+            </thead>
+            <tbody>
+                <row id="destination_commonoption_flags">
+                    <entry>flags()</entry>
+                    <entry>syslog-protocol, no_multi_line</entry>
+                    <entry>empty set</entry>
+                    <entry>
+                        <para>Flags influence the behavior of the driver. </para>
+                        <para>The <parameter>syslog-protocol</parameter> flag instructs the driver
+                            to format the messages according to the new IETF syslog protocol
+                            standard. <!-- FIXME link--> If this flag is enabled, macros used for
+                            the message have effect only for the text of the message, the message
+                            header is formatted to the new standard. Note that this flag is not
+                            needed for the <parameter>syslog</parameter> driver.</para>
+                        <para>The <parameter>no-multi-line</parameter> flag disables line-breaking
+                            in the messages; the entire message is sent as a single line.</para>
+                    </entry>
+                </row>
+                <row id="destination_commonoption_flush_lines">
+                    <entry>flush_lines()</entry>
+                    <entry>number</entry>
+                    <entry>Use global setting. </entry>
+                    <entry>Specifies how many lines are flushed to a destination at a time.
+                        Syslog-ng waits for this number of lines to accumulate and sends them off in
+                        a single batch. Setting this number high increases throughput as fully
+                        filled frames are sent to the network, but also increases message latency.
+                        The latency can be limited by the use of the
+                        <parameter>flush_timeout</parameter> option.</entry>
+                </row>
+                <row id="destination_commonoption_flush_timeout">
+                    <entry>flush_timeout()</entry>
+                    <entry>time in milliseconds</entry>
+                    <entry>Use global setting. </entry>
+                    <entry>Specifies the time syslog-ng waits for lines to accumulate in its output
+                        buffer. See the <parameter>flush_lines</parameter> option for more
+                        information.</entry>
+                </row>
+                <row id="destination_commonoption_frac_digits">
+                    <entry>frac_digits()</entry>
+                    <entry>number</entry>
+                    <entry>0</entry>
+                    <entry>The syslog-ng application can store fractions of a second in the
+                        timestamps. The <parameter>frac_digits()</parameter> parameter specifies the
+                        number of digits stored. The digits storing the fractions are padded by
+                        zeros if the original timestamp of the message specifies only seconds.
+                        Fractions can always be stored for the time the message was
+                    received.</entry>
+                </row>
+                <row id="destination_commonoption_fsync">
+                    <entry>fsync()</entry>
+                    <entry>yes or no</entry>
+                    <entry>no</entry>
+                    <entry>Forces an <parameter>fsync()</parameter> call on the destination fd after
+                        each write. Note: enabling this option may seriously degrade
+                    performance.</entry>
+                </row>
+                <row id="destination_commonoption_log_fifo_size">
+                    <entry>log_fifo_size()</entry>
+                    <entry>number</entry>
+                    <entry>Use global setting. </entry>
+                    <entry>The number of entries in the output buffer (output fifo). </entry>
+                </row>
+                <row id="destination_commonoption_suppress">
+                    <entry>suppress()</entry>
+                    <entry>seconds</entry>
+                    <entry>0 (disabled) </entry>
+                    <entry>When enabled and syslog-ng would send several messages with identical
+                        content to the destination, syslog-ng sends only a single message and a line
+                            <parameter>Last message repeated n times.</parameter>. The parameter of
+                        this option specifies the number of seconds syslog-ng waits for identical
+                        messages. </entry>
+                </row>
+                <!--<row id="destination_commonoption_sync_freq">
+                    <entry>sync_freq()</entry>
+                    <entry>number</entry>
+                    <entry>Use global setting. </entry>
+                    <entry>This setting is an obsolete alias of the
+                        <parameter>flush_lines()</parameter> option. </entry>
+                </row>-->
+                <row id="destination_commonoption_template">
+                    <entry>template()</entry>
+                    <entry>string</entry>
+                    <entry>A format conforming to the default logfile format. </entry>
+                    <entry>Specifies a template defining the logformat to be used in the
+                        destination. Macros are described in <xref linkend="macros"/>. Please note
+                        that for network destinations it might not be appropriate to change the
+                        template as it changes the on-wire format of the syslog protocol which might
+                        not be tolerated by stock syslog receivers (like
+                        <parameter>syslogd</parameter> or syslog-ng itself). For network
+                        destinations make sure the receiver can cope with the custom format defined.
+                    </entry>
+                </row>
+                <row id="destination_commonoption_template_escape">
+                    <!-- FIXME ez kell meg? -->
+                    <entry>template_escape()</entry>
+                    <entry>yes or no</entry>
+                    <entry>yes</entry>
+                    <entry>Turns on escaping <parameter>'</parameter> and <parameter>"</parameter>
+                        in templated output files. This is useful for generating SQL statements and
+                        quoting string contents so that parts of the log message are not interpreted
+                        as commands to the SQL server.</entry>
+                </row>
+                <row id="destination_commonoption_throttle">
+                    <entry>throttle()</entry>
+                    <entry>number</entry>
+                    <entry>0</entry>
+                    <entry>Sets the maximum number of messages sent to the destination per second.
+                        Use this output-rate-limiting functionality only when using disk-buffer as
+                        well to avoid the risk of losing messages. Specifying
+                        <parameter>0</parameter> or a lower value sets the output limit to
+                        unlimited.</entry>
+                </row>
+                <row id="destination_commonoption_timezone">
+                    <entry>timezone()</entry>
+                    <entry>timezone offset in seconds</entry>
+                    <entry>unspecified </entry>
+                    <entry>Convert timestamps to the timezone specified by this option. If this
+                        option is not set then the original timezone information in the message is
+                        used. </entry>
+                </row>
+                <row id="destination_commonoption_ts_format">
+                    <entry>ts_format()</entry>
+                    <entry>rfc3164, bsd, rfc3339, iso</entry>
+                    <entry>rfc3164</entry>
+                    <entry>Override the global timestamp format (set in the global
+                            <parameter>ts_format()</parameter> parameter) for the specific
+                        destination. See also <xref linkend="example_timezones"/>.</entry>
                 </row>
             </tbody>
         </tgroup>
