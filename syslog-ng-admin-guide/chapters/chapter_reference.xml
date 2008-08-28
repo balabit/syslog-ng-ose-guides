@@ -26,6 +26,7 @@
                 <title>Using the internal() driver</title>
                 <synopsis>source s_local { internal(); };</synopsis>
             </example>
+            <!-- FIXME internal driver regi vagy uj formatumot hasznal? Az ujat miert nem tudja? -->
         </section>
         <section id="reference_source_file">
             <title>file()</title>
@@ -291,7 +292,7 @@ pipe(filename);</synopsis>
             </table>
             <example id="example_source_sunstreams">
                 <title>Using the sun-streams() driver</title>
-                <synopsis>source s_stream { sun-streams("/dev/log" door("/etc/.syslog_door"); };</synopsis>
+                <synopsis>source s_stream { sun-streams("/dev/log" door("/etc/.syslog_door")); };</synopsis>
             </example>
         </section>
         <section id="reference_source_syslog">
@@ -556,8 +557,9 @@ pipe(filename);</synopsis>
                    tls(peer-verify('required-trusted' 
                        key_file('/etc/syslog-ng/syslog-ng.key') 
                    cert_file('/etc/syslog-ng/syslog-ng.crt')))); 
-};
-</synopsis>
+};</synopsis>
+                <para>A TCP source listening for messages using the IETF-syslog message format:</para>
+                <synopsis>source s_tcp_syslog { tcp(ip(127.0.0.1) port(1999) flags(syslog-protocol) };</synopsis>
             </example>
         </section>
         <section id="reference_source_unixstream">
@@ -1653,6 +1655,22 @@ udp6(host [options]);</synopsis>
                 <para>If name resolution is configured, the hostname of the target server can be
                     used as well.</para>
                 <synopsis>destination d_tcp { tcp("target_host" port(1999); localport(999)); };</synopsis>
+                <para>To send messages using the IETF-syslog message format, enable the
+                        <parameter>syslog-protocol</parameter> flag:</para>
+                <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999); flags(syslog-protocol) };</synopsis>
+            </example>
+            <example id="example_diskbuffer">
+                <title>Enabling disk-based buffering</title>
+                <para>The following example turns on disk-based buffering for the destination. The
+                    size of the disk buffer is 4 194 304 bytes (4 megabytes). In a worst-case
+                    situation, using the default value of the <parameter>log_msg_size()</parameter>
+                    parameter (8192 bytes), this disk buffer can store at least 512 messages.
+                    Typical log messages are about 300-500 bytes long, so a disk buffer of 4
+                    megabytes can store over 8000 messages. Set the size of the disk buffer based on
+                    the average size and number of messages, and the longest estimated downtime of
+                    the server. </para>
+                <synopsis>destination d_tcp { 
+                    tcp("10.1.2.3" port(1999) log_disk_fifo_size(4194304)); };</synopsis>
             </example>
         </section>
 
@@ -2232,6 +2250,16 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                         <entry>The priority and facility encoded as a 2 digit hexadecimal number.
                         </entry>
                     </row>
+                    <row id="macro_sdata">
+                        <entry>SDATA.SDID.SDNAME</entry>
+                        <entry>The syslog-ng application automatically parses the STRUCTURED-DATA
+                            part of IETF-syslog messages, which can be referenced in macros. For
+                            example, if a log message contains the following structured data:
+                                <parameter>[exampleSDID@0 iut="3" eventSource="Application"
+                                eventID="1011"][examplePriority@0 class="high"]</parameter> you can
+                            use macros like: <parameter>${SDATA.EXAMPLE.EVENTSOURCE}</parameter>.
+                        </entry>
+                    </row>
                     <row id="macro_sec">
                         <entry>SEC, R_SEC, S_SEC</entry>
                         <entry>The second the message was sent. </entry>
@@ -2450,7 +2478,7 @@ log { source(s_local);
             messages<!--( i.e., the contents of
         the $MSG macro)-->: it can search and
             replace text, and also set a specific field to a specified value. Rewriting messages is
-            often used in conjunction with message parsing <xref linkend="reference_parsers"/>.</para>        
+            often used in conjunction with message parsing <xref linkend="reference_parsers"/>.</para>
         <para>To create replace a part of the log message, define the string or regular expression
             to replace, the string to replace the original text (macros can be used as well), and
             the field of the message that the rewrite rule should process. Substitution rules can

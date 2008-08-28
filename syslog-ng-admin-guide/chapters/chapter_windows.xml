@@ -61,7 +61,14 @@
         <listitem>
             <para>Microsoft Windows Vista</para>
         </listitem>
+        <listitem>
+            <para>Microsoft Windows Server 2008</para>
+        </listitem>
     </itemizedlist>
+    <warning>
+        <para>Messages using the new, XML-based eventlog format on Microsoft Windows Vista and
+            Microsoft Windows Server 2008 are not properly supported at the moment.</para>
+    </warning>
     <section id="windows_install">
         <title>Installing the syslog-ng agent</title>
         <indexterm>
@@ -177,8 +184,7 @@
                 <guimenu>Properties > Syslog-ng Agent Settings</guimenu>.</para>
 
         <section id="windows_upgrade">
-            <title>Upgrading to syslog-ng Agent for Windows 2.2</title>
-            <!-- FIXME kesobb majd kell egy 2.2.x -rol 2.2x+1-re upgrade domain controlleren resz is -->
+            <title>Upgrading to syslog-ng Agent for Windows 3.0</title>
             <para>To upgrade the syslog-ng agent application on hosts that are not members of a
                 domain, install the executable (<parameter>.exe</parameter>) version of the
                 syslog-ng Agent for Windows installer and select <guilabel>Standalone
@@ -189,9 +195,12 @@
             <para>To upgrade the syslog-ng agent application on hosts that are members of a domain,
                 install the executable (<parameter>.exe</parameter>) version of the syslog-ng Agent
                 for Windows installer and select <guilabel>Manage syslog-ng Agent centrally using
-                    Group Policy</guilabel>. The installer automatically receives and converts every
-                setting of version 2.1.x and 2.2beta, and also automatically downloads any group
-                policies that are configured on the domain controller.</para>
+                    Group Policy</guilabel>. After that, the installer asks if you want to use the
+                existing configuration as a Local Policy, or as a Group Policy. If you decide to use
+                it as a Group Policy, enter a name for the policy, or select it from the list of
+                available policies. Afterwards, the installer converts every setting of version
+                2.1.x and 2.2beta, and also automatically downloads any group policies that are
+                configured on the domain controller.</para>
             <warning>
                 <para>If there are any group policies for the syslog-ng agent configured on the
                     domain controller, downloading the group policies to the clients will overwrite
@@ -239,14 +248,14 @@
                     the logserver into the <guilabel>Server Name</guilabel> field. If your logserver
                     is configured to accept messages on a non-standard port, type the port number
                     into the <guilabel>Server Port</guilabel> field.</para>
-                <note>
-                    <para> The syslog-ng Agent for Windows application supports both the legacy
-                        syslog protocol specified in RFC3164 and the upcoming syslog protocol
-                        specified in
-                        http://www.ietf.org/internet-drafts/draft-ietf-syslog-protocol-23.txt and
-                        http://www.ietf.org/internet-drafts/draft-ietf-syslog-transport-tls-11.txt.
-                        Version 3.0 of syslog-ng also supports the new protocol.</para>
-                </note>
+            </step>
+            <step>
+                <para>Select the protocol used to transfer log messages. The syslog-ng Agent for
+                    Windows application supports both the legacy syslog protocol specified in
+                    RFC3164 and the upcoming syslog protocol specified in
+                    http://www.ietf.org/internet-drafts/draft-ietf-syslog-protocol-23.txt and
+                    http://www.ietf.org/internet-drafts/draft-ietf-syslog-transport-tls-11.txt.
+                    Version 3.0 of syslog-ng also supports the new protocol.</para>
             </step>
             <step>
                 <indexterm>
@@ -515,8 +524,7 @@
                             <guimenu>Global Settings</guimenu>.</para>
                 </step>
                 <step>
-                    <para>Set the default log facility and log priority associated to the messages
-                        in their respective fields.</para>
+                    <para>Set the default log facility associated to the messages.</para>
                 </step>
                 <step>
                     <para>By default, the filters and regular expressions (see <xref
@@ -672,13 +680,13 @@
                 Certificates</guilabel>) of the Local Computer. Use the <guibutton>Certificate
                     Import Wizard</guibutton> to import this certificate. See <xref
                     linkend="windows_importcert"/> for details.</para>
-            <note>
+            <!--      <note>
                 <para>If the syslog-ng agent cannot find a suitable certificate in the Local
                     Computer/Personal Certificates store, it also checks the Personal Certificates
                     store of the syslog-ng Agent service. If the syslog-ng agent was started
                     manually, the Personal Certificates store of the current user is also
                 checked.</para>
-            </note>
+            </note>-->
             <note>
                 <indexterm>
                     <primary>syslog-ng agent</primary>
@@ -729,8 +737,6 @@
                             <guilabel>Server Name</guilabel> field of the destination.) If the
                         certificate of the client has a different Common Name, complete the
                         following steps:</para>
-                    <para><emphasis>Optional step</emphasis>: To explicitly specify the certificate
-                        that the client shows to the server, complete the following steps: </para>
                     <substeps>
                         <step>
                             <para>Start the configuration interface of the syslog-ng Agent for
@@ -746,12 +752,9 @@
                                     <guibutton>Edit</guibutton>.</para>
                         </step>
                         <step>
-                            <para>Select the <guibutton>Use SSL</guibutton> option, then enter the
-                                contents of the <parameter>subject_alt_name</parameter> parameter
-                                (or the <parameter>Common Name</parameter> parameter if the
-                                    <parameter>subject_alt_name</parameter> parameter is empty) of
-                                the certificate into the <guilabel>Client Certificate
-                                Subject</guilabel> field.</para>
+                            <para>Select the <guibutton>Use SSL</guibutton> option, click
+                                    <guibutton>Browse</guibutton>, then select the certificate to
+                                use.</para>
                             <note>
                                 <para>A common way is to use the hostname or the IP address of the
                                     agent as the Common Name of the certificate (e.g.,
@@ -1494,6 +1497,27 @@
                 running, you have to restart the syslog-ng Agent. Otherwise, it will not receive the
                 updated timezone information and the date of the events will be incorrect.</para>
         </warning>
+    </section>
+    <section id="windows_inheritance">
+        <title>Domain versus local settings</title>
+        <indexterm>
+            <primary>inheriting settings on Windows</primary>
+        </indexterm>
+        <indexterm>
+            <primary>syslog-ng Agent</primary>
+            <secondary>inheriting settings</secondary>
+        </indexterm>
+        <para>Group policies for the syslog-ng Agent can be specified at different levels, e.g., at
+            the domain level, at the organization unit level, at the computer level, or also as a
+            local policy of the computer. When evaluating its configuration settings, the syslog-ng
+            Agent follows the standard policy-inheritance methods of Windows. If the configuration
+            of the syslog-ng Agent is specified at multiple levels (e.g., on the domain level and
+            also at the computer level), then the more specific (or lower level) setting is used
+            (that is, the computer level in the above example). If a setting is not configured at a
+            level, the setting of the next higher level is used (e.g., if something is not
+            configured on the computer level, then the setting of the organization unit &mdash;
+            or if it is not specified in the policy of organization unit, then the setting of the
+            domain policy &mdash; is used.) </para>
     </section>
     <section id="windows_cpu">
         <title>Sending messages and CPU load</title>

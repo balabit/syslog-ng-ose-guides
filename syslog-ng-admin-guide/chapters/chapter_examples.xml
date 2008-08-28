@@ -32,9 +32,7 @@
                     ISODATE timestamp, because the ISODATE format includes the year and timezone as
                     well. To convert all timestamps to the ISODATE format, include the following
                     line in the syslog-ng configuration file:</para>
-                <synopsis>
-options {ts_format(iso)};
-                </synopsis>
+                <synopsis>options {ts_format(iso)};</synopsis>
             </listitem>
             <listitem>
                 <indexterm>
@@ -46,6 +44,119 @@ options {ts_format(iso)};
             </listitem>
         </itemizedlist>
     </section>
+    <section id="parallel_connections">
+        <title>Handling lots of parallel connections</title>
+        <indexterm>
+            <primary>parallel connections</primary>
+        </indexterm>
+        <indexterm>
+            <primary>batch processing</primary>
+        </indexterm>
+        <indexterm>
+            <primary>parameters</primary>
+            <secondary>time_sleep()</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>parameters</primary>
+            <secondary>max_connections()</secondary>
+        </indexterm>
+        <para>When syslog-ng is receiving messages from a large number of TCP or unix-stream
+            connections, the CPU usage of syslog-ng might increase even if the number of messages is
+            low. By default, syslog-ng processes every message when it is received. To reduce the
+            CPU usage, process the incoming messages in batches. To accomplish this, instruct
+            syslog-ng to wait for a short time before processing a message. During this period
+            additional messages might arrive that can be processed together with the original
+            message. To process log messages in batches, set the <parameter>time_sleep()</parameter>
+            option (measured in milliseconds) to a non-zero value. Include the following line in
+            your syslog-ng configuration:</para>
+        <synopsis>options { time_sleep(20); };</synopsis>
+        <note>
+            <para>It is not recommended to increase the <parameter>time_sleep()</parameter>
+                parameter above 100ms, as that might distort timestamps, slow down syslog-ng, and
+                cause messages to be dropped.</para>
+            <indexterm>
+                <primary>parameters</primary>
+                <secondary>log_fifo_size()</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>parameters</primary>
+                <secondary>log_fetch_limit()</secondary>
+            </indexterm>
+            <para>When modifying the <parameter>time_sleep()</parameter> option, also adjust the
+                    <parameter>log_fetch_limit()</parameter> and
+                <parameter>log_fifo_size()</parameter> options accordingly.</para>
+        </note>
+        <para>The <parameter>max_connections()</parameter> parameter limits the number of parallel
+            connections for the source. </para>
+        <para>If adjusting the <parameter>time_sleep()</parameter> option is not desired for some
+            reason, an alternative solution is to use <parameter>unix-stream()</parameter>,
+                <parameter>udp()</parameter> and <parameter>unix-dgram()</parameter> sources instead
+            of <parameter>tcp()</parameter> connections.</para>
+    </section>
+
+    <section id="handling_large_load">
+        <title>Handling large message load</title>
+        <indexterm>
+            <primary>optimizing syslog-ng performance</primary>
+        </indexterm>
+        <indexterm>
+            <primary>filters</primary>
+        </indexterm>
+        <indexterm>
+            <primary>regular expressions</primary>
+        </indexterm>
+        <para>This section provides tips on optimizing the performance of syslog-ng. Optimizing the
+            performance is important for syslog-ng hosts that handle large traffic.</para>
+        <itemizedlist>
+            <listitem>
+                <para>Disable DNS resolution, or resolve hostnames locally. See <xref
+                        linkend="examples_dns"/> for details.</para>
+            </listitem>
+            <listitem>
+                <para>Enable flow-control for the TCP sources. See <xref linkend="flow_control"/>
+                    for details.</para>
+            </listitem>
+            <listitem>
+                <para>Do not use the <parameter>usertty()</parameter> destination driver. Under
+                    heavy load, the users are not be able to read the messages from the console, and
+                    it slows down syslog-ng.</para>
+            </listitem>
+            <listitem>
+                <para>Do not use regular expressions in our filters. Evaluating general regular
+                    expressions puts a high load on the CPU. Use simple filter functions and logical
+                    operators instead. See <xref linkend="regular_expressions"/> for details.</para>
+            </listitem>
+            <listitem>
+                <para>When receiving lots of messages using the UDP protocol, increase the size of
+                    the UDP receive buffer on the syslog-ng hosts. For information about sizing and
+                    modifying the UDP buffer, see <ulink
+                        url="http://www.29west.com/docs/THPM/udp-buffer-sizing.html"
+                        >http://www.29west.com/docs/THPM/udp-buffer-sizing.html</ulink>.</para>
+            </listitem>
+        </itemizedlist>
+    </section>
+
+    <!-- FIXME a sync obsolete, updatelni a flush_lines parameterre - kell egyaltalan? -->
+    <!--	<section id="sync">
+            <title>The sync() parameter</title>
+            
+            <indexterm>
+            <primary>parameters</primary>
+            <secondary>sync()</secondary>
+            </indexterm>
+            <para>The syslog-ng application buffers the log messages to be sent in an output queue. The
+            <parameter>sync()</parameter> parameter specifies the number of messages held in
+            this buffer.</para>
+            <para>Note that syslog-ng does not write all buffered messages into a single chunk; each
+            message is written with a single <parameter>write()</parameter> system call.</para>
+            <para>For file destinations, the received messages can be written to disk immediately after
+            the message is received. To accomplish this, set the <parameter>sync()</parameter>
+            option to zero.</para>
+            <synopsis>
+            options { sync(0); };	
+            </synopsis>
+            </section>-->
+
     <section id="examples_dns">
         <title>Using name resolution in syslog-ng</title>
         <indexterm>
@@ -61,16 +172,12 @@ options {ts_format(iso)};
                 <para>Use DNS caching. Verify that the DNS cache is large enough to store all
                     important hostnames. (By default, the syslog-ng DNS cache stores
                     <parameter>1007</parameter> entries.)</para>
-                <synopsis>
-options { dns_cache(2000); };
-                </synopsis>
+                <synopsis>options { dns_cache(2000); };</synopsis>
             </listitem>
             <listitem>
                 <para>If the IP addresses of the clients change only rarely, set the expiry of the
                     DNS cache large.</para>
-                <synopsis>
-options { dns_cache_expire(87600); };
-                </synopsis>
+                <synopsis>options { dns_cache_expire(87600); };</synopsis>
             </listitem>
             <listitem>
                 <para>If possible, resolve the hostnames locally. See <xref
@@ -107,11 +214,9 @@ options { dns_cache_expire(87600); };
                 <step>
                     <para>Set the <parameter>dns_cache_hosts()</parameter> option to point to the
                         file storing the hostnames. </para>
-                    <synopsis>
-options { 
+                    <synopsis>options { 
         use_dns(persist_only);
-        dns_cache_hosts(/etc/hosts); };   
-</synopsis>
+        dns_cache_hosts(/etc/hosts); };</synopsis>
                 </step>
             </procedure>
         </section>
@@ -222,20 +327,19 @@ options {
         </indexterm>
         <indexterm>
             <primary>dropping messages</primary>
-        </indexterm>        
-        <para>To skip the processing of a message without sending it to a destination, create a log statement with 
-            the appropriate filters, but do not include any destination in the statement, and use the <parameter>final</parameter> flag.         
-        </para>
+        </indexterm>
+        <para>To skip the processing of a message without sending it to a destination, create a log
+            statement with the appropriate filters, but do not include any destination in the
+            statement, and use the <parameter>final</parameter> flag. </para>
         <example>
             <title>Skipping messages</title>
-            <para>The following log statement drops all <parameter>debug</parameter> level messages without any further processing.</para>
-            <synopsis>
-filter demo_debugfilter { level(debug); };
-log { source(s_all); filter(demo_debugfilter); flags(final); };    
-            </synopsis>            
+            <para>The following log statement drops all <parameter>debug</parameter> level messages
+                without any further processing.</para>
+            <synopsis>filter demo_debugfilter { level(debug); };
+log { source(s_all); filter(demo_debugfilter); flags(final); };</synopsis>
         </example>
-        
+
     </section>
-    
-    
+
+
 </chapter>
