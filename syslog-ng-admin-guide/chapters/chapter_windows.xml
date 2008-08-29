@@ -102,7 +102,8 @@
             <title>Installing the syslog-ng agent in standalone mode</title>
             <step>
                 <para>Start the installer. Run the
-                    <filename>syslog-ng-agent-2.2-setup.exe</filename> file.</para>
+                        <filename>syslog-ng-agent-&lt;versionnumber&gt;-setup.exe</filename>
+                    file.</para>
                 <note>
                     <para>Installing the syslog-ng agent requires administrator privileges.</para>
                 </note>
@@ -178,10 +179,11 @@
             <primary>configuring syslog-ng</primary>
             <secondary>syslog-ng agent</secondary>
         </indexterm>
-        <para>To configure an already installed syslog-ng agent from the domain controller, select
-                <guimenu>Start > Control Panel > Administrative Tools > Active Directory Users and
-                Computers</guimenu>, right-click on the Organizational Unit, select
-                <guimenu>Properties > Syslog-ng Agent Settings</guimenu>.</para>
+        <para>To configure an already installed syslog-ng agent from the domain controller, install
+            the syslog-ng agent on the domain controller, then select <guimenu>Start > Control Panel
+                > Administrative Tools > Active Directory Users and Computers</guimenu>, right-click
+            on the Organizational Unit, select <guimenu>Properties > Syslog-ng Agent
+            Settings</guimenu>.</para>
 
         <section id="windows_upgrade">
             <title>Upgrading to syslog-ng Agent for Windows 3.0</title>
@@ -196,11 +198,14 @@
                 install the executable (<parameter>.exe</parameter>) version of the syslog-ng Agent
                 for Windows installer and select <guilabel>Manage syslog-ng Agent centrally using
                     Group Policy</guilabel>. After that, the installer asks if you want to use the
-                existing configuration as a Local Policy, or as a Group Policy. If you decide to use
-                it as a Group Policy, enter a name for the policy, or select it from the list of
-                available policies. Afterwards, the installer converts every setting of version
-                2.1.x and 2.2beta, and also automatically downloads any group policies that are
-                configured on the domain controller.</para>
+                existing configuration as a Local Policy, or as a Group Policy. (Selecting both
+                options is also possible, although seldom needed.)</para>
+            <para>If you decide to use it as a Group Policy, enter the unique name for the policy,
+                or select it from the list of available policies. Any local settings are
+                automatically added to the group policy, so these local settings will be applied to
+                every computer that belongs to the selected group policy. Afterwards, the installer
+                converts every setting of version 2.1.x and 2.2beta, and also automatically
+                downloads any group policies that are configured on the domain controller.</para>
             <warning>
                 <para>If there are any group policies for the syslog-ng agent configured on the
                     domain controller, downloading the group policies to the clients will overwrite
@@ -274,7 +279,7 @@
                     logserver becomes unavailable, select the <guilabel>Failover Servers</guilabel>
                     tab, click <guibutton>Add</guibutton>, and enter the hostname or the IP address
                     of the backup logserver into the <guilabel>Server Name</guilabel> field. Repeat
-                    this step if you have more than one backup servers.logserver2.balabit</para>
+                    this step if you have more than one backup servers.</para>
             </step>
             <step>
                 <para>If you want to send the log messages to more than on server in parallel, so
@@ -871,7 +876,7 @@
         <itemizedlist>
             <!-- FIXME linkeket a makrokra -->
             <listitem>
-                <para><emphasis>Event Sources and Event IDs</emphasis>: Filter on the application
+                <para><emphasis>Sources and Event ID</emphasis>: Filter on the source (application)
                     that created the message, and optionally on the identification number of the
                     event. Corresponds with the EVENT_SOURCE and EVENT_ID macros.</para>
             </listitem>
@@ -914,13 +919,13 @@
                     <!-- FIXME linkeket a makrokra -->
                     <listitem>
                         <para>To ignore messages sent by a specific application, or messages of the
-                            application with a specific event ID, double-click on <guibutton>Event
-                                Sources and Event IDs</guibutton>, select
-                            <guibutton>Add</guibutton>, and select the name of the application whose
-                            messages you want to ignore from the <guilabel>Application
-                            Name</guilabel> field. To ignore only specific messages of the
-                            application, enter the ID of the event into the <guilabel>Event
-                            ID</guilabel> field. Select <guimenu>Add > Apply</guimenu>.</para>
+                            application with a specific event ID, double-click on <guibutton>Sources
+                                and Event ID</guibutton>, select <guibutton>Add</guibutton>, and
+                            select the name of the source (application) whose messages you want to
+                            ignore from the <guilabel>Source Name</guilabel> field. To ignore only
+                            specific messages of the application, enter the ID of the event into the
+                                <guilabel>Event ID</guilabel> field. Select <guimenu>Add >
+                            Apply</guimenu>.</para>
                     </listitem>
                     <listitem>
                         <para>To ignore messages that contain a specific string or text,
@@ -1113,8 +1118,8 @@
                     for a list of macros). The message customized here is included in the
                     server-specific templates using the <parameter>MESSAGE</parameter> macro.</para>
                 <!-- FIXME link -->
-                <para>By default, the following is sent about file messages: <parameter>$FILE_NAME: $FILE_MESSAGE $DATE
-                $R_DATE</parameter>.</para>
+                <para>By default, the following is sent about file messages: <parameter>$FILE_NAME:
+                        $FILE_MESSAGE $DATE $R_DATE</parameter>.</para>
             </step>
             <step>
                 <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
@@ -1516,7 +1521,9 @@
             level, the setting of the next higher level is used (e.g., if something is not
             configured on the computer level, then the setting of the organization unit &mdash;
             or if it is not specified in the policy of organization unit, then the setting of the
-            domain policy &mdash; is used.) </para>
+            domain policy &mdash; is used). If a setting is not configured in any group policy,
+            the syslog-ng Agent checks its local policy settings, and uses the local setting if
+            available.</para>
     </section>
     <section id="windows_cpu">
         <title>Sending messages and CPU load</title>
@@ -1561,14 +1568,19 @@
                     host, or importing a certificate that you want to use to authenticate the
                     communication between the agent and the server. If the configuration of the
                     agent has changed since the last restart, the syslog-ng agent sends a message of
-                    the change, including the SHA-1 hash of the new configuration.</para>
+                    the change, including the hmac-sha-1 hash of the new configuration.</para>
                 <para>Also note that if your clients are managed from a Domain Controller,
                     configuration changes are not instantly downloaded to the client hosts, only at
                     the time of the next group policy update. To update the configuration of a
                     client host earlier, open a command prompt on the client host, and issue the
                         <command>gpupdate /force</command> command.</para>
                 <para>After downloading the configuration from the Domain Controller, the syslog-ng
-                    Agent service is automatically restarted.</para>
+                    Agent service is automatically restarted if the configuration has changed.</para>
+                <note>
+                    <para>Certain domain settings that may affect the syslog-ng Agent are downloaded
+                        only when the machine is rebooted. For example, moving the computer from one
+                        group policy to another requires a reboot to have effect.</para>
+                </note>
             </listitem>
             <listitem>
                 <para><emphasis>The syslog-ng agent does not send messages to the server</emphasis>:
