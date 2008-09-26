@@ -407,7 +407,7 @@ pipe(filename);</synopsis>
                 <para>Encrypted source where the client is also authenticated. See <xref
                         linkend="tlsoptions"/> for details on the encryption settings.</para>
                 <synopsis>source s_syslog_tls{ syslog(
-                    "10.100.20.40"
+                    ip(10.100.20.40)
                     transport("tls")
                     tls(
                     peer-verify(required-trusted)
@@ -1254,6 +1254,9 @@ sql(database_type host_parameters database_parameters [options]);</synopsis>
                             <entry>n/a</entry>
                             <entry>Name of the database that stores the logs.</entry>
                         </row>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_commonoption_frac_digits)"/>
                         <row>
                             <entry>host</entry>
                             <entry>hostname or IP address</entry>
@@ -1262,7 +1265,7 @@ sql(database_type host_parameters database_parameters [options]);</synopsis>
                                 not use this parameter, but retrieve the hostname from the
                                     <filename>/etc/tnsnames.ora</filename> file.</entry>
                         </row>
-                        <row>
+                        <row id="sql_option_indexes">
                             <entry>indexes</entry>
                             <entry>string list</entry>
                             <entry>"date", "facility", "host", "program"</entry>
@@ -1289,13 +1292,16 @@ sql(database_type host_parameters database_parameters [options]);</synopsis>
                                 using macros, note that some databases limit the length of table
                                 names.</entry>
                         </row>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_commonoption_timezone)"/>
                         <row id="sql_option_type">
                             <entry>type</entry>
-                            <entry>freetds, mysql, oracle, pgsql, or 3</entry>
+                            <entry>mssql, mysql, oracle, pgsql, or 3</entry>
                             <entry>n/a</entry>
                             <entry>Specifies the type of the database, i.e., the DBI database driver
-                                to use. Use the <parameter>freetds</parameter> option to send logs
-                                to an MSSQL database. See the examples of the databases on the
+                                to use. Use the <parameter>mssql</parameter> option to send logs to
+                                an MSSQL database. See the examples of the databases on the
                                 following sections for details.</entry>
                         </row>
                         <row>
@@ -1383,7 +1389,7 @@ sql(database_type host_parameters database_parameters [options]);</synopsis>
                     creates the required tables and columns, if the user account used to connect to
                     the database has the required privileges.</para>
                 <synopsis>destination d_mssql { 
-sql(type(freetds) host("logserver") port("1433") 
+sql(type(mssql) host("logserver") port("1433") 
   username("syslogng") password("syslogng") database("syslogng") 
   table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")columns("datetime varchar(16)", "host varchar(32)",
   "program varchar(32)", "pid varchar(8)", "message varchar(4096)")
@@ -2104,7 +2110,9 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                 </link> option is disabled.</para>
         </warning>
         <para>By default, syslog-ng sends messages using the following template: <parameter>$ISODATE
-                $HOST $MSGHDR $MSG\n</parameter>.</para>
+                $HOST $MSGHDR$MSG\n</parameter>. (The <parameter>$MSGHDR$MSG</parameter> part is
+            written together because the <parameter>$MSGHDR</parameter> macro includes a trailing
+            whitespace.)</para>
         <table>
             <title>Available macros</title>
             <tgroup cols="2">
@@ -2220,7 +2228,9 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                     <row>
                         <entry>MSGHDR</entry>
                         <entry>The name and the pid of the program that sent the log message in
-                                <parameter>PROGRAM[PID]</parameter> format. </entry>
+                                <parameter>PROGRAM: PID </parameter> format. Includes a trailing
+                            whitespace. Note that the macro returns an empty value if both the
+                            program and pid fields of the message are empty.</entry>
                     </row>
                     <row>
                         <entry>MSGONLY</entry>
@@ -2245,11 +2255,6 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                             the $PROGRAM variable may not be completely trusted as it is provided by
                             the client program that constructed the message.</entry>
                     </row>
-                    <row id="macro_tag">
-                        <entry>TAG</entry>
-                        <entry>The priority and facility encoded as a 2 digit hexadecimal number.
-                        </entry>
-                    </row>
                     <row id="macro_sdata">
                         <entry>SDATA.SDID.SDNAME</entry>
                         <entry>The syslog-ng application automatically parses the STRUCTURED-DATA
@@ -2264,6 +2269,15 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                         <entry>SEC, R_SEC, S_SEC</entry>
                         <entry>The second the message was sent. </entry>
                     </row>
+                    <row id="macro_seqnum">
+                        <entry>SEQNUM</entry>
+                        <entry>The sequence number of the message. The syslog-ng client adds this
+                            number when processing the message; it is a unique identifier of the
+                            message between two hops (e.g., between the client and the relay, the
+                            relay ad the server, or the client and the server if there are no
+                            interim hops). The sequence number increases for every message, and is
+                            not lost even if syslog-ng is reloaded or restarted.</entry>
+                    </row>
                     <row>
                         <entry>SOURCEIP</entry>
                         <entry>IP address of the host that sent the message to syslog-ng. (I.e. the
@@ -2277,6 +2291,11 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                                 linkend="reference_options">
                                 <parameter>ts_format()</parameter>
                             </link> global or per-destination option.</entry>
+                    </row>
+                    <row id="macro_tag">
+                        <entry>TAG</entry>
+                        <entry>The priority and facility encoded as a 2 digit hexadecimal number.
+                        </entry>
                     </row>
                     <row id="macro_tz">
                         <entry>TZ, R_TZ, S_TZ</entry>
@@ -2417,12 +2436,15 @@ log { source(s_local); parser(p_hostname_segmentation); destination(d_file);};</
         <example id="example_parser_apache">
             <title>Parsing Apache log files</title>
             <para>The following parser processes the log of Apache web servers and separates them
-                into different fields. Apache log messages look like: <parameter>"%h %l %u %t \"%r\"
-                    %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %T %v" 192.168.1.1 - -
+                into different fields. Apache log messages can be formatted like:</para>
+            <synopsis>"%h %l %u %t \"%r\"
+                    %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %T %v"</synopsis>.
+                <para>Here is a sample message: </para>
+            <synopsis> 192.168.1.1 - -
                     [31/Dec/2007:00:17:10 +0100] "GET /cgi-bin/example.cgi HTTP/1.1" 200 2708 "-"
                     "curl/7.15.5 (i4 86-pc-linux-gnu) libcurl/7.15.5 OpenSSL/0.9.8c zlib/1.2.3
-                    libidn/0.6.5" 2 example.balabit</parameter>. </para>
-            <para>To parse such logs, the delimiter character is set to a single whitespace
+                    libidn/0.6.5" 2 example.balabit</synopsis>.
+                <para>To parse such logs, the delimiter character is set to a single whitespace
                     (<parameter>delimiters(" ")</parameter>). Whitespaces between quotes and
                 brackets are ignored (<parameter>quote-pairs('""[]')</parameter>).</para>
             <synopsis>parser p_apache {
@@ -2498,7 +2520,7 @@ rewrite &lt;name_of_the_rule&gt;{subst("&lt;string or regular expression to find
             <para>Multiple substitution rules are applied sequentially; the following rules replace
                 the first occurrence of the string <parameter>IP</parameter> with the string
                     <parameter>IP-Addresses</parameter>. </para>
-            <synopsis>rewrite r_rewrite_subst{subst("IP", "IP-Address", value("MESSAGE")); subst("Address", "Addresses", field("message"));};</synopsis>
+            <synopsis>rewrite r_rewrite_subst{subst("IP", "IP-Address", value("MESSAGE")); subst("Address", "Addresses", value("message"));};</synopsis>
         </example>
         <indexterm>
             <primary>setting message fields</primary>
@@ -2553,7 +2575,7 @@ rewrite &lt;name_of_the_rule&gt;{set("&lt;string to include&gt;", value(&lt;fiel
                     <row id="option_chain_hostnames">
                         <entry>chain_hostnames()</entry>
                         <entry>yes or no</entry>
-                        <entry>yes</entry>
+                        <entry>no</entry>
                         <entry>Enable or disable the chained hostname format.</entry>
                     </row>
                     <row>
@@ -2650,7 +2672,7 @@ rewrite &lt;name_of_the_rule&gt;{set("&lt;string to include&gt;", value(&lt;fiel
                             output buffer. See the <parameter>flush_lines()</parameter> option for
                             more information. </entry>
                     </row>
-                    <row>
+                    <!--<row>
                         <entry>gc_busy_threshold() (DEPRECATED)</entry>
                         <entry>number</entry>
                         <entry>n/a</entry>
@@ -2661,7 +2683,7 @@ rewrite &lt;name_of_the_rule&gt;{set("&lt;string to include&gt;", value(&lt;fiel
                         <entry>number</entry>
                         <entry>n/a</entry>
                         <entry>Has no meaning in syslog-ng 1.9.x and later. </entry>
-                    </row>
+                    </row>-->
                     <row>
                         <entry>group()</entry>
                         <entry>groupid</entry>
@@ -2841,17 +2863,12 @@ rewrite &lt;name_of_the_rule&gt;{set("&lt;string to include&gt;", value(&lt;fiel
             <primary>TLS</primary>
             <secondary>reference</secondary>
         </indexterm>
-        <para>The Premium Edition of syslog-ng is able to encrypt incoming and outgoing syslog
-            message flows using SSL/TLS, if the TCP transport protocol (the
-            <parameter>tcp()</parameter> or <parameter>tcp6()</parameter> sources or destination) is
-            used. </para>
+        <para>The syslog-ng application is able to encrypt incoming and outgoing syslog message
+            flows using SSL/TLS, if the TCP transport protocol (the <parameter>tcp()</parameter> or
+                <parameter>tcp6()</parameter> sources or destination) is used. </para>
         <note>
-            <para>The format of the TLS connections used by syslog-ng Premium Edition is similar to
-                using syslog-ng and stunnel, but the source IP information is not lost.
-                <!--It is
-                <emphasis>NOT</emphasis> compatible with latest standardization efforts of the IETF,
-            although support for that protocol might be added to syslog-ng at some later point.-->
-            </para>
+            <para>The format of the TLS connections used by syslog-ng is similar to using syslog-ng
+                and stunnel, but the source IP information is not lost. </para>
         </note>
         <para>To encrypt connections, use the <parameter>tls()</parameter> option in the source and
             destination statements. </para>
@@ -2907,7 +2924,11 @@ rewrite &lt;name_of_the_rule&gt;{set("&lt;string to include&gt;", value(&lt;fiel
                         <entry>Verification method of the peer, the four possible values is a
                             combination of two properties of validation: whether the peer is
                             required to provide a certificate (required or optional prefix), and
-                            whether the certificate provided needs to be trusted or not. </entry>
+                            whether the certificate provided needs to be trusted or not. For
+                            untrusted certificates only the existence of the certificate is checked,
+                            but it does not have to be valid &mdash; syslog-ng accepts the
+                            certificate even if it is expired, signed by an unknown CA, or its CN
+                            and the name of the machine mismatch. </entry>
                     </row>
                 </tbody>
             </tgroup>

@@ -209,7 +209,7 @@
                         Available only in syslog-ng Premium Edition when using the
                         <parameter>tcp</parameter> or <parameter>tls</parameter> transport method.
                         See <xref linkend="concepts_diskbuffer"/> for details on using the disk
-                    buffer.</entry>
+                        buffer.</entry>
                 </row>
             </tbody>
         </tgroup>
@@ -243,8 +243,8 @@
                                 <parameter>LOG_KERN | LOG_CRIT</parameter> priority if not specified
                             otherwise. </para>
                         <para>The <parameter>syslog-protocol</parameter> flag specifies that
-                            incoming messages are expected to be formatted according to the new
-                            IETF syslog protocol standard. Note that this flag is not needed for the
+                            incoming messages are expected to be formatted according to the new IETF
+                            syslog protocol standard. Note that this flag is not needed for the
                                 <parameter>syslog</parameter> driver.<!-- FIXME link--></para>
                         <para>The <parameter>no-multi-line</parameter> flag disables line-breaking
                             in the messages; the entire message is converted to a single line.</para>
@@ -258,7 +258,7 @@
                 <row id="source_commonoption_follow_freq">
                     <entry>follow_freq()</entry>
                     <entry>number</entry>
-                    <entry>-1</entry>
+                    <entry>1</entry>
                     <entry>Indicates that the source should be checked periodically instead of being
                         polled. This is useful for files which always indicate readability, even
                         though no new lines were appended. If this value is higher than zero,
@@ -266,6 +266,12 @@
                         but checks whether the file changed every time the
                         <parameter>follow_freq()</parameter> interval (in seconds) has elapsed.
                     </entry>
+                </row>
+                <row id="source_commonoption_host_override">
+                    <entry>host_override</entry>
+                    <entry>string</entry>
+                    <entry/>
+                    <entry>Replaces the $HOST part of the message with the parameter string. </entry>
                 </row>
                 <row id="source_commonoption_keep_timestamp">
                     <entry>keep_timestamp()</entry>
@@ -301,13 +307,14 @@
                     </entry>
                 </row>
                 <row id="source_commonoption_log_prefix">
-                    <entry>log_prefix()</entry>
+                    <entry>log_prefix() (DEPRECATED)</entry>
                     <entry>string</entry>
                     <entry/>
                     <entry>A string added to the beginning of every log message. It can be used to
                         add an arbitrary string to any log source, though it is most commonly used
                         for adding <parameter>kernel:</parameter> to the kernel messages on Linux.
-                    </entry>
+                        NOTE: This option is deprecated. Use
+                        <parameter>program_override()</parameter> instead. </entry>
                 </row>
                 <row id="source_commonoption_optional">
                     <entry>optional()</entry>
@@ -329,6 +336,16 @@
                         device to the number of bytes set in <parameter>pad_size()</parameter>.
                         Mostly used on HP-UX where <filename>/dev/log</filename> is a named pipe and
                         every write is padded to 2048 bytes. </entry>
+                </row>
+                <row id="source_commonoption_program_override">
+                    <entry>program_override</entry>
+                    <entry>string</entry>
+                    <entry/>
+                    <entry>Replaces the $PROGRAM part of the message with the parameter string. For
+                        example, to mark every message coming from the kernel, include the
+                            <parameter>program_override("kernel")</parameter> option in the source
+                        containing <parameter>/proc/kmsg</parameter>. NOTE: This option replaces the
+                        deprecated <parameter>log_prefix()</parameter> option. </entry>
                 </row>
                 <row id="source_commonoption_time_zone">
                     <entry>time_zone()</entry>
@@ -370,8 +387,9 @@
                             the message have effect only for the text of the message, the message
                             header is formatted to the new standard. Note that this flag is not
                             needed for the <parameter>syslog</parameter> driver.</para>
-                        <para>The <parameter>no-multi-line</parameter> flag disables line-breaking
-                            in the messages; the entire message is sent as a single line.</para>
+                        <para>The <parameter>no-multi-line</parameter> flog_prefix()lag disables
+                            line-breaking in the messages; the entire message is sent as a single
+                            line.</para>
                     </entry>
                 </row>
                 <row id="destination_commonoption_flush_lines">
@@ -452,7 +470,7 @@
                     <!-- FIXME ez kell meg? -->
                     <entry>template_escape()</entry>
                     <entry>yes or no</entry>
-                    <entry>yes</entry>
+                    <entry>no</entry>
                     <entry>Turns on escaping <parameter>'</parameter> and <parameter>"</parameter>
                         in templated output files. This is useful for generating SQL statements and
                         quoting string contents so that parts of the log message are not interpreted
