@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
  [  
  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
@@ -18,6 +18,14 @@
                 </row>
             </thead>
             <tbody>
+            	<row id="source_option_encoding">
+                    <entry>encoding()</entry>
+                    <entry>string</entry>
+                    <entry></entry>
+                    <entry>Specifies the characterset (encoding, e.g., <parameter>UTF-8</parameter>) of 
+                    messages using the legacy BSD-syslog protocol. To list the available character sets on a host, 
+                    execute the <command>iconv -l</command> command.</entry>
+                </row>
                 <row id="source_option_ip">
                     <entry>ip() or localip()</entry>
                     <entry>string</entry>
@@ -41,10 +49,12 @@
                     <entry>keep-alive()</entry>
                     <entry>yes or no</entry>
                     <entry>yes</entry>
-                    <entry>Available for <parameter>tcp</parameter> only; specifies whether
-                        connections should be closed upon the receipt of a SIGHUP signal. Note that
-                        this applies to the source side of the syslog-ng connections, destination
-                        connections are always reopened after receiving a HUP signal.</entry>
+                    <entry>Specifies whether connections to sources should be closed upon the
+                        receipt of a SIGHUP signal. Note that this applies to the server (source)
+                        side of the syslog-ng connections, client-side (destination) connections are
+                        always reopened after receiving a HUP signal unless the
+                            <parameter>keep-alive</parameter> option is enabled for the
+                    destination.</entry>
                 </row>
                 <row id="source_option_max_connections">
                     <entry>max-connections()</entry>
@@ -271,14 +281,27 @@
                     <entry>host_override</entry>
                     <entry>string</entry>
                     <entry/>
-                    <entry>Replaces the $HOST part of the message with the parameter string. </entry>
+                    <entry>Replaces the $HOST part of the message with the parameter string.
+                    </entry>
+                </row>
+                <row id="source_commonoption_keep_hostname">
+                    <entry>keep_hostname()</entry>
+                    <entry>yes or no</entry>
+                    <entry>no</entry>
+                    <entry>Enable or disable hostname rewriting. Enable this option to use
+                        hostname-related macros. This option can be specified globally, and
+                        per-source as well. The local setting of the source overrides the global
+                        option if available.</entry>
                 </row>
                 <row id="source_commonoption_keep_timestamp">
                     <entry>keep_timestamp()</entry>
                     <entry>yes or no</entry>
                     <entry>yes</entry>
                     <entry>Specifies whether syslog-ng should accept the timestamp received from the
-                        peer. If disabled, the time of reception will be used instead. </entry>
+                        sending application or client. If disabled, the time of reception will be
+                        used instead. This option can be specified globally, and per-source as well.
+                        The local setting of the source overrides the global option if
+                    available.</entry>
                 </row>
                 <row id="source_commonoption_log_fetch_limit">
                     <entry>log_fetch_limit()</entry>
@@ -353,6 +376,27 @@
                     <entry/>
                     <entry>The default timezone for messages read from the source. Applies only if
                         no timezone is specified within the message itself. </entry>
+                </row>
+                <row id="source_commonoption_use_dns">
+                    <entry>use_dns()</entry>
+                    <entry>yes, no, persist_only</entry>
+                    <entry>yes</entry>
+                    <entry>Enable or disable DNS usage. The <para>persist_only</para> option
+                        attempts to resolve hostnames locally from file (e.g., from
+                            <filename>/etc/hosts</filename>). syslog-ng blocks on DNS queries, so
+                        enabling DNS may lead to a Denial of Service attack. To prevent DoS, protect
+                        your syslog-ng network endpoint with firewall rules, and make sure that all
+                        hosts which may get to syslog-ng are resolvable. This option can be
+                        specified globally, and per-source as well. The local setting of the source
+                        overrides the global option if available.</entry>
+                </row>
+                <row id="source_commonoption_use_fqdn">
+                    <entry>use_fqdn()</entry>
+                    <entry>yes or no</entry>
+                    <entry>no</entry>
+                    <entry>Add Fully Qualified Domain Name instead of short hostname. This option
+                        can be specified globally, and per-source as well. The local setting of the
+                        source overrides the global option if available.</entry>
                 </row>
             </tbody>
         </tgroup>
@@ -435,6 +479,19 @@
                     <entry>number</entry>
                     <entry>Use global setting. </entry>
                     <entry>The number of entries in the output buffer (output fifo). </entry>
+                </row>
+                <row id="destination_commonoption_keep_alive">
+                    <entry>keep-alive()</entry>
+                    <entry>yes or no</entry>
+                    <entry>yes</entry>
+                    <entry>Specifies whether connections to destinations should be closed upon the
+                        receipt of a SIGHUP signal. Note that this applies to the client
+                        (destination) side of the syslog-ng connections, server-side (source)
+                        connections are always reopened after receiving a HUP signal unless the
+                            <parameter>keep-alive</parameter> option is enabled for the
+                    source. When the <parameter>keep-alive</parameter> option is enabled, 
+                    syslog-ng saves the contents of the output queue of the destination when 
+                    receiving a HUP signal, reducing the risk of losing messages.</entry>
                 </row>
                 <row id="destination_commonoption_suppress">
                     <entry>suppress()</entry>

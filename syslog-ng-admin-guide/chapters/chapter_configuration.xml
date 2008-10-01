@@ -36,11 +36,15 @@
                 into the <filename>/var/log/messages_syslog-ng.log</filename> file.</para>
             <synopsis>@version:3.0
 source s_local { unix-stream("/dev/log"); internal(); };
-                
 destination d_file_normal {file("/var/log/messages_syslog-ng.log"); };
-                
 log { source(s_local); destination(d_file); };</synopsis>
         </example>
+        <tip>
+        <para>Before activating a new configuration, check that your configuration file is syntactically correct 
+        using the <command>syslog-ng --syntax</command> command.</para>
+        <para>To activate the configuration, reload the configuration of syslog-ng using the 
+        <command>/etc/init.d/syslog-ng reload</command> command.</para>
+        </tip>
         <para>The following table lists the location of the <filename>syslog-ng.conf</filename> file
             on the different platforms. The <filename>license.txt</filename> license file is also
             located here.</para>
@@ -402,13 +406,13 @@ source s_demo_stream {
                 xpointer="element(example_source_internal)"/>
             <section id="reference_log_statistics">
                 <title>Log statistics</title>
-                <para>
-                    <indexterm>
+                <indexterm>
                         <primary>log statistics</primary>
                     </indexterm>
                     <indexterm>
                         <primary>statistics</primary>
-                    </indexterm>Periodically, syslog-ng sends a message containing statistics about
+                    </indexterm>
+                <para>Periodically, syslog-ng sends a message containing statistics about
                     the received messages, and about any lost messages since the last such message.
                     It includes a <parameter>processed</parameter> entry for every source and
                     destination, listing the number of messages received or sent, and a
@@ -427,7 +431,28 @@ source s_demo_stream {
                     processed='destination(d_tcp)=234413',
                     processed='destination(d_local)=234413',
                     processed='source(s_local)=234413'</synopsis>
-                <!-- FIXME domain socketes snmp kiajanlas -->
+                    <indexterm>
+                        <primary>log statistics</primary>
+                        <secondary>on unix-socket</secondary>
+                    </indexterm>
+                    <indexterm>
+                        <primary>statistics</primary>
+                    </indexterm>
+                    <para>Log statistics can be also retrieved on-demand using the <command>nc -U var/run/syslog-ng.ctl 
+                    STATS</command> command. This returns a list of source groups and destinations, 
+                    as well as the number of processed messages for each.</para>
+                <!-- FIXME ertelmes peldat, ez nem az igazi, es reszletezni, hogy pontosan mit ir ki
+                src.udp;s_local#1;;a;processed;0 src.udp;s_local#1;;a;stamp;0 source;s_local;;a;processed;7
+                src.internal;s_local#0;;a;processed;7 
+                src.internal;s_local#0;;a;stamp;1222437774
+                src.host;;bzorp;d;processed;7 
+                src.host;;bzorp;d;stamp;1222437774 
+                center;;received;a;processed;0
+                src.file;s_local#5;/home/bazsi/logs/input.log;a;processed;0
+                src.file;s_local#5;/home/bazsi/logs/input.log;a;stamp;0 destination;d_logstore;;a;processed;7
+                center;;queued;a;processed;0
+                dst.logstore;d_logstore#0;/home/bazsi/logs/logstore.ls;a;processed;7                                
+                 -->
             </section>
         </section>
         <section id="configuring_sources_file">
@@ -1322,11 +1347,11 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
         </note>
         <section id="configuring_embedded_logpaths">
             <title>Using embedded log statements</title>
-            <para>Embedded log statements <!-- FIXME link a conceptre --> re-use the results of
-                processing messages (e.g., the results of filtering or rewriting) to create complex
-                log paths. Embedded log statements use the same syntax as regular log statements,
-                but they cannot contain additional sources. To define embedded log statements, use
-                the following syntax:</para>
+            <para>Embedded log statements (see <xref linkend="concepts_embedded_logpaths"/> ) re-use
+                the results of processing messages (e.g., the results of filtering or rewriting) to
+                create complex log paths. Embedded log statements use the same syntax as regular log
+                statements, but they cannot contain additional sources. To define embedded log
+                statements, use the following syntax:</para>
             <synopsis id="log_path_synopsis_embedded">log {
     source(s1); source(s2); ... 
     optional_element(filter1|parser1|rewrite1); optional_element(filter2|parser2|rewrite2);... 
@@ -1362,6 +1387,12 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
                 <synopsis>log { source(s_localhost); host(192.168.1.); destination(d_file1); 
                     log {message("example"); destination(d_file2); };
 };</synopsis>
+                <para>The following example collects logs from multiple source groups and uses the
+                        <parameter>source()</parameter> filter in the embedded log statement to
+                    select messages of the <parameter>s_network</parameter> source group.</para>
+                <synopsis>log { source(s_localhost); source(s_network); destination(d_file1); 
+                    log {source(s_network); destination(d_file2); };
+                    };</synopsis>
             </example>
         </section>
         <section id="configuring_flow_control">
@@ -1599,9 +1630,9 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
             string. Backslashes have to be escaped as well if they are meant literally. For example,
             the <parameter>\\d</parameter> expression matches the <parameter>\d</parameter> string.</para>
         <para>By default, all regular expressions are case sensitive. To disable the case
-            sensitivity of the expression, start the expression with the <parameter>(?i)</parameter>
-            string.</para>
-        <synopsis>filter demo_regexp_insensitive { host("(?i)system"); };</synopsis>
+            sensitivity of the expression, add the <parameter>flags(ignore-case)</parameter>
+            option to the regular expression.</para>
+        <synopsis>filter demo_regexp_insensitive { host("system") flags(ignore-case); };</synopsis>
         <note>
             <indexterm>
                 <primary>filters</primary>
@@ -1696,7 +1727,42 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
             syslog-ng to escape the <parameter>'</parameter> and <parameter>"</parameter> characters
             from the messages. This behavior might cause problems when the messages are passed to a
             an application that cannot handle escaped characters properly. In such case, disable the
-            escape feature (<parameter>template_escape(no)</parameter>).</para>
+            escape feature (<parameter>template_escape(no)</parameter>).</para>                 
+        <para>Macros can be included by prefixing the macro name with a <parameter>$</parameter>
+            sign, just like in Bourne compatible shells. Regarding braces around macro names, the
+            following two formats are equivalent <parameter>"$MSG"</parameter> and
+                <parameter>"${MSG}"</parameter>. </para>                
+        <para>Default values for macros can also be specified by appending the
+            <parameter>:-</parameter> characters and the default value to the macro, e.g.,</para>
+        <synopsis>${HOST:-default_hostname}</synopsis>
+        <note>
+            <para>See <xref linkend="windows_message_format"/> for the macros available in the
+                syslog-ng Agent for Windows application.</para>
+        </note>
+        <para id="date_macros">The macros related to the date of the message (e.g.:
+                <parameter>ISODATE</parameter>, <parameter>HOUR</parameter>, etc.) have two further
+            versions each: one with the <parameter>S_</parameter> and one with the
+            <parameter>R_</parameter> prefix (e.g.: <parameter>S_DATE</parameter> and
+                <parameter>R_DATE</parameter> ). The <parameter>S_DATE</parameter> macro represents
+            the date found in the log message, i.e. when the message was sent by the original
+            application. <parameter>R_DATE</parameter> is the date when syslog has received the
+            message.</para>
+        <para><parameter>DATE</parameter> equals either <parameter>S_DATE</parameter> or
+                <parameter>R_DATE</parameter>, depending on the global option set in the now
+            deprecated <parameter>use_time_recvd()</parameter> parameter (see <xref
+                linkend="reference_options"/>). </para>
+        <warning>
+            <para>The hostname-related macros (<parameter>FULLHOST</parameter>,
+                    <parameter>FULLHOST_FROM</parameter>, <parameter>HOST</parameter>, and
+                    <parameter>HOST_FROM</parameter>) do not have any effect if the <link
+                    linkend="source_commonoption_keep_hostname">
+                    <parameter>keep_hostname()</parameter>
+                </link> option is disabled.</para>
+        </warning>
+        <para>By default, syslog-ng sends messages using the following template: <parameter>$ISODATE
+                $HOST $MSGHDR$MSG\n</parameter>. (The <parameter>$MSGHDR$MSG</parameter> part is
+            written together because the <parameter>$MSGHDR</parameter> macro includes a trailing
+            whitespace.)</para>
         <note>
             <para>Earlier versions of syslog-ng used templates and scripts to send log messages into
                 SQL databases. Starting from version 2.1, syslog-ng natively supports direct
@@ -1782,8 +1848,7 @@ template t_sql {
                 linkend="reference_parsers"/>.</para>
         <synopsis>Declaration:
             parser parser_name {
-            csv-parser(column1, column2, ...
-            )
+            csv-parser(column1, column2, ...)
             delimiters()
             quote-pairs()
             };</synopsis>
@@ -1842,9 +1907,7 @@ template t_sql {
             statement to have any effect.</para>
         <tip>
             <!-- FIXME ez le van irva valahol mashol is, ill. le kellene legyen -->
-            <para>For case-insensitive searches, add <parameter>(?i)</parameter> to the string to
-                replace. To replace every occurrence of the string, add
-            <parameter>(?g)</parameter>.</para>
+            <para>For case-insensitive searches, add the <parameter>flags(ignore-case)</parameter> option; to replace every occurrence of the string, add <parameter>flags(global)</parameter> option.</para>
         </tip>
         <xi:include href="chapter_reference.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
             xpointer="element(example_rewrite_subst)"/>
