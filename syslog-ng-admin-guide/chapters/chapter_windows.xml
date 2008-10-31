@@ -65,12 +65,11 @@
             <para>Microsoft Windows Server 2008</para>
         </listitem>
     </itemizedlist>
-    <warning>
-        <!-- FIXME remove when 3.0.3 is released -->
-        <para>Messages using the new, XML-based eventlog format on Microsoft Windows Vista and
-            Microsoft Windows Server 2008 are not properly supported at the moment. This issue will
-            be solved in version 3.0.3. </para>
-    </warning>
+    <note>
+        <para>Starting from version 3.0.3, the syslog-ng Agent for Windows application supports the
+            new XML-based eventlog used format on Microsoft Windows Vista and Microsoft Windows
+            Server 2008, and also offers full support for 64-bit operating systems.</para>
+    </note>
     <section id="windows_install">
         <title>Installing the syslog-ng agent</title>
         <indexterm>
@@ -120,7 +119,14 @@
             </step>
             <step>
                 <para>Select <guilabel>Standalone mode</guilabel>, then click
-                    <guibutton>Install</guibutton>.</para>
+                    <guibutton>Next</guibutton>. </para>
+            </step>
+            <step>
+                <para>Starting from version 3.0.3, the syslog-ng Agent sends only messages that are
+                    created after the agent has been installed. If you want to send old log messages
+                    to the syslog-ng server, enable the <guibutton>Send log messages generated
+                        before the syslog-ng Agent was installed</guibutton> option and click
+                        <guibutton>Install</guibutton>.</para>
             </step>
             <step>
                 <para>The installer automatically opens the configuration interface of the syslog-ng
@@ -143,14 +149,25 @@
 
         <procedure id="windows_install_domain_controller">
             <title>Installing the syslog-ng agent on the hosts of a domain</title>
+            <note>
+                <para>Starting from version 3.0.3, the syslog-ng Agent sends only messages that are
+                    created after the agent has been installed. If you want to send old log messages
+                    to the syslog-ng server, download the Orca MSI editor from <ulink
+                        url="http://www.technipages.com/download-orca-msi-editor.html"
+                        >http://www.technipages.com/download-orca-msi-editor.html</ulink>, open the
+                    .msi installer of the syslog-ng Agent, select <guilabel>Property</guilabel>, and
+                    change the value of the <guilabel>SENDOLDMESSAGES</guilabel> field to
+                        <parameter>yes</parameter>.</para>
+            </note>
             <step>
                 <para>Download the Microsoft Installer (<parameter>.msi</parameter>) version of the
-                    syslog-ng agent installer to the domain controller host.</para>
+                    syslog-ng agent installer to the domain controller host. Note that separate .msi
+                    intallers are available for 32-bit and 64-bit operating systems.</para>
                 <note>
                     <para>Installing the syslog-ng agent requires administrator privileges, but
                         configuring the related group policies on the domain controller requires
-                        domain administrator or higher (e.g., enterprise administrator)
-                    privileges.</para>
+                        domain administrator or higher (e.g., enterprise administrator) privileges.</para>
+                    <para/>
                 </note>
             </step>
             <step>
@@ -189,7 +206,6 @@
                 > Administrative Tools > Active Directory Users and Computers</guimenu>, right-click
             on the Organizational Unit, select <guimenu>Properties > Syslog-ng Agent
             Settings</guimenu>.</para>
-
         <section id="windows_upgrade">
             <title>Upgrading syslog-ng Agent for Windows 2.x to 3.0.x</title>
             <indexterm significance="preferred">
@@ -220,6 +236,11 @@
                     domain controller, downloading the group policies to the clients will overwrite
                     the local settings.</para>
             </warning>
+            <note>
+                <para>Upgrading from version 2.1 is supported for the 32-bit Windows XP and Server
+                    2003 platforms.</para>
+            </note>
+
         </section>
         <section id="windows_upgrade_301">
             <title>Upgrading syslog-ng Agent for Windows 3.0.1 to version 3.0.2</title>
@@ -250,6 +271,24 @@
                     </note>
                 </step>
             </procedure>
+        </section>
+        <section id="windows_upgrade_302">
+            <title>Upgrading syslog-ng Agent for Windows 3.0.2 to version 3.0.3</title>
+            <indexterm>
+                <primary>syslog-ng agent</primary>
+                <secondary>upgrading 3.0.2</secondary>
+            </indexterm>
+            <para>When upgrading a machine running version 3.0.2 in standalone mode, run the .exe
+                installer and verify that the displayed information is correct.</para>
+            <para>When upgrading a machine running version 3.0.2 in domain mode, follow the steps
+                described in <xref linkend="windows_install_domain_controller"/> of the
+                documentation. The system will automatically recognize that the new package will
+                update the syslog-ng Agent for Windows version 3.0.2 package.</para>
+            <note>
+                <para>Upgrading to 3.0.3 is not supported on Windows Vista, Server 2008, and 64-bit
+                    platforms, as full support for these platforms was introduced only in version
+                    3.0.3.</para>
+            </note>
         </section>
     </section>
     <section id="windows_destinations">
@@ -292,12 +331,33 @@
                     into the <guilabel>Server Port</guilabel> field.</para>
             </step>
             <step>
-                <para>Select the protocol used to transfer log messages. The syslog-ng Agent for
-                    Windows application supports both the legacy syslog protocol specified in
-                    RFC3164 and the upcoming syslog protocol specified in
-                    http://www.ietf.org/internet-drafts/draft-ietf-syslog-protocol-23.txt and
-                    http://www.ietf.org/internet-drafts/draft-ietf-syslog-transport-tls-11.txt.
-                    Version 3.0 of syslog-ng also supports the new protocol.</para>
+                <para>Select the protocol used to transfer log messages. The following protocol
+                    templates are available:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para><emphasis>Legacy</emphasis>: Use the legacy BSD-syslog protocol
+                            specified in RFC3164. This option uses the following message template:
+                                <parameter>&lt;${PRI}&gt;${BSDDATE} ${HOST}
+                                ${APP_NAME}[${PROCESS_ID}]: ${MSG}</parameter>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Syslog<emphasis/>: Uses the new IETF-syslog protocol specified in
+                            http://www.ietf.org/internet-drafts/draft-ietf-syslog-protocol-23.txt
+                            and
+                            http://www.ietf.org/internet-drafts/draft-ietf-syslog-transport-tls-11.txt.
+                            Starting from version 3.0, syslog-ng also supports the
+                        IETF-protocol.</para>
+                    </listitem>
+                    <listitem>
+                        <indexterm>
+                            <primary>snare</primary>
+                        </indexterm>
+                        <para><emphasis>Snare compatible</emphasis>: Sends log messages in a format
+                            compatible with the Snare log monitoring tool, using the following
+                            template: <parameter>&lt;${PRI}&gt;${BSDDATE} ${HOST}
+                            ${MSG}</parameter>.</para>
+                    </listitem>
+                </itemizedlist>
                 <note>
                     <para>Selecting the <guilabel>syslog protocol</guilabel> option is identical to
                         using the <link linkend="configuring_destinations_syslog">
@@ -448,15 +508,55 @@
                         <listitem>
                             <para>To add a custom container, select <guibutton>Add</guibutton>, and
                                 enter the name if the container into the <guilabel>Event Container
-                                    Name</guilabel> field.</para>
-                            <!-- Fixme ez nagyon bena, hogy a comboboxba kell beleirni 
-                                lasd meg http://bugzilla.balabit/bugzilla-3.0/show_bug.cgi?id=14649 -->
+                                    Name</guilabel> field. If you do not know the name of the
+                                container, see <xref linkend="windows_custom_eventlog_name"/>.
+                            </para>
                         </listitem>
                     </itemizedlist>
                 </step>
                 <step>
                     <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
                         activate the changes, restart the syslog-ng Agent service.</para>
+                </step>
+            </procedure>
+            <procedure id="windows_custom_eventlog_name">
+                <title>Determining the name of a custom eventlog container</title>
+                <step>
+                    <para>Open the Event Viewer application.</para>
+                </step>
+                <step>
+                    <para>Select the custom container you are looking for (e.g., <parameter>DNS
+                            Server</parameter>).</para>
+                </step>
+                <step>
+                    <para>Right click on the container and select
+                    <guimenu>Properties</guimenu>.</para>
+                </step>
+                <step>
+                    <para>The name of the container is the name of the file (without the extension)
+                        displayed in the <guilabel>Logname</guilabel> field (e.g., for
+                            <parameter>C:\WINDOWS\system32\config\DnsEvent.Evt</parameter> it is
+                            <parameter>DnsEvent</parameter>).</para>
+                </step>
+                <step>
+                    <para>Use this name as the name of the custom eventlog container during the
+                        procedure described in <xref linkend="windows_sources_eventlog"/>.</para>
+                    <note>
+                        <para>On Windows Vista and Server 2008, some container are not real
+                            containers, but show selected messages collected from multiple
+                            containers. To forward such messages to the syslog-ng server, you have
+                            to find out which real containers are displayed in the container, and
+                            add them to the configuration of the syslog-ng Agent.</para>
+                        <para>Some containers have the <parameter>%4</parameter> characters in their
+                            names. When adding these to the syslog-ng Agent, replace
+                            <parameter>%4</parameter> with the <parameter>/</parameter> (slash)
+                            character. E.g., write
+                            <parameter>microsoft-windows-bits-client/analytic</parameter> instead of
+                                <parameter>microsoft-windows-bits-client%4analyctic</parameter>.</para>
+                        <para>If you are sending old messages to the server as well, the syslog-ng
+                            Agent will not send the very first message stored in the container. This
+                            is a bug in the Windows API.</para>
+                    </note>
                 </step>
             </procedure>
         </section>
@@ -517,6 +617,9 @@
                         <listitem>
                             <para>To send messages only from the file that was last modified, select
                                 the <guilabel>Last Modified File Only</guilabel> option.</para>
+                            <para>If you are forwarding the logs of Internet Information Server
+                                (IIS) 5 appliations, select the <guilabel>IIS 5.x Log</guilabel>
+                                option.</para>
                             <note>
                                 <para>If this option is not selected, the syslog-ng agent monitors
                                     every matching file in the folder for changes, and sends new log
@@ -535,6 +638,26 @@
                                     <guilabel>Log Facility</guilabel> or <guilabel>Log
                                 Priority</guilabel> fields, respectively.</para>
                         </listitem>
+                        <note>
+                            <para>Significant changes to the settings of a file source may cause the
+                                syslog-ng Agent to resend the entire contents of the matching files.
+                                This means that log messages already sent earlier to the syslog-ng
+                                server may be resent and thus duplicated in the server logs.
+                                Configuration changes that may result in such behavior are:</para>
+                            <itemizedlist>
+                                <listitem>
+                                    <para>changing the Base Directory,</para>
+                                </listitem>
+                                <listitem>
+                                    <para>changing filter options,</para>
+                                </listitem>
+                                <listitem>
+                                    <para>changing recursivity and Last Modified File Only
+                                    options.</para>
+                                </listitem>
+                            </itemizedlist>
+
+                        </note>
                     </itemizedlist>
                 </step>
                 <step>
@@ -1015,6 +1138,17 @@
                         <para><emphasis>Event Types</emphasis>: To ignore messages of a specific
                             event-type, double-click on <guimenu>Event Types</guimenu>, select the
                             event types to ignore, and select <guimenu>Ok > Apply</guimenu>.</para>
+                        <note>
+                            <para>Under Windows Vista and Server 2008, Windows labels certain
+                                messages as level 3 and the Event Viewer labels such messages as
+                                warnings. This is against the official specification: level 3 should
+                                not be used; and only level 2 messages are warnings. To filter these
+                                events, you have to manually add a new event type to the registry
+                                and set its value to 3, e.g.,
+                                    <parameter>HKEY_LOCAL_MACHINE\SOFTWARE\BalaBit\syslog-ng
+                                    Agent\Local
+                                Settings\EventSources\Filter\Type\Rule0\Type=3</parameter></para>
+                        </note>
                     </listitem>
                 </itemizedlist>
             </step>
@@ -1076,7 +1210,6 @@
             the file sources. When creating a template to customize the message format, you can use
             macros, all alphanumeric characters, and the following special characters:
                 <parameter>&lt;&gt;,():;-+/_</parameter>.</para>
-        <para/>
         <para>To create a template, complete the following procedure:</para>
         <warning>
             <para>These macros are available only in the syslog-ng Agent for Windows. To recognize
@@ -1180,7 +1313,7 @@
                     server-specific templates using the <parameter>MESSAGE</parameter> macro.</para>
                 <!-- FIXME link -->
                 <para>By default, the following is sent about file messages: <parameter>$FILE_NAME:
-                        $FILE_MESSAGE $DATE $R_DATE</parameter>.</para>
+                        $FILE_MESSAGE</parameter>.</para>
             </step>
             <step>
                 <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
@@ -1254,14 +1387,21 @@
                         <link linkend="macro_file_agent">Macros related to file sources</link>
                     </para>
                 </listitem>
+                <note>
+                    <para>Note that if you use the Syslog protocol template (meaning that messages
+                        are sent using the IETF-syslog protocol), only the message part of the log
+                        message can be customized, the structure of the headers and other
+                        information is fixed by the protocol.</para>
+                </note>
             </itemizedlist>
             <!-- FIXME ezt updatelni, mi van file sourcenal -->
             <para>By default, syslog-ng Agent uses the following format:
-                    <parameter>&lt;${PRI}&gt;$DATE $HOST $MESSAGE</parameter>, where
-                    <parameter>$MESSAGE</parameter> is <parameter>${EVENT_USERNAME}: ${EVENT_NAME}
-                    ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})</parameter>
-                for eventlog messages, and <parameter>$FILE_NAME: $FILE_CURRENT_POSITION/$FILE_SIZE:
-                    $FILE_MESSAGE $DATE $R_DATE</parameter> for file messages.</para>
+                    <parameter>&lt;${PRI}&gt;${BSDDATE} ${HOST} ${APP_NAME}[${PROCESS_ID}]:
+                    ${MESSAGE}</parameter>, where <parameter>$MESSAGE</parameter> is
+                    <parameter>${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}: [${EVENT_TYPE}]
+                    ${EVENT_MSG} (EventID ${EVENT_ID})</parameter> for eventlog messages, and
+                    <parameter>$FILE_NAME: $FILE_CURRENT_POSITION/$FILE_SIZE:
+                $FILE_MESSAGE</parameter> for file messages.</para>
             <indexterm>
                 <primary>syslog-ng agent</primary>
                 <secondary>default message format</secondary>
@@ -1439,6 +1579,11 @@
                             <entry>The content of the message.</entry>
                         </row>
                         <row>
+                            <entry>EVENT_MESSAGE_XML</entry>
+                            <entry>Contains the entire message in XML format. Available only on
+                                Windows Vista and Server 2008 platforms</entry>
+                        </row>
+                        <row>
                             <entry>EVENT_MSG</entry>
                             <entry><!--FIXME--></entry>
                         </row>
@@ -1469,6 +1614,11 @@
                         <row>
                             <entry>EVENT_SOURCE</entry>
                             <entry>The application that created the message.</entry>
+                        </row>
+                        <row>
+                            <entry>EVENT_TASK</entry>
+                            <entry>The task category of the event. Available only on Windows Vista
+                                and Server 2008 platforms</entry>
                         </row>
                         <row>
                             <entry>EVENT_TYPE</entry>
@@ -1660,6 +1810,17 @@
                     filters to see that they are not configured to ignore every message. When using
                     filter, it is also recommended to check the global case-sensitivity
                 settings.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Command-line parameters are ignored on Windows Vista and 2008
+                    Server</emphasis>: Command-line parameters work only for administrators if User
+                    Account Control (UAC) is enabled. To execute syslog-ng Agent with command-line
+                    parameters, select <guibutton>Start > Programs > Accessories</guibutton>,
+                    right-click on <guibutton>Command prompt > Run as administrator</guibutton>. </para>
+                <para>If you contact the BalaBit Support Team about a problem with the syslog-ng
+                    Agent for Windows, execute the <command>syslog-ng-agent -V</command> command
+                    from the command line and include every version and platform information it
+                    displays in your support request.</para>
             </listitem>
         </itemizedlist>
         <section id="windows_core_dumps">
