@@ -158,6 +158,19 @@
             <para>For example, if you want to filter your incoming messages based on the facility
                 parameter, and then use further filters to send messages arriving from different
                 hosts to different destinations, you would use embedded log statements.</para>
+            <figure>
+                <title>Embedded log statement</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center"
+                            fileref="syslog-ng-embedded-log-statement-2.png"/>
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG"
+                            fileref="&imgroot;/syslog-ng-embedded-log-statement-2.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
             <para>Embedded log statements include sources &mdash; and usually filters, parsers,
                 rewrite rules, or destinations &mdash; and other log statements that can include
                 filters, parsers, rewrite rules, and destinations. The following rules apply to
@@ -188,7 +201,19 @@
                         the messages that pass the filter.</para>
                 </listitem>
             </itemizedlist>
-            <!-- FIXME abra -->
+            <figure>
+                <title>Embedded log statements</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" align="center"
+                            fileref="syslog-ng-embedded-log-statement.png"/>
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG"
+                            fileref="&imgroot;/syslog-ng-embedded-log-statement.png"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
             <para>Embedded log filters can be used to optimize the processing of log messages, for
                 example, to re-use the results of filtering and rewriting operations.</para>
         </section>
@@ -488,7 +513,7 @@
                 </imageobject>
                 <imageobject role="fo">
                     <imagedata format="PNG"
-                        fileref="&imgroot;/certificate-based_authentication01"/>
+                        fileref="&imgroot;/certificate-based_authentication01.png"/>
                 </imageobject>
             </mediaobject>
         </figure>
@@ -563,12 +588,17 @@
             and timestamped separately. Chunks contain log message data, chunk size defaults to 128k
             (about 1MB worth of compressed logs). Chunks are closed when their size reaches the
             limit set in the <parameter>chunk_size</parameter> parameter, or when the time limit set
-            in the <parameter>chunk_time</parameter> parameter expires and no new message arrives.</para>
+            in the <parameter>chunk_time</parameter> parameter expires and a new message arrives.
+            Specifically, when a new message arrives to the logstore, syslog-ng checks if
+                <parameter>chunk_time</parameter> time has elapsed since the last message has
+            arrived. If it has, then the old chunk is closed and the new message is written into a
+            new chunk.</para>
         <para>When the logstore file is encrypted, a hash is also generated for every chunk to
             verify the integrity of the chunk. The hashes of the chunks are chained together to
             prevent injecting chunks into the logstore file. The encryption algorithm used is
                 <parameter>aes128</parameter> in CBC mode, the hashing (HMAC) algorithm is
-                <parameter>hmac-sha1</parameter>.</para>
+                <parameter>hmac-sha1</parameter>. Currently it is not possible to use other
+            algorithms.</para>
     </section>
 
     <section id="concepts_macro">
@@ -607,7 +637,7 @@
             <secondary>concepts of</secondary>
         </indexterm>
         <para>The filters and default macros of syslog-ng work well on the headers and
-            metainformation of the lgo messages, but are rather limited when processing the content
+            metainformation of the log messages, but are rather limited when processing the content
             of the messages. Parsers can segment the content of the messages into name-value pairs,
             and these names can be used as user-defined macros. Subsequent filtering or other type
             of processing of the message can use these custom macros to refer to parts of the
@@ -622,16 +652,16 @@
             <primary>rewriting messages</primary>
             <secondary>concepts of</secondary>
         </indexterm>
-        <para>The syslog-ng application can rewrite parts of the messags using rewrite rules.
+        <para>The syslog-ng application can rewrite parts of the messages using rewrite rules.
             Rewrite rules are global objects similar to parsers and filters and can be used in log
             paths. The syslog-ng application has two methods to rewrite parts of the log messages:
-            replacing (substituting) a part of the message to a fix value, and a general
+            replacing (setting) a part of the message to a fix value, and a general
             search-and-replace mode.</para>
         <para>Substitution completely replaces a specific part of the message that is referenced
             using a built-in or user-defined macro.</para>
-        <para>General rewriting searches for a string or regular expression in the entire message
-            (or only a part of the message specified by a macro) and replaces it with another string
-            or regular expression.</para>
+        <para>General rewriting searches for a string in the entire message (or only a part of the
+            message specified by a macro) and replaces it with another string Optionally, this
+            replacement string can be a template that contains macros.</para>
         <para>For details on using rewrite rules, see <xref linkend="configuring_rewrite"/> and
                 <xref linkend="reference_rewrite"/>.</para>
 
@@ -800,6 +830,19 @@
             queue. After the restart, syslog-ng sends the saved messages to the server. In other
             words, the disk buffer is persistent.</para>
         <para>The syslog-ng application handles outgoing messages the following way:</para>
+        <figure>
+            <title>Handling outgoing messages in syslog-ng PE</title>
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata format="PNG" align="center"
+                        fileref="syslog-ng-message-output.png"/>
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata format="PNG" scale="60"
+                        fileref="&imgroot;/syslog-ng-message-output.png"/>
+                </imageobject>
+            </mediaobject>
+        </figure>
         <itemizedlist>
             <listitem>
                 <indexterm>
@@ -833,12 +876,10 @@
                     overflow queue of the destination. (The overflow queue is identical to the
                     output buffer used by other destinations.) The
                     <parameter>log_fifo_size()</parameter> parameter specifies the number of
-                    messages stored in the overflow queue. See also <xref linkend="concepts_flow_control"/>
-                    for details on sizing the <parameter>log_fifo_size()</parameter>
-                parameter.</para>
-            </listitem>
-            <!-- FIXME abra fifo->disk-buffer->output queue
-            -->
+                    messages stored in the overflow queue. See also <xref
+                        linkend="concepts_flow_control"/> for details on sizing the
+                        <parameter>log_fifo_size()</parameter> parameter.</para>
+            </listitem>            
         </itemizedlist>
 
     </section>
@@ -944,9 +985,9 @@
             and provides methods to minimize the risk of losing messages.</para>
         <note>
             <para>The following list covers the main possibilities of losing messages, but does not
-                take into account the possible use of flow-control (see <xref linkend="concepts_flow_control"
-                />). This topic will be addressed in more detail in the future releases of this
-                guide.</para>
+                take into account the possible use of flow-control (see <xref
+                    linkend="concepts_flow_control"/>). This topic will be addressed in more detail
+                in the future releases of this guide.</para>
         </note>
         <itemizedlist>
             <listitem>
@@ -1534,8 +1575,7 @@
                             messages, which can be referenced in macros (see <xref
                                 linkend="reference_macros"/> for details). An example
                             STRUCTURED-DATA block looks like:</para>
-                        <synopsis>[exampleSDID@0 iut="3" eventSource="Application"
-                            eventID="1011"][examplePriority@0 class="high"]</synopsis>
+                        <synopsis>[exampleSDID@0 iut="3" eventSource="Application" eventID="1011"][examplePriority@0 class="high"]</synopsis>
                     </listitem>
                 </itemizedlist>
                 <note>
@@ -1548,9 +1588,10 @@
             <section id="ietfsyslog_msg">
                 <title>The MSG message part</title>
                 <para>The MSG part contains the text of the message itself. The encoding of the text
-                    must be UTF-8.</para>
+                    must be UTF-8 if the BOM character is present in the message. If the message
+                    does not contain the BOM character, the encoding is treated as unknown. Usually
+                    messages arriving from legacy sources do not include the BOM character.</para>
             </section>
-            <!-- FIXME help needed -->
         </section>
 
     </section>
