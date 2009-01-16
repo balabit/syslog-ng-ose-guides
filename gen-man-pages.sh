@@ -1,7 +1,7 @@
 #!/bin/sh
 
 srcdir=$1
-shift
+#shift
 for manpage in $1; do
 	manxml="${srcdir}/${manpage}.xml"
 	output="out/${manpage}"
