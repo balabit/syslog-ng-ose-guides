@@ -28,7 +28,7 @@
         file. </para>
     <note>
         <para>There are two versions of every binary release. The one with the
-            <parameter>no-db</parameter> suffix does not include the libraries required to log into
+            <parameter>client</parameter> suffix does not include the libraries required to log into
             SQL databases. If you are installing syslog-ng in client or relay mode, or you do not
             use the <parameter>sql()</parameter> destination, use these binaries. That way no
             unnecessary components are installed to your system. </para>
@@ -236,7 +236,7 @@
         /etc/init.d/boot.apparmor stop
         /etc/init.d/boot.apparmor start
     -->
-    <!--    <section id="install_rpm">
+    <section id="install_rpm">
         <title>Installing syslog-ng on RPM-based platforms (Red Hat, SUSE, AIX)</title>
         <indexterm>
             <primary>installing syslog-ng</primary>
@@ -248,6 +248,14 @@
         </indexterm>
         <indexterm>
             <primary>Red Hat Enterprise Server</primary>
+            <secondary>installing syslog-ng</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>on CentOS</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>CentOS</primary>
             <secondary>installing syslog-ng</secondary>
         </indexterm>
         <indexterm>
@@ -270,76 +278,72 @@
             complete the following steps. Installing syslog-ng automatically replaces the original
             syslog service. The following supported operating systems use RPM: </para>
         <itemizedlist>
+
+            <listitem>
+                <para>AIX 5.2 and 5.3</para>
+            </listitem>
+            <listitem>
+                <para>CentOS 4 and 5</para>
+            </listitem>
+            <listitem>
+                <para>openSUSE Linux Enterprise Server 10.0 and 10.1</para>
+            </listitem>
             <listitem>
                 <para>Red Hat Enterprise Server 4 and 5</para>
             </listitem>
             <listitem>
-                <para>AIX 5.2</para>
-            </listitem>
-            <listitem>
-                <para>SUSE 10</para>
+                <para>SUSE Linux Enterprise Server 10 and 10 SP1</para>
             </listitem>
         </itemizedlist>
         <procedure>
             <title>Installing syslog-ng on RPM-based systems</title>
             <step>
-                <xi:include href="install_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
-                    xpointer="xpointer(//section[@id='install_downloads']/*)"/>
+                <para>Login to your MyBalabit account (<ulink url="http://www.balabit.com/mybalabit"
+                        >http://www.balabit.com/mybalabit</ulink>) and download the syslog-ng RPM
+                    package for your system from <ulink
+                        url="http://www.balabit.com/network-security/syslog-ng/central-syslog-server/upgrades/"
+                        >http://www.balabit.com/network-security/syslog-ng/central-syslog-server/upgrades/</ulink>.</para>
             </step>
             <step>
-                <para>Issue the following command as root:</para>
-                <para>
-                    <command>rpm -i[v] libdbi8_&lt;version&gt;_&lt;arch&gt;.rpm
-                        syslog-ng-premium-edition-&lt;version&gt;.&lt;arch&gt;.rpm</command>
-                </para>
-            </step>
-            <step>
-                <para>If you use an SQL destination, issue the command corresponding to the
-                    database:</para>
                 <itemizedlist>
                     <listitem>
-                        <para>For MySQL:</para>
-                        <para>
-                            <command>rpm -i[v]
-                                libdbd8-mysql_&lt;version&gt;_&lt;arch&gt;.rpm</command>
-                        </para>
+                        <para>If the host already uses syslog-ng for logging, execute the following
+                            command as root. Otherwise, skip this step. </para>
+                        <synopsis>rpm -U syslog-ng-premium-edition-&lt;version&gt;-&lt;OS&gt;-&lt;arch&gt;.rpm</synopsis>
+                        <para>The syslog-ng Premium Edition application and all its dependencies
+                            will be installed, and the configuration of the existing syslog-ng
+                            installation will be used.</para>
+                        <note>
+                            <para>If you are upgrading from syslog-ng version 2.1, note that the
+                                location of the configuration file has been moved to
+                                    <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename></para>
+                        </note>
                     </listitem>
                     <listitem>
-                        <para>For MSSQL:</para>
-                        <para>
-                            <command>rpm -i[v]
-                                libdbd8-mssql_&lt;version&gt;_&lt;arch&gt;.rpm</command>
-                        </para>
+                        <para>Execute the following command as root:</para>
+                        <synopsis>rpm -i syslog-ng-premium-edition-&lt;version&gt;-&lt;OS&gt;-&lt;arch&gt;.rpm</synopsis>
+                        <para>The syslog-ng Premium Edition application and all its dependencies
+                            will be installed.</para>
                     </listitem>
-                    <listitem>
-                        <para>For Oracle:</para>
-                        <para>
-                            <command>rpm -i[v]
-                                libdbd8-oracle_&lt;version&gt;_&lt;arch&gt;.rpm
-                            </command>
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>For PostgreSQL:</para>
-                        <para>
-                            <command>rpm -i[v]
-                                libdbd8-pgsql_&lt;version&gt;_&lt;arch&gt;.rpm</command>
-                        </para>
-                    </listitem>
-                     <listitem>
-                        <para>For SQLite:</para>
-                        <para>
-                            <command>rpm -i[v]
-                                libdbd8-3_&lt;version&gt;_&lt;arch&gt;.rpm</command>
-                        </para>
-                    </listitem> 
                 </itemizedlist>
             </step>
             <step>
-                <xi:include href="install_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
-                    xpointer="xpointer(//section[@id='install_oracle']/*)"/>
+                <para>Answer the configuration questions of syslog-ng. These are described in detail
+                    in <xref linkend="install_run"/>.</para>
             </step>
             <step>
+                <warning>
+                    <para>When performing an upgrade, the package manager might automatically
+                        execute the post-uninstall script of the upgraded package, stopping
+                        syslog-ng and starting syslogd. If this happens, stop syslogd and start
+                        syslog-ng by issuing the following commands:</para>
+                    <synopsis>/etc/init.d/syslogd stop
+/etc/init.d/syslog-ng start</synopsis>
+                    <para>This behavior has been detected on CentOS 4 systems, but may occur on
+                        other rpm-based platforms as well.</para>
+                </warning>
+            </step>
+            <!--<step>
                 <indexterm>
                     <primary>Novell AppArmor</primary>
                 </indexterm>
@@ -347,12 +351,12 @@
                     computer, copy the <filename>/usr/share/doc/syslog-ng/sbin.syslog-ng</filename>
                     file into the <filename>/etc/apparmor.d/</filename> directory and restart
                     AppArmor.</para>
-            </step>
-            <step>
+            </step>-->
+            <!--<step>
                 <para><emphasis>Optional step</emphasis>: When installing syslog-ng to the central
                     syslog-ng server, copy the <filename>license.txt</filename> license file to the
                         <filename>/etc/syslog-ng/</filename> directory of the server.</para>
-            </step>
+            </step>-->
             <step>
                 <para>
                     <indexterm>
@@ -362,8 +366,7 @@
                     <emphasis>Optional step for AIX systems</emphasis>: To redirect the messages of
                     the AIX Error log into syslog, create a file (e.g.,
                     <filename>/tmp/syslog-ng.add</filename>) with the following contents:</para>
-                <synopsis>
-errnotify:
+                <synopsis>errnotify:
 en_name = "syslog1"
 en_persistenceflg = 1
 en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTAMP'`"</synopsis>
@@ -388,69 +391,32 @@ en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTA
         </itemizedlist>
         <procedure>
             <title>Installing syslog-ng on Debian-based systems</title>
+
             <step>
-                <xi:include href="install_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
-                    xpointer="xpointer(//section[@id='install_downloads']/*)"/>
+                <para>Login to your MyBalabit account (<ulink url="http://www.balabit.com/mybalabit"
+                        >http://www.balabit.com/mybalabit</ulink>) and download the syslog-ng DEB
+                    package for your system from <ulink
+                        url="http://www.balabit.com/network-security/syslog-ng/central-syslog-server/upgrades/"
+                        >http://www.balabit.com/network-security/syslog-ng/central-syslog-server/upgrades/</ulink>.</para>
             </step>
-            <step>
+            <!--<step>
                 <para>Remove the existing system logging package from the host. Issue the following
                     command as root if the host is running syslog: <command>dpkg -r
                     sysklogd</command>, or <command>dpkg -r syslog-ng</command> if the host is
                     running the open source version of syslog-ng.</para>
-            </step>
+            </step>-->
             <step>
                 <para>Issue the following command as root: </para>
                 <para>
-                    <command>dpkg -i libdbi8_&lt;version&gt;_&lt;arch&gt;.deb
-                        syslog-ng-premium-edition_&lt;version&gt;_&lt;arch&gt;.deb</command>
+                    <command>dpkg -i syslog-ng-premium-edition-&lt;version&gt;-&lt;OS&gt;-&lt;arch&gt;.deb</command>
                 </para>
             </step>
             <step>
-                <para>If you use an SQL destination, issue the command corresponding to the
-                    database:</para>
-                <itemizedlist>
-                    <listitem>
-                        <para>For MSSQL:</para>
-                        <para>
-                            <command>dpkg -i
-                                libdbd8-mssql_&lt;version&gt;_&lt;arch&gt;.deb</command>
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>For MySQL:</para>
-                        <para>
-                            <command>dpkg -i
-                                libdbd8-mysql_&lt;version&gt;_&lt;arch&gt;.deb</command>
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>For Oracle:</para>
-                        <para>
-                            <command>dpkg -i
-                                libdbd8-oracle_&lt;version&gt;_&lt;arch&gt;.deb</command>
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>For PostgreSQL:</para>
-                        <para>
-                            <command>dpkg -i
-                                libdbd8-pgsql_&lt;version&gt;_&lt;arch&gt;.deb</command>
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>For SQLite:</para>
-                        <para>
-                            <command>dpkg -i
-                                libdbd8-3_&lt;version&gt;_&lt;arch&gt;.deb</command>
-                        </para>
-                    </listitem> 
-                </itemizedlist>
+                <para>Answer the configuration questions of syslog-ng. These are described in detail
+                    in <xref linkend="install_run"/>.</para>
             </step>
-            <step>
-                <xi:include href="install_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
-                    xpointer="xpointer(//section[@id='install_oracle']/*)"/>
-            </step>
-            <step>
+
+            <!--<step>
                 <indexterm>
                     <primary>Novell AppArmor</primary>
                 </indexterm>
@@ -458,15 +424,15 @@ en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTA
                     computer, copy the <filename>/usr/share/doc/syslog-ng/sbin.syslog-ng</filename>
                     file into the <filename>/etc/apparmor.d/</filename> directory and restart
                     AppArmor.</para>
-            </step>
-            <step>
+            </step>-->
+            <!--<step>
                 <para><emphasis>Optional step</emphasis>: When installing syslog-ng to the central
                     syslog-ng server, copy the <filename>license.txt</filename> license file to the
                         <filename>/etc/syslog-ng/</filename> directory of the server.</para>
-            </step>
+            </step>-->
         </procedure>
     </section>
-    <section id="install_freebsd">
+    <!-- <section id="install_freebsd">
         <title>Installing syslog-ng on FreeBSD</title>
         <indexterm>
             <primary>installing syslog-ng</primary>
