@@ -5,8 +5,8 @@ all: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS)
 
 .PHONY: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS)
 setup:
-	[ -d xml-stylesheet ] || tla get tt-l@balabit.hu--doc-1/xml-stylesheet--mainline--1.0 xml-stylesheet 
-	[ -d xml-stylesheet ] && (cd xml-stylesheet; tla tree-lint --strict && tla update)
+	[ -d xml-stylesheet ] || git clone git+ssh://git.balabit/var/scm/git/docs/xml-stylesheet.git xml-stylesheet 
+	[ -d xml-stylesheet ] && (cd xml-stylesheet; git pull)
 	[ -d out ] || mkdir out
 	
 ### entry points for the user
