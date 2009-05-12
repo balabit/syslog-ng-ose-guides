@@ -69,6 +69,13 @@
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_option_encoding)"/>
+                        <row>
+                            <entry>facility</entry>
+                            <entry>facility string</entry>
+                            <entry>kern</entry>
+                            <entry>This parameter assigns a facility value to the messages received
+                                from the file source.</entry>
+                        </row>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_commonoption_flags)"/>
@@ -157,7 +164,9 @@
             <synopsis>Declaration:
     pipe(filename);</synopsis>
             <note>
-                <para>You have to create this pipe using <command>mkfifo(1)</command>. </para>
+                <para>As of syslog-ng Open Source Edition 3.0.2, pipes are created automatically. In
+                    earlier versions, you had to create the pipe using the
+                    <command>mkfifo(1)</command> command. </para>
             </note>
             <para>The <parameter>pipe</parameter> driver has the following options:</para>
             <table>
@@ -669,9 +678,9 @@
                 <synopsis>source s_tcp { tcp(ip(127.0.0.1) port(1999) max-connections(10)); };</synopsis>
                 <para>A TCP source listening on a TLS-encrypted channel.</para>
                 <synopsis>source s_tcp { tcp(ip(127.0.0.1) port(1999) 
-                   tls(peer-verify('required-trusted' 
+                   tls(peer-verify('required-trusted') 
                        key_file('/etc/syslog-ng/syslog-ng.key') 
-                   cert_file('/etc/syslog-ng/syslog-ng.crt')))); 
+                   cert_file('/etc/syslog-ng/syslog-ng.crt'))); 
 };</synopsis>
                 <para>A TCP source listening for messages using the IETF-syslog message format:</para>
                 <synopsis>source s_tcp_syslog { tcp(ip(127.0.0.1) port(1999) flags(syslog-protocol) };</synopsis>
@@ -1184,12 +1193,13 @@
             <para>This driver sends messages to a named pipe like
                 <filename>/dev/xconsole</filename>. </para>
             <para>The pipe driver has a single required parameter, specifying the filename of the
-                pipe to open. </para>
+                pipe to open. The filename can include macros.</para>
             <synopsis>Declaration:
     pipe(filename);</synopsis>
             <warning>
-                <para>You have to create this pipe using <command>mkfifo(1)</command>, it is not
-                    created automatically. </para>
+                <para>As of syslog-ng Open Source Edition 3.0.2, pipes are created automatically. In
+                    earlier versions, you had to create the pipe using the
+                    <command>mkfifo(1)</command> command. </para>
             </warning>
             <para>The <parameter>pipe()</parameter> destination has the following options:</para>
             <table>
@@ -2547,9 +2557,15 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                         <entry>flags()</entry>
                         <entry>flags(escape-none,escape-backslash,escape-double-char,strip-whitespace
                             )</entry>
-                        <entry>Escaping rules used by the parser. The
-                            <parameter>strip-whitespace</parameter> flag removes trailing
-                            whitespaces from the beginning and the end of the columns.</entry>
+                        <entry>
+                            <para>Escaping rules used by the parser. </para>
+                            <para>The <parameter>strip-whitespace</parameter> flag removes trailing
+                                whitespaces from the beginning and the end of the columns.</para>
+                            <para>The <parameter>greedy</parameter> option assigns the remainder of
+                                the message to the last column, regardless of the delimiter
+                                characters set. You can use this option to process messages where
+                                the number of columns varies.</para>
+                        </entry>
                     </row>
                     <row>
                         <entry>quote-pairs()</entry>
@@ -2627,6 +2643,32 @@ log { source(s_local);
 };
 </synopsis>
         </example>
+        <example id="example_parser_greedy">
+            <title>Adding the end of the message to the last column</title>
+            <para>If the <parameter>greedy</parameter> option is enabled, the syslog-ng application
+                adds the not-yet-parsed part of the message to the last column, ignoring any
+                delimiter characters that may appear in this part of the message.</para>
+            <para>For example, you receive the following comma-separated message: <parameter>example
+                    1, example2, example3</parameter>, and you segment it with the following parser:</para>
+            <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(","));</synopsis>.
+                <para>The <parameter>COLUMN1</parameter>, <parameter>COLUMN2</parameter>, and
+                    <parameter>COLUMN3</parameter> variables will contain the strings
+                    <parameter>example1</parameter>, <parameter>example2</parameter>, and
+                    <parameter>example3</parameter>, respectively. If the message looks like
+                    <parameter>example 1, example2, example3, some more information</parameter>,
+                then any text appearing after the third comma (i.e., <parameter>some more
+                    information</parameter>) is not parsed, and possibly lost if you use only the
+                variables to reconstruct the message (for example, to send it to different columns
+                of an SQL table). </para>
+            <para>Using the <parameter>greedy</parameter> flag will assign the remainder of the
+                message to the last column, so that the <parameter>COLUMN1</parameter>,
+                    <parameter>COLUMN2</parameter>, and <parameter>COLUMN3</parameter> variables
+                will contain the strings <parameter>example1</parameter>,
+                <parameter>example2</parameter>, and <parameter>example3, some more
+                information</parameter>.</para>
+            <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(",") flags(greedy));</synopsis>
+        </example>
+
     </section>
     <section id="reference_rewrite">
         <title>Rewriting messages</title>
