@@ -24,8 +24,8 @@
         <para>If the configuration file does not contain the version information, syslog-ng assumes
             that the file is for syslog-ng version 2.x. In this case it interprets the configuration
             and sends warnings about the parts of the configuration that should be updated. Version
-            3.0 of syslog-ng will correctly operate with configuration files of version 2.x, but
-            many new features of version 3.0 will not be available.</para>
+            3.0 of syslog-ng will correctly operate with configuration files of version 2.x, but the
+            default values of certain parameters are different in 3.0.</para>
         <para>All identifiers, option names and attributes, and any other strings used in the
             syslog-ng configuration file are case sensitive. Objects must be defined before they are
             referenced in another statement.</para>
@@ -120,6 +120,16 @@ log { source(s_local); destination(d_file); };</synopsis>
                 <listitem>
                     <para>Files can be embedded into each other: the included files can contain
                         include statements as well, up to a maximum depth of 15 levels.</para>
+                </listitem>
+                <listitem>
+                    <para>Include statements can only be used at top level of the configuration
+                        file. For example, the following is correct:</para>
+                    <synopsis>@version:3.0
+include "example.conf";</synopsis>
+                    <para>But the following is not:</para>
+                    <synopsis>source s_example {
+    include "example.conf"
+     };</synopsis>
                 </listitem>
             </itemizedlist>
             <warning>
@@ -492,7 +502,8 @@ source s_demo_stream {
                         nc -U var/run/syslog-ng.ctl</command> command. This returns a list of source
                     groups and destinations, as well as the number of processed messages for each.
                     The verbosity of the statistics can be set using the
-                    <parameter>stats_level()</parameter> option. <!-- FIXME link --></para>
+                    <parameter>stats_level()</parameter> option. See <xref
+                        linkend="global_option_stats_level"/> for details .</para>
                 <note>
                     <para>To query the statistics, you need the OpenBSD-style
                         <command>netcat</command> application. The <command>netcat</command>
@@ -577,8 +588,9 @@ source s_demo_stream {
             <synopsis>Declaration:
                 pipe(filename);</synopsis>
             <note>
-                <para>As of syslog-ng Open Source Edition 3.0.2, pipes are created automatically. 
-		In earlier versions, you had to create the pipe using the <command>mkfifo(1)</command> command. </para>
+                <para>As of syslog-ng Open Source Edition 3.0.2, pipes are created automatically. In
+                    earlier versions, you had to create the pipe using the
+                    <command>mkfifo(1)</command> command. </para>
             </note>
             <para>Pipe is very similar to the <parameter>file()</parameter> driver, but there are a
                 few differences, for example <parameter>pipe()</parameter> opens its argument in
@@ -1037,13 +1049,14 @@ source s_demo_stream {
             <para>The <parameter>pipe()</parameter> driver sends messages to a named pipe like
                     <filename>/dev/xconsole</filename>. </para>
             <para>The pipe driver has a single required parameter, specifying the filename of the
-                pipe to open. The filename can include macros. For the list of available optional parameters, see <xref
-                    linkend="reference_destination_pipe"/>.</para>
+                pipe to open. The filename can include macros. For the list of available optional
+                parameters, see <xref linkend="reference_destination_pipe"/>.</para>
             <synopsis>Declaration:
                 pipe(filename);</synopsis>
             <warning>
-                <para>As of syslog-ng Open Source Edition 3.0.2, pipes are created automatically. 
-		In earlier versions, you had to create the pipe using the <command>mkfifo(1)</command> command. </para>
+                <para>As of syslog-ng Open Source Edition 3.0.2, pipes are created automatically. In
+                    earlier versions, you had to create the pipe using the
+                    <command>mkfifo(1)</command> command. </para>
             </warning>
             <xi:include href="chapter_reference.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
                 xpointer="element(example_destination_pipe)"/>
@@ -1137,6 +1150,11 @@ source s_demo_stream {
             <warning>
                 <para>The syslog-ng application requires read and write access to the SQL table,
                     otherwise it cannot verify that the destination table exists.</para>
+                <para>Currently the syslog-ng application has default schemas for the different
+                    databases and uses these defaults if the database schema (e.g., columns and
+                    column types) is not defined in the configuration file. However, these schemas
+                    will be deprecated and specifying the exact database schema will be required in
+                    later versions of syslog-ng. </para>
             </warning>
             <note>
                 <para>In addition to the standard syslog-ng packages, the
@@ -1888,9 +1906,11 @@ destination d_file {
              file("/var/log/messages" template(t_demo_filetemplate)); };</synopsis>
             <para>Templates can also be used inline, if they are used only at a single location. The
                 following destination is equivalent with the previous example: </para>
-            <synopsis>destination d_file { 
-             file("/var/log/messages" 
-                template("$ISODATE $HOST $MSG\n"; template_escape(no))); };</synopsis>
+            <synopsis>destination d_file {
+                file ("/var/log/messages"
+                        template("$ISODATE $HOST $MSG\n") template_escape(no) ); 
+                };
+            </synopsis>
         </example>
         <!-- <example>
             <title>Feeding messages into an SQL database</title>
@@ -1964,6 +1984,80 @@ template t_sql {
         <xi:include href="chapter_reference.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
             xpointer="element(example_parser_multiple)"/>
     </section>
+    <section id="configuring_pattern_databases">
+        <title>Classifying messages</title>
+        <!-- FIXME index -->
+        <para>To classify messages using a pattern database, include a
+            <parameter>db_parser()</parameter> statement in your syslog-ng configuration file using
+            the following syntax:</para>
+        <synopsis>Declaration:
+            parser &lt;identifier&gt; {db_parser(file("&lt;database_filename&gt;"));};
+        </synopsis>
+        <example>
+            <title>Defining pattern databases</title>
+            <para>The following statement uses the database located at
+                    <filename>/opt/syslog-ng/var/db/patterndb.xml</filename>.</para>
+            <synopsis>parser pattern_db {
+            db_parser(
+                file("/opt/syslog-ng/var/db/patterndb.xml")
+            );
+            };</synopsis>
+            <para>To apply the patterns on the incoming messages, include the parser in a log
+                statement:</para>
+            <synopsis>log { 
+            source(s_all);
+            parser(pattern_db);            
+            destination( di_messages_class);
+            };</synopsis>
+        </example>
+        <note>
+            <para>The default location of the pattern database file is
+                    <filename>/opt/syslog-ng/var/run/patterndb.xml</filename>. The
+                <parameter>file</parameter> option of the <parameter>db-parser</parameter> statement
+                can be used to specify a different file, thus different db-parser statements can use
+                different pattern databases. Later versions of syslog-ng will be able to dynamically
+                generate a main database from separate pattern database files.</para>
+        </note>
+        <para>Note that using the parser in a log statement only performs the classification, but
+            does not automatically do anything with the results of the classification. </para>
+        <example>
+            <title>Using classification results</title>
+            <para>The following destination separates the log messages into different files based on
+                the class assigned to the pattern that matches the message (e.g., Violation and
+                Security type messages are stored in a separate file), and also adds the ID of the
+                matching rule to the message: </para>
+            <synopsis>destination di_messages_class {
+        file("/var/log/messages-${.classifier.class}"       
+        template("${.classifier.rule_id};${S_UNIXTIME};${SOURCEIP};${HOST};${PROGRAM};${PID};${MSG}\n")
+        template_escape(no)
+    );
+};</synopsis>
+        </example>
+        <para>Sample pattern databases are available at the BalaBit Download page <ulink
+                url="http://www.balabit.com/network-security/syslog-ng/log-server-appliance/"
+                >http://www.balabit.com/network-security/syslog-ng/log-server-appliance/</ulink>.
+            Alternatively, you can create your own pattern database as well. See <xref
+                linkend="reference_patterndb_schemes"/> for details.</para>
+        <!-- FIXME link -->
+        <section id="patterndb-filters">
+            <title>Using parser results in filters and templates</title>
+            <indexterm>
+                <primary>pattern database</primary>
+                <secondary>using the results</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>message filtering</primary>
+                <secondary>using parsers</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>parsing messages</primary>
+                <secondary>filtering parsed messages</secondary>
+            </indexterm>
+            <xi:include href="chapter_reference.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
+                xpointer="element(patterndb-filtering)/*"/>
+        </section>
+    </section>
+
     <section id="configuring_rewrite">
         <title>Rewriting messages</title>
         <indexterm>
@@ -2612,6 +2706,14 @@ log { source(s_local);destination(d_syslog_tcp); };</synopsis>
         <para>This section provides tips and guidelines about troubleshooting problems related to
             syslog-ng. Troubleshooting the syslog-ng Agent for Windows application is discussed in
                 <xref linkend="windows_troubleshooting"/>.</para>
+        <tip>
+            <para>As a general rule, first try to get logging the messages to a local file. Once
+                this is working, you know that syslog-ng is running correctly and receiving
+                messages, and you can proceed to forwarding the messages to the server.</para>
+            <para>Similarly, build up encrypted connections step-by-step: first create a working
+                unencrypted (e.g., TCP) connection, then add TLS encryption, and finally client
+                authentication if needed.</para>
+        </tip>
         <section id="syslog-ng-core-files">
             <title>Creating syslog-ng core files</title>
             <indexterm>
@@ -2674,7 +2776,12 @@ log { source(s_local);destination(d_syslog_tcp); };</synopsis>
                 script must be located at
                 <filename>/opt/syslog-ng/sbin/syslog-ng-failure</filename>.</para>
         </section>
-
-
+        <section id="syslog-ng-stop">
+            <title>Stopping syslog-ng</title>
+            <para>To avoid problems, always use the init scripts to stop syslog-ng
+                    (<parameter>/etc/init.d/syslog-ng stop</parameter>), instead of using the
+                    <command>kill</command> command. This is especially true on Solaris and HP-UX
+                systems, here use <parameter>/etc/init.d/syslog stop</parameter>.</para>
+        </section>
     </section>
 </chapter>

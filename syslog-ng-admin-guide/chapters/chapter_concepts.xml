@@ -664,7 +664,108 @@
             replacement string can be a template that contains macros.</para>
         <para>For details on using rewrite rules, see <xref linkend="configuring_rewrite"/> and
                 <xref linkend="reference_rewrite"/>.</para>
-
+    </section>
+    <section id="concepts_pattern_databases">
+        <title>Classifying log messages</title>
+        <indexterm>
+            <primary>classifying messages</primary>
+            <secondary>concepts of</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>pattern databases</primary>
+            <secondary>concepts of</secondary>
+        </indexterm>
+        <para>The syslog-ng application can compare the contents of the received log messages to
+            predefined message patterns. By comparing the messages to the known patterns, syslog-ng
+            is able to identify the exact type of the messages, and sort them into message classes.
+            The message classes can be used to classify the type of the event described in the log
+            message. The message classes can be customized, and for example can label the messages
+            as user login, application crash, file transfer, etc. events.</para>
+        <para>To find the pattern that matches a particular message, syslog-ng uses a method called
+            longest prefix match radix tree. This means that syslog-ng creates a tree structure of
+            the available patterns, where the different characters available in the patterns for a
+            given position are the branches of the tree. This is also illustrated on the following
+            figure: </para>
+        <para>To classify a message, syslog-ng selects the first character of the message (the text
+            of message, not the header), and selects the patterns starting with this character,
+            other patterns are ignored for the rest of the process. After that, the second character
+            of the message is compared to the second character of the selected patterns. Again,
+            matching patterns are selected, and the others discarded. This process is repeated until
+            a single pattern completely matches the message, or no match is found. In the latter
+            case, the message is classified as unknown, otherwise the class of the matching pattern
+            is assigned to the message.</para>
+        <para>To make the message classification more flexible and robust, the patterns can contain
+            pattern parsers: elements that match on a set of characters. For example, the NUMBER
+            parser matches on any integer numbers (e.g., 1, 123, 894054, etc.). Other pattern
+            parsers match on various strings and IP addresses. For the details of available pattern
+            parsers, see <!--FIXMEXREF--></para>
+        <para>The functionality of the pattern database is similar to that of the logcheck project,
+            but it is much easier to write and maintain the patterns used by syslog-ng, than the
+            regular expressions used by logcheck. Also, it is much easier to understand syslog-ng
+            pattens than regular expressions.</para>
+        <para>Pattern matching based on regular expressions is computationally very intensive,
+            especially when the number of patterns increases. The solution used by syslog-ng can be
+            performed real-time, and is independent from the number of patterns, so it scales much
+            better. The following patterns describe the same message: <parameter>Accepted password
+                for bazsi from 10.50.0.247 port 42156 ssh2</parameter>
+        </para>
+        <para>A regular expression matching this message from the logcheck project:
+                <parameter>Accepted \
+                (gssapi(-with-mic|-keyex)?|rsa|dsa|password|publickey|keyboard-interactive/pam) \
+                for [^[:space:]]+ from [^[:space:]]+ port [0-9]+( (ssh|ssh2))?</parameter>
+        </para>
+        <para>A syslog-ng database pattern for this message: <parameter>Accepted
+                @QSTRING:auth_method: @ for@QSTRING:username: @from\ @QSTRING:client_addr: @port
+                @NUMBER:port:@ ssh2</parameter>
+        </para>
+        <para>For details on using pattern databases to classify log messages, see <xref
+                linkend="configuring_pattern_databases"/> and <xref
+                linkend="reference_parsers_pattern_databases"/>.</para>
+        <xi:include href="../../../xcb-guides/ssb-admin-guide/chapters/chapter-patterndb.xml"
+            xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="element(patterndb-structure)"/>
+        <xi:include href="../../../xcb-guides/ssb-admin-guide/chapters/chapter-patterndb.xml"
+            xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="element(patterndb-operation)"/>
+        <section id="concepts_artificial_ignorance">
+            <title>Artificial ignorance</title>
+            <para>Artificial ignorance is a method to detect anomalies. When applied to log
+                analysis, it means that you ignore the regular, common log messages - these are the
+                result of the regular behavior of your system, and therefore are not too
+                interesting. However, new messages that have not appeared in the logs before can
+                sign important events, and should be therefore investigated. "By definition,
+                something we have never seen before is anomalous" (Marcus J. Ranum). </para>
+            <para>The syslog-ng application can classify messages using a pattern database: messages
+                that do not match any pattern are classified as unknown. This provides a way to use
+                artificial ignorance to review your log messages. You can periodically review the
+                unknown messages &mdash; syslog-ng can send them to a separate destination - and
+                add patterns for them to the pattern database.  By reviewing an manually classifying
+                the unknown messages, you can iteratively classify more and more messages, until the
+                only the really anomalous messages show up as unknown.</para>
+            <para>Obviously, for this to work, a large number of message patterns are required. The
+                radix-tree matching method used for message classification is very effective, can be
+                performed very fast, and scales very well; basically the time required to perform a
+                pattern matching is independent from the number of patterns in the database.</para>
+            <para>To simplify the building of pattern databases, BalaBit has released (and will
+                continue to release) sample databases. Currently the following pattern databases are
+                available at the BalaBit Download page <ulink
+                    url="http://www.balabit.com/network-security/syslog-ng/log-server-appliance/"
+                    >http://www.balabit.com/network-security/syslog-ng/log-server-appliance/</ulink>:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>a database for the log messages of Cisco PIX firewalls;</para>
+                </listitem>
+                <listitem>
+                    <para>the database of the Logcheck project (<ulink url="http://logcheck.org/"
+                            >http://logcheck.org/</ulink>) containing message patterns for a large
+                        number of open source applications;</para>
+                </listitem>
+                <listitem>
+                    <para>a database for the log messages of the Zorp Application Level Gateway
+                            (<ulink url="http://www.balabit.com/network-security/zorp-gateway/"
+                            >http://www.balabit.com/network-security/zorp-gateway/</ulink>)
+                        (developed by BalaBit IT Security).</para>
+                </listitem>
+            </itemizedlist>
+        </section>
     </section>
     <section id="concepts_flow_control">
         <title>Managing incoming and outgoing messages with flow-control</title>
@@ -834,8 +935,7 @@
             <title>Handling outgoing messages in syslog-ng PE</title>
             <mediaobject>
                 <imageobject role="html">
-                    <imagedata format="PNG" align="center"
-                        fileref="syslog-ng-message-output.png"/>
+                    <imagedata format="PNG" align="center" fileref="syslog-ng-message-output.png"/>
                 </imageobject>
                 <imageobject role="fo">
                     <imagedata format="PNG" scale="60"
@@ -879,7 +979,7 @@
                     messages stored in the overflow queue. See also <xref
                         linkend="concepts_flow_control"/> for details on sizing the
                         <parameter>log_fifo_size()</parameter> parameter.</para>
-            </listitem>            
+            </listitem>
         </itemizedlist>
 
     </section>
@@ -1334,8 +1434,8 @@
             <para>This section describes the format of a syslog message, according to the
                 IETF-syslog protocol (see RFC 5424-5428 <ulink
                     url="http://tools.ietf.org/html/rfc5424"
-                    >http://tools.ietf.org/html/rfc5424</ulink>).A
-                syslog message consists of the following parts: </para>
+                >http://tools.ietf.org/html/rfc5424</ulink>).A syslog message consists of the
+                following parts: </para>
             <itemizedlist>
                 <listitem>
                     <para>
@@ -1369,8 +1469,7 @@
             </note>
             -->
             <para>The following is a sample syslog message:<footnote>
-                    <para>Source:
-                        http://tools.ietf.org/html/rfc5424</para>
+                    <para>Source: http://tools.ietf.org/html/rfc5424</para>
                 </footnote></para>
             <synopsis>&lt;34&gt;1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - BOM'su root' failed for lonvick on /dev/pts/8</synopsis>
             <para>The message corresponds to the following format: </para>

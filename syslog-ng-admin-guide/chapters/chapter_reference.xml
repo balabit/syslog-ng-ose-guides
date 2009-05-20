@@ -683,7 +683,7 @@
                    cert_file('/etc/syslog-ng/syslog-ng.crt'))); 
 };</synopsis>
                 <para>A TCP source listening for messages using the IETF-syslog message format:</para>
-                <synopsis>source s_tcp_syslog { tcp(ip(127.0.0.1) port(1999) flags(syslog-protocol) };</synopsis>
+                <synopsis>source s_tcp_syslog { tcp(ip(127.0.0.1) port(1999) flags(syslog-protocol)); };</synopsis>
             </example>
         </section>
         <section id="reference_source_unixstream">
@@ -900,6 +900,9 @@
                             <entry>root</entry>
                             <entry>Set the group of the created file to the one specified. </entry>
                         </row>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_commonoption_local_timezone)"/>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(destination_commonoption_log_fifo_size)"/>
@@ -1382,7 +1385,9 @@
                             <entry>"date", "facility", "level", "host", "program", "pid", "message"</entry>
                             <entry>Name of the columns storing the data in <parameter>fieldname
                                     [dbtype]</parameter> format. The <parameter>[dbtype]</parameter>
-                                parameter is optional, and specifies the type of the field.</entry>
+                                parameter is optional, and specifies the type of the field. By
+                                default, syslog-ng creates <parameter>text</parameter> columns. Note
+                                that not every database engine can index text fields. </entry>
                         </row>
                         <row id="sql_option_database">
                             <entry>database</entry>
@@ -1406,14 +1411,20 @@
                             <entry>string list</entry>
                             <entry>"date", "facility", "host", "program"</entry>
                             <entry>The list of columns that are indexed by the database to speed up
-                                searching.</entry>
+                                searching. To disable indexing for the destination, include the
+                                empty <parameter>indexes()</parameter> parameter in the destination,
+                                simply omitting the <parameter>indexes</parameter> parameter will
+                                cause syslog-ng to request indexing on the default columns.</entry>
                         </row>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_log_fifo_size)"/>
+                            xpointer="element(destination_commonoption_local_timezone)"/>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(diskbuffer_option_log_disk_fifo_size)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(destination_commonoption_log_fifo_size)"/>
                         <row>
                             <entry>password</entry>
                             <entry>string</entry>
@@ -1457,6 +1468,16 @@
                     </tbody>
                 </tgroup>
             </table>
+            <note>
+                <para>If you specify <parameter>host="localhost"</parameter>, syslog-ng will use a
+                    socket to connect to the local database server. Use
+                    <parameter>host="127.0.0.1"</parameter> to force TCP communication between
+                    syslog-ng and the local database server.</para>
+                <para>To specify the socket to use, set and export the
+                    <parameter>MYSQL_UNIX_PORT</parameter> environment variable, e.g.,
+                        <command>MYSQL_UNIX_PORT=/var/lib/mysql/mysql.sock; export
+                    MYSQL_UNIX_PORT</command>.</para>
+            </note>
             <example id="example_destination_sql">
                 <title>Using the sql() driver</title>
                 <indexterm>
@@ -2507,91 +2528,118 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
         <indexterm>
             <primary>parsing messages</primary>
         </indexterm>
-        <indexterm>
-            <primary>segmenting messages</primary>
-        </indexterm>
-        <indexterm>
-            <primary>splitting messages</primary>
-        </indexterm>
-        <para>The syslog-ng application can separate parts of log messages (i.e., the contents of
-            the $MSG macro) to named fields (columns). These fields act as user-defined macros that
-            can be referenced in message templates, file- and tablenames, etc. </para>
-        <para>To create a parser, define the columns of the message, the delimiter or separator
-            characters, and optionally the characters that are used to escape the delimiter
-            characters (quote-pairs).</para>
-        <synopsis>Declaration:
+        <para>The following sections provide reference for the parsers available in syslog-ng.</para>
+        <itemizedlist>
+            <listitem>
+                <para>To segment structured messages like comma-separated values, see <xref
+                        linkend="reference_parsers_csv"/>.</para>
+            </listitem>
+            <listitem>
+                <para>To classify messages using a pattern database, see <xref
+                        linkend="reference_parsers_pattern_databases"/>.</para>
+            </listitem>
+        </itemizedlist>
+
+        <section id="reference_parsers_csv">
+            <title>CSV parsers</title>
+            <indexterm>
+                <primary>segmenting messages</primary>
+            </indexterm>
+            <indexterm>
+                <primary>CSV parsers</primary>
+            </indexterm>
+            <indexterm>
+                <primary>splitting messages</primary>
+            </indexterm>
+            <para>The syslog-ng application can separate parts of log messages (i.e., the contents
+                of the $MSG macro) to named fields (columns). These fields act as user-defined
+                macros that can be referenced in message templates, file- and tablenames, etc. </para>
+            <para>To create a parser, define the columns of the message, the delimiter or separator
+                characters, and optionally the characters that are used to escape the delimiter
+                characters (quote-pairs).</para>
+            <synopsis>Declaration:
     parser parser_name {
         csv-parser(column1, column2, ...)
         delimiters()
         quote-pairs()
     };</synopsis>
-        <para>Column names work like macros. Always use a prefix to identify the columns of the
-            parsers, e.g., <parameter>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</parameter>, etc. Column
-            names starting with a dot (e.g., <parameter>.HOST</parameter>) are reserved for use by
-            syslog-ng. </para>
-        <table id="parser_options">
-            <title>Parser parameters</title>
-            <tgroup cols="3">
-                <thead>
-                    <row>
-                        <entry>Name</entry>
-                        <entry>Synopsis</entry>
-                        <entry>Description</entry>
-                    </row>
-                </thead>
-                <tbody>
-                    <row>
-                        <entry>csv-parser</entry>
-                        <entry>csv-parser(columns("PARSER.COLUMN1", "PARSER.COLUMN2", ...))</entry>
-                        <entry>Specifies the type of parser to use, and the name of the columns to
-                            separate messages to. Currently only the
-                            <parameter>csv-parser</parameter> is implemented, which can separate
-                            columns based on delimiter characters and strings.</entry>
-                    </row>
-                    <row>
-                        <entry>delimiters</entry>
-                        <entry>delimiters("&lt;delimiter_characters&gt;")</entry>
-                        <entry>The character that separates the columns in the message. </entry>
-                    </row>
-                    <row>
-                        <entry>flags()</entry>
-                        <entry>flags(escape-none,escape-backslash,escape-double-char,strip-whitespace
-                            )</entry>
-                        <entry>
-                            <para>Escaping rules used by the parser. </para>
-                            <para>The <parameter>strip-whitespace</parameter> flag removes trailing
-                                whitespaces from the beginning and the end of the columns.</para>
-                            <para>The <parameter>greedy</parameter> option assigns the remainder of
-                                the message to the last column, regardless of the delimiter
-                                characters set. You can use this option to process messages where
-                                the number of columns varies.</para>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>quote-pairs()</entry>
-                        <entry>quote-pairs('&lt;quote_pairs&gt;')</entry>
-                        <entry>List quote-pairs between single quotes. Delimiter characters enclosed
-                            between quote characters are ignored. Note that the beginning and ending
-                            quote character does not have to be identical, e.g.,
-                            <parameter>[}</parameter> can also be a quote-pair.</entry>
-                    </row>
-                    <row>
-                        <entry>template()</entry>
-                        <entry>template("${&lt;macroname&gt;}")</entry>
-                        <entry>The macro that contains the part of the message that the parser will
-                            process. It can also be a macro created by a previous parser of the log
-                            path. By default, this is empty and the parser processes the entire
-                            message.</entry>
-                    </row>
-                </tbody>
-            </tgroup>
-        </table>
+            <para>Column names work like macros. Always use a prefix to identify the columns of the
+                parsers, e.g., <parameter>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</parameter>, etc.
+                Column names starting with a dot (e.g., <parameter>.HOST</parameter>) are reserved
+                for use by syslog-ng. </para>
+            <table id="parser_options">
+                <title>Parser parameters</title>
+                <tgroup cols="3">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Synopsis</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>csv-parser</entry>
+                            <entry>csv-parser(columns("PARSER.COLUMN1", "PARSER.COLUMN2", ...))</entry>
+                            <entry>Specifies the type of parser to use, and the name of the columns
+                                to separate messages to. Currently only the
+                                <parameter>csv-parser</parameter> is implemented, which can separate
+                                columns based on delimiter characters and strings.</entry>
+                        </row>
+                        <row>
+                            <entry>delimiters</entry>
+                            <entry>delimiters("&lt;delimiter_characters&gt;")</entry>
+                            <entry>The character that separates the columns in the message. </entry>
+                        </row>
+                        <row>
+                            <entry>flags()</entry>
+                            <entry>drop-invalid, escape-none, escape-backslash, escape-double-char,
+                                greedy, strip-whitespace</entry>
+                            <entry>
+                                <para>When the <parameter>drop-invalid</parameter> option is set,
+                                    the parser does not process messages that have less columns than
+                                    defined in the parser. Using this option practically turns the
+                                    parser into a special filter, that matches messages that have
+                                    the predifined number of columns (using the specified
+                                    delimiters).</para>
+                                <para>The <parameter>escape-none, escape-backslash,
+                                        escape-double-char</parameter> flags set the escaping rules
+                                    used by the parser. </para>
+                                <para>The <parameter>greedy</parameter> option assigns the remainder
+                                    of the message to the last column, regardless of the delimiter
+                                    characters set. You can use this option to process messages
+                                    where the number of columns varies.</para>
+                                <para>The <parameter>strip-whitespace</parameter> flag removes
+                                    trailing whitespaces from the beginning and the end of the
+                                    columns.</para>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>quote-pairs()</entry>
+                            <entry>quote-pairs('&lt;quote_pairs&gt;')</entry>
+                            <entry>List quote-pairs between single quotes. Delimiter characters
+                                enclosed between quote characters are ignored. Note that the
+                                beginning and ending quote character does not have to be identical,
+                                e.g., <parameter>[}</parameter> can also be a quote-pair.</entry>
+                        </row>
+                        <row>
+                            <entry>template()</entry>
+                            <entry>template("${&lt;macroname&gt;}")</entry>
+                            <entry>The macro that contains the part of the message that the parser
+                                will process. It can also be a macro created by a previous parser of
+                                the log path. By default, this is empty and the parser processes the
+                                entire message.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
 
-        <example id="example_parser">
-            <title>Segmenting hostnames separated with a dash</title>
-            <para>The following example separates hostnames like <parameter>example-1</parameter>
-                and <parameter>example-2</parameter> into two parts.</para>
-            <synopsis>parser p_hostname_segmentation {
+            <example id="example_parser">
+                <title>Segmenting hostnames separated with a dash</title>
+                <para>The following example separates hostnames like
+                    <parameter>example-1</parameter> and <parameter>example-2</parameter> into two
+                    parts.</para>
+                <synopsis>parser p_hostname_segmentation {
     csv-parser(columns("HOSTNAME.NAME", "HOSTNAME.ID")
     delimiters("-")
     flags(escape-none)
@@ -2599,18 +2647,18 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
 };
 destination d_file { file("/var/log/messages-${HOSTNAME.NAME:-examplehost}"); };
 log { source(s_local); parser(p_hostname_segmentation); destination(d_file);};</synopsis>
-        </example>
-        <example id="example_parser_apache">
-            <title>Parsing Apache log files</title>
-            <para>The following parser processes the log of Apache web servers and separates them
-                into different fields. Apache log messages can be formatted like:</para>
-            <synopsis>"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %T %v"</synopsis>.
-                <para>Here is a sample message: </para>
-            <synopsis>192.168.1.1 - - [31/Dec/2007:00:17:10 +0100] "GET /cgi-bin/example.cgi HTTP/1.1" 200 2708 "-" "curl/7.15.5 (i4 86-pc-linux-gnu) libcurl/7.15.5 OpenSSL/0.9.8c zlib/1.2.3 libidn/0.6.5" 2 example.balabit</synopsis>.
-                <para>To parse such logs, the delimiter character is set to a single whitespace
-                    (<parameter>delimiters(" ")</parameter>). Whitespaces between quotes and
-                brackets are ignored (<parameter>quote-pairs('""[]')</parameter>).</para>
-            <synopsis>parser p_apache {
+            </example>
+            <example id="example_parser_apache">
+                <title>Parsing Apache log files</title>
+                <para>The following parser processes the log of Apache web servers and separates
+                    them into different fields. Apache log messages can be formatted like:</para>
+                <synopsis>"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %T %v"</synopsis>.
+                    <para>Here is a sample message: </para>
+                <synopsis>192.168.1.1 - - [31/Dec/2007:00:17:10 +0100] "GET /cgi-bin/example.cgi HTTP/1.1" 200 2708 "-" "curl/7.15.5 (i4 86-pc-linux-gnu) libcurl/7.15.5 OpenSSL/0.9.8c zlib/1.2.3 libidn/0.6.5" 2 example.balabit</synopsis>.
+                    <para>To parse such logs, the delimiter character is set to a single whitespace
+                        (<parameter>delimiters(" ")</parameter>). Whitespaces between quotes and
+                    brackets are ignored (<parameter>quote-pairs('""[]')</parameter>).</para>
+                <synopsis>parser p_apache {
     csv-parser(columns("APACHE.CLIENT_IP", "APACHE.IDENT_NAME", "APACHE.USER_NAME",
         "APACHE.TIMESTAMP", "APACHE.REQUEST_URL", "APACHE.REQUEST_STATUS",
         "APACHE.CONTENT_LENGTH", "APACHE.REFERER", "APACHE.USER_AGENT",
@@ -2620,19 +2668,19 @@ log { source(s_local); parser(p_hostname_segmentation); destination(d_file);};</
          quote-pairs('""[]')
          );
 };</synopsis>
-            <para>The results can be used for example to separate log messages into different files
-                based on the APACHE.USER_NAME field. If the field is empty, the
-                <parameter>nouser</parameter> name is assigned.</para>
-            <synopsis>log { source(s_local);
+                <para>The results can be used for example to separate log messages into different
+                    files based on the APACHE.USER_NAME field. If the field is empty, the
+                        <parameter>nouser</parameter> name is assigned.</para>
+                <synopsis>log { source(s_local);
     parser(p_apache); destination(d_file);};
 };
 destination d_file { file("/var/log/messages-${APACHE.USER_NAME:-nouser}"); };</synopsis>
-        </example>
-        <example id="example_parser_multiple">
-            <title>Segmenting a part of a message</title>
-            <para>The following example splits the timestamp of a parsed Apache log message into
-                separate fields.</para>
-            <synopsis>parser p_apache_timestamp {
+            </example>
+            <example id="example_parser_multiple">
+                <title>Segmenting a part of a message</title>
+                <para>The following example splits the timestamp of a parsed Apache log message into
+                    separate fields.</para>
+                <synopsis>parser p_apache_timestamp {
     csv-parser(columns("APACHE.TIMESTAMP.DAY", "APACHE.TIMESTAMP.MONTH", "APACHE.TIMESTAMP.YEAR", "APACHE.TIMESTAMP.HOUR", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.ZONE")
     delimiters("/: ")
     flags(escape-none)
@@ -2642,33 +2690,126 @@ log { source(s_local);
     log { parser(p_apache); parser(p_apache_timestamp); destination(d_file);};
 };
 </synopsis>
-        </example>
-        <example id="example_parser_greedy">
-            <title>Adding the end of the message to the last column</title>
-            <para>If the <parameter>greedy</parameter> option is enabled, the syslog-ng application
-                adds the not-yet-parsed part of the message to the last column, ignoring any
-                delimiter characters that may appear in this part of the message.</para>
-            <para>For example, you receive the following comma-separated message: <parameter>example
-                    1, example2, example3</parameter>, and you segment it with the following parser:</para>
-            <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(","));</synopsis>.
-                <para>The <parameter>COLUMN1</parameter>, <parameter>COLUMN2</parameter>, and
-                    <parameter>COLUMN3</parameter> variables will contain the strings
-                    <parameter>example1</parameter>, <parameter>example2</parameter>, and
-                    <parameter>example3</parameter>, respectively. If the message looks like
-                    <parameter>example 1, example2, example3, some more information</parameter>,
-                then any text appearing after the third comma (i.e., <parameter>some more
-                    information</parameter>) is not parsed, and possibly lost if you use only the
-                variables to reconstruct the message (for example, to send it to different columns
-                of an SQL table). </para>
-            <para>Using the <parameter>greedy</parameter> flag will assign the remainder of the
-                message to the last column, so that the <parameter>COLUMN1</parameter>,
-                    <parameter>COLUMN2</parameter>, and <parameter>COLUMN3</parameter> variables
-                will contain the strings <parameter>example1</parameter>,
-                <parameter>example2</parameter>, and <parameter>example3, some more
-                information</parameter>.</para>
-            <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(",") flags(greedy));</synopsis>
-        </example>
+            </example>
+            <example id="example_parser_greedy">
+                <title>Adding the end of the message to the last column</title>
+                <para>If the <parameter>greedy</parameter> option is enabled, the syslog-ng
+                    application adds the not-yet-parsed part of the message to the last column,
+                    ignoring any delimiter characters that may appear in this part of the message.</para>
+                <para>For example, you receive the following comma-separated message:
+                        <parameter>example 1, example2, example3</parameter>, and you segment it
+                    with the following parser:</para>
+                <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(","));</synopsis>.
+                    <para>The <parameter>COLUMN1</parameter>, <parameter>COLUMN2</parameter>, and
+                        <parameter>COLUMN3</parameter> variables will contain the strings
+                        <parameter>example1</parameter>, <parameter>example2</parameter>, and
+                        <parameter>example3</parameter>, respectively. If the message looks like
+                        <parameter>example 1, example2, example3, some more information</parameter>,
+                    then any text appearing after the third comma (i.e., <parameter>some more
+                        information</parameter>) is not parsed, and possibly lost if you use only
+                    the variables to reconstruct the message (for example, to send it to different
+                    columns of an SQL table). </para>
+                <para>Using the <parameter>greedy</parameter> flag will assign the remainder of the
+                    message to the last column, so that the <parameter>COLUMN1</parameter>,
+                        <parameter>COLUMN2</parameter>, and <parameter>COLUMN3</parameter> variables
+                    will contain the strings <parameter>example1</parameter>,
+                    <parameter>example2</parameter>, and <parameter>example3, some more
+                    information</parameter>.</para>
+                <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(",") flags(greedy));</synopsis>
+            </example>
+        </section>
+        <section id="reference_pattern_databases">
+            <title>Pattern databases</title>
+            <xi:include href="../../../xcb-guides/ssb-admin-guide/chapters/chapter-patterndb.xml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                xpointer="element(patterndb-using-parsers)"/>
+            <section id="patterndb-filtering">
+                <title>Filtering messages based on classification</title>
+                <!-- FIXME index -->
+                <para>The results of message classification and parsing can be used in custom
+                    filters and file and database templates as well. There are two built-in macros
+                    in &abbrev; that allow you to use the results of the classification: the
+                        <parameter>.classifier.class</parameter> macro contains the class assigned
+                    to the message (e.g., violation, security, or unknown), while the
+                        <parameter>.classifier.rule_id</parameter> macro contains the identifier of
+                    the message pattern that matched the message.</para>
+                <example id="example_patterndb_filtering">
+                    <title>Using classification results for filtering messages</title>
+                    <para>To filter on a specific message class, create a filter that checks the
+                            <guimenu>.classifier_class</guimenu> macro, and use this filter in a log
+                        statement.</para>
+                    <synopsis>filter fi_class_violation {
+                        match("violation"
+                        value(".classifier.class")
+                        type("string")
+                        );
+                        };</synopsis>
+                    <synopsis>log { 
+                        source(s_all);
+                        parser(pattern_db);
+                        filter(fi_class_violation);
+                        destination(di_class_violation);
+                        };</synopsis>
+                    <para>Filtering on the <parameter>unknown</parameter> class selects messages
+                        that did not match any rule of the pattern database. Routing these messages
+                        into a separate file allows you to periodically review new or unknown
+                        messages.</para>
+                    <para>To filter on messages matching a specific classification rule, create a
+                        filter that checks the <guimenu>.classifier_rule_id</guimenu> macro. The
+                        unique identifier of the rule (e.g.,
+                            <parameter>e1e9c0d8-13bb-11de-8293-000c2922ed0a</parameter>) is the
+                            <parameter>id</parameter> attribute of the rule in the XML database.</para>
+                    <synopsis>filter fi_class_rule {
+                        match("e1e9c0d8-13bb-11de-8293-000c2922ed0a"
+                        value(".classifier_rule_id")
+                        type("string")
+                        );
+                        };</synopsis>
+                </example>
 
+                <para>The message-segments parsed by the pattern parsers can also be used as macros
+                    as well. To accomplish this, you have to add a name to the parser, and then you
+                    can use this name as a macro that refers to the parsed value of the message.</para>
+                <example id="example_patterndb_patternfilter">
+                    <title>Using pattern parsers as macros</title>
+                    <para>For example, you want to parse messages of an application that look like
+                            <parameter>"Transaction: &lt;type&gt;."</parameter>, where
+                        &lt;type&gt; is a string that has different values (e.g., refused,
+                        accepted, incomplete, etc.). To parse these messages, you can use the
+                        following pattern:</para>
+                    <synopsis>'Transaction: @ESTRING::.@'</synopsis>
+                    <para>Here the @ESTRING@ parser parses the message until the next full stop
+                        character. To use the results in a filter or a filename template, include a
+                        name in the parser of the pattern, e.g.:</para>
+                    <synopsis>'Transaction: @ESTRING:TRANSACTIONTYPE:.@'</synopsis>
+                    <para>After that, add a custom template to the logpath that uses this template.
+                        For example, to select every <parameter>accepted</parameter> transaction,
+                        use the following custom filter in the log path:</para>
+                    <synopsis>match("accepted" value("TRANSACTIONTYPE"));</synopsis>
+                </example>
+                <note>
+                    <para>The above macros can be used in database columns and filename templates as
+                        well, if you create custom templates for the destination or logspace.</para>
+                    <para>Use a consistent naming scheme for your macros, for example,
+                            <parameter>APPLICATIONNAME_MACRONAME</parameter>.</para>
+                </note>
+            </section>
+            <section id="reference_patterndb_schemes">
+                <title>Creating pattern databases</title>
+                <para>Pattern databases are XML files that contain rules describing the message
+                    patterns. The XML schema of the pattern database used in syslog-ng OSE and PE
+                    (up to version 3.0.2) is the following:</para>
+                <warning>
+                    <para>This is an experimental database format that will change in the future
+                        releases of syslog-ng. When the new format will be released, an upgrading
+                        script will be available to convert the existing databases to the new
+                        format. Note that the sample pattern databases available at the BalaBit
+                        website already use the new format (dubbed V2).</para>
+                </warning>
+                <!--<table id="reference_patterndb_scheme_v1"></table>-->
+                <!-- <table id="reference_patterndb_scheme_v1"></table> -->
+            </section>
+        </section>
     </section>
     <section id="reference_rewrite">
         <title>Rewriting messages</title>
@@ -3076,6 +3217,18 @@ log { source(s_local);
                         <entry>The period between two STATS messages in seconds. STATS are log
                             messages sent by syslog-ng, containing statistics about dropped log
                             messages.</entry>
+                    </row>
+                    <row id="global_option_stats_level">
+                        <entry>stats_level()</entry>
+                        <entry>0, 1, or 2</entry>
+                        <entry>0</entry>
+                        <entry>Specifies the detail of statistics syslog-ng collects about the
+                            processed messages. Level 0 collects only statistics about the sources
+                            and destinations; level 1 contains details about the different
+                            connections and log files, but has a slight memory overhead; while level
+                            2 can display detailed statistics based on message parameters (e.g.,
+                            hostname). Note that level 2 increases the memory requirements and CPU
+                            load. </entry>
                     </row>
                     <row>
                         <entry>sync() or sync_freq() (DEPRECATED)</entry>
