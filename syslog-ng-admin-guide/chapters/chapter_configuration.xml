@@ -135,7 +135,9 @@ include "example.conf";</synopsis>
             <warning>
                 <para>The syslog-ng application will not start if it cannot find a file that is to
                     be included in its configuration. Always double-check the filenames, paths, and
-                    access rights when including configuration files.</para>
+                    access rights when including configuration files, and use the
+                        <command>--syntax-only</command> command-line option to check your
+                    configuration.</para>
             </warning>
         </section>
 
@@ -233,6 +235,66 @@ source s_demo_stream2 {
         <synopsis># Comment: This is a stream source
 source s_demo_stream { 
            unix-stream("/dev/log" max-connections(10) group(log)); };</synopsis>
+        <section id="configfile_syntax">
+            <title>Notes about the configuration syntax</title>
+            <para>When you are editing the syslog-ng configuration file, note the following points:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>When writing the names of options and parameters (or other reserved
+                        words), the hyphen (<parameter>-</parameter>) and underscore
+                        (<parameter>_</parameter>) characters are equivalent, e.g.,
+                            <parameter>max-connections(10)</parameter> and
+                            <parameter>max_connections(10)</parameter> are both correct.</para>
+                </listitem>
+                <listitem>
+                    <para>Number can be prefixed with <parameter>+</parameter> or
+                        <parameter>-</parameter> to indicate positive or negative values. Numbers
+                        beginning with zero (<parameter>0</parameter>) or <parameter>0x</parameter>
+                        are treated as hexadecimal or octal numbers, respectively.</para>
+                </listitem>
+                <listitem>
+                    <para>You can use commas (<parameter>,</parameter>) to separate options or other
+                        parameters for readability; syslog-ng completely ignores them. The following
+                        declarations are equivalent:</para>
+                    <synopsis>source s_demo_stream { 
+                        unix-stream("/dev/log" max-connections(10) group(log)); };</synopsis>
+                    <synopsis>source s_demo_stream { 
+                        unix-stream("/dev/log", max-connections(10), group(log)); };</synopsis>                    
+                </listitem>
+                <listitem>
+                    <para>Strings between single quotes (<parameter>'string'</parameter>) are
+                        treated literally, you do not have to escape special characters. This makes
+                        writing and reading regular expressions much more simple: it is recommended
+                        to use single quotes when writing regular expressions.</para>
+                </listitem>
+                <listitem>
+                    <para>When enclosing strings between double-quotes
+                        (<parameter>"string"</parameter>), you have to escape special characters:
+                        e.g., when enclosing a regular expression that uses the
+                        <parameter>\</parameter> character to escape a special character, you have
+                        to add an extra <parameter>\</parameter> (e.g.,
+                        <parameter>"\\n"</parameter>). It is recommended to use single quotes
+                        instead.</para>
+                </listitem>
+                <listitem>
+                    <para>Enclosing normal strings between double-quotes
+                        (<parameter>"string"</parameter>) is not necessary, you can just omit the
+                        double-quotes. E.g., when writing filters,
+                        <parameter>match("sometext")</parameter> and
+                        <parameter>match(sometext)</parameter> will both match for the
+                            <parameter>sometext</parameter> string.</para>
+                </listitem>
+                <listitem>
+                    <para>When enclosing object IDs (e.g., the name of a destination) between
+                        double-quotes (<parameter>"mydestination"</parameter>), the ID can include
+                        whitespace as well, e.g.:</para>
+                    <synopsis>source "s demo stream" { 
+                        unix-stream("/dev/log" max-connections(10) group(log)); };</synopsis>
+                </listitem>
+            </itemizedlist>
+
+        </section>
+
     </section>
     <section id="sources">
         <title>Sources and source drivers</title>
@@ -2094,7 +2156,7 @@ template t_sql {
             details.). Substitution rules use the following syntax:</para>
         <synopsis>Declaration:
             rewrite &lt;name_of_the_rule&gt;
-                {subst("&lt;string or regular expression to find&gt;", "&lt;replacement string&gt;", value(&lt;field name&gt;));};</synopsis>
+                {subst("&lt;string or regular expression to find&gt;", "&lt;replacement string&gt;", value(&lt;field name&gt;), flags());};</synopsis>
         <para>A single substitution rule can include multiple substitutions that are applied
             sequentially to the message. Note that rewriting rules must be included in the log
             statement to have any effect.</para>

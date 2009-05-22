@@ -1425,6 +1425,16 @@
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(destination_commonoption_log_fifo_size)"/>
+                        <row id="sql_option_null">
+                            <entry>null</entry>
+                            <entry>string</entry>
+                            <entry/>
+                            <entry>If the content of a column matches the string specified in the
+                                    <parameter>null()</parameter> parameter, the contents of the
+                                column will be replaced with an SQL NULL value. If unset (by
+                                default), the option does not match on any string. See the <xref
+                                    linkend="example_destination_sql_null"/> for details.</entry>
+                        </row>
                         <row>
                             <entry>password</entry>
                             <entry>string</entry>
@@ -1506,6 +1516,14 @@
             </example>
             <example id="example_destination_sql_oracle">
                 <title>Using the sql() driver with an Oracle database</title>
+                <indexterm>
+                    <primary>destinations</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>Oracle</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
                 <para>The following example sends the log messages into an Oracle database running
                     on the <parameter>logserver</parameter> host, which must be set in the
                         <filename>/etc/tnsnames.ora</filename> file. The messages are inserted into
@@ -1539,6 +1557,14 @@
             </example>
             <example id="example_destination_sql_mssql">
                 <title>Using the sql() driver with an MSSQL database</title>
+                <indexterm>
+                    <primary>destinations</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>MSSQL</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
                 <para>The following example sends the log messages into an MSSQL database running on
                     the <parameter>logserver</parameter> host. The messages are inserted into the
                         <parameter>syslogng</parameter> database, the name of the table includes the
@@ -1558,6 +1584,46 @@ sql(type(mssql) host("logserver") port("1433")
                     create this file as needed for your configuration. A sample is provided below.</para>
                 <synopsis>[default]
 date = "%Y-%m-%d %H:%M:%S"</synopsis>
+            </example>
+            <example id="example_destination_sql_null">
+                <title>Using SQL NULL values</title>
+                <indexterm>
+                    <primary>destinations</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>SQL NULL values</primary>
+                </indexterm>
+                <para>The <parameter>null()</parameter> parameter of the SQL driver can be used to
+                    replace the contents of a column with a special SQL NULL value. To replace every
+                    column that contains an empty string with NULL, use the
+                    <parameter>null("")</parameter> option, e.g.,</para>
+                <synopsis>destination d_sql { 
+                    sql(type(pgsql)
+                    host("logserver") username("syslog-ng") password("password")
+                    database("logs")
+                    table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
+                    columns("datetime", "host", "program", "pid", "message")
+                    values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+                    indexes("datetime", "host", "program", "pid", "message")
+                    null(""));                    
+                    };</synopsis>
+                <para>To replace only a specific column (e.g., <parameter>pid</parameter>) if it is
+                    empty, assign a default value to the column, and use this default value in the
+                        <parameter>null()</parameter> parameter:</para>
+                <synopsis>destination d_sql { 
+                    sql(type(pgsql)
+                    host("logserver") username("syslog-ng") password("password")
+                    database("logs")
+                    table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
+                    columns("datetime", "host", "program", "pid", "message")
+                    values("$R_DATE", "$HOST", "$PROGRAM", "${PID:-@@NULL@@}", "$MSGONLY")
+                    indexes("datetime", "host", "program", "pid", "message")
+                    null("@@NULL@@"));                    
+                    };</synopsis>
+                <para>Ensure that the default value you use does not appear in the actual log
+                    messages, because other occurrences of this string will be replaced with NULL as
+                    well.</para>
             </example>
         </section>
 
@@ -1630,9 +1696,15 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(destination_commonoption_log_fifo_size)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_option_port)"/>
+                        <row id="destination_option_port">
+                            <entry>port() or destport()</entry>
+                            <entry>number</entry>
+                            <entry>601</entry>
+                            <entry>The port number to connect to. Note that the default port numbers
+                                used by syslog-ng do not comply with the latest RFC which was
+                                published after the release of syslog-ng 3.0.2, therefore the
+                                default port numbers will change in the future releases.</entry>
+                        </row>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(destination_option_so_broadcast)"/>
@@ -2718,7 +2790,7 @@ log { source(s_local);
                 <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(",") flags(greedy));</synopsis>
             </example>
         </section>
-        <section id="reference_pattern_databases">
+        <section id="reference_parsers_pattern_databases">
             <title>Pattern databases</title>
             <xi:include href="../../../xcb-guides/ssb-admin-guide/chapters/chapter-patterndb.xml"
                 xmlns:xi="http://www.w3.org/2001/XInclude"
@@ -2806,8 +2878,31 @@ log { source(s_local);
                         format. Note that the sample pattern databases available at the BalaBit
                         website already use the new format (dubbed V2).</para>
                 </warning>
-                <!--<table id="reference_patterndb_scheme_v1"></table>-->
-                <!-- <table id="reference_patterndb_scheme_v1"></table> -->
+                <!--
+                    FIXME:
+                    <table id="reference_patterndb_scheme_v1"></table>-->
+
+                <example>
+                    <title>A pattern database containing a single rule</title>
+                    <indexterm>
+                        <primary>pattern database</primary>
+                    </indexterm>
+                    <para>The following pattern database contains a single rule that matches log
+                        messages of the <parameter>PF</parameter> packet-filtering application. A
+                        sample log message looks like:</para>
+                    <synopsis>PF: DROP filter/INPUT IN=eth0 OUT= MAC=00:1A:4B:80:90:C9:00:1A:4B:80:90:C6 SRC=192.168.155.11 DST=192.168.155.1 LEN=60 TOS=0x10 PREC=0x00 TTL=64 ID=51939 DF PROTO=TCP SPT=34407 DPT=80 WINDOW=32792 RES=0x00 SYN URGP=0</synopsis>
+                    <para>A simple pattern database containing a matching rule:</para>
+                    <synopsis>&lt;patterndb version='1' pub_date='2009-04-17'&gt;
+                        &lt;program name='PF'&gt;
+                        &lt;pattern&gt;PF&lt;/pattern&gt;
+                        &lt;rule id='1' class='pf'&gt;
+                        &lt;pattern&gt;@STRING:PF.VERDICT@ @STRING:PF.CHAIN:/@ IN=@STRING:PF.IN_IFACE@ OUT= MAC=@STRING:PF.MAC::@ SRC=@IPV4:PF.SRC_IP@ DST=@IPV4:PF.DST_IP@ LEN=@NUMBER:PF.PKT_LEN@ TOS=@STRING:PF.TOS@ PREC=@STRING:PF.PREC@ TTL=@NUMBER:PF.TTL@ ID=@NUMBER:PF.ID@ DF PROTO=@STRING:PF.PROTO@ SPT=@NUMBER:PF.SRC_PORT@ DPT=@NUMBER:PF.DST_PORT@ WINDOW=@NUMBER:PF.TCP_WINDOW@ RES=@STRING:PF.RES@ SYN URGP=@NUMBER:PF.TCP_URGP@&lt;/pattern&gt;
+                        &lt;/rule&gt;
+                        &lt;/program&gt;
+                        &lt;/patterndb&gt;</synopsis>
+                </example>
+<!-- FIXME:
+    <table id="reference_patterndb_scheme_v2"></table> -->
             </section>
         </section>
     </section>
@@ -2864,7 +2959,7 @@ log { source(s_local);
             syntax:</para>
         <synopsis>Declaration:
     rewrite &lt;name_of_the_rule&gt;
-        {set("&lt;string to include&gt;", value(&lt;field name&gt;));};</synopsis>
+    {set("&lt;string to include&gt;", value(&lt;field name&gt;)  flags());};</synopsis>
         <example id="example_rewrite_set">
             <title>Setting message fields to a particular value</title>
             <para>The following example sets the HOST field of the message to
@@ -3076,17 +3171,9 @@ log { source(s_local);
                         <entry>1007</entry>
                         <entry>Number of hostnames in the DNS cache.</entry>
                     </row>
-                    <row>
-                        <entry>frac_digits()</entry>
-                        <entry>number</entry>
-                        <entry>0</entry>
-                        <entry>The syslog-ng application can store fractions of a second in the
-                            timestamps according to the ISO8601 format. The
-                            <parameter>frac_digits()</parameter> parameter specifies the number of
-                            digits stored. The digits storing the fractions are padded by zeros if
-                            the original timestamp of the message specifies only seconds. Fractions
-                            can always be stored for the received time of the messages.</entry>
-                    </row>
+                    <xi:include href="reference_common.xml"
+                        xmlns:xi="http://www.w3.org/2001/XInclude"
+                        xpointer="element(destination_commonoption_timezone)"/>
                     <row>
                         <entry>flush_lines()</entry>
                         <entry>number</entry>
