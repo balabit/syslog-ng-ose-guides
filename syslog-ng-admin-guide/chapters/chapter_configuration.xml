@@ -2048,13 +2048,30 @@ template t_sql {
     </section>
     <section id="configuring_pattern_databases">
         <title>Classifying messages</title>
-        <!-- FIXME index -->
+        <indexterm>
+            <primary>parsers</primary>
+        </indexterm>
+        <indexterm>
+            <primary>message parsing</primary>
+        </indexterm>
+        <indexterm>
+            <primary>parsing messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>pattern database</primary>
+        </indexterm>
+        <indexterm>
+            <primary>classifying messages</primary>
+            <secondary>configuration</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>message classification</primary>
+        </indexterm>
         <para>To classify messages using a pattern database, include a
             <parameter>db_parser()</parameter> statement in your syslog-ng configuration file using
             the following syntax:</para>
         <synopsis>Declaration:
-            parser &lt;identifier&gt; {db_parser(file("&lt;database_filename&gt;"));};
-        </synopsis>
+            parser &lt;identifier&gt; {db_parser(file("&lt;database_filename&gt;"));};</synopsis>
         <example>
             <title>Defining pattern databases</title>
             <para>The following statement uses the database located at
@@ -2267,7 +2284,7 @@ template t_sql {
                 <para>Copy the CA certificate (e.g., <filename>cacert.pem</filename>) of the
                     Certificate Authority that issued the certificate of the syslog-ng server to the
                     syslog-ng client hosts, for example into the
-                    <filename>/etc/syslog-ng/ca.d</filename> directory. </para>
+                    <filename>/opt/syslog-ng/etc/syslog-ng/ca.d</filename> directory. </para>
                 <para>Issue the following command on the certificate: <command>openssl x509 -noout
                         -hash -in cacert.pem</command> The result is a hash (e.g.,
                         <parameter>6d2962a8</parameter>), a series of alphanumeric characters based
@@ -2293,13 +2310,13 @@ template t_sql {
                         having the <parameter>10.1.2.3</parameter> IP address. </para>
                     <synopsis>destination demo_tls_destination {
                 tcp("10.1.2.3" port(1999) 
-                    tls( ca_dir("/etc/syslog-ng/ca.d")) ); };</synopsis>
+                    tls( ca_dir("/opt/syslog-ng/etc/syslog-ng/ca.d")) ); };</synopsis>
                     <para>A similar statement using the IETF-syslog protocol and thus the
                             <parameter>syslog()</parameter> driver:</para>
                     <synopsis>destination demo_tls_syslog_destination { syslog("10.1.2.3" port(1999)
                         transport("tls")
                         port(3214)
-                        tls(ca_dir("/etc/syslog-ng/ca.d")) ); 
+                        tls(ca_dir("/opt/syslog-ng/etc/syslog-ng/ca.d")) ); 
 };</synopsis>
                 </example>
             </step>
@@ -2321,13 +2338,13 @@ template t_sql {
             <step>
                 <para>Copy the certificate (e.g., <filename>syslog-ng.cert</filename>) of the
                     syslog-ng server to the syslog-ng server host, for example into the
-                        <filename>/etc/syslog-ng/cert.d</filename> directory. The certificate must
+                        <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename> directory. The certificate must
                     be a valid X.509 certificate in PEM format.</para>
             </step>
             <step>
                 <para>Copy the private key (e.g., <filename>syslog-ng.key</filename>) matching the
                     certificate of the syslog-ng server to the syslog-ng server host, for example
-                    into the <filename>/etc/syslog-ng/key.d</filename> directory. The key must be in
+                    into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The key must be in
                     PEM format, and must not be password-protected.</para>
             </step>
             <step>
@@ -2344,14 +2361,14 @@ template t_sql {
                         syslog-ng server. </para>
                     <synopsis>source demo_tls_source {
            tcp(ip(0.0.0.0) port(1999) 
-               tls( key_file("/etc/syslog-ng/key.d/syslog-ng.key") 
-                    cert_file("/etc/syslog-ng/cert.d/syslog-ng.cert")) ); };</synopsis>
+               tls( key_file("/opt/syslog-ng/etc/syslog-ng/key.d/syslog-ng.key") 
+                    cert_file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert")) ); };</synopsis>
                     <para>A similar source for receiving messages using the IETF-syslog protocol:</para>
                     <synopsis>source demo_tls_syslog_source {                    
                     syslog(ip(0.0.0.0) port(1999)
                     transport("tls")
-                    tls( key_file("/etc/syslog-ng/key.d/syslog-ng.key") 
-                    cert_file("/etc/syslog-ng/cert.d/syslog-ng.cert")) ); };</synopsis>
+                    tls( key_file("/opt/syslog-ng/etc/syslog-ng/key.d/syslog-ng.key") 
+                    cert_file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert")) ); };</synopsis>
                 </example>
             </step>
             <step>
@@ -2366,15 +2383,15 @@ template t_sql {
                         syslog-ng server. The identity of the syslog-ng client is not verified.</para>
                     <synopsis>source demo_tls_source {
            tcp(ip(0.0.0.0) port(1999) 
-               tls( key_file("/etc/syslog-ng/key.d/syslog-ng.key") 
-                    cert_file("/etc/syslog-ng/cert.d/syslog-ng.cert") 
+               tls( key_file("/opt/syslog-ng/etc/syslog-ng/key.d/syslog-ng.key") 
+                    cert_file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert") 
                     peer_verify(optional-untrusted))  ); };</synopsis>
                     <para>A similar source for receiving messages using the IETF-syslog protocol:</para>
                     <synopsis>source demo_tls_syslog_source {                    
                         syslog(ip(0.0.0.0) port(1999)
                         transport("tls")
-                        tls( key_file("/etc/syslog-ng/key.d/syslog-ng.key") 
-                        cert_file("/etc/syslog-ng/cert.d/syslog-ng.cert") 
+                        tls( key_file("/opt/syslog-ng/etc/syslog-ng/key.d/syslog-ng.key") 
+                        cert_file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert") 
                         peer_verify(optional-untrusted))  ); };</synopsis>
                 </example>
                 <warning>
@@ -2419,7 +2436,7 @@ template t_sql {
             <step>
                 <para>Copy the certificate (e.g., <filename>client_cert.pem</filename>) and the
                     matching private key (e.g., <filename>client.key</filename>) to the syslog-ng
-                    client host, for example into the <filename>/etc/syslog-ng/cert.d</filename>
+                    client host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename>
                     directory. The certificate must be a valid X.509 certificate in PEM format and
                     must not be password-protected.</para>
             </step>
@@ -2427,7 +2444,7 @@ template t_sql {
                 <para>Copy the CA certificate of the Certificate Authority (e.g.,
                         <filename>cacert.pem</filename>) that issued the certificate of the
                     syslog-ng server to the syslog-ng client hosts, for example into the
-                        <filename>/etc/syslog-ng/ca.d</filename> directory.</para>
+                        <filename>/opt/syslog-ng/etc/syslog-ng/ca.d</filename> directory.</para>
                 <para>Issue the following command on the certificate: <command>openssl x509 -noout
                         -hash -in cacert.pem</command> The result is a hash (e.g.,
                         <parameter>6d2962a8</parameter>), a series of alphanumeric characters based
@@ -2455,15 +2472,15 @@ template t_sql {
                         the certificate file authenticating the client is also specified.</para>
                     <synopsis>destination demo_tls_destination {
     tcp("10.1.2.3" port(1999) 
-        tls( ca_dir("/etc/syslog-ng/ca.d") 
-             key_file("/etc/syslog-ng/key.d/client.key")
-             cert_file("/etc/syslog-ng/cert.d/client_cert.pem")) ); };</synopsis>
+        tls( ca_dir("/opt/syslog-ng/etc/syslog-ng/ca.d") 
+             key_file("/opt/syslog-ng/etc/syslog-ng/key.d/client.key")
+             cert_file("/opt/syslog-ng/etc/syslog-ng/cert.d/client_cert.pem")) ); };</synopsis>
                     <synopsis>destination demo_tls_syslog_destination {
     syslog("10.1.2.3" port(1999) 
         transport("tls")
-            tls( ca_dir("/etc/syslog-ng/ca.d")
-                 key_file("/etc/syslog-ng/key.d/client.key")
-                 cert_file("/etc/syslog-ng/cert.d/client_cert.pem")) ); };</synopsis>
+            tls( ca_dir("/opt/syslog-ng/etc/syslog-ng/ca.d")
+                 key_file("/opt/syslog-ng/etc/syslog-ng/key.d/client.key")
+                 cert_file("/opt/syslog-ng/etc/syslog-ng/cert.d/client_cert.pem")) ); };</synopsis>
                 </example>
             </step>
             <step>
@@ -2485,14 +2502,14 @@ template t_sql {
             <step>
                 <para>Copy the certificate (e.g., <filename>syslog-ng.cert</filename>) of the
                     syslog-ng server to the syslog-ng server host, for example into the
-                        <filename>/etc/syslog-ng/cert.d</filename> directory. The certificate must
+                        <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename> directory. The certificate must
                     be a valid X.509 certificate in PEM format.</para>
             </step>
             <step>
                 <para>Copy the CA certificate (e.g., <filename>cacert.pem</filename>) of the
                     Certificate Authority that issued the certificate of the syslog-ng clients to
                     the syslog-ng server, for example into the
-                    <filename>/etc/syslog-ng/ca.d</filename> directory. </para>
+                    <filename>/opt/syslog-ng/etc/syslog-ng/ca.d</filename> directory. </para>
                 <para>Issue the following command on the certificate: <command>openssl x509 -noout
                         -hash -in cacert.pem</command> The result is a hash (e.g.,
                         <parameter>6d2962a8</parameter>), a series of alphanumeric characters based
@@ -2507,7 +2524,7 @@ template t_sql {
             <step>
                 <para>Copy the private key (e.g., <filename>syslog-ng.key</filename>) matching the
                     certificate of the syslog-ng server to the syslog-ng server host, for example
-                    into the <filename>/etc/syslog-ng/key.d</filename> directory. The key must be in
+                    into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The key must be in
                     PEM format, and must not be password-protected.</para>
             </step>
             <step>
@@ -2525,16 +2542,16 @@ template t_sql {
                         syslog-ng server. </para>
                     <synopsis>source demo_tls_source {
            tcp(ip(0.0.0.0) port(1999) 
-               tls( key_file("/etc/syslog-ng/key.d/syslog-ng.key") 
-                    cert_file("/etc/syslog-ng/cert.d/syslog-ng.cert") 
-                    ca_dir("/etc/syslog-ng/ca.d")) ); };</synopsis>
+               tls( key_file("/opt/syslog-ng/etc/syslog-ng/key.d/syslog-ng.key") 
+                    cert_file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert") 
+                    ca_dir("/opt/syslog-ng/etc/syslog-ng/ca.d")) ); };</synopsis>
                     <para>A similar source for receiving messages using the IETF-syslog protocol:</para>
                     <synopsis>source demo_tls_syslog_source {                    
                         syslog(ip(0.0.0.0) port(1999)
                         transport("tls")
-                        tls( key_file("/etc/syslog-ng/key.d/syslog-ng.key")
-                        cert_file("/etc/syslog-ng/cert.d/syslog-ng.cert") 
-                        ca_dir("/etc/syslog-ng/ca.d")) ); };</synopsis>
+                        tls( key_file("/opt/syslog-ng/etc/syslog-ng/key.d/syslog-ng.key")
+                        cert_file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert") 
+                        ca_dir("/opt/syslog-ng/etc/syslog-ng/ca.d")) ); };</synopsis>
                 </example>
                 <warning>
                     <!--<para>The encrypted connection between the server and the client fails if the
