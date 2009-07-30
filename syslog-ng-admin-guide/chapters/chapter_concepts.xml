@@ -435,7 +435,7 @@
             the following algorithm:</para>
         <procedure>
             <step>
-                <para>The sender application or host specifies (e.g., the syslog-ng client) the
+                <para>The sender application (e.g., the syslog-ng client) or host specifies the
                     timezone of the messages. If the incoming message includes a timezone it is
                     associated with the message. Otherwise, the local timezone is assumed.</para>
             </step>
@@ -593,12 +593,12 @@
                 <parameter>chunk_time</parameter> time has elapsed since the last message has
             arrived. If it has, then the old chunk is closed and the new message is written into a
             new chunk.</para>
-        <para>When the logstore file is encrypted, a hash is also generated for every chunk to
-            verify the integrity of the chunk. The hashes of the chunks are chained together to
-            prevent injecting chunks into the logstore file. The encryption algorithm used is
-                <parameter>aes128</parameter> in CBC mode, the hashing (HMAC) algorithm is
-                <parameter>hmac-sha1</parameter>. Currently it is not possible to use other
-            algorithms.</para>
+        <para>The syslog-ng PE application generates an SHA-1 hash for every chunk to verify the
+            integrity of the chunk. The hashes of the chunks are chained together to prevent
+            injecting chunks into the logstore file. The syslog-ng application can encrypt the
+            logstore using the <parameter>aes128</parameter> algorithm in CBC mode; the hashing
+            (HMAC) algorithm is <parameter>hmac-sha1</parameter>. Currently it is not possible to
+            use other algorithms.</para>
     </section>
 
     <section id="concepts_macro">
@@ -872,11 +872,14 @@
             of every control window, that is, the <parameter>log_fifo_size()</parameter> of the
             destination must be greater than
                 <parameter>number_of_sources</parameter>*<parameter>log_iw_size()</parameter>. This
-            applies to every source that sends logs to the particular destination, thus if two
+            applies to every source that sends logs to the particular destination. Thus if two
             sources having several connections and heavy traffic send logs to the same destination,
-            the control window of every connection of both sources must fit into the output buffer
-            of the destination. Otherwise, syslog-ng does not activate the flow-control, and
-            messages may be lost.</para>
+            the control window of both sources must fit into the output buffer of the destination.
+            Otherwise, syslog-ng does not activate the flow-control, and messages may be lost.</para>
+        <note>
+            <para>Flow-control can be used together with the disk-based buffering feature of
+                syslog-ng PE. See <xref linkend="concepts_diskbuffer"/> for details.</para>
+        </note>
         <section>
             <title>Flow-control and multiple destinations</title>
             <indexterm>
@@ -918,6 +921,10 @@
             reestablished. The disk buffer is used as a queue: when the connection to the server is
             reestablished, syslog-ng sends the messages to the server in the order they were
             received.</para>
+        <note>
+            <para>Disk-based buffering can be used in conjunction with flow-control. See <xref
+                    linkend="concepts_flow_control"/> for details.</para>
+        </note>
         <para>Disk buffers can be used with <parameter>tcp()</parameter>,
             <parameter>tcp6()</parameter>, <parameter>syslog()</parameter> (when using the
                 <parameter>tcp</parameter> or <parameter>tls</parameter> transport methods), and
@@ -942,6 +949,7 @@
                         fileref="&imgroot;/syslog-ng-message-output.png"/>
                 </imageobject>
             </mediaobject>
+            <!-- FIXME az abran a diskbuffernel a global felirat nem kell, mert nem globalis -->
         </figure>
         <itemizedlist>
             <listitem>
@@ -964,7 +972,9 @@
                     buffer of the destination. The disk buffer is enabled if the
                         <parameter>log_disk_fifo_size()</parameter> parameter of the destination is
                     larger than <parameter>0</parameter>; the size of the disk buffer is specified
-                    in bytes.</para>
+                    in bytes. The <parameter>log_disk_fifo_size()</parameter> parameter can be
+                    specified as a global option as well, setting the default size of the
+                    diskbuffers used for the individual destinations.</para>
             </listitem>
             <listitem>
                 <indexterm>
@@ -1000,6 +1010,13 @@
             syslog-ng. Log source hosts are identified by their IP addresses, so virtual machines
             and vhosts are separately counted. Licenses are available for 5, 10, 25, 50, 100, 150,
             200, 250, 300, 500, 750, 1000, and unlimited number of log source hosts.</para>
+        <warning>
+            <para>The <parameter>chain_hostnames()</parameter> option of syslog-ng can interfere
+                with the way syslog-ng counts the log source hosts, causing syslog-ng to think there
+                are more hosts logging to the central server. As
+                <parameter>chain_hostnames()</parameter> is a deprecated option, disable it on your
+                log sources to avoid any problems related to license counting.</para>
+        </warning>
         <para>Buying a syslog-ng server license permits you to perform the following:</para>
         <itemizedlist>
             <listitem>
@@ -1216,7 +1233,7 @@
                     </para>
                 </listitem>
             </itemizedlist>
-            <para>The total message must be shorter than 1024 bytes.</para>
+            <para>The total message cannot be longer than 1024 bytes.</para>
             <para>The following is a sample syslog message: <parameter>&lt;133&gt;Feb 25
                     14:09:07 webserver syslogd: restart</parameter>. The message corresponds to the
                 following format: <parameter>&lt;priority&gt;timestamp hostname application:
@@ -1440,14 +1457,15 @@
                 <listitem>
                     <para>
                         <parameter>
-                            <link linkend="ietfsyslog_pri">PRI</link>
-                        </parameter>
+                            <link linkend="ietfsyslog_header">HEADER</link> (includes the <parameter>
+                                <link linkend="ietfsyslog_pri">PRI</link>
+                            </parameter> as well) </parameter>
                     </para>
                 </listitem>
                 <listitem>
                     <para>
                         <parameter>
-                            <link linkend="ietfsyslog_header">HEADER</link>
+                            <link linkend="ietfsyslog_structureddata">STRUCTURED-DATA</link>
                         </parameter>
                     </para>
                 </listitem>
@@ -1482,9 +1500,9 @@
                 in UTF-8. The encoding is defined by the BOM. There is no STRUCTURED-DATA present in
                 the message, this is indicated by "-" in the STRUCTURED-DATA field. The MSG is "'su
                 root' failed for lonvick...".</para>
-            <para>The HEADER part of the message must be in plain ASCII format, while the MSG part
-                must be in UTF-8. The different parts of the message are explained in the following
-                sections.</para>
+            <para>The HEADER part of the message must be in plain ASCII format, the parameter values
+                of the STRUCTURED-DATA part must be in UTF-8, while the MSG part should be in UTF-8.
+                The different parts of the message are explained in the following sections.</para>
             <section id="ietfsyslog_pri">
                 <title>The PRI message part</title>
                 <para>The PRI part of the syslog message (known as Priority value) represents the
@@ -1669,27 +1687,28 @@
                     <listitem>
                         <para><emphasis>MESSAGEID</emphasis>: The ID number of the message.</para>
                     </listitem>
-                    <listitem>
-                        <para><emphasis>STRUCTURED-DATA</emphasis>: STRUCTURED-DATA may contain
-                            meta- information about the syslog message, or application-specific
-                            information such as traffic counters or IP addresses. STRUCTURED-DATA
-                            consists of data blocks enclosed in brackets
-                            (<parameter>[]</parameter>). Every block include the ID of the block,
-                            and one or more <parameter>name=value</parameter> pairs. The syslog-ng
-                            application automatically parses the STRUCTURED-DATA part of syslog
-                            messages, which can be referenced in macros (see <xref
-                                linkend="reference_macros"/> for details). An example
-                            STRUCTURED-DATA block looks like:</para>
-                        <synopsis>[exampleSDID@0 iut="3" eventSource="Application" eventID="1011"][examplePriority@0 class="high"]</synopsis>
-                    </listitem>
                 </itemizedlist>
                 <note>
                     <para>The syslog-ng application supports other timestamp formats as well, like
-                        ISO, or the PIX extended format. For details, see the
-                        <parameter>ts_format()</parameter> option in <xref
+                        ISO, or the PIX extended format. The timestamp used in the IETF-syslog
+                        protocol is derived from RFC3339, which is based on ISO8601. For details,
+                        see the <parameter>ts_format()</parameter> option in <xref
                             linkend="reference_options"/>.</para>
                 </note>
             </section>
+            <section id="ietfsyslog_structureddata">
+                <title>The STRUCTURED-DATA message part</title>
+                <para>The STRUCTURED-DATA message part may contain meta- information about the
+                    syslog message, or application-specific information such as traffic counters or
+                    IP addresses. STRUCTURED-DATA consists of data blocks enclosed in brackets
+                        (<parameter>[]</parameter>). Every block include the ID of the block, and
+                    one or more <parameter>name=value</parameter> pairs. The syslog-ng application
+                    automatically parses the STRUCTURED-DATA part of syslog messages, which can be
+                    referenced in macros (see <xref linkend="reference_macros"/> for details). An
+                    example STRUCTURED-DATA block looks like:</para>
+                <synopsis>[exampleSDID@0 iut="3" eventSource="Application" eventID="1011"][examplePriority@0 class="high"]</synopsis>
+            </section>
+
             <section id="ietfsyslog_msg">
                 <title>The MSG message part</title>
                 <para>The MSG part contains the text of the message itself. The encoding of the text

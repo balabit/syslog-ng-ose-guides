@@ -259,7 +259,7 @@ source s_demo_stream {
                     <synopsis>source s_demo_stream { 
                         unix-stream("/dev/log" max-connections(10) group(log)); };</synopsis>
                     <synopsis>source s_demo_stream { 
-                        unix-stream("/dev/log", max-connections(10), group(log)); };</synopsis>                    
+                        unix-stream("/dev/log", max-connections(10), group(log)); };</synopsis>
                 </listitem>
                 <listitem>
                     <para>Strings between single quotes (<parameter>'string'</parameter>) are
@@ -329,6 +329,22 @@ source s_demo_stream {
            tcp(ip(10.1.2.3) port(1999)); 
            udp(ip(10.1.2.3) port(1999)); };</synopsis>
         </example>
+        <example>
+            <title>Setting default priority and facility</title>
+            <indexterm>
+                <primary>setting facility</primary>
+            </indexterm>
+            <indexterm>
+                <primary>overriding facility</primary>
+            </indexterm>
+            <para>If the message received by the source does not have a proper syslog header, you
+                can use the <parameter>default-facility()</parameter> and
+                    <parameter>default-priority()</parameter> options to set the facility and
+                priority of the messages. Note that these values are applied only to messages that
+                do not set these parameters in their header.</para>
+            <synopsis>source headerless_messages { udp(default-facility(syslog) default-priority(emerg)); };</synopsis>
+        </example>
+
         <para>Define a source only once. The same source can be used in several log paths.
             Duplicating sources causes syslog-ng to open the source (TCP/IP port, file, etc.) more
             than once, which might cause problems. For example, include the
@@ -565,13 +581,14 @@ source s_demo_stream {
                     groups and destinations, as well as the number of processed messages for each.
                     The verbosity of the statistics can be set using the
                     <parameter>stats_level()</parameter> option. See <xref
-                        linkend="global_option_stats_level"/> for details .</para>
+                        linkend="reference_options"/> for details.</para>
                 <note>
                     <para>To query the statistics, you need the OpenBSD-style
                         <command>netcat</command> application. The <command>netcat</command>
                         included in most Linux distributions is a GNU-style version that is not
                         suitable to query the statistics of syslog-ng. An alternative is to use the
-                            <command>socat</command> application.</para>
+                            <command>socat</command> application: <command>echo STATS | socat -vv
+                            UNIX-CONNECT:/opt/syslog-ng/var/run/syslog-ng.ctl -</command>.</para>
                 </note>
                 <!-- FIXME ertelmes peldat, ez nem az igazi, es reszletezni, hogy pontosan mit ir ki
                 src.udp;s_local#1;;a;processed;0 src.udp;s_local#1;;a;stamp;0 source;s_local;;a;processed;7
@@ -608,10 +625,10 @@ source s_demo_stream {
                 <primary>wildcards</primary>
                 <secondary>in file sources</secondary>
             </indexterm>
-            <para>The filename may include wildcard characters (e.g., <parameter>*</parameter>).
-                Note that when using wildcards in filenames, always set how often syslog-ng should
-                check the file for new messages using the <parameter>follow_freq()</parameter>
-                parameter.</para>
+            <para>In syslog-ng PE, the filename may include wildcard characters (e.g.,
+                <parameter>*</parameter>). Note that when using wildcards in filenames, always set
+                how often syslog-ng should check the file for new messages using the
+                    <parameter>follow_freq()</parameter> parameter.</para>
             <xi:include href="chapter_reference.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
                 xpointer="element(example_source_file)"/>
             <xi:include href="chapter_reference.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
@@ -1056,11 +1073,12 @@ source s_demo_stream {
                 read. Chunks are closed when their size reaches the limit set in the
                     <parameter>chunk_size</parameter> parameter, or when the time limit set in the
                     <parameter>chunk_time</parameter> parameter expires and no new message arrives.</para>
-            <para>When the logstore file is encrypted, a hash is also generated for every chunk to
-                verify the integrity of the chunk. The hashes of the chunks are chained together to
-                prevent injecting chunks into the logstore file. The encryption algorithm used is
-                    <parameter>aes128</parameter> in CBC mode, the hashing (HMAC) algorithm is
-                    <parameter>hmac-sha1</parameter>.</para>
+            <para>The syslog-ng PE application generates an SHA-1 hash for every chunk to verify the
+                integrity of the chunk. The hashes of the chunks are chained together to prevent
+                injecting chunks into the logstore file. The syslog-ng application can encrypt the
+                logstore using the <parameter>aes128</parameter> algorithm in CBC mode; the hashing
+                (HMAC) algorithm is <parameter>hmac-sha1</parameter>. Currently it is not possible
+                to use other algorithms.</para>
             <warning>
                 <para>If the syslog-ng Premium Edition application or the computer crashes, an
                     unclosed chunk remains at the end of the file. This chunk is marked as broken,
@@ -1098,9 +1116,6 @@ source s_demo_stream {
                     of possible variations is rather high. Do not use the
                     <parameter>$PROGRAM</parameter> macro in insecure environments.</para>
             </warning>
-            <para>The <parameter>logstore()</parameter> destination has the following options:</para>
-            <xi:include href="chapter_reference.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
-                xpointer="element(example_destination_logstore)"/>
         </section>
         <section id="configuring_destinations_pipe">
             <title>Sending messages to named pipes</title>
@@ -1358,7 +1373,7 @@ source s_demo_stream {
                 multicasting.</para>
             <note>
                 <para>The default ports for the different transport protocols are as follows: UDP
-                    &mdash; 514; TLS &mdash; 6514.</para>
+                    &mdash; 514; TLS &mdash; 6514.</para><!-- FIXME mi a syslog-TCP default portja? -->
             </note>
             <xi:include href="chapter_reference.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
                 xpointer="element(example_destination_syslog)"/>
@@ -1631,7 +1646,7 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
                 </listitem>
                 <listitem>
                     <para>The output buffer must be larger than the control window of every
-                        connection that logs to the destination.</para>
+                        source that logs to the destination.</para>
                 </listitem>
                 <listitem>
                     <para>If the control window is full, syslog-ng stops reading messages from the
@@ -2226,8 +2241,10 @@ template t_sql {
     <section id="configuring_diskbuffer">
         <title>Enabling disk-based buffering</title>
         <para>To enable disk-based buffering, use the <parameter>log_disk_fifo_size()</parameter>
-            parameter to set the size of the disk buffer in bytes. For details on how disk-based
-            buffering works, see <xref linkend="concepts_diskbuffer"/>Disk buffers can be used with
+            parameter to set the size of the disk buffer in bytes. Note that this value applies to
+            every destination separately; every destination will have its own diskbuffer file, even
+            if the parameter is set as a global option. For details on how disk-based buffering
+            works, see <xref linkend="concepts_diskbuffer"/>. Disk buffers can be used with
                 <parameter>tcp()</parameter>, <parameter>tcp6()</parameter>,
             <parameter>syslog()</parameter> (when using the <parameter>tcp</parameter> or
                 <parameter>tls</parameter> transport methods), and <parameter>sql()</parameter>
@@ -2284,7 +2301,7 @@ template t_sql {
                 <para>Copy the CA certificate (e.g., <filename>cacert.pem</filename>) of the
                     Certificate Authority that issued the certificate of the syslog-ng server to the
                     syslog-ng client hosts, for example into the
-                    <filename>/opt/syslog-ng/etc/syslog-ng/ca.d</filename> directory. </para>
+                        <filename>/opt/syslog-ng/etc/syslog-ng/ca.d</filename> directory. </para>
                 <para>Issue the following command on the certificate: <command>openssl x509 -noout
                         -hash -in cacert.pem</command> The result is a hash (e.g.,
                         <parameter>6d2962a8</parameter>), a series of alphanumeric characters based
@@ -2338,14 +2355,14 @@ template t_sql {
             <step>
                 <para>Copy the certificate (e.g., <filename>syslog-ng.cert</filename>) of the
                     syslog-ng server to the syslog-ng server host, for example into the
-                        <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename> directory. The certificate must
-                    be a valid X.509 certificate in PEM format.</para>
+                        <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename> directory. The
+                    certificate must be a valid X.509 certificate in PEM format.</para>
             </step>
             <step>
                 <para>Copy the private key (e.g., <filename>syslog-ng.key</filename>) matching the
                     certificate of the syslog-ng server to the syslog-ng server host, for example
-                    into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The key must be in
-                    PEM format, and must not be password-protected.</para>
+                    into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The
+                    key must be in PEM format, and must not be password-protected.</para>
             </step>
             <step>
                 <para>Add a source statement to the syslog-ng configuration file that uses the
@@ -2436,9 +2453,10 @@ template t_sql {
             <step>
                 <para>Copy the certificate (e.g., <filename>client_cert.pem</filename>) and the
                     matching private key (e.g., <filename>client.key</filename>) to the syslog-ng
-                    client host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename>
-                    directory. The certificate must be a valid X.509 certificate in PEM format and
-                    must not be password-protected.</para>
+                    client host, for example into the
+                    <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename> directory. The
+                    certificate must be a valid X.509 certificate in PEM format and must not be
+                    password-protected.</para>
             </step>
             <step>
                 <para>Copy the CA certificate of the Certificate Authority (e.g.,
@@ -2502,14 +2520,14 @@ template t_sql {
             <step>
                 <para>Copy the certificate (e.g., <filename>syslog-ng.cert</filename>) of the
                     syslog-ng server to the syslog-ng server host, for example into the
-                        <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename> directory. The certificate must
-                    be a valid X.509 certificate in PEM format.</para>
+                        <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename> directory. The
+                    certificate must be a valid X.509 certificate in PEM format.</para>
             </step>
             <step>
                 <para>Copy the CA certificate (e.g., <filename>cacert.pem</filename>) of the
                     Certificate Authority that issued the certificate of the syslog-ng clients to
                     the syslog-ng server, for example into the
-                    <filename>/opt/syslog-ng/etc/syslog-ng/ca.d</filename> directory. </para>
+                        <filename>/opt/syslog-ng/etc/syslog-ng/ca.d</filename> directory. </para>
                 <para>Issue the following command on the certificate: <command>openssl x509 -noout
                         -hash -in cacert.pem</command> The result is a hash (e.g.,
                         <parameter>6d2962a8</parameter>), a series of alphanumeric characters based
@@ -2524,8 +2542,8 @@ template t_sql {
             <step>
                 <para>Copy the private key (e.g., <filename>syslog-ng.key</filename>) matching the
                     certificate of the syslog-ng server to the syslog-ng server host, for example
-                    into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The key must be in
-                    PEM format, and must not be password-protected.</para>
+                    into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The
+                    key must be in PEM format, and must not be password-protected.</para>
             </step>
             <step>
                 <para>Add a source statement to the syslog-ng configuration file that uses the
@@ -2782,6 +2800,16 @@ log { source(s_local);destination(d_syslog_tcp); };</synopsis>
     </section>
     <section id="syslog-ng-troubleshooting">
         <title>Troubleshooting syslog-ng</title>
+        <indexterm>
+            <primary>troubleshooting</primary>
+        </indexterm>
+        <indexterm>
+            <primary>error solving</primary>
+        </indexterm>
+        <indexterm>
+            <primary>syslog-ng</primary>
+            <secondary>troubleshooting</secondary>
+        </indexterm>
         <para>This section provides tips and guidelines about troubleshooting problems related to
             syslog-ng. Troubleshooting the syslog-ng Agent for Windows application is discussed in
                 <xref linkend="windows_troubleshooting"/>.</para>
@@ -2789,6 +2817,9 @@ log { source(s_local);destination(d_syslog_tcp); };</synopsis>
             <para>As a general rule, first try to get logging the messages to a local file. Once
                 this is working, you know that syslog-ng is running correctly and receiving
                 messages, and you can proceed to forwarding the messages to the server.</para>
+            <para>If the syslog-ng server does not receive the messages, use tcpdump or a similar
+                packet sniffer tool on the client to verify that the messages are sent correctly,
+                and on the server to verify that it receives the messages.</para>
             <para>Similarly, build up encrypted connections step-by-step: first create a working
                 unencrypted (e.g., TCP) connection, then add TLS encryption, and finally client
                 authentication if needed.</para>

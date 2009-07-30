@@ -21,6 +21,9 @@
             <para>All messages generated internally by syslog-ng use this special source. To collect
                 warnings, errors and notices from syslog-ng itself, include this source in one of
                 your source statements. </para>
+            <note>
+                <para>Internal messages always use the local timezone of the host.</para>
+            </note>
             <synopsis>internal()</synopsis>
             <para>This driver does not have any parameters.</para>
             <example id="example_source_internal">
@@ -42,10 +45,17 @@
                 <primary>wildcards</primary>
                 <secondary>in file sources</secondary>
             </indexterm>
-            <para>The filename may include wildcard characters (e.g., <parameter>*</parameter>).
-                Note that when using wildcards in filenames, always set how often syslog-ng should
-                check the file for new messages using the <parameter>follow_freq()</parameter>
-                parameter.</para>
+            <para>In syslog-ng PE, the filename may include wildcard characters (e.g.,
+                <parameter>*</parameter>). Note that when using wildcards in filenames, always set
+                how often syslog-ng should check the file for new messages using the
+                    <parameter>follow_freq()</parameter> parameter.</para>
+            <note>
+                <para>If the message does not have a proper syslog header, syslog-ng treats messages
+                    received from files as sent by the <parameter>kern</parameter> facility. Use the
+                        <parameter>default-facility</parameter> and
+                    <parameter>default-priority</parameter> options in the source definition to
+                    assign a different facility if needed.</para>
+            </note>
             <para>The <parameter>file()</parameter> driver has the following options:</para>
             <table>
                 <?dbfo keep-together="auto" ?>
@@ -60,6 +70,12 @@
                         </row>
                     </thead>
                     <tbody>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_commonoption_default-facility)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_commonoption_default-priority)"/>
                         <row>
                             <entry>file</entry>
                             <entry>filename with path</entry>
@@ -69,13 +85,6 @@
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_option_encoding)"/>
-                        <row>
-                            <entry>facility</entry>
-                            <entry>facility string</entry>
-                            <entry>kern</entry>
-                            <entry>This parameter assigns a facility value to the messages received
-                                from the file source.</entry>
-                        </row>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_commonoption_flags)"/>
@@ -223,7 +232,7 @@
             </table>
             <example id="example_source_pipe">
                 <title>Using the pipe() driver</title>
-                <synopsis>source s_pipe { pipe("/dev/log" pad_size(2048)); };</synopsis>
+                <synopsis>source s_pipe { pipe("/dev/pipe" pad_size(2048)); };</synopsis>
             </example>
         </section>
         <section id="reference_source_program">
@@ -672,7 +681,7 @@
             <example id="example_source_tcpudp">
                 <title>Using the udp() and tcp() drivers</title>
                 <para>A simple udp() source with default settings.</para>
-                <synopsis>source s_udp { udp(); };# TCP source with the maximum number of simultaneous connections limited.</synopsis>
+                <synopsis>source s_udp { udp(); };# An UDP source with default settings.</synopsis>
                 <para>A TCP source listening on the localhost interface, with a limited number of
                     connections allowed.</para>
                 <synopsis>source s_tcp { tcp(ip(127.0.0.1) port(1999) max-connections(10)); };</synopsis>
@@ -1513,6 +1522,16 @@
   values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
   indexes("datetime", "host", "program", "pid", "message"));
   };</synopsis>
+                <para>The following example specifies the type of the database columns as well:</para>
+                <synopsis>destination d_sql { 
+  sql(type(pgsql)
+  host("logserver") username("syslog-ng") password("password")
+  database("logs")
+  table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
+  columns("datetime varchar(16)", "host varchar(32)", "program  varchar(20)", "pid varchar(8)", "message  varchar(200)")
+  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  indexes("datetime", "host", "program", "pid", "message"));
+};</synopsis>
             </example>
             <example id="example_destination_sql_oracle">
                 <title>Using the sql() driver with an Oracle database</title>
@@ -2166,8 +2185,11 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
                     <row>
                         <entry>netmask()</entry>
                         <entry>netmask(ip/mask)</entry>
-                        <entry>Check the sender's IP address whether it is in the specified IP
-                            subnet.</entry>
+                        <entry>Select only messages sent by a host whose IP address belongs to the
+                            specified IP subnet. Note that this filter checks the IP address of the
+                            last-hop relay (the host that actually sent the message to syslog-ng),
+                            not the contents of the <parameter>HOST</parameter> field of the
+                            message.</entry>
                     </row>
                     <row>
                         <entry>program()</entry>
@@ -2929,15 +2951,25 @@ log { source(s_local);
                             any number of <guimenu>&lt;program&gt;</guimenu> elements.</para>
                         <itemizedlist>
                             <listitem>
-                                <para><emphasis>name</emphasis>: The name of the application. By
-                                    default, syslog-ng matches this value to the $PROGRAM header of
-                                    the syslog message to find the rulesets applicable to the syslog
-                                    message.</para>
+                                <para><emphasis>name</emphasis>: The name of the application. Note
+                                    that the function of this attribute is to make the database more
+                                    readable, syslog-ng uses the
+                                    <parameter>&lt;pattern&gt;</parameter> element to
+                                    identify the applications sending log messages.</para>
                             </listitem>
                             <listitem>
                                 <para><emphasis>id</emphasis>: A unique ID of the application, for
                                     example, the md5 sum of the <parameter>name</parameter>
                                     attribute.</para>
+                            </listitem>
+                            <listitem>
+                                <para><guimenu>pattern</guimenu>: The name of the application
+                                    &mdash; syslog-ng matches this value to the $PROGRAM header
+                                    of the syslog message to find the rulesets applicable to the
+                                    syslog message. This element is also called <parameter>program
+                                        pattern</parameter>. E.g.,
+                                    <synopsis>&lt;pattern&gt;su&lt;/pattern&gt;</synopsis>
+                                </para>
                             </listitem>
                             <listitem>
                                 <para><guimenu>description</guimenu>: OPTIONAL &mdash; A
@@ -2947,13 +2979,6 @@ log { source(s_local);
                                 <para><guimenu>url</guimenu>: OPTIONAL &mdash; An URL referring
                                     to further information about the ruleset or the
                                 application.</para>
-                            </listitem>
-                            <listitem>
-                                <para><guimenu>pattern</guimenu>: OPTIONAL &mdash; A pattern
-                                    that can be used to override the <parameter>name</parameter>
-                                    attribute of the ruleset. E.g.,
-                                    <synopsis>&lt;pattern&gt;su&lt;/pattern&gt;</synopsis>
-                                </para>
                             </listitem>
                             <listitem>
                                 <para><guimenu>&lt;rules&gt;</guimenu>: A container element
@@ -2988,7 +3013,8 @@ log { source(s_local);
                                     </listitem>
                                     <listitem>
                                         <para><guimenu>&lt;pattern&gt;</guimenu>: A pattern
-                                            describing a log message. For example:
+                                            describing a log message. This element is also called
+                                                <parameter>message pattern</parameter>. For example:
                                             <synopsis>&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</synopsis></para>
                                     </listitem>
                                 </itemizedlist>
@@ -3052,10 +3078,11 @@ log { source(s_local);
                             elements.</para>
                         <itemizedlist>
                             <listitem>
-                                <para><emphasis>name</emphasis>: The name of the application. By
-                                    default, syslog-ng matches this value to the $PROGRAM header of
-                                    the syslog message to find the rulesets applicable to the syslog
-                                    message.</para>
+                                <para><emphasis>name</emphasis>: The name of the application. Note
+                                    that the function of this attribute is to make the database more
+                                    readable, syslog-ng uses the
+                                    <parameter>&lt;pattern&gt;</parameter> element to
+                                    identify the applications sending log messages.</para>
                             </listitem>
                             <listitem>
                                 <para><emphasis>id</emphasis>: A unique ID of the application, for
@@ -3072,10 +3099,19 @@ log { source(s_local);
                                 application.</para>
                             </listitem>
                             <listitem>
-                                <para><guimenu>pattern</guimenu>: OPTIONAL &mdash; A pattern
-                                    that can be used to override the <parameter>name</parameter>
-                                    attribute of the ruleset. E.g.,
-                                    <synopsis>&lt;pattern&gt;su&lt;/pattern&gt;</synopsis>
+                                <para><guimenu>pattern</guimenu>: The name of the application
+                                    &mdash; syslog-ng matches this value to the $PROGRAM header
+                                    of the syslog message to find the rulesets applicable to the
+                                    syslog message. This element is also called <parameter>program
+                                        pattern</parameter>. E.g., <synopsis>&lt;pattern&gt;su&lt;/pattern&gt;</synopsis>
+                                    <note>
+                                        <para>If the <parameter>&lt;pattern&gt;</parameter>
+                                            element of a ruleset is not specified, -ng will use this
+                                            ruleset as a fallback ruleset: it will apply the ruleset
+                                            to messages that have an empty PROGRAM header, or if
+                                            none of the program patterns matched the PROGRAM header
+                                            of the incoming message. </para>
+                                    </note>
                                 </para>
                             </listitem>
                             <listitem>
@@ -3117,11 +3153,15 @@ log { source(s_local);
                                             <guimenu>&lt;pattern&gt;</guimenu> elements, the
                                             class of the <guimenu>&lt;rule&gt;</guimenu> is
                                             assigned to every syslog message matching any of the
-                                            patterns. For example:
-                                            <synopsis>&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</synopsis></para>
+                                            patterns. </para>
                                         <itemizedlist>
-                                            <listitem><guimenu>&lt;pattern&gt;</guimenu>: A
-                                                pattern describing a log message. <para/></listitem>
+                                            <listitem>
+                                                <para><guimenu>&lt;pattern&gt;</guimenu>: A
+                                                  pattern describing a log message. This element
+                                                  is also called <parameter>message
+                                                  pattern</parameter>. For example:
+                                                  <synopsis>&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</synopsis></para>
+                                            </listitem>
                                             <listitem>
                                                 <para><guimenu>description</guimenu>: OPTIONAL
                                                   &mdash; A description of the pattern or the
@@ -3506,6 +3546,9 @@ log { source(s_local);
                     <xi:include href="reference_common.xml"
                         xmlns:xi="http://www.w3.org/2001/XInclude"
                         xpointer="element(source_commonoption_keep_timestamp)"/>
+                    <xi:include href="reference_common.xml"
+                        xmlns:xi="http://www.w3.org/2001/XInclude"
+                        xpointer="element(diskbuffer_option_log_disk_fifo_size)"/>
                     <row>
                         <entry>log_fifo_size()</entry>
                         <entry>number</entry>
@@ -3588,7 +3631,8 @@ log { source(s_local);
                         <entry>600</entry>
                         <entry>The period between two STATS messages in seconds. STATS are log
                             messages sent by syslog-ng, containing statistics about dropped log
-                            messages.</entry>
+                            messages. Set to <parameter>0</parameter> to disable the STATS
+                        messages.</entry>
                     </row>
                     <row id="global_option_stats_level">
                         <entry>stats_level()</entry>

@@ -5,8 +5,11 @@ all: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS)
 
 .PHONY: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS)
 setup:
-	[ -d xml-stylesheet ] || git clone git+ssh://git.balabit/var/scm/git/docs/xml-stylesheet.git xml-stylesheet 
-	[ -d xml-stylesheet ] && (cd xml-stylesheet; git pull)
+#	[ -d xml-stylesheet ] || git clone git+ssh://git.balabit/var/scm/git/docs/xml-stylesheet.git xml-stylesheet 
+#	[ -d xml-stylesheet ] && (cd xml-stylesheet; git pull)
+#	[ -d out ] || mkdir out
+	[ -d xml-stylesheet ] 
+	[ -d xml-stylesheet ] && (cd xml-stylesheet)
 	[ -d out ] || mkdir out
 	
 ### entry points for the user
