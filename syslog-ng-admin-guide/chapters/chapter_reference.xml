@@ -45,10 +45,15 @@
                 <primary>wildcards</primary>
                 <secondary>in file sources</secondary>
             </indexterm>
-            <para>In syslog-ng PE, the filename may include wildcard characters (e.g.,
-                <parameter>*</parameter>). Note that when using wildcards in filenames, always set
-                how often syslog-ng should check the file for new messages using the
-                    <parameter>follow_freq()</parameter> parameter.</para>
+            <para id="reference_file_wildcard">In syslog-ng PE, the filename may include wildcard
+                characters (e.g., <parameter>*</parameter>). Note that when using wildcards in
+                filenames, always set how often syslog-ng should check the file for new messages
+                using the <parameter>follow_freq()</parameter> parameter.</para>
+            <para id="reference_file_wildcard_inotify">When using wildcards, syslog-ng PE monitors
+                every matching file, and can receive new log messages from any of the files.
+                However, monitoring (polling) many files (i.e., more than ten) has a significant
+                overhead and may affect performance. On Linux this overhead is not so significant,
+                because syslog-ng PE uses the inotify feature of the kernel.</para>
             <note>
                 <para>If the message does not have a proper syslog header, syslog-ng treats messages
                     received from files as sent by the <parameter>kern</parameter> facility. Use the
@@ -80,7 +85,8 @@
                             <entry>file</entry>
                             <entry>filename with path</entry>
                             <entry/>
-                            <entry>The file to read messages from. </entry>
+                            <entry>The file to read messages from. Note that only syslog-ng PE
+                                supports wildcards in the file and pathnames.</entry>
                         </row>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
@@ -143,14 +149,16 @@
                 <title>Using wildcards in the filename</title>
                 <para>The following example monitors every file with the <filename>.log</filename>
                     extension in the <filename>/var/application</filename> directory for log
-                    messages.</para>
+                    messages. Note that only syslog-ng PE supports wildcards in the file and
+                    pathnames.</para>
                 <synopsis>source s_file { file("/var/application/*.log" follow_freq(1)};</synopsis>
             </example>
             <example id="example_source_file_recursive">
                 <title>Monitoring multiple directories</title>
                 <para>The following example reads files having the <parameter>.log</parameter>
                     extension from the <parameter>/var/application/</parameter> directory and its
-                    subdirectories.</para>
+                    subdirectories. Note that only syslog-ng PE supports wildcards in the file and
+                    pathnames.</para>
                 <synopsis>source s_file_subdirectories { file("/var/application/*.log"
                     recursive(yes) 
                     follow_freq(1) 
