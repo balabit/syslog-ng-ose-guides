@@ -48,10 +48,10 @@
                 <primary>wildcards</primary>
                 <secondary>in file sources</secondary>
             </indexterm>
-            <para id="reference_file_wildcard">In syslog-ng PE, the filename may include wildcard
-                characters (e.g., <parameter>*</parameter>). Note that when using wildcards in
-                filenames, always set how often syslog-ng should check the file for new messages
-                using the <parameter>follow_freq()</parameter> parameter.</para>
+            <para id="reference_file_wildcard">In syslog-ng PE, the filename (but not the pathname)
+                may include wildcard characters (e.g., <parameter>*</parameter>). Note that when
+                using wildcards in filenames, always set how often syslog-ng should check the file
+                for new messages using the <parameter>follow_freq()</parameter> parameter.</para>
             <para id="reference_file_wildcard_inotify">When using wildcards, syslog-ng PE monitors
                 every matching file, and can receive new log messages from any of the files.
                 However, monitoring (polling) many files (i.e., more than ten) has a significant
@@ -89,7 +89,10 @@
                             <entry>filename with path</entry>
                             <entry/>
                             <entry>The file to read messages from. Note that only syslog-ng PE
-                                supports wildcards in the file and pathnames.</entry>
+                                supports wildcards in the filename (but not in the pathname). To
+                                monitor the subdirectories as well, use the <parameter>
+                                    <link linkend="source_file_recursive">recursive </link>
+                                </parameter> option.</entry>
                         </row>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
@@ -121,7 +124,7 @@
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_commonoption_pad_size)"/>
-                        <row>
+                        <row id="source_file_recursive">
                             <entry>recursive</entry>
                             <entry>yes or no</entry>
                             <entry>no</entry>
@@ -160,8 +163,8 @@
                 <title>Monitoring multiple directories</title>
                 <para>The following example reads files having the <parameter>.log</parameter>
                     extension from the <parameter>/var/application/</parameter> directory and its
-                    subdirectories. Note that only syslog-ng PE supports recursive directory handling 
-                    and wildcards in the file and pathnames.</para>
+                    subdirectories. Note that only syslog-ng PE supports recursive directory
+                    handling and wildcards in the file and pathnames.</para>
                 <synopsis>source s_file_subdirectories { file("/var/application/*.log"
                     recursive(yes) 
                     follow_freq(1) 
@@ -2758,9 +2761,9 @@ log { source(s_local); parser(p_hostname_segmentation); destination(d_file);};</
                 <para>The following parser processes the log of Apache web servers and separates
                     them into different fields. Apache log messages can be formatted like:</para>
                 <synopsis>"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %T %v"</synopsis>
-                    <para>Here is a sample message: </para>
+                <para>Here is a sample message: </para>
                 <synopsis>192.168.1.1 - - [31/Dec/2007:00:17:10 +0100] "GET /cgi-bin/example.cgi HTTP/1.1" 200 2708 "-" "curl/7.15.5 (i4 86-pc-linux-gnu) libcurl/7.15.5 OpenSSL/0.9.8c zlib/1.2.3 libidn/0.6.5" 2 example.balabit</synopsis>
-                    <para>To parse such logs, the delimiter character is set to a single whitespace
+                <para>To parse such logs, the delimiter character is set to a single whitespace
                         (<parameter>delimiters(" ")</parameter>). Whitespaces between quotes and
                     brackets are ignored (<parameter>quote-pairs('""[]')</parameter>).</para>
                 <synopsis>parser p_apache {
@@ -2805,7 +2808,7 @@ log { source(s_local);
                         <parameter>example 1, example2, example3</parameter>, and you segment it
                     with the following parser:</para>
                 <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(","));</synopsis>
-                    <para>The <parameter>COLUMN1</parameter>, <parameter>COLUMN2</parameter>, and
+                <para>The <parameter>COLUMN1</parameter>, <parameter>COLUMN2</parameter>, and
                         <parameter>COLUMN3</parameter> variables will contain the strings
                         <parameter>example1</parameter>, <parameter>example2</parameter>, and
                         <parameter>example3</parameter>, respectively. If the message looks like
@@ -3001,6 +3004,28 @@ log { source(s_local);
                                             matches these patterns is classified. For example:
                                             <synopsis>&lt;rule provider='balabit' id='f57196aa-75fd-11dd-9bba-001e6806451b' class='violation'&gt;</synopsis>
                                         </para>
+                                        <note>
+                                            <para>If the following characters appear in the message,
+                                                they must be escaped in the rule as follows:</para>
+                                            <itemizedlist>
+                                                <listitem>
+                                                  <para><parameter>@</parameter>: Use @@, e.g.,
+                                                  <parameter>user@@example.com</parameter></para>
+                                                </listitem>
+                                                <listitem>
+                                                  <para><emphasis>&lt;</emphasis>: Use
+                                                  <parameter>&amp;lt;</parameter></para>
+                                                </listitem>
+                                                <listitem>
+                                                  <para><emphasis>&gt;</emphasis>: Use
+                                                  <parameter>&amp;gt;</parameter></para>
+                                                </listitem>
+                                                <listitem>
+                                                  <para>&amp;: Use
+                                                  <parameter>&amp;amp;</parameter></para>
+                                                </listitem>
+                                            </itemizedlist>
+                                        </note>
                                         <para>The <guimenu>&lt;rules&gt;</guimenu> element
                                             may contain any number of
                                             <guimenu>&lt;rule&gt;</guimenu> elements.</para>
@@ -3134,6 +3159,28 @@ log { source(s_local);
                                             <synopsis>&lt;rule provider='balabit'
                                                 id='f57196aa-75fd-11dd-9bba-001e6806451b'
                                                 class='violation'&gt;</synopsis></para>
+                                        <note>
+                                            <para>If the following characters appear in the message,
+                                                they must be escaped in the rule as follows:</para>
+                                            <itemizedlist>
+                                                <listitem>
+                                                  <para><parameter>@</parameter>: Use @@, e.g.,
+                                                  <parameter>user@@example.com</parameter></para>
+                                                </listitem>
+                                                <listitem>
+                                                  <para><emphasis>&lt;</emphasis>: Use
+                                                  <parameter>&amp;lt;</parameter></para>
+                                                </listitem>
+                                                <listitem>
+                                                  <para><emphasis>&gt;</emphasis>: Use
+                                                  <parameter>&amp;gt;</parameter></para>
+                                                </listitem>
+                                                <listitem>
+                                                  <para>&amp;: Use
+                                                  <parameter>&amp;amp;</parameter></para>
+                                                </listitem>
+                                            </itemizedlist>
+                                        </note>
                                         <para>The <guimenu>&lt;rules&gt;</guimenu> element
                                             may contain any number of
                                             <guimenu>&lt;rule&gt;</guimenu> elements.</para>
