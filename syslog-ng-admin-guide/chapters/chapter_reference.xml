@@ -932,7 +932,9 @@
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(destination_commonoption_log_fifo_size)"/>
                         <row>
-                            <entry><parameter>overwrite_if_older()</parameter></entry>
+                            <entry>
+                                <parameter>overwrite_if_older()</parameter>
+                            </entry>
                             <entry>number</entry>
                             <entry>0</entry>
                             <entry>If set to a value higher than 0, syslog-ng checks when the file
@@ -2175,7 +2177,7 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>-->
                 </listitem>
                 <listitem>
                     <para>Adding a fourth log path with the <parameter>catchall</parameter> flag
-                    would process every message received by the syslog-ng server.</para>
+                        would process every message received by the syslog-ng server.</para>
                     <synopsis>log { source(s_localhost); destination(d_file); flags(catchall); };</synopsis>
                 </listitem>
             </itemizedlist>
@@ -3373,7 +3375,42 @@ log { source(s_local);
             details.). Substitution rules use the following syntax:</para>
         <synopsis>Declaration:
     rewrite &lt;name_of_the_rule&gt;
-        {subst("&lt;string or regular expression to find&gt;", "&lt;replacement string&gt;", value(&lt;field name&gt;));};</synopsis>
+    {subst("&lt;string or regular expression to find&gt;", "&lt;replacement string&gt;", value(&lt;field name&gt;) type() flags());};</synopsis>
+        <para>The <parameter>type()</parameter> and <parameter>flags()</parameter> options are
+            optional. The <parameter>type()</parameter> specifies the type of regular expression to
+            use; while the <parameter>flags()</parameter> are the flags of the regular expressions
+            (see <xref linkend="reference_regular_expressions"/> for details):</para>
+        <table>
+            <title>Rewrite rule types</title>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>posix</entry>
+                        <entry>Use POSIX regular expressions. If the <parameter>type()</parameter>
+                            parameter is not specified, syslog-ng uses POSIX regular expressions by
+                            default.</entry>
+                    </row>
+                    <row>
+                        <entry>pcre</entry>
+                        <entry>Use PCRE regular expressions. This is available only if syslog-ng was
+                            compiled with the <parameter>--enable-pcre</parameter> option. Execute
+                            the <command>syslog-ng -V</command> command to list the options
+                            supported by your binary.</entry>
+                    </row>
+                    <row>
+                        <entry>string</entry>
+                        <entry>Match the strings literally, without regular expression
+                        support.</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
         <example id="example_rewrite_subst">
             <title>Using substitution rules</title>
             <para>The following example replaces the first occurrence of the string
@@ -3452,7 +3489,7 @@ log { source(s_local);
                     </row>
                     <row>
                         <entry>utf8</entry>
-                        <entry><!-- FIXME --></entry>
+                        <entry>Use UTF-8 matching.</entry>
                     </row>
                 </tbody>
             </tgroup>
@@ -3483,7 +3520,8 @@ log { source(s_local);
                     </row>
                     <row>
                         <entry>newline</entry>
-                        <entry><!-- FIXME --></entry>
+                        <entry>Process the string until the end of the string, ignoring newline
+                            characters.</entry>
                     </row>
                     <row>
                         <entry>nobackref</entry>
@@ -3492,11 +3530,11 @@ log { source(s_local);
                     </row>
                     <row>
                         <entry>unicode</entry>
-                        <entry><!-- FIXME --></entry>
+                        <entry>Use Unicode support for UTF-8 matches.</entry>
                     </row>
                     <row>
                         <entry>utf8</entry>
-                        <entry><!-- FIXME --></entry>
+                        <entry>Use UTF-8 matching.</entry>
                     </row>
                 </tbody>
             </tgroup>
