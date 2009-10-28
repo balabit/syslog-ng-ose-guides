@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  
+ <!ENTITY % entities SYSTEM "../../syslog-ng-admin-guide/syslog-ng-entities.ent">
+ %entities;]> 
+<chapter>
+    <title/>
+    <section id="patterndb-structure">
+        <title>The structure of the pattern database</title>
+        <indexterm>
+            <primary>pattern database</primary>
+            <secondary>structure of</secondary>
+        </indexterm>
+        <para>The pattern database is organized as follows:</para>
+        <figure float="0">
+            <title>The structure of the pattern database</title>
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata format="PNG" align="center" fileref="patterndb-structure.png"
+                        scale="&webscreenshotscale;"/>
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata format="PNG" fileref="&imgroot;/patterndb-structure.png"
+                        scale="50"/>
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <itemizedlist>
+            <listitem>
+                <para>The pattern database consists of rulesets. A ruleset consists of a Program
+                    Pattern and a set of rules: the rules of a ruleset are applied to log messages
+                    if the name of the application that sent the message matches the Program Pattern
+                    of the ruleset. The name of the application (the content of the $PROGRAM macro)
+                    is compared to the Program Patterns of the available rulesets, and then the
+                    rules of the matching rulesets are applied to the message.</para>
+            </listitem>
+            <listitem>
+                <para>The Program Pattern can be a string that specifies the name of the appliation
+                    or the beginning of its name (e.g., to match for sendmail, the program pattern
+                    can be sendmail, or just send), and the Program Pattern can contain pattern
+                    parsers. Note that pattern parsers are completely independent from the syslog-ng
+                    parsers used to segment messages. Additionally, every rule has a unique
+                    identifier: if a message matches a rule, the identifier of the rule is stored
+                    together with the message.</para>
+            </listitem>
+            <listitem>
+                <para>Rules consist of a message pattern and a class. The Message Pattern is similar
+                    to the Program Pattern, but is applied to the message part of the log message
+                    (the content of the $MESSAGE macro). If a message pattern matches the message,
+                    the class of the rule is assigned to the message (e.g., Security, Violation,
+                    etc.).</para>
+            </listitem>
+            <listitem>
+                <para>Rules can also contain additional information about the matching messages,
+                    such as the description of the rule, an URL, or free-form tags.<phrase
+                        condition="ssb"> This information is displayed by the &product; in the
+                        e-mail alerts (if alerts are requested for the rule), and are also displayed
+                        on the search interface.</phrase></para>
+            </listitem>
+            <listitem>
+                <para>Patterns can consist of literals (keywords, or rather, keycharacters) and
+                    pattern parsers.</para>
+                <note>
+                    <para>If the $PROGRAM part of a message is empty, rules with an empty Program
+                        Pattern are used to classify the message.</para>
+                    <para>If the same Program Pattern is used in multiple rulesets, the rules of
+                        these rulesets are merged, and every rule is used to classify the message.
+                        Note that message patterns must be unique within the merged rulesets, but
+                        the currently only one ruleset is checked for uniqueness.</para>
+                </note>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section id="patterndb-operation">
+        <title>How pattern matching works</title>
+        <indexterm>
+            <primary>pattern matching</primary>
+            <secondary>procedure of</secondary>
+        </indexterm>
+        <figure float="0">
+            <title>Applying patterns</title>
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata format="PNG" align="center" fileref="patterndb-pattern.png"
+                        scale="&webscreenshotscale;"/>
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata format="PNG" fileref="&imgroot;/patterndb-pattern.png" scale="50"
+                    />
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <para>The followings describe how patterns work. This information applies to program
+            patterns and message patterns alike, even though message patterns are used to illustrate
+            the procedure.</para>
+        <para>Patterns can consist of literals (keywords, or rather, keycharacters) and pattern
+            parsers. Pattern parsers attempt to parse a sequence of characters according to certain
+            rules.</para>
+        <note>
+            <para>Wildcards and regular expressions cannot be used in patterns. The
+                <parameter>@</parameter> character must be escaped, i.e., to match for this
+                character, you have to write <parameter>@@</parameter> in your pattern. This is
+                required because pattern parsers of syslog-ng are enclosed between
+                <parameter>@</parameter> characters.</para>
+        </note>
+        <para>When a new message arrives, syslog-ng attempts to classify it using the pattern
+            database. The available patterns are organized alphabetically into a tree, and syslog-ng
+            inspects the message character-by-character, starting from the beginning. This approach
+            ensures that only a small subset of the rules must be evaluated at any given step,
+            resulting in high processing speed. Note that the speed of classifying messages is
+            practically independent from the total number of rules. </para>
+        <para>For example, if the message begins with the <parameter>Apple</parameter> string, only
+            patterns beginning with the character <parameter>A</parameter> are considered. In the
+            next step, syslog-ng selects the patterns that start with <parameter>Ap</parameter>, and
+            so on, until there is no more specific pattern left.</para>
+        <para>Note that literal matches take precedence over pattern parser matches: if at a step
+            there is a pattern that matches the next character with a literal, and another pattern
+            that would match it with a parser, the pattern with the literal match is selected. Using
+            the previous example, if at the third step there is the literal pattern
+            <parameter>Apport</parameter> and a pattern parser
+            <parameter>Ap@STRING@</parameter>, the <parameter>Apport</parameter> pattern is matched,
+            even if the pattern parser would result in a better match.</para>
+        <para>If there are two parsers at the same level (e.g., <parameter>Ap@STRING@</parameter>
+            and <parameter>Ap@QSTRING@</parameter>), it is random which pattern is applied
+            (technically, the one that is loaded first). However, if the selected parser cannot
+            parse at least oe character of the message, the other parser is used. But having two
+            different parsers at the same level is extremely rare, so the impact of this limitation
+            is much less than it appears.</para>
+    </section>
+</chapter>
