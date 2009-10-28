@@ -935,15 +935,20 @@
                             <entry>overwrite_if_older()</entry>
                             <entry>number</entry>
                             <entry>0</entry>
-                            <entry>If set to a value higher than 0, syslog-ng checks when the file was last modified
-                                before starting to write into the file. If the file is older than the specified
-                                amount of time (in seconds), then syslog-ng removes the existing file and 
-                                opens a new file with the same name. In combination with e.g., the
-                                    <parameter>$WEEKDAY</parameter> macro, this can be used for
-                                simple log rotation, in case not all history has to be kept. (Note that in this weekly log rotation example if its Monday 00:01, then the file from last Monday is not seven days old, because it was probably last modified shortly before 23:59 last Monday, so it is actually not even six days old. So in this case, set the 
-                                <parameter>overwrite_if_older()</parameter> parameter to a-bit-less-than-six-days, 
-                                for example, to <parameter>518000</parameter> seconds.
-                            </entry>
+                            <entry>If set to a value higher than 0, syslog-ng checks when the file
+                                was last modified before starting to write into the file. If the
+                                file is older than the specified amount of time (in seconds), then
+                                syslog-ng removes the existing file and opens a new file with the
+                                same name. In combination with e.g., the
+                                <parameter>$WEEKDAY</parameter> macro, this can be used for simple
+                                log rotation, in case not all history has to be kept. (Note that in
+                                this weekly log rotation example if its Monday 00:01, then the file
+                                from last Monday is not seven days old, because it was probably last
+                                modified shortly before 23:59 last Monday, so it is actually not
+                                even six days old. So in this case, set the
+                                    <parameter>overwrite_if_older()</parameter> parameter to
+                                a-bit-less-than-six-days, for example, to
+                                <parameter>518000</parameter> seconds. </entry>
                         </row>
                         <row>
                             <entry>owner()</entry>
@@ -2118,11 +2123,13 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             </tgroup>
         </table>
         <warning id="warning_embedded_log_flags">
-        <para>The <parameter>final</parameter>, <parameter>fallback</parameter>, and <parameter>catchall</parameter> flags apply only for the top-level log paths, they have no effect on embedded log paths.</para>
+            <para>The <parameter>final</parameter>, <parameter>fallback</parameter>, and
+                    <parameter>catchall</parameter> flags apply only for the top-level log paths,
+                they have no effect on embedded log paths.</para>
         </warning>
         <example id="example_logpath_flags">
             <title>Using log path flags</title>
-            <para>The following log path processes every message received to the
+            <!--<para>The following log path processes every message received to the
                     <parameter>s_localhost</parameter> source that was not processed by earlier log
                 paths. As syslog-ng processes log paths in the order they appear in the
                 configuration file, place such log paths at the end of the file. A typical situation
@@ -2131,7 +2138,47 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             <synopsis>.
 .
 .
-log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>
+log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>-->
+            <para>Let's suppose that you have two hosts (<parameter>myhost_A</parameter> and
+                    <parameter>myhost_B</parameter>) that run two applications each
+                    (<parameter>application_A</parameter> and <parameter>application_B</parameter>),
+                and you collect the log messages to a central syslog-ng server. On the server, you
+                create two log paths:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>one that processes only the messages sent by
+                        <parameter>myhost_A</parameter>; and</para>
+                </listitem>
+                <listitem>
+                    <para>one that processes only the messages sent by
+                        <parameter>application_A</parameter>.</para>
+                </listitem>
+            </itemizedlist>
+            <para>This means that messages sent by <parameter>application_A</parameter> running on
+                    <parameter>myhost_A</parameter> will be processed by both log paths, and the
+                messages of <parameter>application_B</parameter> running on
+                <parameter>myhost_B</parameter> will not be processed at all.</para>
+            <itemizedlist>
+                <listitem>
+                    <para>If you add the <parameter>final</parameter> flag to the first log path,
+                        then only this log path will process the messages of
+                        <parameter>myhost_A</parameter>, so the second log path will receive only
+                        the messages of <parameter>application_A</parameter> running on
+                            <parameter>myhost_B</parameter>. </para>
+                </listitem>
+                <listitem>
+                    <para>If you create a third log path that includes the
+                        <parameter>fallback</parameter> flag, it will process the messages not
+                        processed by the first two log paths, in this case, the messages of
+                            <parameter>application_B</parameter> running on
+                        <parameter>myhost_B</parameter>.</para>
+                </listitem>
+                <listitem>
+                    <para>Adding a fourth log path with the <parameter>catchall</parameter> flag
+                    would process every message received by the syslog-ng server.</para>
+                    <synopsis>log { source(s_localhost); destination(d_file); flags(catchall); };</synopsis>
+                </listitem>
+            </itemizedlist>
         </example>
     </section>
     <section id="reference_filters">
