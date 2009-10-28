@@ -25,11 +25,11 @@ syslog-ng-admin-guide_en.html: out/syslog-ng-admin-guide_en.html/index.html
 ### scb admin guide en
 
 out/syslog-ng-admin-guide_en.pdf: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/chapters/*.xml
-	xml-stylesheet/pdf/process $< $@
+	xml-stylesheet/pdf/process-profile $< $@ syslog-ng
         
 out/syslog-ng-admin-guide_en.html/index.html: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/*.xml syslog-ng-admin-guide/chapters/*.xml
 	mkdir out/syslog-ng-admin-guide_en.html || /bin/true
-	xml-stylesheet/html/process $< $@
+	xml-stylesheet/html/process-profile $< $@ syslog-ng
 	./copy-pngs.sh out/syslog-ng-admin-guide_en.html TRUE
 	            
 syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml: setup
