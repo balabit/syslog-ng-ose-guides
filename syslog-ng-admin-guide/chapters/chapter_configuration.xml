@@ -1751,11 +1751,12 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
                     accept extended regular expressions as parameters.</para>
             </listitem>
             <listitem>
-                <para>Parentheses</para>
+                <para>The boolean operators <parameter>and</parameter>, <parameter>or</parameter>,
+                        <parameter>not</parameter>.</para>
             </listitem>
             <listitem>
-                <para>The boolean operators <parameter>and</parameter>, <parameter>or</parameter>,
-                        <parameter>not</parameter></para>
+                <para>Parentheses to mark the precedence of the operators when using 
+                complex filters.</para>
             </listitem>
         </itemizedlist>
         <example>
@@ -1790,20 +1791,26 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
                 <parameter>example1</parameter> and <parameter>example2</parameter> at the same
                 time):</para>
             <synopsis>filter demo_filter1 { host("example1"); };
-                filter demo_filter2 { host("example2"); };
+filter demo_filter2 { host("example2"); };
 
-                log demo_filteredlog{
-                source(s1); source(s2); 
-                filter(demo_filter1); filter(demo_filter2);
-                destination(d1); destination(d2); };</synopsis>
+log demo_filteredlog{
+	source(s1); source(s2); 
+	filter(demo_filter1); filter(demo_filter2);
+	destination(d1); destination(d2); };</synopsis>
             <para>To select the messages that come from either host <parameter>example1</parameter>
                 or <parameter>example2</parameter>, use a single filter expression:</para>
             <synopsis>filter demo_filter { host("example1") or host("example2"); };
                 
-                log demo_filteredlog{
-                source(s1); source(s2); 
-                filter(demo_filter);
-                destination(d1); destination(d2); };</synopsis>
+log demo_filteredlog{
+	source(s1); source(s2); 
+	filter(demo_filter);
+	destination(d1); destination(d2); };</synopsis>
+	<para>>Use the <para>not</para> operator to invert filters, for example, to select the messages that were not sent by host <parameter>example1</parameter>: </para>
+	<synopsis>filter demo_filter { not host("example1"); };</synopsis>
+	<para>However, to select the messages that were not sent by host <parameter>example1</parameter> or <parameter>example2</parameter>, you have to use the <parameter>and</parameter> operator (that's how boolean logic works):</para>
+	<synopsis>filter demo_filter { not host("example1") and not host("example2"); };</synopsis>
+	<para>Alternatively, you can use parentheses to avoid this confusion:</para>
+	<synopsis>filter demo_filter { not (host("example1") or host("example2")); };
         </note>
 
         <indexterm>
