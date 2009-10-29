@@ -2993,171 +2993,24 @@ log { source(s_local);
                 </indexterm>
                 <para>Pattern databases are XML files that contain rules describing the message
                     patterns. </para>
-                <para>The XML schema of the V1 pattern database used in syslog-ng OSE and PE 3.0.X
-                    is the following:</para>
-                <warning>
-                    <para>This is an experimental database format that will change in the future
-                        releases of syslog-ng. When the new format will be released, an upgrading
-                        script will be available to convert the existing databases to the new
-                        format. Note that the sample pattern databases available at the BalaBit
-                        website already use the new format (dubbed V2).</para>
-                </warning>
-                <itemizedlist id="reference_patterndb_scheme_v1">
-                    <listitem>
-                        <para><guimenu>&lt;patterndb&gt;</guimenu>: The container element of
-                            the pattern database. For example:
-                            <synopsis>&lt;patterndb version='1' pub_date='2008-08-25'&gt;</synopsis></para>
-                    </listitem>
-                    <listitem>
-                        <para><emphasis>version</emphasis>: The schema version of the pattern
-                            database. The current version is <parameter>2</parameter>.</para>
-                    </listitem>
-                    <listitem>
-                        <para><emphasis>pubdate</emphasis>: The publication date of the XML
-                        file.</para>
-                    </listitem>
-                    <listitem>
-                        <para><guimenu>&lt;program&gt;</guimenu>: A container element to
-                            group log patterns for an application or program. For example:
-                            <synopsis>&lt;program name='su' id='480de478-d4a6-4a7f-bea4-0c0245d361e1'&gt;</synopsis>
-                        </para>
-                        <para><parameter>&lt;patterndb&gt;</parameter> element may contain
-                            any number of <guimenu>&lt;program&gt;</guimenu> elements.</para>
-                        <itemizedlist>
-                            <listitem>
-                                <para><emphasis>name</emphasis>: The name of the application. Note
-                                    that the function of this attribute is to make the database more
-                                    readable, syslog-ng uses the
-                                    <parameter>&lt;pattern&gt;</parameter> element to
-                                    identify the applications sending log messages.</para>
-                            </listitem>
-                            <listitem>
-                                <para><emphasis>id</emphasis>: A unique ID of the application, for
-                                    example, the md5 sum of the <parameter>name</parameter>
-                                    attribute.</para>
-                            </listitem>
-                            <listitem>
-                                <para><guimenu>pattern</guimenu>: The name of the application
-                                    &mdash; syslog-ng matches this value to the $PROGRAM header
-                                    of the syslog message to find the rulesets applicable to the
-                                    syslog message. This element is also called <parameter>program
-                                        pattern</parameter>. E.g.,
-                                    <synopsis>&lt;pattern&gt;su&lt;/pattern&gt;</synopsis>
-                                </para>
-                            </listitem>
-                            <listitem>
-                                <para><guimenu>description</guimenu>: OPTIONAL &mdash; A
-                                    description of the ruleset or the application.</para>
-                            </listitem>
-                            <listitem>
-                                <para><guimenu>url</guimenu>: OPTIONAL &mdash; An URL referring
-                                    to further information about the ruleset or the
-                                application.</para>
-                            </listitem>
-                            <listitem>
-                                <para><guimenu>&lt;rules&gt;</guimenu>: A container element
-                                    for the rules of the ruleset.</para>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para><guimenu>&lt;rule&gt;</guimenu>: An element
-                                            containing message patterns and how a message that
-                                            matches these patterns is classified. For example:
-                                            <synopsis>&lt;rule provider='balabit' id='f57196aa-75fd-11dd-9bba-001e6806451b' class='violation'&gt;</synopsis>
-                                        </para>
-                                        <note>
-                                            <para>If the following characters appear in the message,
-                                                they must be escaped in the rule as follows:</para>
-                                            <itemizedlist>
-                                                <listitem>
-                                                  <para><parameter>@</parameter>: Use @@, e.g.,
-                                                  <parameter>user@@example.com</parameter></para>
-                                                </listitem>
-                                                <listitem>
-                                                  <para><emphasis>&lt;</emphasis>: Use
-                                                  <parameter>&amp;lt;</parameter></para>
-                                                </listitem>
-                                                <listitem>
-                                                  <para><emphasis>&gt;</emphasis>: Use
-                                                  <parameter>&amp;gt;</parameter></para>
-                                                </listitem>
-                                                <listitem>
-                                                  <para>&amp;: Use
-                                                  <parameter>&amp;amp;</parameter></para>
-                                                </listitem>
-                                            </itemizedlist>
-                                        </note>
-                                        <para>The <guimenu>&lt;rules&gt;</guimenu> element
-                                            may contain any number of
-                                            <guimenu>&lt;rule&gt;</guimenu> elements.</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para><emphasis>provider</emphasis>: The provider of the
-                                            rule. This is used to distinguish between who supplied
-                                            the rule; i.e., if it has been created by BalaBit, or
-                                            added to the xml by a local user.</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para><emphasis>id</emphasis>: The globally unique ID of the
-                                            rule.</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para><emphasis>class</emphasis>: The class of the rule
-                                            &mdash; syslog-ng assigns this class to the messages
-                                            matching a pattern of this rule.</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para><guimenu>&lt;pattern&gt;</guimenu>: A pattern
-                                            describing a log message. This element is also called
-                                                <parameter>message pattern</parameter>. For example:
-                                            <synopsis>&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</synopsis></para>
-                                    </listitem>
-                                </itemizedlist>
-                            </listitem>
-                        </itemizedlist>
-                    </listitem>
-                </itemizedlist>
-
-                <example id="example_pattern_database_v1_pf">
-                    <title>A V1 pattern database containing a single rule</title>
-                    <indexterm>
-                        <primary>pattern database</primary>
-                    </indexterm>
-                    <para>The following pattern database contains a single rule that matches log
-                        messages of the <parameter>PF</parameter> packet-filtering application. A
-                        sample log message looks like:</para>
-                    <synopsis>PF: DROP filter/INPUT IN=eth0 OUT= MAC=00:1A:4B:80:90:C9:00:1A:4B:80:90:C6 SRC=192.168.155.11 DST=192.168.155.1 LEN=60 TOS=0x10 PREC=0x00 TTL=64 ID=51939 DF PROTO=TCP SPT=34407 DPT=80 WINDOW=32792 RES=0x00 SYN URGP=0</synopsis>
-                    <para>The following is a simple pattern database containing a matching rule.</para>
-                    <synopsis>&lt;patterndb version='1' pub_date='2009-04-17'&gt;
-    &lt;program name='PF'&gt;
-        &lt;pattern&gt;PF&lt;/pattern&gt;
-            &lt;rule id='1' class='pf'&gt;
-                &lt;pattern&gt;@STRING:PF.VERDICT@ @STRING:PF.CHAIN:/@ IN=@STRING:PF.IN_IFACE@ OUT= MAC=@STRING:PF.MAC::@ SRC=@IPV4:PF.SRC_IP@ DST=@IPV4:PF.DST_IP@ LEN=@NUMBER:PF.PKT_LEN@ TOS=@STRING:PF.TOS@ PREC=@STRING:PF.PREC@ TTL=@NUMBER:PF.TTL@ ID=@NUMBER:PF.ID@ DF PROTO=@STRING:PF.PROTO@ SPT=@NUMBER:PF.SRC_PORT@ DPT=@NUMBER:PF.DST_PORT@ WINDOW=@NUMBER:PF.TCP_WINDOW@ RES=@STRING:PF.RES@ SYN URGP=@NUMBER:PF.TCP_URGP@&lt;/pattern&gt;
-            &lt;/rule&gt;
-    &lt;/program&gt;
-&lt;/patterndb&gt;</synopsis>
-                    <para>Note that the rule uses macros that refer to parts of the message, for
-                        example, you can use the <parameter>$PF.DST_IP</parameter> macro refer to
-                        the destination IP address of the logged connection+.</para>
-                </example>
-
-
-                <para>The following scheme describes the V2 format of the pattern database. This
-                    format is used by the syslog-ng Store Box (SSB) appliance version 1.0.x (see
+                <para>The following scheme describes the V3 format of the pattern database. This
+                    format is used by syslog-ng 3.1 and later, and the syslog-ng Store Box (SSB) appliance version 1.1 and later (see
                         <ulink
                         url="http://www.balabit.com/network-security/syslog-ng/log-server-appliance/"
                         >http://www.balabit.com/network-security/syslog-ng/log-server-appliance/</ulink>
-                    for details).</para>
+                    for details on SSB).</para>
                 <para>For a sample database containing only a single pattern, see <xref
-                        linkend="example_pattern_database_v2_su"/>.</para>
-                <itemizedlist id="reference_patterndb_scheme_v2">
+                        linkend="example_pattern_database_v3_su"/>.</para>
+                        <para>For earlier versions of the syslog-ng pattern database formats, see <xref linkend="app-patterndb"/>.</para>
+                <itemizedlist id="reference_patterndb_scheme_v3">
                     <listitem>
                         <para><guimenu>&lt;patterndb&gt;</guimenu>: The container element of
                             the pattern database. For example:
-                            <synopsis>&lt;patterndb version='2' pub_date='2008-08-25'&gt;</synopsis></para>
+                            <synopsis>&lt;patterndb version='3' pub_date='2009-10-25'&gt;</synopsis></para>
                     </listitem>
                     <listitem>
                         <para><emphasis>version</emphasis>: The schema version of the pattern
-                            database. The current version is <parameter>2</parameter>.</para>
+                            database. The current version is <parameter>3</parameter>.</para>
                     </listitem>
                     <listitem>
                         <para><emphasis>pubdate</emphasis>: The publication date of the XML
@@ -3298,6 +3151,54 @@ log { source(s_local);
                                                 </itemizedlist>
                                             </listitem>
                                             <listitem>
+                                                <para><guimenu>values</guimenu>: OPTIONAL &mdash;
+                                                  Name-value pairs that are assigned to messages matching
+                                                  the patterns, for example, the representation of the event
+                                                  described in the message in Common Event Format (CEF). The names can be used as macros to reference 
+                                                  the assigned values.</para>
+                                                <itemizedlist>
+                                                  <listitem>
+                                                  <para><guimenu>value</guimenu>: OPTIONAL
+                                                  &mdash; Contains the value of the name-value pair 
+                                                  that is assigned to the message. For example:
+                                                  <synopsis>&lt;value name=".classifier.outcome"&gt;/Success&lt;/value&gt;</synopsis>
+                                                  </para>
+                                                  </listitem>
+                                                  <listitem>
+                                                  <para><emphasis>name</emphasis>: The name of the name-value pair. It can also be used as a macro to reference 
+                                                  the assigned value.</para>
+                                                  </listitem>
+                                                </itemizedlist>
+                                            </listitem>
+                                            <listitem>
+                                                <para><guimenu>examples</guimenu>: OPTIONAL &mdash;
+                                                  A container element for sample log messages that should be recognized by the pattern. These messages can be used also to test the patterns and the parsers.</para>
+                                                <itemizedlist>
+                                                  <listitem>
+                                                  <para><guimenu>example</guimenu>: OPTIONAL
+                                                  &mdash; A container element for a sample log message.</synopsis>
+                                                  </para>
+                                                  <itemizedlist>
+                                                  <listitem><para><guimenu>test_message</guimenu>: OPTIONAL
+                                                  &mdash; A sample log message that should match this pattern.
+                                                   For example: <synopsis>&lt;test_message&gt;Content filter has been enabled&lt;/test_message&gt;</synopsis></para></listitem>
+                                                  <listitem><para><guimenu>test_values</guimenu>: OPTIONAL
+                                                  &mdash; A container element to test the results of the parsers used in the pattern.</para>
+                                                  <itemizedlist>
+                                                  <listitem>
+                                                  <para><guimenu>test_value</guimenu>: OPTIONAL
+                                                  &mdash; The expected value of the parser when matching the pattern to the test message. For example:
+                                                  <synopsis>&lt;test_value name=".dict.ContentFilter"&gt;enabled&lt;/test_value&gt;</synopsis></para>
+                                                  </listitem>
+                                                  <listitem>
+                                                  <para><emphasis>name</emphasis>: The name of the parser to test.</para>
+                                                  </listitem>
+                                                </itemizedlist></listitem>
+                                                  </itemizedlist>
+                                                  </listitem>
+                                                </itemizedlist>
+                                            </listitem>
+                                            <listitem>
                                                 <para><guimenu>tags</guimenu>: OPTIONAL &mdash;
                                                   An element containing custom keywords (tags)
                                                   about the rules. The tags can be used to label
@@ -3318,8 +3219,8 @@ log { source(s_local);
                         </itemizedlist>
                     </listitem>
                 </itemizedlist>
-                <example id="example_pattern_database_v2_su">
-                    <title>A V2 pattern database containing a single rule</title>
+                <example id="example_pattern_database_v3_su">
+                    <title>A V3 pattern database containing a single rule</title>
                     <indexterm>
                         <primary>pattern database</primary>
                     </indexterm>
@@ -3328,7 +3229,7 @@ log { source(s_local);
                         looks like:</para>
                     <synopsis>Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2</synopsis>
                     <para>The following is a simple pattern database containing a matching rule.</para>
-                    <synopsis>&lt;patterndb version='2' pub_date='2009-04-17'&gt;
+                    <synopsis>&lt;patterndb version='3' pub_date='2009-04-17'&gt;
     &lt;ruleset name='ssh' id='123456678'&gt;
         &lt;pattern&gt;ssh&lt;/pattern&gt;
             &lt;rules&gt;
@@ -3343,6 +3244,44 @@ log { source(s_local);
                     <para>Note that the rule uses macros that refer to parts of the message, for
                         example, you can use the <parameter>$SSH_USERNAME</parameter> macro refer to
                         the username used in the connection.</para>
+                        <para>The following is the same example, but with a test message and test values for the parsers.</para>
+                        <synopsis>&lt;patterndb version='3' pub_date='2009-04-17'&gt;
+    &lt;ruleset name='ssh' id='123456678'&gt;
+        &lt;pattern&gt;ssh&lt;/pattern&gt;
+            &lt;rules&gt;
+                &lt;rule provider='me' id='182437592347598' class='system'&gt;
+                    &lt;patterns&gt;
+                        &lt;pattern&gt;Accepted @QSTRING:SSH.AUTH_METHOD: @ for@QSTRING:SSH_USERNAME: @from\ @QSTRING:SSH_CLIENT_ADDRESS: @port @NUMBER:SSH_PORT_NUMBER:@ ssh2&lt;/pattern&gt;
+                    &lt;/patterns&gt;
+                    &lt;examples&gt;
+                        &lt;example&gt;
+                            &lt;test_message&gt;Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2&lt;/test_message&gt;
+                            &lt;test_values&gt;
+                                &lt;test_value name="SSH.AUTH_METHOD"&gt;password&lt;/test_value&gt;
+                                &lt;test_value name="SSH_USERNAME"&gt;sampleuser&lt;/test_value&gt;
+                                &lt;test_value name="SSH_CLIENT_ADDRESS"&gt;10.50.0.247&lt;/test_value&gt;
+                                &lt;test_value name="SSH_PORT_NUMBER"&gt;42156&lt;/test_value&gt;
+                            &lt;/test_values&gt;
+                       &lt;/example&gt;
+                    &lt;/examples&gt;
+                &lt;/rule&gt;
+            &lt;/rules&gt;
+    &lt;/ruleset&gt;
+&lt;/patterndb&gt;</synopsis>
+<!--
+                        <patterns>
+  <pattern>Content filter has been @STRING:.dict.ContentFilter@</pattern>
+</patterns>
+
+<examples>
+  <example>
+    <test_message>Content filter has been enabled</test_message>
+    <test_values>
+      <test_value name=".dict.ContentFilter">enabled</test_value>
+    </test_values>
+  </example>
+</example>
+                         -->
                 </example>
             </section>
         </section>
