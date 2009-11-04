@@ -3033,275 +3033,334 @@ log { source(s_local);
                 </indexterm>
                 <para>Pattern databases are XML files that contain rules describing the message
                     patterns. </para>
-                <para>The following scheme describes the V3 format of the pattern database. This
-                    format is used by syslog-ng 3.1 and later, and the syslog-ng Store Box (SSB)
-                    appliance version 1.1 and later (see <ulink
-                        url="http://www.balabit.com/network-security/syslog-ng/log-server-appliance/"
-                        >http://www.balabit.com/network-security/syslog-ng/log-server-appliance/</ulink>
-                    for details on SSB).</para>
-                <para>For a sample database containing only a single pattern, see <xref
-                        linkend="example_pattern_database_v3_su"/>.</para>
-                <para>For earlier versions of the syslog-ng pattern database formats, see <xref
-                        linkend="app-patterndb"/>.</para>
-                <itemizedlist id="reference_patterndb_scheme_v3">
-                    <listitem>
-                        <para><guimenu>&lt;patterndb&gt;</guimenu>: The container element of
-                            the pattern database. For example:
-                            <synopsis>&lt;patterndb version='3' pub_date='2009-10-25'&gt;</synopsis></para>
-                    </listitem>
-                    <listitem>
-                        <para><emphasis>version</emphasis>: The schema version of the pattern
-                            database. The current version is <parameter>3</parameter>.</para>
-                    </listitem>
-                    <listitem>
-                        <para><emphasis>pubdate</emphasis>: The publication date of the XML
-                        file.</para>
-                    </listitem>
-                    <listitem>
-                        <para><guimenu>&lt;ruleset&gt;</guimenu>: A container element to
-                            group log patterns for an application or program. For example:
-                            <synopsis>&lt;ruleset name='su' id='480de478-d4a6-4a7f-bea4-0c0245d361e1'&gt;</synopsis></para>
-                        <para> A <parameter>&lt;patterndb&gt;</parameter> element may
-                            contain any number of <guimenu>&lt;ruleset&gt;</guimenu>
-                            elements.</para>
-                        <itemizedlist>
-                            <listitem>
-                                <para><emphasis>name</emphasis>: The name of the application. Note
-                                    that the function of this attribute is to make the database more
-                                    readable, syslog-ng uses the
-                                    <parameter>&lt;pattern&gt;</parameter> element to
-                                    identify the applications sending log messages.</para>
-                            </listitem>
-                            <listitem>
-                                <para><emphasis>id</emphasis>: A unique ID of the application, for
-                                    example, the md5 sum of the <parameter>name</parameter>
-                                    attribute.</para>
-                            </listitem>
-                            <listitem>
-                                <para><guimenu>description</guimenu>: OPTIONAL &mdash; A
-                                    description of the ruleset or the application.</para>
-                            </listitem>
-                            <listitem>
-                                <para><guimenu>url</guimenu>: OPTIONAL &mdash; An URL referring
-                                    to further information about the ruleset or the
-                                application.</para>
-                            </listitem>
-                            <listitem>
-                                <para><guimenu>pattern</guimenu>: The name of the application
-                                    &mdash; syslog-ng matches this value to the $PROGRAM header
-                                    of the syslog message to find the rulesets applicable to the
-                                    syslog message. This element is also called <parameter>program
-                                        pattern</parameter>. E.g., <synopsis>&lt;pattern&gt;su&lt;/pattern&gt;</synopsis>
-                                    <note>
-                                        <para>If the <parameter>&lt;pattern&gt;</parameter>
-                                            element of a ruleset is not specified, -ng will use this
-                                            ruleset as a fallback ruleset: it will apply the ruleset
-                                            to messages that have an empty PROGRAM header, or if
-                                            none of the program patterns matched the PROGRAM header
-                                            of the incoming message. </para>
-                                    </note>
-                                </para>
-                            </listitem>
-                            <listitem>
-                                <para><guimenu>&lt;rules&gt;</guimenu>: A container element
-                                    for the rules of the ruleset.</para>
-                                <itemizedlist>
-                                    <listitem>
-                                        <para><guimenu>&lt;rule&gt;</guimenu>: An element
-                                            containing message patterns and how a message that
-                                            matches these patterns is classified. For example:
-                                            <synopsis>&lt;rule provider='balabit'
+                <section id="patterndb-version-comparison">
+                    <title>What's new in the syslog-ng pattern database format V3</title>
+                    <para>The V3 database format has the following differences compared to the
+                        original V1 format:</para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>The rules that are applied to the messages of a program can be
+                                separated into multiple rulesets.</para>
+                        </listitem>
+                        <listitem>
+                            <para>The program pattern of the rulesets can be empty; such rulesets
+                                act as fallback rulesets that are applied to the log messages if no
+                                program pattern is matching or when a message does not have a
+                                program part.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Rules can contain multiple patterns to cover messages that have
+                                multiple formats (e.g., multilingual messages).</para>
+                        </listitem>
+                        <listitem>
+                            <para>Tags can be defined in the rules; these tags are automatically
+                                assigned to messages matching the patterns of the rule.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Static named values can be defined in the rules; these are
+                                automatically assigned to messages matching the patterns of the
+                                rule. The assigned values can be used in filters and macros.</para>
+                        </listitem>
+                        <listitem>
+                            <para>It is also possible to include sample messages in the rules, and
+                                also the expected values of the parsers. These can be used to test
+                                the behavior of the patterns.</para>
+                        </listitem>
+                    </itemizedlist>
+                </section>
+                <section>
+                    <title>The syslog-ng pattern database format</title>
+                    <para>The following scheme describes the V3 format of the pattern database. This
+                        format is used by syslog-ng 3.1 and later, and the syslog-ng Store Box (SSB)
+                        appliance version 1.1 and later (see <ulink
+                            url="http://www.balabit.com/network-security/syslog-ng/log-server-appliance/"
+                            >http://www.balabit.com/network-security/syslog-ng/log-server-appliance/</ulink>
+                        for details on SSB).</para>
+                    <para>For a sample database containing only a single pattern, see <xref
+                            linkend="example_pattern_database_v3_su"/>.</para>
+                    <para>For earlier versions of the syslog-ng pattern database formats, see <xref
+                            linkend="app-patterndb"/>.</para>
+                    <para>For a summary of differences between the different syslog-ng pattern
+                        database formats, see <xref linkend="app-patterndb-versions"/>.</para>
+                    <tip>
+                        <para>Use the <command>pdbtool</command> utility that is bundled with
+                            syslog-ng to test message patterns and convert existing databases to the
+                            latest format. See <xref linkend="pdbtool.1"/> for details.</para>
+                    </tip>
+                    <itemizedlist id="reference_patterndb_scheme_v3">
+                        <listitem>
+                            <para><guimenu>&lt;patterndb&gt;</guimenu>: The container
+                                element of the pattern database. For example:
+                                <synopsis>&lt;patterndb version='3' pub_date='2009-10-25'&gt;</synopsis></para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis>version</emphasis>: The schema version of the pattern
+                                database. The current version is <parameter>3</parameter>.</para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis>pubdate</emphasis>: The publication date of the XML
+                                file.</para>
+                        </listitem>
+                        <listitem>
+                            <para><guimenu>&lt;ruleset&gt;</guimenu>: A container element to
+                                group log patterns for an application or program. For example:
+                                <synopsis>&lt;ruleset name='su' id='480de478-d4a6-4a7f-bea4-0c0245d361e1'&gt;</synopsis></para>
+                            <para> A <parameter>&lt;patterndb&gt;</parameter> element may
+                                contain any number of <guimenu>&lt;ruleset&gt;</guimenu>
+                                elements.</para>
+                            <itemizedlist>
+                                <listitem>
+                                    <para><emphasis>name</emphasis>: The name of the application.
+                                        Note that the function of this attribute is to make the
+                                        database more readable, syslog-ng uses the
+                                            <parameter>&lt;pattern&gt;</parameter> element
+                                        to identify the applications sending log messages.</para>
+                                </listitem>
+                                <listitem>
+                                    <para><emphasis>id</emphasis>: A unique ID of the application,
+                                        for example, the md5 sum of the <parameter>name</parameter>
+                                        attribute.</para>
+                                </listitem>
+                                <listitem>
+                                    <para><guimenu>description</guimenu>: OPTIONAL &mdash; A
+                                        description of the ruleset or the application.</para>
+                                </listitem>
+                                <listitem>
+                                    <para><guimenu>url</guimenu>: OPTIONAL &mdash; An URL
+                                        referring to further information about the ruleset or the
+                                        application.</para>
+                                </listitem>
+                                <listitem>
+                                    <para><guimenu>pattern</guimenu>: The name of the application
+                                        &mdash; syslog-ng matches this value to the $PROGRAM
+                                        header of the syslog message to find the rulesets applicable
+                                        to the syslog message. This element is also called
+                                            <parameter>program pattern</parameter>. E.g., <synopsis>&lt;pattern&gt;su&lt;/pattern&gt;</synopsis>
+                                        <note>
+                                            <para>If the
+                                                <parameter>&lt;pattern&gt;</parameter>
+                                                element of a ruleset is not specified, -ng will use
+                                                this ruleset as a fallback ruleset: it will apply
+                                                the ruleset to messages that have an empty PROGRAM
+                                                header, or if none of the program patterns matched
+                                                the PROGRAM header of the incoming message. </para>
+                                        </note>
+                                    </para>
+                                </listitem>
+                                <listitem>
+                                    <para><guimenu>&lt;rules&gt;</guimenu>: A container
+                                        element for the rules of the ruleset.</para>
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para><guimenu>&lt;rule&gt;</guimenu>: An
+                                                element containing message patterns and how a
+                                                message that matches these patterns is classified.
+                                                For example:
+                                                <synopsis>&lt;rule provider='balabit'
                                                 id='f57196aa-75fd-11dd-9bba-001e6806451b'
                                                 class='violation'&gt;</synopsis></para>
-                                        <note>
-                                            <para>If the following characters appear in the message,
-                                                they must be escaped in the rule as follows:</para>
-                                            <itemizedlist>
-                                                <listitem>
-                                                  <para><parameter>@</parameter>: Use @@, e.g.,
+                                            <note>
+                                                <para>If the following characters appear in the
+                                                  message, they must be escaped in the rule as
+                                                  follows:</para>
+                                                <itemizedlist>
+                                                  <listitem>
+                                                  <para><parameter>@</parameter>: Use @@,
+                                                  e.g.,
                                                   <parameter>user@@example.com</parameter></para>
-                                                </listitem>
-                                                <listitem>
+                                                  </listitem>
+                                                  <listitem>
                                                   <para><emphasis>&lt;</emphasis>: Use
                                                   <parameter>&amp;lt;</parameter></para>
-                                                </listitem>
-                                                <listitem>
+                                                  </listitem>
+                                                  <listitem>
                                                   <para><emphasis>&gt;</emphasis>: Use
                                                   <parameter>&amp;gt;</parameter></para>
-                                                </listitem>
-                                                <listitem>
+                                                  </listitem>
+                                                  <listitem>
                                                   <para>&amp;: Use
                                                   <parameter>&amp;amp;</parameter></para>
-                                                </listitem>
-                                            </itemizedlist>
-                                        </note>
-                                        <para>The <guimenu>&lt;rules&gt;</guimenu> element
-                                            may contain any number of
-                                            <guimenu>&lt;rule&gt;</guimenu> elements.</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para><emphasis>provider</emphasis>: The provider of the
-                                            rule. This is used to distinguish between who supplied
-                                            the rule; i.e., if it has been created by BalaBit, or
-                                            added to the xml by a local user.</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para><emphasis>id</emphasis>: The globally unique ID of the
-                                            rule.</para>
-                                    </listitem>
-                                    <listitem>
-                                        <para><emphasis>class</emphasis>: The class of the rule
-                                            &mdash; syslog-ng assigns this class to the messages
-                                            matching a pattern of this rule.</para>
-                                    </listitem>
-
-                                    <listitem>
-                                        <para><guimenu>&lt;patterns&gt;</guimenu>: An
-                                            element containing the patterns of the rule. If a
-                                                <guimenu>&lt;patterns&gt;</guimenu> element
-                                            contains multiple
-                                            <guimenu>&lt;pattern&gt;</guimenu> elements, the
-                                            class of the <guimenu>&lt;rule&gt;</guimenu> is
-                                            assigned to every syslog message matching any of the
-                                            patterns. </para>
-                                        <itemizedlist>
-                                            <listitem>
-                                                <para><guimenu>&lt;pattern&gt;</guimenu>: A
-                                                  pattern describing a log message. This element
-                                                  is also called <parameter>message
-                                                  pattern</parameter>. For example:
-                                                  <synopsis>&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</synopsis></para>
-                                            </listitem>
-                                            <listitem>
-                                                <para><guimenu>description</guimenu>: OPTIONAL
-                                                  &mdash; A description of the pattern or the
-                                                  log message matching the pattern. </para>
-                                            </listitem>
-                                            <listitem>
-                                                <para><guimenu>urls</guimenu>: OPTIONAL &mdash;
-                                                  An element containing one or more URLs referring
-                                                  to further information about the patterns or the
-                                                  matching log messages.</para>
-                                                <itemizedlist>
-                                                  <listitem>
-                                                  <para><guimenu>url</guimenu>: OPTIONAL
-                                                  &mdash; An URL referring to further
-                                                  information about the patterns or the
-                                                  matching log messages.</para>
                                                   </listitem>
                                                 </itemizedlist>
-                                            </listitem>
-                                            <listitem>
-                                                <para><guimenu>values</guimenu>: OPTIONAL
-                                                  &mdash; Name-value pairs that are assigned
-                                                  to messages matching the patterns, for example,
-                                                  the representation of the event described in the
-                                                  message in Common Event Format (CEF). The names
-                                                  can be used as macros to reference the assigned
-                                                  values.</para>
-                                                <itemizedlist>
+                                            </note>
+                                            <para>The <guimenu>&lt;rules&gt;</guimenu>
+                                                element may contain any number of
+                                                  <guimenu>&lt;rule&gt;</guimenu>
+                                                elements.</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para><emphasis>provider</emphasis>: The provider of the
+                                                rule. This is used to distinguish between who
+                                                supplied the rule; i.e., if it has been created by
+                                                BalaBit, or added to the xml by a local user.</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para><emphasis>id</emphasis>: The globally unique ID of
+                                                the rule.</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para><emphasis>class</emphasis>: The class of the rule
+                                                &mdash; syslog-ng assigns this class to the
+                                                messages matching a pattern of this rule.</para>
+                                        </listitem>
+
+                                        <listitem>
+                                            <para><guimenu>&lt;patterns&gt;</guimenu>: An
+                                                element containing the patterns of the rule. If a
+                                                  <guimenu>&lt;patterns&gt;</guimenu>
+                                                element contains multiple
+                                                  <guimenu>&lt;pattern&gt;</guimenu>
+                                                elements, the class of the
+                                                  <guimenu>&lt;rule&gt;</guimenu> is
+                                                assigned to every syslog message matching any of the
+                                                patterns. </para>
+                                            <itemizedlist>
+                                                <listitem>
+                                                  <para><guimenu>&lt;pattern&gt;</guimenu>:
+                                                  A pattern describing a log message. This
+                                                  element is also called <parameter>message
+                                                  pattern</parameter>. For example:
+                                                  <synopsis>&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</synopsis></para>
+                                                </listitem>
+                                                <listitem>
+                                                  <para><guimenu>description</guimenu>: OPTIONAL
+                                                  &mdash; A description of the pattern or
+                                                  the log message matching the pattern.
+                                                  </para>
+                                                </listitem>
+                                                <listitem>
+                                                  <para><guimenu>urls</guimenu>: OPTIONAL
+                                                  &mdash; An element containing one or
+                                                  more URLs referring to further information
+                                                  about the patterns or the matching log
+                                                  messages.</para>
+                                                  <itemizedlist>
+                                                  <listitem>
+                                                  <para><guimenu>url</guimenu>: OPTIONAL
+                                                  &mdash; An URL referring to
+                                                  further information about the
+                                                  patterns or the matching log
+                                                  messages.</para>
+                                                  </listitem>
+                                                  </itemizedlist>
+                                                </listitem>
+                                                <listitem>
+                                                  <para><guimenu>values</guimenu>: OPTIONAL
+                                                  &mdash; Name-value pairs that are
+                                                  assigned to messages matching the patterns,
+                                                  for example, the representation of the event
+                                                  described in the message in Common Event
+                                                  Format (CEF). The names can be used as
+                                                  macros to reference the assigned values.</para>
+                                                  <itemizedlist>
                                                   <listitem>
                                                   <para><guimenu>value</guimenu>: OPTIONAL
-                                                  &mdash; Contains the value of the
-                                                  name-value pair that is assigned to the
-                                                  message. For example:
+                                                  &mdash; Contains the value of
+                                                  the name-value pair that is assigned
+                                                  to the message. For example:
                                                   <synopsis>&lt;value name=".classifier.outcome"&gt;/Success&lt;/value&gt;</synopsis>
                                                   </para>
                                                   </listitem>
                                                   <listitem>
-                                                  <para><emphasis>name</emphasis>: The name of
-                                                  the name-value pair. It can also be used
-                                                  as a macro to reference the assigned
-                                                  value.</para>
+                                                  <para><emphasis>name</emphasis>: The
+                                                  name of the name-value pair. It can
+                                                  also be used as a macro to reference
+                                                  the assigned value.</para>
                                                   </listitem>
-                                                </itemizedlist>
-                                            </listitem>
-                                            <listitem>
-                                                <para><guimenu>examples</guimenu>: OPTIONAL
-                                                  &mdash; A container element for sample log
-                                                  messages that should be recognized by the
-                                                  pattern. These messages can be used also to test
-                                                  the patterns and the parsers.</para>
-                                                <itemizedlist>
+                                                  </itemizedlist>
+                                                </listitem>
+                                                <listitem>
+                                                  <para><guimenu>examples</guimenu>: OPTIONAL
+                                                  &mdash; A container element for sample
+                                                  log messages that should be recognized by
+                                                  the pattern. These messages can be used also
+                                                  to test the patterns and the parsers.</para>
+                                                  <itemizedlist>
                                                   <listitem>
-                                                  <para><guimenu>example</guimenu>: OPTIONAL
-                                                  &mdash; A container element for a
-                                                  sample log message. </para>
+                                                  <para><guimenu>example</guimenu>:
+                                                  OPTIONAL &mdash; A container
+                                                  element for a sample log message. </para>
                                                   <itemizedlist>
                                                   <listitem>
                                                   <para><guimenu>test_message</guimenu>:
-                                                  OPTIONAL &mdash; A sample
-                                                  log message that should match
-                                                  this pattern. For example:
+                                                  OPTIONAL &mdash; A
+                                                  sample log message that
+                                                  should match this pattern.
+                                                  For example:
                                                   <synopsis>&lt;test_message&gt;Content filter has been enabled&lt;/test_message&gt;</synopsis></para>
                                                   </listitem>
                                                   <listitem>
                                                   <para><guimenu>test_values</guimenu>:
-                                                  OPTIONAL &mdash; A container
-                                                  element to test the results of
-                                                  the parsers used in the pattern.</para>
+                                                  OPTIONAL &mdash; A
+                                                  container element to test
+                                                  the results of the parsers
+                                                  used in the pattern.</para>
                                                   <itemizedlist>
                                                   <listitem>
                                                   <para><guimenu>test_value</guimenu>:
-                                                  OPTIONAL &mdash; The
-                                                  expected value of the
-                                                  parser when matching the
-                                                  pattern to the test
-                                                  message. For example:
+                                                  OPTIONAL &mdash;
+                                                  The expected value
+                                                  of the parser when
+                                                  matching the pattern
+                                                  to the test message.
+                                                  For example:
                                                   <synopsis>&lt;test_value name=".dict.ContentFilter"&gt;enabled&lt;/test_value&gt;</synopsis></para>
                                                   </listitem>
                                                   <listitem>
                                                   <para><emphasis>name</emphasis>:
-                                                  The name of the parser
-                                                  to test.</para>
+                                                  The name of the
+                                                  parser to
+                                                  test.</para>
                                                   </listitem>
                                                   </itemizedlist>
                                                   </listitem>
                                                   </itemizedlist>
                                                   </listitem>
-                                                </itemizedlist>
-                                            </listitem>
-                                            <listitem>
-                                                <indexterm>
+                                                  </itemizedlist>
+                                                </listitem>
+                                                <listitem>
+                                                  <indexterm>
                                                   <primary>tagging messages</primary>
-                                                </indexterm>
-                                                <indexterm>
+                                                  </indexterm>
+                                                  <indexterm>
                                                   <primary>tags</primary>
-                                                </indexterm>
-                                                <para><guimenu>tags</guimenu>: OPTIONAL &mdash;
-                                                  An element containing custom keywords (tags)
-                                                  about the messages matching the patterns. The
-                                                  tags can be used to label specific events (e.g.,
-                                                  user logons). It is also possible to filter on
-                                                  these tags later (see <xref
-                                                  linkend="tagging_messages"/> for details).</para>
-                                                <itemizedlist>
+                                                  </indexterm>
+                                                  <para><guimenu>tags</guimenu>: OPTIONAL
+                                                  &mdash; An element containing custom
+                                                  keywords (tags) about the messages matching
+                                                  the patterns. The tags can be used to label
+                                                  specific events (e.g., user logons). It is
+                                                  also possible to filter on these tags later
+                                                  (see <xref linkend="tagging_messages"/> for
+                                                  details).</para>
+                                                  <itemizedlist>
                                                   <listitem>
                                                   <para><guimenu>tag</guimenu>: OPTIONAL
-                                                  &mdash; A keyword or tags applied to
-                                                  messages matching the rule. For example:
+                                                  &mdash; A keyword or tags
+                                                  applied to messages matching the
+                                                  rule. For example:
                                                   <synopsis>&lt;tags&gt;&lt;tag&gt;UserLogin&lt;/tag&gt;&lt;/tags&gt;</synopsis></para>
                                                   </listitem>
-                                                </itemizedlist>
-                                            </listitem>
-                                        </itemizedlist>
-                                    </listitem>
-                                </itemizedlist>
-                            </listitem>
-                        </itemizedlist>
-                    </listitem>
-                </itemizedlist>
-                <example id="example_pattern_database_v3_su">
-                    <title>A V3 pattern database containing a single rule</title>
-                    <indexterm>
-                        <primary>pattern database</primary>
-                    </indexterm>
-                    <para>The following pattern database contains a single rule that matches a log
-                        message of the <parameter>ssh</parameter> application. A sample log message
-                        looks like:</para>
-                    <synopsis>Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2</synopsis>
-                    <para>The following is a simple pattern database containing a matching rule.</para>
-                    <synopsis>&lt;patterndb version='3' pub_date='2009-04-17'&gt;
+                                                  </itemizedlist>
+                                                </listitem>
+                                            </itemizedlist>
+                                        </listitem>
+                                    </itemizedlist>
+                                </listitem>
+                            </itemizedlist>
+                        </listitem>
+                    </itemizedlist>
+                    <example id="example_pattern_database_v3_su">
+                        <title>A V3 pattern database containing a single rule</title>
+                        <indexterm>
+                            <primary>pattern database</primary>
+                        </indexterm>
+                        <para>The following pattern database contains a single rule that matches a
+                            log message of the <parameter>ssh</parameter> application. A sample log
+                            message looks like:</para>
+                        <synopsis>Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2</synopsis>
+                        <para>The following is a simple pattern database containing a matching rule.</para>
+                        <synopsis>&lt;patterndb version='3' pub_date='2009-04-17'&gt;
     &lt;ruleset name='ssh' id='123456678'&gt;
         &lt;pattern&gt;ssh&lt;/pattern&gt;
             &lt;rules&gt;
@@ -3313,12 +3372,12 @@ log { source(s_local);
             &lt;/rules&gt;
     &lt;/ruleset&gt;
 &lt;/patterndb&gt;</synopsis>
-                    <para>Note that the rule uses macros that refer to parts of the message, for
-                        example, you can use the <parameter>$SSH_USERNAME</parameter> macro refer to
-                        the username used in the connection.</para>
-                    <para>The following is the same example, but with a test message and test values
-                        for the parsers.</para>
-                    <synopsis>&lt;patterndb version='3' pub_date='2009-04-17'&gt;
+                        <para>Note that the rule uses macros that refer to parts of the message, for
+                            example, you can use the <parameter>$SSH_USERNAME</parameter> macro
+                            refer to the username used in the connection.</para>
+                        <para>The following is the same example, but with a test message and test
+                            values for the parsers.</para>
+                        <synopsis>&lt;patterndb version='3' pub_date='2009-04-17'&gt;
     &lt;ruleset name='ssh' id='123456678'&gt;
         &lt;pattern&gt;ssh&lt;/pattern&gt;
             &lt;rules&gt;
@@ -3341,21 +3400,8 @@ log { source(s_local);
             &lt;/rules&gt;
     &lt;/ruleset&gt;
 &lt;/patterndb&gt;</synopsis>
-                    <!--
-                        <patterns>
-  <pattern>Content filter has been @STRING:.dict.ContentFilter@</pattern>
-</patterns>
-
-<examples>
-  <example>
-    <test_message>Content filter has been enabled</test_message>
-    <test_values>
-      <test_value name=".dict.ContentFilter">enabled</test_value>
-    </test_values>
-  </example>
-</example>
-                         -->
-                </example>
+                    </example>
+                </section>
             </section>
         </section>
     </section>
