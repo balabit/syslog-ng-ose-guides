@@ -19,7 +19,7 @@
       <cmdsynopsis>
         <command>pdbtool</command>
         <arg>command</arg>
-        <arg>[options]</arg>
+        <arg>options</arg>
       </cmdsynopsis>
     </refsynopsisdiv>
     <refsect1 id="pdbtool_mandescription">
@@ -28,13 +28,13 @@
         pdbtool, see <ulink url="http://www.balabit.com/support/documentation/">
           <command>The syslog-ng Administrator Guide</command>
         </ulink>.</para>
-      <para>The syslog-ng application can compare the contents of the log messages to a database of
+      <para>The syslog-ng application can match the contents of the log messages to a database of
         predefined message patterns (also called patterndb). By comparing the messages to the known
-        patterns, syslog-ng is able to identify the exact type of the messages, and sort them into
-        message classes. The message classes can be used to classify the type of the event described
-        in the log message. The functionality of the pattern database is similar to that of the
-        logcheck project, but the syslog-ng approach is faster, scales better, and is much easier to
-        maintain compared to the regular expressions of logcheck.</para>
+        patterns, syslog-ng is able to identify the exact type of the messages, tag the messages,
+        and sort them into message classes. The message classes can be used to classify the type of
+        the event described in the log message. The functionality of the pattern database is similar
+        to that of the logcheck project, but the syslog-ng approach is faster, scales better, and is
+        much easier to maintain compared to the regular expressions of logcheck.</para>
       <para>The <command>pdbtool</command> application is a utility that can be used to:</para>
       <itemizedlist>
         <listitem>
@@ -52,142 +52,135 @@
         </listitem>
       </itemizedlist>
     </refsect1>
-    <refsect1>
-      <title>Options</title>
+    <refsect1 id="pdbtool_match">
+      <title>The match command</title>
+      <cmdsynopsis>
+        <command>match</command>
+        <arg>options</arg>
+      </cmdsynopsis>
+      <para>Use the <command>match</command> command to test the rules in a pattern database. The
+        command tries to match the specified message against the patterns of the database, evaluates
+        the parsers of the pattern, and also displays which part of the message was parsed
+        successfully. The command returns with a <parameter>0</parameter> (success) or
+        <parameter>1</parameter> (no match) return code and displays the following information:</para>
+      <itemizedlist>
+        <listitem>
+          <para>the class assigned to the message (e.g., system, violation, etc.),</para>
+        </listitem>
+        <listitem>
+          <para>the ID of the rule that matched the message, and</para>
+        </listitem>
+        <listitem>
+          <para>the values of the parsers (if there were parsers in the matching pattern).</para>
+        </listitem>
+      </itemizedlist>
+      <para>The <command>match</command> command has the following options:</para>
       <variablelist>
         <varlistentry>
-          <term>
-            <command>match [options]</command>
-          </term>
+          <term><command>--color-out </command> or <command>-c</command></term>
           <listitem>
-            <para>Use the <command>match</command> command to test the rules in a pattern database.
-              The command tries to match the specified message against the patterns of the database,
-              evaluates the parsers of the pattern, and also displays which part of the message was
-              parsed successfully. The command returns with a <parameter>0</parameter> (success) or
-                <parameter>1</parameter> (no match) return code and displays the following
-              information:</para>
-            <itemizedlist>
-              <listitem>
-                <para>the class assigned to the message (e.g., system, violation, etc.),</para>
-              </listitem>
-              <listitem>
-                <para>the ID of the rule that matched the message, and</para>
-              </listitem>
-              <listitem>
-                <para>the values of the parsers (if there were parsers in the matching
-                pattern).</para>
-              </listitem>
-            </itemizedlist>
-            <para>The <command>match</command> command has the following options:</para>
-            <variablelist>
-              <varlistentry>
-                <term><command>--color-out </command> or <command>-c</command></term>
-                <listitem>
-                  <para>Color the terminal output to highlight the part of the message that was
-                    successfully parsed.</para>
-                </listitem>
-              </varlistentry>
-              <varlistentry>
-                <term><command>--debug-pattern</command> or <command>-D</command></term>
-                <listitem>
-                  <para>Print debugging information about the pattern matching.</para>
-                </listitem>
-              </varlistentry>
-              <varlistentry>
-                <term><command>--message</command> or <command>-M</command></term>
-                <listitem>
-                  <para>The text of the log message to match (only the
-                    <parameter>$MESSAGE</parameter> part without the syslog headers).</para>
-                </listitem>
-              </varlistentry>
-              <varlistentry>
-                <term><command>--pdb</command> or <command>-p</command></term>
-                <listitem>
-                  <para>Name of the pattern database file to use.
-                    <!--By default, syslog-ng and the pdbtool uses the 
-                    <filename>/var/lib/syslog-ng/patterndb.xml</filename> file.--></para>
-                </listitem>
-              </varlistentry>
-              <varlistentry>
-                <term><command>--program</command> or <command>-P</command></term>
-                <listitem>
-                  <para>Name of the program to use, as contained in the
-                    <parameter>$PROGRAM</parameter> part of the syslog message.</para>
-                </listitem>
-              </varlistentry>
-            </variablelist>
-            <para>Example:
-              <synopsis>pdbtool match -p patterndb.xml
-              -P sshd -M "Accepted publickey for myuser from 127.0.0.1 port 59357 ssh2"</synopsis></para>
+            <para>Color the terminal output to highlight the part of the message that was
+              successfully parsed.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term>
-            <command>merge [options]</command>
-          </term>
+          <term><command>--debug-pattern</command> or <command>-D</command></term>
           <listitem>
-            <para>Use the <command>merge</command> command to combine separate pattern database
-              files into a single file ( pattern databases are usually stored in separate files per
-              applications to simplify maintenance). If a file uses an older database format, it is
-              automatically updated to the latest format (V3). See the <ulink
-                url="http://www.balabit.com/support/documentation/">
-                <command>The syslog-ng Administrator Guide</command>
-              </ulink> for details on the different pattern database versions.</para>
-            <variablelist>
-              <varlistentry>
-                <term><command>--directory</command> or <command>-D</command></term>
-                <listitem>
-                  <para>The directory that contains the pattern database XML files to be
-                  merged.</para>
-                </listitem>
-              </varlistentry>
-              <varlistentry>
-                <term><command>--pdb</command> or <command>-p</command></term>
-                <listitem>
-                  <para>Name of the output pattern database file.</para>
-                </listitem>
-              </varlistentry>
-            </variablelist>
-            <para>Example:<synopsis>pdbtool merge --directory /home/me/mypatterns/  --pdb /var/lib/syslog-ng/patterndb.xml</synopsis>
-              Currently it is not possible to convert a file without merging, so if you only want to
-              convert an older pattern database file to the latest format, you have to copy it into
-              an empty directory.</para>
+            <para>Print debugging information about the pattern matching.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term>
-            <command>dump [options]</command>
-          </term>
+          <term><command>--message</command> or <command>-M</command></term>
           <listitem>
-            <para>Display the RADIX tree built from the patterns. This shows how are the patterns
-              represented in syslog-ng and it might also help to track down pattern-matching
-              problems. The dump utility can dump the tree used for matching the PROGRAM or the MSG
-              parts. </para>
-            <variablelist>
-              <varlistentry>
-                <term><command>--pdb</command> or <command>-p</command></term>
-                <listitem>
-                  <para>Name of the pattern database file to
-                    use.<!--  By default, syslog-ng and the pdbtool uses the 
+            <para>The text of the log message to match (only the <parameter>$MESSAGE</parameter>
+              part without the syslog headers).</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--pdb</command> or <command>-p</command></term>
+          <listitem>
+            <para>Name of the pattern database file to use.
+              <!--By default, syslog-ng and the pdbtool uses the 
                     <filename>/var/lib/syslog-ng/patterndb.xml</filename> file.--></para>
-                </listitem>
-              </varlistentry>
-              <varlistentry>
-                <term><command>--program</command> or <command>-P</command></term>
-                <listitem>
-                  <para>Displays the RADIX tree built from the patterns belonging to the
-                      <parameter>$PROGRAM</parameter> application.</para>
-                </listitem>
-              </varlistentry>
-              <varlistentry>
-                <term><command>--program-tree</command> or <command>-T</command></term>
-                <listitem>
-                  <para>Display the <parameter>$PROGRAM</parameter> tree.</para>
-                </listitem>
-              </varlistentry>
-            </variablelist>
-            <para>Example and sample output: <synopsis>pdbtool dump -p patterndb.xml  -P 'sshd'</synopsis>
-              <synopsis>'p'
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--program</command> or <command>-P</command></term>
+          <listitem>
+            <para>Name of the program to use, as contained in the <parameter>$PROGRAM</parameter>
+              part of the syslog message.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>Example:
+        <synopsis>pdbtool match -p patterndb.xml -P sshd -M "Accepted publickey for myuser from 127.0.0.1 port 59357 ssh2"</synopsis></para>
+    </refsect1>
+    <refsect1 id="pdbtool_merge">
+      <title>The merge command</title>
+      <cmdsynopsis>
+        <command>merge</command>
+        <arg>options</arg>
+      </cmdsynopsis>
+      <para>Use the <command>merge</command> command to combine separate pattern database files into
+        a single file (pattern databases are usually stored in separate files per applications to
+        simplify maintenance). If a file uses an older database format, it is automatically updated
+        to the latest format (V3). See the <ulink
+          url="http://www.balabit.com/support/documentation/">
+          <command>The syslog-ng Administrator Guide</command>
+        </ulink> for details on the different pattern database versions.</para>
+      <variablelist>
+        <varlistentry>
+          <term><command>--directory</command> or <command>-D</command></term>
+          <listitem>
+            <para>The directory that contains the pattern database XML files to be merged.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--pdb</command> or <command>-p</command></term>
+          <listitem>
+            <para>Name of the output pattern database file.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>Example:<synopsis>pdbtool merge --directory /home/me/mypatterns/  --pdb /var/lib/syslog-ng/patterndb.xml</synopsis>
+        Currently it is not possible to convert a file without merging, so if you only want to
+        convert an older pattern database file to the latest format, you have to copy it into an
+        empty directory.</para>
+    </refsect1>
+    <refsect1 id="pdbtool_dump">
+      <title>The merge command</title>
+      <cmdsynopsis>
+        <command>dump</command>
+        <arg>options</arg>
+      </cmdsynopsis>
+      <para>Display the RADIX tree built from the patterns. This shows how are the patterns
+        represented in syslog-ng and it might also help to track down pattern-matching problems. The
+        dump utility can dump the tree used for matching the PROGRAM or the MSG parts. </para>
+      <variablelist>
+        <varlistentry>
+          <term><command>--pdb</command> or <command>-p</command></term>
+          <listitem>
+            <para>Name of the pattern database file to
+              use.<!--  By default, syslog-ng and the pdbtool uses the 
+                    <filename>/var/lib/syslog-ng/patterndb.xml</filename> file.--></para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--program</command> or <command>-P</command></term>
+          <listitem>
+            <para>Displays the RADIX tree built from the patterns belonging to the
+                <parameter>$PROGRAM</parameter> application.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--program-tree</command> or <command>-T</command></term>
+          <listitem>
+            <para>Display the <parameter>$PROGRAM</parameter> tree.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>Example and sample output: <synopsis>pdbtool dump -p patterndb.xml  -P 'sshd'</synopsis>
+        <synopsis>'p'
    'assword for'
      @QSTRING:@
        'from'
@@ -205,17 +198,6 @@
                ' ssh' rule_id='fc5441ac-75fd-11dd-9bba-001e6806451b'
                   '2' rule_id='fc44a9fe-75fd-11dd-9bba-001e6806451b'
               </synopsis></para>
-          </listitem>
-        </varlistentry>
-        <varlistentry>
-          <term>
-            <command>--help</command> or <command>-?</command>
-          </term>
-          <listitem>
-            <para>Display a help message.</para>
-          </listitem>
-        </varlistentry>
-      </variablelist>
     </refsect1>
     <refsect1>
       <title>Files</title>
@@ -246,5 +228,8 @@
           <command>syslog-ng mailing list</command>
         </ulink>
       </para>
+      <para>For news and notifications about the documentation of syslog-ng, visit the at <ulink
+          url="http://robert.blogs.balabit.com"><command>BalaBit Documentation
+        Blog</command>.</ulink></para>
     </refsect1> &mancopy; </refentry>
 </reference>
