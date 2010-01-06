@@ -22,7 +22,7 @@
     <para>The features and restrictions of the syslog-ng agent are summarized below:</para>
     <itemizedlist>
         <listitem>
-            <para>Reads messages from eventlog groups and log files.</para>
+            <para>Reads messages from eventlog containers and log files.</para>
         </listitem>
         <listitem>
             <para>Transfers log messages using TCP.</para>
@@ -111,11 +111,10 @@
             </listitem>
         </itemizedlist>
         <note>
-            <para>The syslog-ng Agent for Windows application is configured usually using its
-                graphical configuration utility (in standalone mode) or its MMC snap-in (when
-                managed globally from the domain controller). However, it is also possible to use an
-                XML-based configuration file. See <xref linkend="windows_xml_config"/> for
-            details.</para>
+            <para>The syslog-ng Agent for Windows application is configured usually using its MMC
+                snap-in (when managed globally from the domain controller). However, it is also
+                possible to use an XML-based configuration file. See <xref
+                    linkend="windows_xml_config"/> for details.</para>
         </note>
         <section id="windows_install_standalone">
             <title>Installing the syslog-ng agent in standalone mode</title>
@@ -127,7 +126,7 @@
                 independent hosts. If your hosts are members of a domain, install the syslog-ng
                 agent on the domain controller, as described in <xref
                     linkend="windows_install_domain_controller"/>. The syslog-ng agent requires
-                about 1 MB hard disk space.</para>
+                about 3 MB hard disk space.</para>
             <para>To install the syslog-ng agent in standalone mode, complete the following steps:</para>
             <note>
                 <para>The syslog-ng Agent for Windows requires the Microsoft .NET Framework version
@@ -174,7 +173,7 @@
                     <para>The installer automatically opens the configuration interface of the
                         syslog-ng agent. As a minimum, you must set the IP address of the
                         destination server, and the agent will automatically start sending eventlog
-                        messages to your central logserver from the Application, Security, ans
+                        messages to your central logserver from the Application, Security, and
                         System eventlog containers.</para>
                     <note>
                         <para>The installation is completed only after you close the configuration
@@ -188,13 +187,34 @@
             </indexterm>
             <para>In standalone mode, to configure an already installed syslog-ng agent, select
                     <guibutton>Start Menu > Programs > syslog-ng Agent for Windows > Configure
-                    syslog-ng Agent</guibutton>.</para>
+                    syslog-ng Agent</guibutton>. Alternatively, select <guibutton>Start Menu >
+                Run</guibutton>, enter <parameter>gpedit.msc</parameter>, then select
+                    <guibutton>Computer configuration > syslog-ng Agent Settings</guibutton></para>
+            <warning>
+                <para>After modifying its configuration, you have to restart the
+                        <parameter>syslog-ng Agent</parameter> service for the changes to take
+                    effect. To restart the syslog-ng Agent service, select <guibutton>Start Menu >
+                        Run</guibutton> enter <parameter>services.msc</parameter> and restart the
+                        <guilabel>syslog-ng Agent</guilabel> service.</para>
+            </warning>
         </section>
         <section id="windows_install_domain_controller">
-            <title>Installing the syslog-ng agent on the hosts of a domain</title>
-            <para>The syslog-ng Agent for Windows application can be installed on the members of a
-                domain from the domain controller, and configured globally using group policies. The
-                syslog-ng agent requires about 1 MB hard disk space.</para>
+            <title>Installing the syslog-ng agent on the domain controller and the hosts of a domain</title>
+            <para>The syslog-ng Agent for Windows application can be installed on the domain
+                controller and the members of a domain from the domain controller, and configured
+                globally using group policies. The syslog-ng agent requires about 1 MB hard disk
+                space.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>To install the syslog-ng Agent application in a domain, see <xref linkend="windows_install_domain"/>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>To configure the syslog-ng agents of the domain hosts, see <xref linkend="windows_configure_domain_hosts"/>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>To configure the syslog-ng agents of the domain controllers, see <xref linkend="windows_configure_domain_controllers"/>.</para>
+                    </listitem>
+                </itemizedlist>
             <note>
                 <para>Starting from version <parameter>3.0.4</parameter>, the
                     <parameter>.msi</parameter> version of the installer does not install the MMC
@@ -206,8 +226,9 @@
                 <primary>syslog-ng agent</primary>
                 <secondary>installing the agent from the domain controller</secondary>
             </indexterm>
-            <procedure>
-                <title>Installing the syslog-ng agent on the hosts of a domain</title>
+            <procedure id="windows_install_domain">
+                <title>Installing the syslog-ng agent on the domain controller and the hosts of a
+                    domain</title>
                 <note>
                     <para>Starting from version 3.0.3, the syslog-ng Agent sends only messages that
                         are created after the agent has been installed. If you want to send old log
@@ -224,10 +245,10 @@
                             linkend="windows_xml_config"/>.</para>
                 </note>
                 <step>
-                    <para>Download both the Microsoft Installer (<parameter>.msi</parameter>) version and the 
-                        executable (<parameter>.exe</parameter>) version of
-                        the syslog-ng agent installer to the domain controller host. 
-                        Make sure to download the executable that includes the MMC snap-in module. Note that
+                    <para>Download both the Microsoft Installer (<parameter>.msi</parameter>)
+                        version and the executable (<parameter>.exe</parameter>) version of the
+                        syslog-ng agent installer to the domain controller host. Make sure to
+                        download the executable that includes the MMC snap-in module. Note that
                         separate .msi intallers are available for 32-bit and 64-bit operating
                         systems.</para>
                     <note>
@@ -239,26 +260,27 @@
                     </note>
                 </step>
                 <step>
-                    <para>Install the syslog-ng Agent application to your domain controllers using the <parameter>.exe</parameter> installer.</para>
+                    <para>Install the syslog-ng Agent application to your domain controllers using
+                        the <parameter>.exe</parameter> installer.</para>
                     <note>
-                <para>The syslog-ng Agent for Windows requires the Microsoft .NET Framework version
-                    2.0. This package is usually already installed on most hosts. It can be
-                    downloaded at:</para>
-                <para>
-                    <ulink
-                        url="http://www.microsoft.com/downloads/details.aspx?FamilyID=0856EACB-4362-4B0D-8EDD-AAB15C5E04F5&amp;displaylang=en"
-                        >http://www.microsoft.com/downloads/details.aspx?FamilyID=0856EACB-4362-4B0D-8EDD-AAB15C5E04F5&amp;displaylang=en</ulink>
-                </para>
-            </note>
+                        <para>The syslog-ng Agent for Windows requires the Microsoft .NET Framework
+                            version 2.0. This package is usually already installed on most hosts. It
+                            can be downloaded at:</para>
+                        <para>
+                            <ulink
+                                url="http://www.microsoft.com/downloads/details.aspx?FamilyID=0856EACB-4362-4B0D-8EDD-AAB15C5E04F5&amp;displaylang=en"
+                                >http://www.microsoft.com/downloads/details.aspx?FamilyID=0856EACB-4362-4B0D-8EDD-AAB15C5E04F5&amp;displaylang=en</ulink>
+                        </para>
+                    </note>
                 </step>
                 <step>
                     <para>Select <guimenu>Start > Control Panel > Administrative Tools > Active
                             Directory Users and Computers</guimenu>, right-click on the
                         Organizational Unit of the domain whose hosts you want to install the
-                        syslog-ng agent to, and select <guimenu>Properties</guimenu>.</para>
+                        syslog-ng agent on, and select <guimenu>Properties</guimenu>.</para>
                 </step>
                 <step>
-                    <para>Select <guibutton>Group Policy</guibutton>, and select the Group Policy
+                    <para>Select <guibutton>Group Policy</guibutton>, and edit the Group Policy
                         object you want to add the syslog-ng agent configuration to. Alternatively,
                         you can create a new group policy object as well.</para>
                 </step>
@@ -268,24 +290,99 @@
                         Package</guimenu>.</para>
                 </step>
                 <step>
-                    <para>Navigate to the syslog-ng Agent for Windows <parameter>.msi</parameter> installer and select <guibutton>Open</guibutton>. </para>
+                    <para>Navigate to the syslog-ng Agent for Windows <parameter>.msi</parameter>
+                        installer and select <guibutton>Open</guibutton>. </para>
                 </step>
                 <step>
                     <para>Select <guibutton>Assigned</guibutton>, then
                     <guibutton>OK</guibutton>.</para>
                 </step>
+                <step>
+                    <para>Select <guilabel>Computer Configuration > syslog-ng Agent Settings</guilabel> and configure the syslog-ng Agent. The members of the domain will use this configuration. </para>
+                </step>
+                <step>
+                    <para>The syslog-ng Agent for Windows application will be automatically installed on the members of the domain when they are next rebooted. To perform the installation earlier, execute the <command>gpupdate</command> command on the members of the domain.</para>
+                    <note><para>If you do not want to install the syslog-ng Agent automatically from the domain controller, skip Steps 5-7, complete Step 8, then install the <filename>syslog-ng-agent-nosnapin-&lt;versionnumber&gt;-setup.exe</filename> file manually on the members of the domain. This method is useful if you do not want to install the syslog-ng Agent on every host of the domain.</para></note>
+                </step>
             </procedure>
+            <procedure id="windows_configure_domain_hosts">
+            <title>Configuring the syslog-ng agents of the domain hosts</title>
             <indexterm>
-                <primary>configuring syslog-ng</primary>
-                <secondary>syslog-ng agent</secondary>
+                <primary>syslog-ng agent</primary>
+                <secondary>configuring domain hosts</secondary>
             </indexterm>
             <para>To configure an already installed syslog-ng agent from the domain controller,
-                install the syslog-ng agent on the domain controller, then select <guimenu>Start >
+                perform the following steps.</para>
+                <step>
+                    <para>On the domain controller, select <guimenu>Start >
                     Control Panel > Administrative Tools > Active Directory Users and
-                Computers</guimenu>, right-click on the Organizational Unit, select
-                    <guimenu>Properties > Syslog-ng Agent Settings</guimenu>.</para>
+                Computers</guimenu>.</para>
+                    </step>
+                 <step>
+                     <para>Right-click on the Organizational Unit, then select
+                    <guimenu>Properties > syslog-ng Agent Settings</guimenu>.</para>
+                 </step>
+                 <step>
+                     <para>Configure the syslog-ng agent as needed for the domain hosts. The changes will take affect when the domain hosts update their settings from the domain controller. 
+                     By default, this happens every 90 minutes, depending on your domain settings. To download the configuration earlier, execute the <command>gpupdate</command> command on the members of the domain.</para>
+                     <note>
+                         <para>When the domain hosts update their settings, the syslog-ng agent will be automatically restarted to load the new settings, except when there is no difference between the old and the new settings.</para>
+                     </note>
+                 </step>
+             </procedure>
+             <procedure id="windows_configure_domain_controllers">
+            <title>Configuring the syslog-ng agents of the domain controllers</title>
+            <indexterm>
+                <primary>syslog-ng agent</primary>
+                <secondary>configuring domain controllers</secondary>
+            </indexterm>
+            <para>To configure the syslog-ng agent running on the domain controllers,
+                perform the following steps.</para>
+                <step>
+                    <para>On the domain controller, select <guimenu>Start >
+                    Control Panel > Administrative Tools > Active Directory Users and
+                Computers</guimenu>.</para>
+                    </step>
+                 <step>
+                     <para>Right-click on the Organizational Unit of the domain whose domain controllers you want to configure, then select <guimenu>Properties</guimenu>. By default, the domain controllers are in the Domain Controllers organizational unit.</para>
+                 </step>
+                 <step>
+                    <para>Select <guibutton>Group Policy</guibutton>, and edit the Group Policy
+                        object you want to add the syslog-ng agent configuration to. Alternatively,
+                        you can create a new group policy object as well.</para>
+                </step>
+                <step>
+                    <para>Select <guilabel>Computer Configuration > syslog-ng Agent Settings</guilabel>        and configure the syslog-ng Agent. The domain controllers of the domain will use this configuration. </para>
+                </step>
+                 <step>
+                     <para>Configure the syslog-ng agent as needed for the domain controllers. If you have multiple domain controllers, the changes will take affect when the other domain controllers update their settings from this domain controller. 
+                     By default, this happens every 5 minutes, depending on your domain settings. To download the configuration earlier, execute the <command>gpupdate</command> command on the domain controllers.</para>
+                     <note>
+                         <para>When the domain controllers receive the new settings, the syslog-ng agent will be automatically restarted to load the new settings, except when there is no difference between the old and the new settings.</para>
+                     </note>
+                 </step>
+             </procedure>
         </section>
         <section id="windows_upgrade">
+            <title>Upgrading syslog-ng Agent for Windows to the latest version</title>
+            <para>The exact upgrading procedure of the syslog-ng Agent for Windows application depends on how you have installed and how you manage the agent.</para>
+            <warning>
+                <para>When upgrading agents running in domain mode, always upgrade the agents running on the domain hosts before upgrading the agent running on the domain controllers.</para>
+                <para>The hosts of a domain (including the domain controllers) should run the same version of the syslog-ng Agent, running different versions on the hosts in neither supported nor recommended.</para>
+            </warning>
+            <itemizedlist>
+                <listitem>
+                    <para>If a host is running the syslog-ng agent in standalone mode, download and execute the <filename>syslog-ng-agent-&lt;versionnumber&gt;-setup.exe</filename> installer on the host and verify that the displayed information is correct. The agent will be automatically restarted when you close the configuration window.</para>
+                </listitem>
+                <listitem>
+                    <para>If a domain host is running the syslog-ng agent that was installed by the domain controller from the <parameter>.msi</parameter> installer package, complete the steps described in <xref linkend="windows_install_domain_controller"/>. The system will automatically recognize that the new package will update the syslog-ng Agent for Windows application.</para>
+                </listitem>
+                <listitem>
+                    <para>If a domain host is running the syslog-ng agent that was installed manually from the <filename>syslog-ng-agent-nosnapin-&lt;versionnumber&gt;-setup.exe</filename> file, run the new <filename>syslog-ng-agent-nosnapin-&lt;versionnumber&gt;-setup.exe</filename> file on the host. After the installation is complete, select <guilabel>Start > Run</guilabel> and execute the <command>gpupdate</command> command to refresh the domain settings of the agent.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section id="windows_upgrade_30x">
             <title>Upgrading syslog-ng Agent for Windows 2.x to 3.0.x</title>
             <indexterm significance="preferred">
                 <primary>syslog-ng agent</primary>
@@ -429,13 +526,14 @@
                     into the <guilabel>Server Port</guilabel> field.</para>
             </step>
             <step>
-                <para>Select the protocol used to transfer log messages. The following protocol
-                    templates are available:</para>
+                <para>Select the protocol used to transfer log messages and press
+                    <guibutton>Reset</guibutton> to apply the selected template. The following
+                    protocol templates are available:</para>
                 <itemizedlist>
                     <listitem>
-                        <para><emphasis>Legacy</emphasis>: Use the legacy BSD-syslog protocol
-                            specified in RFC3164. This option uses the following message template:
-                                <parameter>&lt;${PRI}&gt;${BSDDATE} ${HOST}
+                        <para><emphasis>Legacy BSD Syslog Protocol</emphasis>: Use the legacy
+                            BSD-syslog protocol specified in RFC3164. This option uses the following
+                            message template: <parameter>&lt;${PRI}&gt;${BSDDATE} ${HOST}
                                 ${APP_NAME}[${PROCESS_ID}]: ${MSG}</parameter>.</para>
                     </listitem>
                     <listitem>
@@ -453,9 +551,10 @@
                         <indexterm>
                             <primary>snare</primary>
                         </indexterm>
-                        <para><emphasis>Snare compatible</emphasis>: Sends log messages in a format
-                            compatible with the Snare log monitoring tool, using the following
-                            template: <parameter>&lt;${PRI}&gt;${BSDDATE} ${HOST}
+                        <para><emphasis>Snare compatible BSD Syslog Protocol</emphasis>: Sends log
+                            messages in a format compatible with the Snare log monitoring tool,
+                            using the following template:
+                                <parameter>&lt;${PRI}&gt;${BSDDATE} ${HOST}
                             ${MSG}</parameter>.</para>
                     </listitem>
                 </itemizedlist>
@@ -617,7 +716,7 @@
                 </step>
                 <step>
                     <para>Select <guibutton>syslog-ng Agent Settings > Eventlog Sources</guibutton>,
-                        and double-click on <guimenu>Eventlog Containers</guimenu>.</para>
+                        and double-click on <guimenu>Event Containers</guimenu>.</para>
                 </step>
                 <step>
                     <itemizedlist>
@@ -707,8 +806,9 @@
                         application.</para>
                 </step>
                 <step>
-                    <para>Select <guibutton>syslog-ng Agent Settings > File Sources</guibutton>, and
-                        double-click on <guimenu>Sources</guimenu>.</para>
+                    <para>Select <guibutton>syslog-ng Agent Settings > File Sources</guibutton>,
+                        double-click on <guimenu>Sources</guimenu>, and check the
+                        <guilabel>Enable</guilabel> option.</para>
                 </step>
                 <step>
                     <para>Select <guibutton>Add > Browse</guibutton>, and select the log file or the
@@ -742,8 +842,12 @@
                         <listitem>
                             <para>To send messages only from the file that was last modified, select
                                 the <guilabel>Last Modified File Only</guilabel> option.</para>
+                                <note>
+                                    <para>When using the <guilabel>Last Modified File Only</guilabel> option with a file source that has wildcard in the filename (e.g., <parameter>*.log</parameter>), the following will happen. When started for the first time, the agent will send the contents of every matching file to the central server, and store the position of the last message in the file with the most recent modification date. When new messages are written to this file, the agent will send only the new messages. However, if an older file is modified, the agent will resend the entire contents of this newly modified file, and store the position of the last message in this file only.</para>
+                                    <para>When you use wildcards together with the <guilabel>Last Modified File Only</guilabel> option, make sure that older files will not be modified.</para>
+                                </note>
                             <para>If you are forwarding the logs of Internet Information Server
-                                (IIS) 5 appliations, select the <guilabel>IIS 5.x Log</guilabel>
+                                (IIS) 5 applications, select the <guilabel>IIS 5.x Log</guilabel>
                                 option.</para>
                             <note>
                                 <para>If this option is not selected, the syslog-ng agent monitors
@@ -842,7 +946,7 @@
                             the <parameter>Message Contents</parameter> filter case-insensitive for
                             both file and eventlog sources. The <guilabel>Filters Ignore
                             Case</guilabel> option makes the <parameter>Computers</parameter>,
-                                <parameter>Event Sources and Categories</parameter>, and the
+                                <parameter>Sources and Categories</parameter>, and the
                                 <parameter>Users</parameter> filter case-insensitive.</para>
                     </note>
                 </step>
@@ -1058,7 +1162,7 @@
                         </step>
                         <step>
                             <para>Select the <guibutton>Use SSL</guibutton> option, click
-                                    <guibutton>Browse</guibutton>, then select the certificate to
+                                    <guibutton>Select</guibutton>, then select the certificate to
                                 use.</para>
                             <note>
                                 <para>A common way is to use the hostname or the IP address of the
@@ -1562,8 +1666,7 @@
                         </row>
                         <row>
                             <entry>MSG</entry>
-                            <entry>The content of the message.</entry>
-                            <!-- FIXME ez ugyanaz, mint a $MSGONLY ?? -->
+                            <entry>An alias for the <parameter>MESSAGE</parameter> macro.</entry>                           
                         </row>
                         <row>
                             <entry>PRI</entry>
@@ -1870,12 +1973,13 @@
                             <parameter>0</parameter> is not accepted by the agent.</para>
                     </listitem>
                     <listitem>
-                        <para>To make the agent send old messages as well, us the following in the
-                            configuration file: </para>
-                        <synopsis>&lt;syslog-ng_Agent SendOldMessages="1"&gt;</synopsis>
+                        <para>If you do not want the agent to send old (already existing) messages
+                            to the logserver, use the following in the configuration file: </para>
+                        <synopsis>&lt;syslog-ng_Agent SendOldMessages="0"&gt;</synopsis>
                         <para>Note that when it starts, the agent automatically removes the
-                                <parameter>SendOldMessages="1"</parameter> attribute from the
-                            configuration file to avoid sending the old messages repeatedly.</para>
+                                <parameter>SendOldMessages="0"</parameter> attribute from the
+                            configuration file, but it will not resend the messages after the agent
+                            is restarted.</para>
                     </listitem>
                 </itemizedlist>
             </step>
@@ -1893,7 +1997,12 @@
                         /xmlconfig="fullpath\myconfigfile.xml"</command>. Note that the XML schema
                     file must be in the same folder as the installer file.</para>
                 <note>
-                    <para>If you want to use the .msi installer with an xml file, use the
+                    <itemizedlist>
+                        <listitem>
+                            <para>If you are using an XML-capable agent without using an XML configuration file, and you want to switch to using an XML configuration file without reinstalling the agent, execute the <command>syslog-ng-agent.exe -i "fullpath\myconfigfile.xml"</command> command. The syslog-ng Agent service will be re-registered to use the XML configuration file.</para>
+                        </listitem>
+                        <listitem>
+                            <para>If you want to use the .msi installer with an xml file, use the
                             <command>syslog-ng-agent-3.0.4-setup.msi
                             SLNGOPTS="/xmlconfig=fullpath\myconfigfile.xml"</command> command, or
                         edit the installer with the Orca MSI editor (<ulink
@@ -1903,40 +2012,109 @@
                         <parameter>SLNGOPTS="/xmlconfig=fullpath\myconfigfile.xml"</parameter> to
                         the installation parameters on the <guilabel>Customization</guilabel>
                     tab.</para>
+                        </listitem>
+                    </itemizedlist>
                 </note>
             </step>
         </procedure>
-        <example id="windows_xml_config_sample">
-            <title>A sample configuration file for the syslog-ng Agent</title>
-            <para>The following is a sample configuration file for the syslog-ng Agent for Windows
-                application.</para>
-            <synopsis>&lt;SOFTWARE&gt;
-  &lt;BalaBit&gt;
-    &lt;syslog-ng_Agent&gt;
-        &lt;Local_Settings Enabled="1" RegExpIgnoreCase="1" FilterIgnoreCase="0" LogFacility="13"&gt;
-            &lt;Destinations&gt;
-                &lt;Network&gt;
-                    &lt;IPv4 Enabled="1" PrimaryServer="Server0"&gt;
-                        &lt;Server0 Enabled="1" ServerName="mylogserver-1" ServerPort="4221" Throttle="100" Protocol="1" ProtocolTemplate="&lt;${PRI}&gt;${BSDDATE} ${HOST} ${MSG}" UseSSL="0" ClientCertSubject=""/&gt;
-                    &lt;/IPv4&gt;
-                &lt;/Network&gt;
-            &lt;/Destinations&gt;
-            &lt;EventSources Enabled="1" MessageTemplate="${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})"&gt;
-                &lt;Sources Enabled="1"&gt;
-                    &lt;Event0 Enabled="1" Name="Security"/&gt;
-                    &lt;Event1 Enabled="1" Name="Application"/&gt;
-                &lt;/Sources&gt;
-            &lt;/EventSources&gt;
-            &lt;FileSources&gt;
-                &lt;Sources Enabled="2"&gt;
-                    &lt;File0 Enabled="1" BaseDirectory="c:\" FileNameFilter="*.log" Recursive="0" LastModifiedFileOnly="0" id="a455e5ba-d4e9-4b85-8711-e8bf10141028" PeriodicFileCheck="0"/&gt;
-                &lt;/Sources&gt;
-            &lt;/FileSources&gt;
+        <section id="windows_xml_config_sample">
+            <title>Sample configuration files for the syslog-ng Agent</title>
+            <para>The following is a sample configuration file with minimal settings for the syslog-ng Agent for Windows application.</para>
+            <synopsis>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;syslog-ng-agent-configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="c:\Program Files\syslog-ng Agent\syslog-ng-agent-conf.xsd"&gt;
+  &lt;SOFTWARE&gt;
+    &lt;BalaBit&gt;
+      &lt;syslog-ng_Agent WriteMinidump="1" SendOldMessages="1"&gt;
+        &lt;Local_Settings Enabled="1"&gt;
+          &lt;Destinations&gt;
+            &lt;Network&gt;
+              &lt;IPv4 Enabled="1" PrimaryServer="1"&gt;
+                &lt;Server Index="1" Enabled="1" ServerName="yourserver" ServerPort="514" Throttle="10000" Protocol="2" ProtocolTemplate="&lt;${PRI}&gt;${BSDDATE} ${HOST} ${APP_NAME}[${PROCESS_ID}]: ${MSG}"&gt;&lt;/Server&gt;
+              &lt;/IPv4&gt;
+            &lt;/Network&gt;
+          &lt;/Destinations&gt;
+          &lt;EventSources Enabled="1" MessageTemplate="${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})"&gt;
+            &lt;Sources Enabled="1"&gt;
+              &lt;Event Index="0" Enabled="1" Name="Application" /&gt;
+              &lt;Event Index="1" Enabled="1" Name="Security" /&gt;
+              &lt;Event Index="2" Enabled="1" Name="System" /&gt;
+            &lt;/Sources&gt;
+          &lt;/EventSources&gt;
         &lt;/Local_Settings&gt;
-    &lt;/syslog-ng_Agent&gt;
-  &lt;/BalaBit&gt;
-&lt;/SOFTWARE&gt;</synopsis>
-        </example>
+      &lt;/syslog-ng_Agent&gt;
+    &lt;/BalaBit&gt;
+  &lt;/SOFTWARE&gt;
+&lt;/syslog-ng-agent-configuration&gt;</synopsis>
+         <para>The following is a more detailed configuration file for the syslog-ng Agent for Windows application.</para>
+         <synopsis>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;syslog-ng-agent-configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="c:\Program Files\syslog-ng Agent\syslog-ng-agent-conf.xsd"&gt;
+  &lt;SOFTWARE&gt;
+    &lt;BalaBit&gt;
+      &lt;syslog-ng_Agent WriteMinidump="1" SendOldMessages="1"&gt;
+        &lt;Local_Settings Enabled="1" RegExpIgnoreCase="0" FilterIgnoreCase="0" LogFacility="13"&gt;
+          &lt;Destinations&gt;
+            &lt;Network&gt;
+              &lt;IPv4 Enabled="1" PrimaryServer="0"&gt;
+                &lt;Server Index="0" Enabled="1" ServerName="server1" ServerPort="514" Throttle="100000" Protocol="2" ProtocolTemplate="&lt;${PRI}&gt;${BSDDATE} ${HOST} ${APP_NAME}[${PROCESS_ID}]: ${MSG}" UseSSL="0" ClientCertSubject=""&gt;
+                  &lt;FailoverServers FailoverServer0="failoverserver01" FailoverServer1="failoverserver02"&gt;&lt;/FailoverServers&gt;
+                &lt;/Server&gt;
+                &lt;Server Index="1" Enabled="1" ServerName="server1" ServerPort="514" Throttle="100000" Protocol="1" ProtocolTemplate="&lt;${PRI}&gt;${BSDDATE} ${HOST} ${MSG}" UseSSL="0" ClientCertSubject=""&gt;
+                  &lt;FailoverServers FailoverServer0="failoverserver11" FailoverServer1="failoverserver12"&gt;&lt;/FailoverServers&gt;
+                &lt;/Server&gt;
+              &lt;/IPv4&gt;
+            &lt;/Network&gt;
+          &lt;/Destinations&gt;
+          &lt;EventSources Enabled="1" MessageTemplate="${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})"&gt;
+            &lt;Sources Enabled="1"&gt;
+              &lt;Event Index="0" Enabled="1" Name="Application" /&gt;
+              &lt;Event Index="1" Enabled="1" Name="Security" /&gt;
+              &lt;Event Index="3" Enabled="1" Name="System" /&gt;
+            &lt;/Sources&gt;
+            &lt;Filter Enabled="1"&gt;
+              &lt;Formatted_Message Enabled="1"&gt;
+                &lt;Rule Index="0" Regexp="testregexp" Enabled="1" /&gt;
+                &lt;Rule Index="1" Regexp="testregexp2" Enabled="1" /&gt;
+              &lt;/Formatted_Message&gt;
+              &lt;Computer Enabled="1"&gt;
+                &lt;Rule Index="0" Computer="mycomputername1" Enabled="1" /&gt;
+                &lt;Rule Index="1" Computer="mycomputername2" Enabled="1" /&gt;
+              &lt;/Computer&gt;
+              &lt;Type Enabled="1"&gt;
+                &lt;Rule Index="0" Type="4" Enabled="1"&gt;&lt;/Rule&gt;
+                &lt;Rule Index="1" Type="4" Enabled="1"&gt;&lt;/Rule&gt;
+              &lt;/Type&gt;
+              &lt;User Enabled="1"&gt;
+                &lt;Rule Index="0" Username="TESTDOMAIN\Administrator" Enabled="1" /&gt;
+                &lt;Rule Index="1" Username="NT AUTHORITY\SYSTEM" Enabled="1" /&gt;
+              &lt;/User&gt;
+              &lt;Source_EventId Enabled="1"&gt;
+                &lt;Rule Index="0" Source="EventCreate" EventId="636" Enabled="1" /&gt;
+                &lt;Rule Index="1" Source="EventCreate" EventId="637" Enabled="1" /&gt;
+              &lt;/Source_EventId&gt;
+              &lt;Source_Category Enabled="1"&gt;
+                &lt;Rule Index="0" Source="Security" Category="Object Access" Enabled="1" /&gt;
+                &lt;Rule Index="1" Source=" EventCreate" Category="" Enabled="1" /&gt;
+              &lt;/Source_Category&gt;
+            &lt;/Filter&gt;
+          &lt;/EventSources&gt;
+          &lt;FileSources MessageTemplate="$FILE_NAME: $FILE_MESSAGE" Enabled="1" LogFacility="0" LogPriority="6"&gt;
+            &lt;Sources Enabled="1"&gt;
+              &lt;File Index="0" Enabled="1" BaseDirectory="c:\windows" FileNameFilter="*.log" Recursive="0" LastModifiedFileOnly="0" id="a455e5ba-d4e9-4b85-8711-e8bf10141028" PeriodicFileCheck="0" LogFacility="5" LogPriority="5" /&gt;
+              &lt;File Index="1" Enabled="1" BaseDirectory="c:\" FileNameFilter="*.txt" Recursive="1" LastModifiedFileOnly="1" id="b455e5ba-d4e9-4b85-8711-e8bf10141038" PeriodicFileCheck="0" /&gt;
+            &lt;/Sources&gt;
+            &lt;Filter Enabled="1"&gt;
+              &lt;Formatted_Message&gt;
+                &lt;Rule Index="0" Regexp="Verbose" Enabled="1" /&gt;
+                &lt;Rule Index="1" Regexp="Info" Enabled="1" /&gt;
+              &lt;/Formatted_Message&gt;
+            &lt;/Filter&gt;
+          &lt;/FileSources&gt;
+        &lt;/Local_Settings&gt;
+      &lt;/syslog-ng_Agent&gt;
+    &lt;/BalaBit&gt;
+  &lt;/SOFTWARE&gt;
+&lt;/syslog-ng-agent-configuration&gt;</synopsis>
+        </section>
         <!-- <section id="windows_xml_config_specification">
             <title>Specification of the syslog-ng agent configuration file</title>
             <indexterm>
@@ -2009,8 +2187,79 @@
             </indexterm>
             <para>If you change the timezone setting of the host while the syslog-ng Agent is
                 running, you have to restart the syslog-ng Agent. Otherwise, it will not receive the
-                updated timezone information and the date of the events will be incorrect.</para>
+                updated timezone information and the date of the events will be incorrect.</para>                
         </warning>
+        <section id="windows_command_line">
+            <title>Command-line options</title>
+            <para>The syslog-ng Agent for Windows application has the following command-line options:</para>
+            <variablelist>
+                 <varlistentry>
+                     <term>
+                     <command>-e</command>
+                     </term>
+                     <listitem>
+                         <para>Start the syslog-ng Agent in debug mode and send the messages to the Application eventlog container.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-d</command>
+                     </term>
+                     <listitem>
+                         <para>Start the syslog-ng Agent in debug mode. The debug messages can be displayed using the <command>dbgview</command> application (available at <ulink url="http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx">http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx</ulink>).</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-i</command>
+                     </term>
+                     <listitem>
+                         <para>Install the syslog-ng Agent service into the services list.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-r</command>
+                     </term>
+                     <listitem>
+                         <para>Remove the syslog-ng Agent service from the services list.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-h</command>
+                     </term>
+                     <listitem>
+                         <para>Display a help message about the command-line options.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-v</command>
+                     </term>
+                     <listitem>
+                         <para>Display version information.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-t</command>
+                     </term>
+                     <listitem>
+                         <para>Terminate the currently running syslog-ng Agent.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-c</command>
+                     </term>
+                     <listitem>
+                         <para>Start the syslog-ng Agent using the specified XML configuration file.</para>
+                     </listitem>
+                 </varlistentry>
+            </variablelist>
+            <para>To use these options, select <guilabel>Start > Run > cmd</guilabel>, navigate to the directory where the syslog-ng Agent is installed (e.g., <command>cd C:\Windows\Program Files\BalaBit\syslog-ng Agent\</command>), and execute the <command>syslog-ng-agent.exe</command> file with the required option.</para>
+        </section>
     </section>
     <section id="windows_inheritance">
         <title>Domain versus local settings</title>
@@ -2045,8 +2294,7 @@
             <primary>troubleshooting</primary>
             <secondary>syslog-ng agent</secondary>
         </indexterm>
-        <para>In case you experience problems with the syslog-ng agent, the following points may be
-            of help.</para>
+        <para>In case you experience problems with the syslog-ng agent, the following points may be of help.</para>
         <note>
             <para>The followings address only problems specific to the syslog-ng agent, and assume
                 that communication between the server and the client is otherwise possible (that is,
@@ -2163,6 +2411,25 @@
                 typically about 40-50 MB.</para>
             <!-- FIXME mi a default install dir, az elejen az installhoz is! -->
         </section>
+        <section>
+                <title>Logging domain update errors</title>
+                <para>If the domain settings are not downloaded to a domain host, the syslog-ng Agent (starting from version 3.0.6) can create a logfile to debug why the domain settings are not updated on the client. Complete the following steps:</para>
+                <procedure>
+                    <title></title>
+                    <step>
+                        <para>On the client host select <guilabel>Start > Run > regedit</guilabel>.</para>
+                    </step>
+                    <step>
+                        <para>Set the <guilabel>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/GpoDbgLog</guilabel> key to <parameter>2</parameter>.</para>
+                    </step> 
+                    <step>
+                        <para>Select <guilabel>Start > Run > gpupdate</guilabel>, and a the <filename>%systemroot%\system32\syslog_gpext.txt</filename> file will be created.</para>
+                    </step>
+                    <step>
+                        <para>After solving the problem, delete the <guilabel>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/GpoDbgLog</guilabel> key from the registry, otherwise the <filename>%systemroot%\system32\syslog_gpext.txt</filename> file will grow every time when the domain settings of the client are updated.</para>
+                    </step>
+                </procedure>
+            </section>
     </section>
     <section id="windows_auditing">
         <title>Configuring the auditing policy on Windows</title>

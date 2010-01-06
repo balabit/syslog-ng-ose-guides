@@ -122,6 +122,9 @@
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_commonoption_pad_size)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_commonoption_program_override)"/>
                         <row id="source_file_recursive">
                             <entry>recursive</entry>
                             <entry>yes or no</entry>
@@ -241,6 +244,9 @@
                         </row>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_commonoption_program_override)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_commonoption_tags)"/>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
@@ -321,6 +327,9 @@
                             <entry>The name of the application to start and read messages from.
                             </entry>
                         </row>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_commonoption_program_override)"/>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_commonoption_tags)"/>
@@ -404,6 +413,11 @@
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_commonoption_pad_size)"/>
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                        <xi:include href="reference_common.xml"
+                            xmlns:xi="http://www.w3.org/2001/XInclude"
+                            xpointer="element(source_commonoption_program_override)"/>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_commonoption_tags)"/>
@@ -727,7 +741,11 @@
                        key_file('/opt/syslog-ng/etc/syslog-ng/syslog-ng.key') 
                    cert_file('/opt/syslog-ng/etc/syslog-ng/syslog-ng.crt'))); 
 };</synopsis>
-                <para>A TCP source listening for messages using the IETF-syslog message format:</para>
+                <para>A TCP source listening for messages using the IETF-syslog message format. Note
+                    that for transferring IETF-syslog messages, generally you are recommended to use
+                    the <parameter>syslog()</parameter> driver on both the client and the server, as
+                    it uses both the IETF-syslog message format and the protocol. See <xref
+                        linkend="configuring_sources_syslog"/> for details.</para>
                 <synopsis>source s_tcp_syslog { tcp(ip(127.0.0.1) port(1999) flags(syslog-protocol)); };</synopsis>
             </example>
         </section>
@@ -1308,7 +1326,19 @@
                             <entry>string</entry>
                             <entry>Use global setting.</entry>
                             <entry>The URL of the Timestamping Authority used to request timestamps
-                                to sign logstore chunks.</entry>
+                                to sign logstore chunks. Note that &abbrev; currently supports
+                                only Timestamping Authorities that conform to <emphasis>RFC3161
+                                    Internet X.509 Public Key Infrastructure Time-Stamp
+                                Protocol</emphasis>, other protocols like <emphasis>Microsoft
+                                    Authenticode Timestamping</emphasis> are not supported.</entry>
+                            <indexterm>
+                                <primary>timestamping</primary>
+                                <secondary>Microsoft Authenticode Timestamping</secondary>
+                            </indexterm>
+                            <indexterm>
+                                <primary>timestamping</primary>
+                                <secondary>RFC3161</secondary>
+                            </indexterm>
                         </row>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
@@ -2366,7 +2396,8 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>-->
                             functionality has been moved to the <parameter>message()</parameter>
                             filter. To limit the scope of the match to a specific part of the
                             message (identified with a macro), use the <parameter>match(regexp
-                                value("$MACRO"))</parameter> syntax.</entry>
+                                value("MACRO"))</parameter> syntax. Do nor include the $ sign in the
+                            parameter of the <parameter>value()</parameter> option.</entry>
                     </row>
                     <row>
                         <entry>message()</entry>
@@ -2418,24 +2449,62 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>-->
         </indexterm>
         <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and
                 <parameter>program()</parameter> filter functions accept regular expressions as
-            parameters. See <xref linkend="reference_regular_expressions"/> for details. </para>
-        <para>
-            <indexterm>
-                <primary>filters</primary>
-                <secondary>priorities</secondary>
-            </indexterm> The <parameter>level()</parameter> filter accepts the following levels:
+            parameters. The exact type of the regular expression to use can be specified with the
+                <parameter>type()</parameter> option. The following expression types are available:</para>
+        <table id="reference_filter_types">
+            <title>Filter match types</title>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>posix</entry>
+                        <entry>Use POSIX regular expressions. If the <parameter>type()</parameter>
+                            parameter is not specified, syslog-ng uses POSIX regular expressions by
+                            default. For additional details on the use and flags of regular
+                            expressions, see <xref linkend="reference_regular_expressions"
+                        />.</entry>
+                    </row>
+                    <row>
+                        <entry>pcre</entry>
+                        <entry>Use PCRE regular expressions. This is available only if syslog-ng was
+                            compiled with the <parameter>--enable-pcre</parameter> option. Execute
+                            the <command>syslog-ng -V</command> command to list the options
+                            supported by your binary. For additional details on the use and flags of
+                            regular expressions, see <xref linkend="reference_regular_expressions"
+                            />.</entry>
+                    </row>
+                    <row>
+                        <entry>string</entry>
+                        <entry>Match the strings literally, without regular expression support. By
+                            default, only identical strings are matched. For partial matches, use
+                            the <parameter>flags("prefix")</parameter> or the
+                                <parameter>flags("substring")</parameter> flags.</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <indexterm>
+            <primary>filters</primary>
+            <secondary>priorities</secondary>
+        </indexterm>
+        <para>The <parameter>level()</parameter> filter accepts the following levels:
                 <parameter>emerg</parameter>, <parameter>alert</parameter>,
             <parameter>crit</parameter>, <parameter>err</parameter>, <parameter>warning</parameter>,
                 <parameter>notice</parameter>, <parameter>info</parameter>,
             <parameter>debug</parameter>. </para>
-        <para>
-            <indexterm>
-                <primary>filters</primary>
-                <secondary>facilities, </secondary>
-            </indexterm> The <parameter>facility()</parameter> filter accepts both the name and the
-            numerical code of the facility or the importance level. The syslog-ng application
-            recognizes the following facilities: (Note that some of these facilities are available
-            only on specific platforms.)</para>
+        <indexterm>
+            <primary>filters</primary>
+            <secondary>facilities, </secondary>
+        </indexterm>
+        <para>The <parameter>facility()</parameter> filter accepts both the name and the numerical
+            code of the facility or the importance level. The syslog-ng application recognizes the
+            following facilities: (Note that some of these facilities are available only on specific
+            platforms.)</para>
         <!-- FIXME authpriv -->
         <table>
             <title>syslog Message Facilities recognized by the facility() filter</title>
@@ -3533,7 +3602,7 @@ log { source(s_local);
             optional. The <parameter>type()</parameter> specifies the type of regular expression to
             use; while the <parameter>flags()</parameter> are the flags of the regular expressions
             (see <xref linkend="reference_regular_expressions"/> for details):</para>
-        <table>
+        <table id="reference_rewrite_types">
             <title>Rewrite rule types</title>
             <tgroup cols="2">
                 <thead>
@@ -3558,8 +3627,10 @@ log { source(s_local);
                     </row>
                     <row>
                         <entry>string</entry>
-                        <entry>Match the strings literally, without regular expression
-                        support.</entry>
+                        <entry>Match the strings literally, without regular expression support. By
+                            default, only identical strings are matched. For partial matches, use
+                            the <parameter>flags("prefix")</parameter> or the
+                                <parameter>flags("substring")</parameter> flags.</entry>
                     </row>
                 </tbody>
             </tgroup>
@@ -3608,7 +3679,8 @@ log { source(s_local);
             syslog-ng uses POSIX-style regular expressions, but if compiled with the
                 <parameter>--enable-pcre</parameter> option, Perl Compatible Regular Expressions can
             be used as well. The regular expressions can use up to 255 regexp matches
-                (<parameter>${1} ... ${255}</parameter>), but only from the last filter. For
+                (<parameter>${1} ... ${255}</parameter>), but only from the last filter and only if
+            the <parameter>flags("store-matches")</parameter> flag was set for the filter. For
             case-insensitive searches, use the <parameter>flags("ignore-case")</parameter> option.</para>
         <indexterm>
             <primary>regular expressions</primary>
@@ -3639,9 +3711,15 @@ log { source(s_local);
                         <entry>ignore-case</entry>
                         <entry>Disable case-sensitivity.</entry>
                     </row>
-                    <row>
+                    <!--<row>
                         <entry>newline</entry>
-                        <entry><!-- FIXME --></entry>
+                        <entry></entry>
+                    </row>-->
+                    <row>
+                        <entry>store-matches</entry>
+                        <entry>Store the matches of the regular expression into the <parameter>$1,
+                                ... $255</parameter> variables. Matches from the last filter
+                            expression can be referenced in regular expressions</entry>
                     </row>
                     <row>
                         <entry>utf8</entry>
@@ -3650,11 +3728,11 @@ log { source(s_local);
                 </tbody>
             </tgroup>
         </table>
-        <para>PCRE regular expressions have the following flag options:</para>
         <example id="example_regexp_posix">
             <title>Using Posix regular expressions</title>
             <synopsis>filter f_message { message("keyword" flags("utf8" "ignore-case") );</synopsis>
         </example>
+        <para>PCRE regular expressions have the following flag options:</para>
         <table>
             <title>PCRE options</title>
             <tgroup cols="2">
@@ -3674,23 +3752,32 @@ log { source(s_local);
                         <entry>ignore-case</entry>
                         <entry>Disable case-sensitivity.</entry>
                     </row>
-                    <row>
+                    <!--<row>
                         <entry>newline</entry>
                         <entry>Process the string until the end of the string, ignoring newline
                             characters.</entry>
-                    </row>
+                    </row>-->
                     <row>
                         <entry>nobackref</entry>
                         <entry>Do not store back references for the matches &mdash; improves
                             performance.</entry>
                     </row>
                     <row>
+                        <entry>store-matches</entry>
+                        <entry>Store the matches of the regular expression into the <parameter>$1,
+                                ... $255</parameter> variables. Named matches (also called named
+                            subpatterns), e.g., <parameter>(?&lt;name&gt;...)</parameter>,
+                            are stored as well. Matches from the last filter expression can be
+                            referenced in regular expressions</entry>
+                    </row>
+                    <row>
                         <entry>unicode</entry>
-                        <entry>Use Unicode support for UTF-8 matches.</entry>
+                        <entry>Use Unicode support for UTF-8 matches: UTF-8 character sequences are
+                            handled as single characters.</entry>
                     </row>
                     <row>
                         <entry>utf8</entry>
-                        <entry>Use UTF-8 matching.</entry>
+                        <entry>An alias for the <parameter>unicode</parameter> flag.</entry>
                     </row>
                 </tbody>
             </tgroup>

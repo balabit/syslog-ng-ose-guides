@@ -1786,27 +1786,28 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
         source(s1); source(s2); 
         filter(demo_filter);
         destination(d1); destination(d2); };</synopsis>
-                <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and
-                        <parameter>program()</parameter> filter functions accept regular expressions
-                    as parameters.</para>
-                <synopsis>filter demo_regexp_filter { host("system.*1") and match("deny"); };</synopsis>
-            </example>
-            <para>To limit the scope of a filter function, add the <parameter>value()</parameter>
-                option and set its scope with a macro. For example, to limit the scope of the
-                    <parameter>match()</parameter> filter to the text part of the message, use:</para>
-            <synopsis>match("keyword" value("MESSAGE"))</synopsis>
-            <para>The <parameter>value()</parameter> parameter accepts both built-in macros and
-                user-defined ones created with a parser. For details on macros and parsers, see
-                    <xref linkend="configuring_macros"/> and <xref linkend="configuring_parsers"/>.</para>
-            <note>
-                <para>When a log statement includes multiple filter statements, syslog-ng sends a
-                    message to the destination only if all filters are true for the message. In
-                    other words, the filters are connected with the logical
-                    <parameter>AND</parameter> operator. In the following example, no message
-                    arrives to the destination, because the filters are exclusive (the hostname of a
-                    client cannot be <parameter>example1</parameter> and
-                    <parameter>example2</parameter> at the same time):</para>
-                <synopsis>filter demo_filter1 { host("example1"); };
+            <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and
+                    <parameter>program()</parameter> filter functions accept regular expressions as
+                parameters.</para>
+            <synopsis>filter demo_regexp_filter { host("system.*1") and match("deny"); };</synopsis>
+        </example>
+        <para>To limit the scope of a filter function, add the <parameter>value()</parameter> option
+            and set its scope with a macro. For example, to limit the scope of the
+                <parameter>match()</parameter> filter to the text part of the message, use:</para>
+        <synopsis>match("keyword" value("MESSAGE"))</synopsis>
+        <para>The <parameter>value()</parameter> parameter accepts both built-in macros and
+            user-defined ones created with a parser. Do not prefix the macros with the $ sign. For
+            details on macros and parsers, see <xref linkend="configuring_macros"/> and <xref
+                linkend="configuring_parsers"/>.</para>
+        <note>
+            <para>When a log statement includes multiple filter statements, syslog-ng sends a
+                message to the destination only if all filters are true for the message. In other
+                words, the filters are connected with the logical <parameter>AND</parameter>
+                operator. In the following example, no message arrives to the destination, because
+                the filters are exclusive (the hostname of a client cannot be
+                <parameter>example1</parameter> and <parameter>example2</parameter> at the same
+                time):</para>
+            <synopsis>filter demo_filter1 { host("example1"); };
 filter demo_filter2 { host("example2"); };
 
 log demo_filteredlog{
@@ -1822,36 +1823,42 @@ log demo_filteredlog{
 	source(s1); source(s2); 
 	filter(demo_filter);
 	destination(d1); destination(d2); };</synopsis>
-                <para>>Use the <para>not</para> operator to invert filters, for example, to select
-                    the messages that were not sent by host <parameter>example1</parameter>: </para>
-                <synopsis>filter demo_filter { not host("example1"); };</synopsis>
-                <para>However, to select the messages that were not sent by host
-                    <parameter>example1</parameter> or <parameter>example2</parameter>, you have to
-                    use the <parameter>and</parameter> operator (that's how boolean logic works):</para>
-                <synopsis>filter demo_filter { not host("example1") and not host("example2"); };</synopsis>
-                <para>Alternatively, you can use parentheses to avoid this confusion:</para>
-                <synopsis>filter demo_filter { not (host("example1") or host("example2")); };</synopsis>
-            </note>
+            <para>Use the <parameter>not</parameter> operator to invert filters, for example, to
+                select the messages that were not sent by host <parameter>example1</parameter>: </para>
+            <synopsis>filter demo_filter { not host("example1"); };</synopsis>
+            <para>However, to select the messages that were not sent by host
+                <parameter>example1</parameter> or <parameter>example2</parameter>, you have to use
+                the <parameter>and</parameter> operator (that's how boolean logic works):</para>
+            <synopsis>filter demo_filter { not host("example1") and not host("example2"); };</synopsis>
+            <para>Alternatively, you can use parentheses to avoid this confusion:</para>
+            <synopsis>filter demo_filter { not (host("example1") or host("example2")); };</synopsis>
+        </note>
 
-            <indexterm>
-                <primary>regular expressions</primary>
-                <secondary>case-insensitive</secondary>
-            </indexterm>
-            <indexterm>
-                <primary>regular expressions</primary>
-                <secondary>escaping</secondary>
-            </indexterm>
-            <para>In the extended regular expressions, the characters
-                <parameter>()[].*?+^$</parameter> are used as special symbols. Therefore, these
-                characters have to be preceded with a backslash (<parameter>\</parameter>) if they
-                are meant literally. For example, the <parameter>\$40</parameter> expression matches
-                the <parameter>$40</parameter> string. Backslashes have to be escaped as well if
-                they are meant literally. For example, the <parameter>\\d</parameter> expression
-                matches the <parameter>\d</parameter> string.</para>
-            <para>By default, all regular expressions are case sensitive. To disable the case
-                sensitivity of the expression, add the <parameter>flags(ignore-case)</parameter>
-                option to the regular expression.</para>
-            <synopsis>filter demo_regexp_insensitive { host("system" flags(ignore-case)); };</synopsis>
+        <indexterm>
+            <primary>regular expressions</primary>
+            <secondary>case-insensitive</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>regular expressions</primary>
+            <secondary>escaping</secondary>
+        </indexterm>
+        <para>In the extended regular expressions, the characters <parameter>()[].*?+^$|</parameter>
+            are used as special symbols. Therefore, these characters have to be preceded with a
+            backslash (<parameter>\</parameter>) if they are meant literally. For example, the
+                <parameter>\$40</parameter> expression matches the <parameter>$40</parameter>
+            string. Backslashes have to be escaped as well if they are meant literally. For example,
+            the <parameter>\\d</parameter> expression matches the <parameter>\d</parameter> string.</para>
+        <tip>
+            <para>If you use single quotes in, you do not need to escape the backslash, e.g.
+                    <parameter>match("\\.")</parameter> is equivalent to
+                <parameter>match('\.')</parameter>.</para>
+        </tip>
+        <para>By default, all regular expressions are case sensitive. To disable the case
+            sensitivity of the expression, add the <parameter>flags(ignore-case)</parameter> option
+            to the regular expression.</para>
+        <synopsis>filter demo_regexp_insensitive { host("system" flags(ignore-case)); };</synopsis>
+        <para>For details on regular expressions, see <xref linkend="reference_regular_expressions"
+            />.</para>        
             <note>
                 <indexterm>
                     <primary>filters</primary>
