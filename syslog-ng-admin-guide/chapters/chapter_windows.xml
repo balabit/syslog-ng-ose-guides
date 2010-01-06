@@ -2018,83 +2018,102 @@
             </step>
         </procedure>
         <section id="windows_xml_config_sample">
-            <title>A sample configuration file for the syslog-ng Agent</title>
-            <para>The following is a sample configuration file for the syslog-ng Agent for Windows
-                application.</para>
-            <synopsis>&lt;syslog-ng-agent-configuration&gt;<!--    
-        NOTE: 
-        Message Template:
-        invalid XML Characters Must Be Replaced With 
-        <                     &lt; 
-        >                     &gt; 
-        "                     &quot; 
-        '                     &apos; 
-        &                     &amp
-        File Rules:
-        The id field must be updated on any changes to generate a new uuid.
-    -->
-        &lt;SOFTWARE&gt;
-            &lt;BalaBit&gt;
-                &lt;syslog-ng_Agent WriteMinidump="1" SendOldMessages="0"&gt;
-                    &lt;Local_Settings Enabled="1" RegExpIgnoreCase="1" FilterIgnoreCase="0" LogFacility="13"&gt;
-                        &lt;Destinations&gt;
-                            &lt;Network&gt;
-                                &lt;IPv4 Enabled="1" PrimaryServer="1"&gt;
-                                    &lt;Server Index="1" Enabled="1" ServerName="10.20.254.158" ServerPort="1999" Throttle="100000" Protocol="0" ProtocolTemplate="&lt;${PRI}&gt;${BSDDATE} ${HOST} ${MSG}" UseSSL="0" ClientCertSubject=""&gt;
-                                        &lt;FailoverServers FailoverServer0="myserver1" FailoverServer1="myserver2"/&gt;
-                                    &lt;/Server&gt;
-                                &lt;/IPv4&gt;
-                            &lt;/Network&gt;
-                        &lt;/Destinations&gt;
-                        &lt;EventSources Enabled="1" MessageTemplate="${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})"&gt;
-                            &lt;Sources Enabled="1"&gt;
-                                &lt;Event Index="1" Enabled="2" Name="Security"/&gt;
-                                &lt;Event Index="0" Enabled="1" Name="Security"/&gt;
-                            &lt;/Sources&gt;
-                            &lt;Filter&gt;
-                                &lt;Formatted_Message&gt;
-                                    &lt;Rule Index="0" Regexp="myregexp"/&gt;
-                                    &lt;Rule Index="2" Regexp="myregexp"/&gt;
-                                &lt;/Formatted_Message&gt;
-                                &lt;Computer&gt;
-                                    &lt;Rule Index="0" Computer="myhost"/&gt;
-                                    &lt;Rule Index="1" Computer="myhost"/&gt;
-                                &lt;/Computer&gt;
-                                &lt;Type&gt;
-                                    &lt;Rule Index="1" Type="1"/&gt;
-                                    &lt;Rule Index="0" Type="32"/&gt;
-                                &lt;/Type&gt;
-                                &lt;User&gt;
-                                    &lt;Rule Index="0" Username="myuser"/&gt;
-                                    &lt;Rule Index="1" Username="myuser"/&gt;
-                                &lt;/User&gt;
-                                &lt;Source_EventId&gt;
-                                    &lt;Rule Index="0" Source="mysource" EventId="1"/&gt;
-                                    &lt;Rule Index="1" Source="mysource" EventId="2"/&gt;
-                                &lt;/Source_EventId&gt;
-                                &lt;Source_Category&gt;
-                                    &lt;Rule Index="0" Source="mysource" Category="mycategory"/&gt;
-                                    &lt;Rule Index="1" Source="mysource" Category="2"/&gt;
-                                &lt;/Source_Category&gt;
-                            &lt;/Filter&gt;
-                        &lt;/EventSources&gt;
-                        &lt;FileSources MessageTemplate="File${File}"&gt;
-                            &lt;Sources&gt;
-                                &lt;File Index="1" Enabled="1" BaseDirectory="c:\" FileNameFilter="*.log" Recursive="0" LastModifiedFileOnly="0" id="a455e5ba-d4e9-4b85-8711-e8bf10141028" PeriodicFileCheck="0" AppName="log"/&gt;
-                                &lt;File Index="0" Enabled="1" BaseDirectory="c:\" FileNameFilter="*.txt" Recursive="0" LastModifiedFileOnly="0" id="b455e5ba-d4e9-4b85-8711-e8bf10141038" PeriodicFileCheck="0"/&gt;
-                            &lt;/Sources&gt;
-                            &lt;Filter&gt;
-                                &lt;Formatted_Message&gt;
-                                    &lt;Rule Index="0" Regexp="myregexp"/&gt;
-                                    &lt;Rule Index="1" Regexp="myregexp"/&gt;
-                                &lt;/Formatted_Message&gt;
-                            &lt;/Filter&gt;
-                        &lt;/FileSources&gt;
-                    &lt;/Local_Settings&gt;
-                &lt;/syslog-ng_Agent&gt;
-            &lt;/BalaBit&gt;
-        &lt;/SOFTWARE&gt;
-    &lt;/syslog-ng-agent-configuration&gt;</synopsis>
+            <title>Sample configuration files for the syslog-ng Agent</title>
+            <para>The following is a sample configuration file with minimal settings for the syslog-ng Agent for Windows application.</para>
+            <synopsis>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;syslog-ng-agent-configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="c:\Program Files\syslog-ng Agent\syslog-ng-agent-conf.xsd"&gt;
+  &lt;SOFTWARE&gt;
+    &lt;BalaBit&gt;
+      &lt;syslog-ng_Agent WriteMinidump="1" SendOldMessages="1"&gt;
+        &lt;Local_Settings Enabled="1"&gt;
+          &lt;Destinations&gt;
+            &lt;Network&gt;
+              &lt;IPv4 Enabled="1" PrimaryServer="1"&gt;
+                &lt;Server Index="1" Enabled="1" ServerName="yourserver" ServerPort="514" Throttle="10000" Protocol="2" ProtocolTemplate="&lt;${PRI}&gt;${BSDDATE} ${HOST} ${APP_NAME}[${PROCESS_ID}]: ${MSG}"&gt;&lt;/Server&gt;
+              &lt;/IPv4&gt;
+            &lt;/Network&gt;
+          &lt;/Destinations&gt;
+          &lt;EventSources Enabled="1" MessageTemplate="${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})"&gt;
+            &lt;Sources Enabled="1"&gt;
+              &lt;Event Index="0" Enabled="1" Name="Application" /&gt;
+              &lt;Event Index="1" Enabled="1" Name="Security" /&gt;
+              &lt;Event Index="2" Enabled="1" Name="System" /&gt;
+            &lt;/Sources&gt;
+          &lt;/EventSources&gt;
+        &lt;/Local_Settings&gt;
+      &lt;/syslog-ng_Agent&gt;
+    &lt;/BalaBit&gt;
+  &lt;/SOFTWARE&gt;
+&lt;/syslog-ng-agent-configuration&gt;</synopsis>
+         <para>The following is a more detailed configuration file for the syslog-ng Agent for Windows application.</para>
+         <synopsis>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;syslog-ng-agent-configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="c:\Program Files\syslog-ng Agent\syslog-ng-agent-conf.xsd"&gt;
+  &lt;SOFTWARE&gt;
+    &lt;BalaBit&gt;
+      &lt;syslog-ng_Agent WriteMinidump="1" SendOldMessages="1"&gt;
+        &lt;Local_Settings Enabled="1" RegExpIgnoreCase="0" FilterIgnoreCase="0" LogFacility="13"&gt;
+          &lt;Destinations&gt;
+            &lt;Network&gt;
+              &lt;IPv4 Enabled="1" PrimaryServer="0"&gt;
+                &lt;Server Index="0" Enabled="1" ServerName="server1" ServerPort="514" Throttle="100000" Protocol="2" ProtocolTemplate="&lt;${PRI}&gt;${BSDDATE} ${HOST} ${APP_NAME}[${PROCESS_ID}]: ${MSG}" UseSSL="0" ClientCertSubject=""&gt;
+                  &lt;FailoverServers FailoverServer0="failoverserver01" FailoverServer1="failoverserver02"&gt;&lt;/FailoverServers&gt;
+                &lt;/Server&gt;
+                &lt;Server Index="1" Enabled="1" ServerName="server1" ServerPort="514" Throttle="100000" Protocol="1" ProtocolTemplate="&lt;${PRI}&gt;${BSDDATE} ${HOST} ${MSG}" UseSSL="0" ClientCertSubject=""&gt;
+                  &lt;FailoverServers FailoverServer0="failoverserver11" FailoverServer1="failoverserver12"&gt;&lt;/FailoverServers&gt;
+                &lt;/Server&gt;
+              &lt;/IPv4&gt;
+            &lt;/Network&gt;
+          &lt;/Destinations&gt;
+          &lt;EventSources Enabled="1" MessageTemplate="${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})"&gt;
+            &lt;Sources Enabled="1"&gt;
+              &lt;Event Index="0" Enabled="1" Name="Application" /&gt;
+              &lt;Event Index="1" Enabled="1" Name="Security" /&gt;
+              &lt;Event Index="3" Enabled="1" Name="System" /&gt;
+            &lt;/Sources&gt;
+            &lt;Filter Enabled="1"&gt;
+              &lt;Formatted_Message Enabled="1"&gt;
+                &lt;Rule Index="0" Regexp="testregexp" Enabled="1" /&gt;
+                &lt;Rule Index="1" Regexp="testregexp2" Enabled="1" /&gt;
+              &lt;/Formatted_Message&gt;
+              &lt;Computer Enabled="1"&gt;
+                &lt;Rule Index="0" Computer="mycomputername1" Enabled="1" /&gt;
+                &lt;Rule Index="1" Computer="mycomputername2" Enabled="1" /&gt;
+              &lt;/Computer&gt;
+              &lt;Type Enabled="1"&gt;
+                &lt;Rule Index="0" Type="4" Enabled="1"&gt;&lt;/Rule&gt;
+                &lt;Rule Index="1" Type="4" Enabled="1"&gt;&lt;/Rule&gt;
+              &lt;/Type&gt;
+              &lt;User Enabled="1"&gt;
+                &lt;Rule Index="0" Username="TESTDOMAIN\Administrator" Enabled="1" /&gt;
+                &lt;Rule Index="1" Username="NT AUTHORITY\SYSTEM" Enabled="1" /&gt;
+              &lt;/User&gt;
+              &lt;Source_EventId Enabled="1"&gt;
+                &lt;Rule Index="0" Source="EventCreate" EventId="636" Enabled="1" /&gt;
+                &lt;Rule Index="1" Source="EventCreate" EventId="637" Enabled="1" /&gt;
+              &lt;/Source_EventId&gt;
+              &lt;Source_Category Enabled="1"&gt;
+                &lt;Rule Index="0" Source="Security" Category="Object Access" Enabled="1" /&gt;
+                &lt;Rule Index="1" Source=" EventCreate" Category="" Enabled="1" /&gt;
+              &lt;/Source_Category&gt;
+            &lt;/Filter&gt;
+          &lt;/EventSources&gt;
+          &lt;FileSources MessageTemplate="$FILE_NAME: $FILE_MESSAGE" Enabled="1" LogFacility="0" LogPriority="6"&gt;
+            &lt;Sources Enabled="1"&gt;
+              &lt;File Index="0" Enabled="1" BaseDirectory="c:\windows" FileNameFilter="*.log" Recursive="0" LastModifiedFileOnly="0" id="a455e5ba-d4e9-4b85-8711-e8bf10141028" PeriodicFileCheck="0" LogFacility="5" LogPriority="5" /&gt;
+              &lt;File Index="1" Enabled="1" BaseDirectory="c:\" FileNameFilter="*.txt" Recursive="1" LastModifiedFileOnly="1" id="b455e5ba-d4e9-4b85-8711-e8bf10141038" PeriodicFileCheck="0" /&gt;
+            &lt;/Sources&gt;
+            &lt;Filter Enabled="1"&gt;
+              &lt;Formatted_Message&gt;
+                &lt;Rule Index="0" Regexp="Verbose" Enabled="1" /&gt;
+                &lt;Rule Index="1" Regexp="Info" Enabled="1" /&gt;
+              &lt;/Formatted_Message&gt;
+            &lt;/Filter&gt;
+          &lt;/FileSources&gt;
+        &lt;/Local_Settings&gt;
+      &lt;/syslog-ng_Agent&gt;
+    &lt;/BalaBit&gt;
+  &lt;/SOFTWARE&gt;
+&lt;/syslog-ng-agent-configuration&gt;</synopsis>
         </section>
         <!-- <section id="windows_xml_config_specification">
             <title>Specification of the syslog-ng agent configuration file</title>
