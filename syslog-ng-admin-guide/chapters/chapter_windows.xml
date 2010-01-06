@@ -212,7 +212,7 @@
                         <para>To configure the syslog-ng agents of the domain hosts, see <xref linkend="windows_configure_domain_hosts"/>.</para>
                     </listitem>
                     <listitem>
-                        <para>To configure the syslog-ng agents of the domain controllers, see <xref linkend="windows_configure_domain_controllerss"/>.</para>
+                        <para>To configure the syslog-ng agents of the domain controllers, see <xref linkend="windows_configure_domain_controllers"/>.</para>
                     </listitem>
                 </itemizedlist>
             <note>
@@ -302,7 +302,7 @@
                 </step>
                 <step>
                     <para>The syslog-ng Agent for Windows application will be automatically installed on the members of the domain when they are next rebooted. To perform the installation earlier, execute the <command>gpupdate</command> command on the members of the domain.</para>
-                    <note><para>If you do not want to install the syslog-ng Agent automatically from the domain controller, skip Steps 5-7, complete Step 8, then install the <filename>syslog-ng-agent-nosnapin-&lt;versionnumber&gt;-setup.exe</filename> file manually on the members of the domain.</para></note>
+                    <note><para>If you do not want to install the syslog-ng Agent automatically from the domain controller, skip Steps 5-7, complete Step 8, then install the <filename>syslog-ng-agent-nosnapin-&lt;versionnumber&gt;-setup.exe</filename> file manually on the members of the domain. This method is useful if you do not want to install the syslog-ng Agent on every host of the domain.</para></note>
                 </step>
             </procedure>
             <procedure id="windows_configure_domain_hosts">
@@ -366,6 +366,10 @@
         <section id="windows_upgrade">
             <title>Upgrading syslog-ng Agent for Windows to the latest version</title>
             <para>The exact upgrading procedure of the syslog-ng Agent for Windows application depends on how you have installed and how you manage the agent.</para>
+            <warning>
+                <para>When upgrading agents running in domain mode, always upgrade the agents running on the domain hosts before upgrading the agent running on the domain controllers.</para>
+                <para>The hosts of a domain (including the domain controllers) should run the same version of the syslog-ng Agent, running different versions on the hosts in neither supported nor recommended.</para>
+            </warning>
             <itemizedlist>
                 <listitem>
                     <para>If a host is running the syslog-ng agent in standalone mode, download and execute the <filename>syslog-ng-agent-&lt;versionnumber&gt;-setup.exe</filename> installer on the host and verify that the displayed information is correct. The agent will be automatically restarted when you close the configuration window.</para>
@@ -2164,8 +2168,79 @@
             </indexterm>
             <para>If you change the timezone setting of the host while the syslog-ng Agent is
                 running, you have to restart the syslog-ng Agent. Otherwise, it will not receive the
-                updated timezone information and the date of the events will be incorrect.</para>
+                updated timezone information and the date of the events will be incorrect.</para>                
         </warning>
+        <section id="windows_command_line">
+            <title>Command-line options</title>
+            <para>The syslog-ng Agent for Windows application has the following command-line options:</para>
+            <variablelist>
+                 <varlistentry>
+                     <term>
+                     <command>-e</command>
+                     </term>
+                     <listitem>
+                         <para>Start the syslog-ng Agent in debug mode and send the messages to the Application eventlog container.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-d</command>
+                     </term>
+                     <listitem>
+                         <para>Start the syslog-ng Agent in debug mode. The debug messages can be displayed using the <command>dbgview</command> application (available at <ulink url="http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx">http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx</ulink>).</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-i</command>
+                     </term>
+                     <listitem>
+                         <para>Install the syslog-ng Agent service into the services list.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-r</command>
+                     </term>
+                     <listitem>
+                         <para>Remove the syslog-ng Agent service from the services list.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-h</command>
+                     </term>
+                     <listitem>
+                         <para>Display a help message about the command-line options.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-v</command>
+                     </term>
+                     <listitem>
+                         <para>Display version information.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-t</command>
+                     </term>
+                     <listitem>
+                         <para>Terminate the currently running syslog-ng Agent.</para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                     <command>-c</command>
+                     </term>
+                     <listitem>
+                         <para>Start the syslog-ng Agent using the specified XML configuration file.</para>
+                     </listitem>
+                 </varlistentry>
+            </variablelist>
+            <para>To use these options, select <guilabel>Start > Run > cmd</guilabel>, navigate to the directory where the syslog-ng Agent is installed (e.g., <command>cd C:\Windows\Program Files\BalaBit\syslog-ng Agent\</command>), and execute the <command>syslog-ng-agent.exe</command> file with the required option.</para>
+        </section>
     </section>
     <section id="windows_inheritance">
         <title>Domain versus local settings</title>
@@ -2200,8 +2275,7 @@
             <primary>troubleshooting</primary>
             <secondary>syslog-ng agent</secondary>
         </indexterm>
-        <para>In case you experience problems with the syslog-ng agent, the following points may be
-            of help.</para>
+        <para>In case you experience problems with the syslog-ng agent, the following points may be of help.</para>
         <note>
             <para>The followings address only problems specific to the syslog-ng agent, and assume
                 that communication between the server and the client is otherwise possible (that is,
@@ -2318,6 +2392,25 @@
                 typically about 40-50 MB.</para>
             <!-- FIXME mi a default install dir, az elejen az installhoz is! -->
         </section>
+        <section>
+                <title>Logging domain update errors</title>
+                <para>If the domain settings are not downloaded to a domain host, the syslog-ng Agent (starting from version 3.0.6) can create a logfile to debug why the domain settings are not updated on the client. Complete the following steps:</para>
+                <procedure>
+                    <title></title>
+                    <step>
+                        <para>On the client host select <guilabel>Start > Run > regedit</guilabel>.</para>
+                    </step>
+                    <step>
+                        <para>Set the <guilabel>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/GpoDbgLog</guilabel> key to <parameter>2</parameter>.</para>
+                    </step> 
+                    <step>
+                        <para>Select <guilabel>Start > Run > gpupdate</guilabel>, and a the <filename>%systemroot%\system32\syslog_gpext.txt</filename> file will be created.</para>
+                    </step>
+                    <step>
+                        <para>After solving the problem, delete the <guilabel>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/GpoDbgLog</guilabel> key from the registry, otherwise the <filename>%systemroot%\system32\syslog_gpext.txt</filename> file will grow every time when the domain settings of the client are updated.</para>
+                    </step>
+                </procedure>
+            </section>
     </section>
     <section id="windows_auditing">
         <title>Configuring the auditing policy on Windows</title>
