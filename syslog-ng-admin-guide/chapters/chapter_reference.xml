@@ -41,20 +41,7 @@
             <para>Collects log messages from plain-text files. The file driver has a single required
                 parameter specifying the file to open.</para>
             <synopsis>Declaration:
-    file(filename);</synopsis>
-            <indexterm>
-                <primary>wildcards</primary>
-                <secondary>in file sources</secondary>
-            </indexterm>
-            <para id="reference_file_wildcard">In syslog-ng PE, the filename (but not the pathname)
-                may include wildcard characters (e.g., <parameter>*</parameter>). Note that when
-                using wildcards in filenames, always set how often syslog-ng should check the file
-                for new messages using the <parameter>follow_freq()</parameter> parameter.</para>
-            <para id="reference_file_wildcard_inotify">When using wildcards, syslog-ng PE monitors
-                every matching file, and can receive new log messages from any of the files.
-                However, monitoring (polling) many files (i.e., more than ten) has a significant
-                overhead and may affect performance. On Linux this overhead is not so significant,
-                because syslog-ng PE uses the inotify feature of the kernel.</para>
+    file(filename);</synopsis>            
             <note>
                 <para>If the message does not have a proper syslog header, syslog-ng treats messages
                     received from files as sent by the <parameter>kern</parameter> facility. Use the
@@ -86,11 +73,7 @@
                             <entry>file</entry>
                             <entry>filename with path</entry>
                             <entry/>
-                            <entry>The file to read messages from. Note that only syslog-ng PE
-                                supports wildcards in the filename (but not in the pathname). To
-                                monitor the subdirectories as well, use the <parameter>
-                                    <link linkend="source_file_recursive">recursive </link>
-                                </parameter> option.</entry>
+                            <entry>The file to read messages from.</entry>
                         </row>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
@@ -125,16 +108,6 @@
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_commonoption_program_override)"/>
-                        <row id="source_file_recursive">
-                            <entry>recursive</entry>
-                            <entry>yes or no</entry>
-                            <entry>no</entry>
-                            <entry>When enabled, syslog-ng PE monitors every subdirectory of the
-                                directory set in the path of the <parameter>file</parameter>
-                                parameter, and reads log messages from files with the set filename.
-                                The <parameter>recursive</parameter> option can be used together
-                                with wildcards in the filename. </entry>
-                        </row>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(source_commonoption_tags)"/>
@@ -154,26 +127,6 @@
                     second for new messages.</para>
                 <synopsis>source s_tail { file("/var/log/apache/access.log" 
                     follow_freq(1) flags(no-parse)); };</synopsis>
-            </example>
-            <example id="example_source_file_wildcard">
-                <title>Using wildcards in the filename</title>
-                <para>The following example monitors every file with the <filename>.log</filename>
-                    extension in the <filename>/var/application</filename> directory for log
-                    messages. Note that only syslog-ng PE supports wildcards in the file and
-                    pathnames.</para>
-                <synopsis>source s_file { file("/var/application/*.log" follow_freq(1)};</synopsis>
-            </example>
-            <example id="example_source_file_recursive">
-                <title>Monitoring multiple directories</title>
-                <para>The following example reads files having the <parameter>.log</parameter>
-                    extension from the <parameter>/var/application/</parameter> directory and its
-                    subdirectories. Note that only syslog-ng PE supports recursive directory
-                    handling and wildcards in the file and pathnames.</para>
-                <synopsis>source s_file_subdirectories { file("/var/application/*.log"
-                    recursive(yes) 
-                    follow_freq(1) 
-                    log_fetch_limit(100)
-                    );};</synopsis>
             </example>
         </section>
 
@@ -612,7 +565,7 @@
             <para>If you specify a multicast bind address to <parameter>udp()</parameter> and
                     <parameter>udp6()</parameter>, syslog-ng will automatically join the necessary
                 multicast group. TCP does not support multicasting. </para>
-            <para>The syslog-ng Premium Edition application supports TLS (Transport Layer Security,
+            <para>The syslog-ng application supports TLS (Transport Layer Security,
                 also known as SSL) for the tcp() and tcp6() drivers. See the TLS-specific options
                 below and <xref linkend="tls_serverauth"/> for details.</para>
             <indexterm>
@@ -1047,322 +1000,6 @@
 };</synopsis>
             </example>
         </section>
-        <section id="reference_destination_logstore">
-            <title>logstore()</title>
-            <indexterm>
-                <primary>destination drivers</primary>
-                <secondary><parameter>logstore()</parameter> driver</secondary>
-            </indexterm>
-            <para>The logstore driver stores log messages in binary files that can be encrypted,
-                compressed, checked for integrity, and timestamped by an external Timestamping
-                Authority (TSA). Otherwise, it is very similar to the <parameter>
-                    <link linkend="reference_destination_file">file()</link>
-                </parameter> destination.</para>
-            <para>To display the contents of a logstore file, use the <command>logcat</command>
-                command supplied with syslog-ng, e.g., <command>logcat
-                /var/log/messages.lgs</command>.</para>
-            <para>The destination filename may include macros which get expanded when the message is
-                written, thus a simple <parameter>logstore()</parameter> driver may create several
-                files. For more information on available macros see <xref linkend="reference_macros"
-                />. </para>
-            <xi:include href="reference_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude"
-                xpointer="element(warning-fd-ulimit)"/>
-            <para>The <parameter>logstore()</parameter> has a single required parameter that
-                specifies the filename that stores the log messages.</para>
-            <synopsis>Declaration:
-    logstore(filename options());</synopsis>
-            <para>The <parameter>logstore()</parameter> destination has the following options:</para>
-            <!-- FIXME logstore-ra se lesz teljesen igaz, lasd http://bugzilla.balabit/bugzilla-3.0/show_bug.cgi?id=13640  -->
-            <table>
-                <title>Options for logstore()</title>
-                <!-- FIXME a file driverrel kozos opciokat xincludolni 
-                    Global options for destinations files should be cleaned up
-                -->
-                <tgroup cols="4">
-                    <thead>
-                        <row>
-                            <entry>Name</entry>
-                            <entry>Type</entry>
-                            <entry>Default</entry>
-                            <entry>Description</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>cipher()</entry>
-                            <entry>string</entry>
-                            <entry>
-                                <parameter>aes-128-cbc</parameter>
-                            </entry>
-                            <entry>
-                                <para>Set the cipher method used to encrypt the logstore. The
-                                    following cipher methods are available:
-                                    <parameter>aes-128-cbc</parameter>,
-                                    <parameter>aes-128-cfb</parameter>,
-                                    <parameter>aes-128-cfb1</parameter>,
-                                    <parameter>aes-128-cfb8</parameter>,
-                                    <parameter>aes-128-ecb</parameter>, <parameter>aes-128-ofb
-                                    </parameter>, <parameter>aes-192-cbc</parameter>,
-                                        <parameter>aes-192-cfb</parameter>,
-                                    <parameter>aes-192-cfb1</parameter>,
-                                    <parameter>aes-192-cfb8</parameter>,
-                                    <parameter>aes-192-ecb</parameter>, <parameter>aes-192-ofb
-                                    </parameter>, <parameter>aes-256-cbc</parameter>,
-                                        <parameter>aes-256-cfb</parameter>,
-                                    <parameter>aes-256-cfb1</parameter>,
-                                    <parameter>aes-256-cfb8</parameter>,
-                                    <parameter>aes-256-ecb</parameter>, <parameter>aes-256-ofb
-                                    </parameter>, <parameter>aes128 </parameter>, <parameter>aes192
-                                    </parameter>, <parameter>aes256</parameter>, <parameter>bf
-                                    </parameter>, <parameter>bf-cbc </parameter>,
-                                    <parameter>bf-cfb</parameter>, <parameter>bf-ecb </parameter>,
-                                        <parameter>bf-ofb </parameter>,
-                                    <parameter>blowfish</parameter>, <parameter>cast </parameter>,
-                                        <parameter>cast-cbc </parameter>, <parameter>cast5-cbc
-                                    </parameter>, <parameter>cast5-cfb</parameter>,
-                                        <parameter>cast5-ecb</parameter>, <parameter>cast5-ofb
-                                    </parameter>, <parameter>des</parameter>,
-                                    <parameter>des-cbc</parameter>, <parameter>des-cfb </parameter>,
-                                        <parameter>des-cfb1 </parameter>, <parameter>des-cfb8
-                                    </parameter>, <parameter>des-ecb </parameter>,
-                                        <parameter>des-ede</parameter>,
-                                    <parameter>des-ede-cbc</parameter>, <parameter>des-ede-cfb
-                                    </parameter>, <parameter>des-ede-ofb</parameter>,
-                                        <parameter>des-ede3 </parameter>,
-                                    <parameter>des-ede3-cbc</parameter>,
-                                    <parameter>des-ede3-cfb</parameter>,
-                                    <parameter>des-ede3-ofb</parameter>, <parameter>des-ofb
-                                    </parameter>, <parameter>des3 </parameter>, <parameter>desx
-                                    </parameter>, <parameter>desx-cbc</parameter>,
-                                    <parameter>rc2</parameter>, <parameter>rc2-40-cbc </parameter>,
-                                        <parameter>rc2-64-cbc</parameter>,
-                                    <parameter>rc2-cbc</parameter>, <parameter>rc2-cfb</parameter>,
-                                        <parameter>rc2-ecb </parameter>,
-                                    <parameter>rc2-ofb</parameter>, <parameter>rc4</parameter>, and
-                                        <parameter>rc4-40</parameter>. By default, &abbrev; uses
-                                    the <parameter>aes-128-cbc</parameter> method.</para>
-                                <para>Note that the size of the digest hash must be equal to or
-                                    larger than the key size of the cipher method. For example, to
-                                    use the <parameter>aes-256-cbc</parameter> cipher method, the
-                                    digest method must be at least <parameter>SHA-256</parameter>.
-                                    This option is available in syslog-ng PE 3.1 and later.</para>
-                            </entry>
-                        </row>
-                        <row>
-                            <entry>chunk_size()</entry>
-                            <entry>number</entry>
-                            <entry>128</entry>
-                            <entry>Size of a logstore chunk in kilobytes. Note that this size refers
-                                to the compressed size of the chunk. Also, the gzip library used for
-                                compressing the messages has a 32k long buffer; messages may not
-                                appear in the actual logfile until this buffer is not filled.
-                                Logstore chunks are closed when they reach the specified size, or
-                                when the time limit set in <parameter>chunk_time</parameter>
-                                expires. </entry>
-                        </row>
-                        <row>
-                            <entry>chunk_time()</entry>
-                            <entry>number</entry>
-                            <entry>5</entry>
-                            <entry>Time limit in seconds: syslog-ng PE closes the chunk if no new
-                                messages arrive until the time limit expires. Logstore chunks are
-                                closed when the time limit expires, or when they reach the size
-                                specified in the <parameter>chunk_size</parameter> parameter. If the
-                                time limit set in the <parameter>time_reap</parameter> parameter
-                                expires, the entire file is closed.</entry>
-                        </row>
-                        <row>
-                            <entry>compress()</entry>
-                            <entry>number between 0-9</entry>
-                            <entry> 3 </entry>
-                            <entry>Compression level. <parameter>0</parameter> means uncompressed
-                                files, while 1-9 is the compression level used by gzip
-                                (<parameter>9</parameter> means the highest but slowest compression,
-                                    <parameter>3</parameter> is usually a good compromise). </entry>
-                        </row>
-                        <row>
-                            <entry>create_dirs()</entry>
-                            <entry>yes or no</entry>
-                            <entry> no </entry>
-                            <entry>Enable creating non-existing directories. </entry>
-                        </row>
-                        <row>
-                            <entry>digest()</entry>
-                            <entry>string</entry>
-                            <entry> SHA-1 </entry>
-                            <entry>
-                                <para>Set the digest method to use. The following digest methods are
-                                    available: <parameter>MD2</parameter>,
-                                    <parameter>MD4</parameter>, <parameter>MD5</parameter>,
-                                        <parameter>SHA-0 (SHA)</parameter>,
-                                    <parameter>SHA-1</parameter>, <parameter>RIPEMD-160</parameter>,
-                                        <parameter>SHA-224</parameter>,
-                                    <parameter>SHA-256</parameter>, <parameter>SHA-384</parameter>,
-                                    and <parameter>SHA-512</parameter>. By default, &abbrev;
-                                    uses the <parameter>SHA-1</parameter> method.</para>
-                                <para>Note that the size of the digest hash must be equal to or
-                                    larger than the key size of the cipher method. For example, to
-                                    use the <parameter>aes-256-cbc</parameter> cipher method, the
-                                    digest method must be at least <parameter>SHA-256</parameter>.
-                                    This option is available in syslog-ng PE 3.1 and later.</para>
-                            </entry>
-                        </row>
-                        <row>
-                            <entry>dir_group()</entry>
-                            <entry>string</entry>
-                            <entry> root </entry>
-                            <entry>The group of the directories created by syslog-ng. </entry>
-                        </row>
-                        <row>
-                            <entry>dir_owner()</entry>
-                            <entry>string</entry>
-                            <entry> root </entry>
-                            <entry>The owner of directories created by syslog-ng. </entry>
-                        </row>
-                        <row>
-                            <entry>dir_perm()</entry>
-                            <entry>number</entry>
-                            <entry> 0600 </entry>
-                            <entry>The permission mask of directories created by syslog-ng. Log
-                                directories are only created if a file after macro expansion refers
-                                to a non-existing directory, and directory creation is enabled (see
-                                the <parameter>create_dirs()</parameter> option below). For octal
-                                numbers prefix the number with <parameter>0</parameter>, e.g., use
-                                    <parameter>0755</parameter> for
-                                <parameter>rwxr-xr-x</parameter>. </entry>
-                        </row>
-                        <row>
-                            <entry>encrypt_certificate()</entry>
-                            <entry>filename</entry>
-                            <entry> none </entry>
-                            <entry>Name of a file, that contains an X.509 certificate (and the
-                                public key) in PEM format. The syslog-ng application uses this
-                                certificate to encrypt the logstore files which can be decrypted
-                                using the private key of the certificate. </entry>
-                        </row>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_flags)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_flush_lines)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_flush_timeout)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_frac_digits)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_fsync)"/>
-                        <row>
-                            <entry>group()</entry>
-                            <entry>string</entry>
-                            <entry>root</entry>
-                            <entry>Set the group of the created file to the one specified. </entry>
-                        </row>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_log_fifo_size)"/>
-                        <row>
-                            <entry>owner()</entry>
-                            <entry>string</entry>
-                            <entry>root</entry>
-                            <entry>Set the owner of the created file to the one specified. </entry>
-                        </row>
-                        <row>
-                            <entry>perm()</entry>
-                            <entry>number</entry>
-                            <entry> 0600 </entry>
-                            <entry>The permission mask of the file if it is created by syslog-ng.
-                                For octal numbers prefix the number with <parameter>0</parameter>,
-                                e.g., use <parameter>0755</parameter> for
-                                <parameter>rwxr-xr-x</parameter>. </entry>
-                        </row>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_suppress)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_template)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_template_escape)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_throttle)"/>
-                        <row>
-                            <entry>time_reap()</entry>
-                            <entry>number</entry>
-                            <entry>60</entry>
-                            <entry>The time to wait in seconds before an idle destination file is
-                                closed.</entry>
-                        </row>
-                        <row>
-                            <entry>timestamp-freq()</entry>
-                            <entry>number in seconds</entry>
-                            <entry>Use global setting.</entry>
-                            <entry>The minimum time that should expire between two timestamping
-                                requests. When syslog-ng closes a chunk, it checks how much time has
-                                expired since the last timestamping request: if it is higher than
-                                the value set in the <parameter>timestamp-freq</parameter>
-                                parameter, it requests a new timestamp from the authority set in the
-                                    <parameter>timestamp-url</parameter> parameter. </entry>
-                        </row>
-                        <row>
-                            <entry>timestamp-policy()</entry>
-                            <entry>string</entry>
-                            <entry/>
-                            <entry>If the Timestamping Server has timestamping policies configured,
-                                specify the OID of the policy to use with this parameter.
-                                &abbrev; will include this ID in the timestamping requests sent
-                                to the TSA. This option is available in syslog-ng PE 3.1 and
-                            later.</entry>
-                        </row>
-                        <row>
-                            <entry>timestamp-url()</entry>
-                            <entry>string</entry>
-                            <entry>Use global setting.</entry>
-                            <entry>The URL of the Timestamping Authority used to request timestamps
-                                to sign logstore chunks. Note that &abbrev; currently supports
-                                only Timestamping Authorities that conform to <emphasis>RFC3161
-                                    Internet X.509 Public Key Infrastructure Time-Stamp
-                                Protocol</emphasis>, other protocols like <emphasis>Microsoft
-                                    Authenticode Timestamping</emphasis> are not supported.</entry>
-                            <indexterm>
-                                <primary>timestamping</primary>
-                                <secondary>Microsoft Authenticode Timestamping</secondary>
-                            </indexterm>
-                            <indexterm>
-                                <primary>timestamping</primary>
-                                <secondary>RFC3161</secondary>
-                            </indexterm>
-                        </row>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_timezone)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(destination_commonoption_ts_format)"/>
-                    </tbody>
-                </tgroup>
-            </table>
-            <example id="example_destination_logstore">
-                <title>Using the logstore() driver</title>
-                <para>A simple example saving and compressing log messages.</para>
-                <synopsis>destination d_logstore { file("/var/log/messages.lgs" compress(5) ); };</synopsis>
-                <para>A more detailed example that encrypts messages, modifies the parameters for
-                    closing chunks, and sets file privileges.</para>
-                <synopsis>destination d_logstore { logstore("/var/log/messages-logstore.lgs"
-    encrypt_certificate("/opt/syslog-ng/etc/syslog-ng/keys/10-100-20-40/public-certificate-of-the-server.pem")			
-    chunk_size(100) 
-    chunk_time(5)
-    owner("balabit")
-    group("balabit")
-    perm(0777)
-); };</synopsis>
-            </example>
-        </section>
         <section id="reference_destination_pipe">
             <title>pipe()</title>
             <indexterm>
@@ -1595,9 +1232,6 @@
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(destination_commonoption_local_timezone)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(diskbuffer_option_log_disk_fifo_size)"/>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(destination_commonoption_log_fifo_size)"/>
@@ -1878,9 +1512,6 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                             xpointer="element(destination_option_localport)"/>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(diskbuffer_option_log_disk_fifo_size)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(destination_commonoption_log_fifo_size)"/>
                         <row id="destination_option_port">
                             <entry>port() or destport()</entry>
@@ -2035,9 +1666,6 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(destination_option_localport)"/>
-                        <xi:include href="reference_common.xml"
-                            xmlns:xi="http://www.w3.org/2001/XInclude"
-                            xpointer="element(diskbuffer_option_log_disk_fifo_size)"/>
                         <xi:include href="reference_common.xml"
                             xmlns:xi="http://www.w3.org/2001/XInclude"
                             xpointer="element(destination_commonoption_log_fifo_size)"/>
@@ -2472,7 +2100,7 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>-->
                         <entry>Use PCRE regular expressions. This is available only if syslog-ng was
                             compiled with the <parameter>--enable-pcre</parameter> option. Execute
                             the <command>syslog-ng -V</command> command to list the options
-                            supported by your binary. PCRE support is currently disabled in syslog-ng Premium Edition. For additional details on the use and flags of
+                            supported by your binary. For additional details on the use and flags of
                             regular expressions, see <xref linkend="reference_regular_expressions"
                             />.</entry>
                     </row>
@@ -2619,11 +2247,7 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>-->
         </indexterm>
         <para>Certain parts of syslog-ng (e.g., destination filenames and message content templates)
             can refer to one or more macros, which get expanded as a message is processed. The table
-            below summarizes the macros available in syslog-ng.</para>
-        <note>
-            <para>See <xref linkend="windows_message_format"/> for the macros available in the
-                syslog-ng Agent for Windows application.</para>
-        </note>
+            below summarizes the macros available in syslog-ng.</para>        
         <para>Macros can be included by prefixing the macro name with a <parameter>$</parameter>
             sign, just like in Bourne compatible shells. Regarding braces around macro names, the
             following two formats are equivalent <parameter>"$MSG"</parameter> and
@@ -3247,7 +2871,7 @@ log { source(s_local);
                     <para>For earlier versions of the syslog-ng pattern database formats, see <xref
                             linkend="app-patterndb"/>.</para>
                     <para>For a summary of differences between the different syslog-ng pattern
-                        database formats, see <xref linkend="app-patterndb-versions"/>.</para>
+                        database formats, see <xref linkend="patterndb-version-comparison"/>.</para>
                     <tip>
                         <para>Use the <command>pdbtool</command> utility that is bundled with
                             syslog-ng to test message patterns and convert existing databases to the
@@ -3628,7 +3252,7 @@ log { source(s_local);
                         <entry>Use PCRE regular expressions. This is available only if syslog-ng was
                             compiled with the <parameter>--enable-pcre</parameter> option. Execute
                             the <command>syslog-ng -V</command> command to list the options
-                            supported by your binary. PCRE support is currently disabled in syslog-ng Premium Edition.</entry>
+                            supported by your binary.</entry>
                     </row>
                     <row>
                         <entry>string</entry>
@@ -3691,7 +3315,7 @@ log { source(s_local);
             <parameter>type("pcre")</parameter> option after the regular expression. Note that PCRE
             expressions can be used only if syslog-ng was explicitly compiled with the
             <parameter>--enable-pcre</parameter> option. Execute the <command>syslog-ng -V</command>
-            command to list the options supported by your binary. PCRE support is currently disabled in syslog-ng Premium Edition.</para>
+            command to list the options supported by your binary.</para>
         <para>Posix regular expressions have the following flag options:</para>
         <table>
             <title>Posix options</title>
@@ -3914,18 +3538,6 @@ log { source(s_local);
                             output buffer. See the <parameter>flush_lines()</parameter> option for
                             more information. </entry>
                     </row>
-                    <!--<row>
-                        <entry>gc_busy_threshold() (DEPRECATED)</entry>
-                        <entry>number</entry>
-                        <entry>n/a</entry>
-                        <entry>Has no meaning in syslog-ng 1.9.x and later. </entry>
-                    </row>
-                    <row>
-                        <entry>gc_idle_threshold() (DEPRECATED)</entry>
-                        <entry>number</entry>
-                        <entry>n/a</entry>
-                        <entry>Has no meaning in syslog-ng 1.9.x and later. </entry>
-                    </row>-->
                     <row>
                         <entry>group()</entry>
                         <entry>groupid</entry>
