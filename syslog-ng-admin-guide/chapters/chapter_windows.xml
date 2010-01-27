@@ -87,9 +87,9 @@
         </listitem>
     </itemizedlist>
     <note>
-        <para>Starting from version 3.0.3, the &agent; application supports the
-            new XML-based eventlog used format on Microsoft Windows Vista and Microsoft Windows
-            Server 2008, and also offers full support for 64-bit operating systems.</para>
+        <para>The &agent; application supports the
+            XML-based eventlog used format on Microsoft Windows Vista and Microsoft Windows
+            Server 2008, and Windows 7, and also offers full support for 64-bit operating systems.</para>
     </note>
     </section>
     </chapter>
@@ -135,7 +135,7 @@
             <para>The syslog-ng Agent for Windows application can be installed in standalone mode on
                 independent hosts. If your hosts are members of a domain, install the &agentabbrev; on the domain controller, as described in <xref
                     linkend="windows_install_domain_controller"/>. The syslog-ng agent requires
-                about 3 MB hard disk space.</para>
+                about 10 MB hard disk space.</para>
             <para>To install the &agentabbrev; in standalone mode, complete the following steps:</para>
             <note>
                 <para>The syslog-ng Agent for Windows requires the Microsoft .NET Framework version
@@ -195,7 +195,7 @@
             <title>Installing the &agentabbrev; on the domain controller and the hosts of a domain</title>
             <para>The syslog-ng Agent for Windows application can be installed on the domain
                 controller and the members of a domain from the domain controller, and configured
-                globally using group policies. The &agentabbrev; requires about 1 MB hard disk
+                globally using group policies. The &agentabbrev; requires about 10 MB hard disk
                 space.</para>
                 <itemizedlist>
                     <listitem>
@@ -298,6 +298,55 @@
                     <note><para>If you do not want to install the syslog-ng Agent automatically from the domain controller, skip Steps 5-7, complete Step 8, then install the <filename>syslog-ng-agent-nosnapin-&lt;versionnumber&gt;-setup.exe</filename> file manually on the members of the domain. This method is useful if you do not want to install the syslog-ng Agent on every host of the domain.</para></note>
                 </step>
             </procedure>
+        </section>
+        <section id="windows_install_silent">
+            <title>Unattended installation</title>
+            <para>The &agent; application can be installed in silent mode as well, without requiring any user interaction. The various installer options can be specified as command-line options. The following options are available:</para>
+            <variablelist>
+                 <varlistentry>
+                 <term><command>/S</command></term>
+                 <listitem>
+                     <para>Start the installer in unattended mode. This option is required for the unattended installation.</para>
+                 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                 <term><command>/D=</command></term>
+                 <listitem>
+                     <para>Install the &agentabbrev; into the specified folder.</para>
+                 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                 <term><command>/NOMENU</command></term>
+                 <listitem>
+                     <para>Do not add entries about &agentabbrev; to the Start menu.</para>
+                 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                 <term><command>/LOCAL</command></term>
+                 <listitem>
+                     <para>Install &agentabbrev; in standalone mode. This is the default, installation mode of the &agentabbrev;.</para>
+                 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                 <term><command>/REMOTE</command></term>
+                 <listitem>
+                     <para>Install &agentabbrev; in domain mode.</para>
+                 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                 <term><command>/SENDOLDMSGS=</command></term>
+                 <listitem>
+                     <para>If set to <parameter>YES</parameter>, the &agentabbrev; 
+                     will forward every message available in its message sources. By default, only new messages are forwarded.</para>
+                 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                 <term><command>/XMLCONFIG=</command></term>
+                 <listitem>
+                     <para>Use the specified XML configuration file for the configuration of &agentabbrev;.</para>
+                 </listitem>
+                 </varlistentry>
+            </variablelist>
         </section>
         <section id="windows_upgrade">
             <title>Upgrading syslog-ng Agent for Windows to the latest version</title>
@@ -793,6 +842,7 @@
                     into the <guilabel>Server Port</guilabel> field.</para>
             </step>
             <step>
+            <!-- FIXME Ezt a templates reszt kulon helyre is ki kellene rakni, hogy konnyebb legyen megtalalni -->
                 <para>Select the protocol used to transfer log messages and press
                     <guibutton>Reset</guibutton> to apply the selected template. The following
                     protocol templates are available:</para>
@@ -829,7 +879,30 @@
                     <para>Selecting the <guilabel>syslog protocol</guilabel> option is identical to
                         using the <parameter>syslog</parameter> driver of syslog-ng. Similarly, selecting <guilabel>Legacy syslog</guilabel> is equivalent to the <parameter>tcp</parameter>
                         driver of syslog-ng.</para>
+                     <para>Changing a protocol does not automatically change the protocol template used. 
+                     To use a protocol-specific template, select <guilabel>Reset Protocol Template</guilabel> after modifying the protocol. To send Snare-compatible messages, select <guilabel>Message Type > Snare Compatible Message Type</guilabel> and click <guilabel>Reset Message Template</guilabel> as well.</para>
                 </note>
+            </step>
+            <step>
+            <indexterm>
+               <primary>message template</primary>
+            </indexterm>
+            <indexterm>
+               <primary>message format</primary>
+            </indexterm>
+            <indexterm>
+               <primary>formatting messages</primary>
+            </indexterm>
+            	<para>If needed, modify the template of the messages. The format of the messages can be different for the eventlog and the file sources.</para>
+            </step>
+            <step>
+            <indexterm>
+               <primary>hostname resolution</primary>
+            </indexterm>
+            <indexterm>
+               <primary>hostname in the messages</primary>
+            </indexterm>
+            	<para>If the host running &agentabbrev; is sometimes logged in into a domain, sometimes not, then its hostname might change depending on its actual domain membership. This might cause that the hostname appearing in the syslog messages depends on the domain membership of the host. To avoid this situation, enable the <guilabel>Force DNS Hostname</guilabel> option. That way &agentabbrev; resolves the name of its host from the DNS server, and uses the resolved FQDN in the syslog messages.</para>
             </step>
             <step>
                 <indexterm>
@@ -1084,8 +1157,6 @@
                             variables of Windows, e.g., <parameter>%WINDIR%</parameter>,
                                 <parameter>%SYSTEMROOT%</parameter>,
                             <parameter>%PROGRAMFILES%</parameter>, etc.</para>
-                        <!-- FIXME ha kell, akkor itt van ezekrol egy teljes lista, de csak XP-re:
-                        http://kennethhunt.com/archives/000933.html -->
                     </tip>
                     <warning>
                         <para>Note that when managing members of a domain, the selected path must be
@@ -1112,7 +1183,7 @@
                                 (IIS) 5 applications, select the <guilabel>IIS 5.x Log</guilabel>
                                 option.</para>
                             <note>
-                                <para>If this option is not selected, the syslog-ng agent monitors
+                                <para>If this option is not selected, the &agentabbrev; monitors
                                     every matching file in the folder for changes, and sends new log
                                     messages from all files.</para>
                             </note>
@@ -1162,6 +1233,9 @@
                     into the same line, then this is visible in the file as a single line, but the
                     syslog-ng agent interprets them as two separate messages.</para>
             </note>
+            <warning>
+            	<para>If an application deletes a log file, the application must ensure that &agentabbrev; had enough time to forward the messages from the file to the central server to avoid losing messages.</para>
+            </warning>
             <example>
                 <title>Collecting the logs of multiple applications from a single folder</title>
                 <para>If two applications log into the same folder (e.g.,
@@ -1180,7 +1254,7 @@
             </example>
         </section>
         <section id="windows_global_settings">
-            <title>Global settings of the syslog-ng agent</title>
+            <title>Global settings of the &agentabbrev;</title>
             <para>The syslog-ng Agent for Windows application has some global settings that can
                 apply to both eventlog and file sources. To configure the global settings, complete
                 the following procedure:</para>
@@ -1344,8 +1418,8 @@
                 <secondary>syslog-ng agent</secondary>
             </indexterm>
             <para>When the syslog-ng server is configured to use mutual authentication, it requests
-                a certificate from the syslog-ng clients. The syslog-ng agent can automatically show
-                the requested certificate to the server when the connection is established if it is
+                a certificate from the syslog-ng clients. The &agentabbrev; application can automatically show
+                the requested certificate to the server when the connection is established, provided it is
                 available in the <guilabel>Personal Certificates</guilabel> store (<guilabel>MMC >
                     Certificates > Computer Account > Local Computer > Personal
                 Certificates</guilabel>) of the Local Computer. Use the <guibutton>Certificate
@@ -1425,10 +1499,13 @@
                         <step>
                             <para>Select the <guibutton>Use SSL</guibutton> option, click
                                     <guibutton>Select</guibutton>, then select the certificate to
-                                use.</para>
+                                use. You can also type the Common Name of the certificate into the 
+                                <guilabel>Client Certificate Subject</guilabel> field.</para>
+                            <para>If you have more than one certificates with the same Common Name, alternatively, you can type the Distinguished Name (DN) of the certificate into the <guilabel>Client Certificate Subject</guilabel> field. When using the Distinguished Name, type only the elements of the name, separated with comma, starting with the country. E.g., <parameter>US, Maryand, Pasadena, Example Inc,
+                Sample Department, mycommonname</parameter> </para>
                             <note>
                                 <para>A common way is to use the hostname or the IP address of the
-                                    agent as the Common Name of the certificate (e.g.,
+                                    host running the &agentabbrev; as the Common Name of the certificate (e.g.,
                                         <parameter>syslog-ng-agent1.example.com</parameter>).</para>
                             </note>
                         </step>
@@ -1525,19 +1602,28 @@
             <primary>syslog-ng agent</primary>
             <secondary>filtering messages</secondary>
         </indexterm>
-        <para>The syslog-ng Agent for Windows application can filter log messages in a
-            blacklist-fashion: you can define filters, and any message that matches the filters is
+        <para>The syslog-ng Agent for Windows application can filter log messages both in 
+            blacklist- and whitelist fashion. When using blacklisting, you can define filters, and any message that matches the filters is
             ignored by the agent &mdash; only messages that do not match the filters are sent to
-            the central server. In other words, the filters are connected to each other with logical
+            the central server. When using whitelisting, you can define filters, and the messages matching the filters are forwarded to the central server &mdash; other messages are ignored.</para>
+            <para>If you define multiple filters, the messages must match every filter. In other words, the filters are connected to each other with logical
             OR operations.</para>
-        <para>Different filters are available for eventlog- and file sources. When the syslog-ng
-            agent processes a message, it checks the relevant filters on-by-one: if it finds a
+        <para>Different filters are available for eventlog- and file sources. When the &agentabbrev;
+            processes a message, it checks the relevant filters on-by-one: if it finds a
             filter that matches the message, the agent stops processing the message without sending
             it to the server.</para>
         <note>
             <para>By default, all filters are case sensitive. To change this behavior, see <xref
                     linkend="windows_global_settings"/>.</para>
         </note>
+        <itemizedlist>
+        	<listitem>
+        		<para>To filter messages received from eventlog sources, see <xref linkend="filters_eventlog"/>.</para>
+        	</listitem>
+        	<listitem>
+        		<para>To filter messages received from file sources, see <xref linkend="filters_file"/>.</para>
+        	</listitem>
+        </itemizedlist>
         <para>The following types of filters are available for eventlog sources:</para>
         <itemizedlist>
             <!-- FIXME linkeket a makrokra -->
@@ -1571,11 +1657,20 @@
             </listitem>
         </itemizedlist>
         <para>To modify the filters used for eventlog messages, complete the following procedure:</para>
-        <procedure>
+        <procedure id="filters_eventlog">
             <title>Filtering eventlog messages</title>
             <step>
                 <para>Start the configuration interface of the syslog-ng Agent for Windows
                     application.</para>
+            </step>
+            <step>
+                <para>Select <guibutton>syslog-ng Agent Settings > Eventlog Sources</guibutton>.</para>
+            </step>
+            <step>
+                <para>On the right-hand pane right-click on <guibutton>Filters</guibutton>, then select <guilabel>Properties > Enable > OK</guilabel>.</para>
+            </step>
+            <step>
+            	<para>To use whitelist-filtering, select <guilabel>White List Filtering</guilabel>. By default, &agentabbrev; uses blacklist filtering.</para>
             </step>
             <step>
                 <para>Select <guibutton>syslog-ng Agent Settings > Eventlog Sources >
@@ -1657,12 +1752,20 @@
             </listitem>
         </itemizedlist>
         <para>To modify the filters used for file messages, complete the following procedure:</para>
-        <procedure>
+        <procedure id="filters_file">
             <title>Filtering file messages</title>
             <step>
                 <para>Start the configuration interface of the syslog-ng Agent for Windows
                     application.</para>
             </step>
+            <step>
+                <para>Select <guibutton>syslog-ng Agent Settings > File Sources</guibutton>.</para>
+            </step>
+            <step>
+                <para>On the right-hand pane right-click on <guibutton>Filters</guibutton>, then select <guilabel>Properties > Enable</guilabel>.</para>
+            </step>
+            <step>
+            	<para>To use whitelist-filtering, select <guilabel>White List Filtering</guilabel>. By default, &agentabbrev; uses blacklist filtering.</para></step>
             <step>
                 <para>Select <guibutton>syslog-ng Agent Settings > File Sources >
                     Filters</guibutton>, and double-click on the type of filter you want to
@@ -1698,7 +1801,7 @@
         </indexterm>
         <para>The format of the messages received from the eventlog and the file sources can be
             customized using templates. You can define separate message format for the eventlog and
-            the file sources. When creating a template to customize the message format, you can use
+            the file sources. If you have multiple destination servers configured, you can define separate templates for each server. When creating a template to customize the message format, you can use
             macros, all alphanumeric characters, and the following special characters:
                 <parameter>&lt;&gt;,():;-+/_</parameter>.</para>
         <para>To create a template, complete the following procedure:</para>
@@ -1721,8 +1824,11 @@
                     logserver, and click <guibutton>Edit</guibutton>.</para>
             </step>
             <step>
-                <para>Type the message format you want to use into the <guilabel>Template</guilabel>
-                    field. Do not forget to add the <parameter>$</parameter> character before
+                <para>To change the format of messages received from eventlog sources, type the message format you want to use into the <guilabel>Event Message Format > Message Template</guilabel>
+                    field. </para>
+                    <para>To change the format of messages received from file sources, type the message format you want to use into the <guilabel>File Message Format > Message Template</guilabel>
+                    field. </para>
+                    <para>Do not forget to add the <parameter>$</parameter> character before
                     macros. See <xref linkend="windows_macros"/> for a complete list of the
                     available macros.</para>
                 <para>For example, to send the messages in the <parameter>DATE HOSTNAME
@@ -1745,6 +1851,10 @@
                         every server, you must manually copy the template into the configuration of
                         each server. Template modifications are not applied automatically to every
                         server.</para>
+                     <para>To use a Snare-compatible message format, select <guilabel>Message Type > Snare Compatible Message Type</guilabel> and click <guilabel>Reset Message Template</guilabel>.</para>
+                     <indexterm>
+                            <primary>snare</primary>
+                        </indexterm>
                 </warning>
             </step>
             <step>
@@ -2277,6 +2387,7 @@
     </chapter>
     <chapter id="chapter_troubleshooting">
         <title>Troubleshooting syslog-ng Agent for Windows</title>
+        <!--FIXME beindexelni az egyes bejegyzeseket -->
         <indexterm>
             <primary>&agentabbrev;</primary>
             <secondary>troubleshooting</secondary>
@@ -2333,6 +2444,9 @@
                     filters to see that they are not configured to ignore every message. When using
                     filter, it is also recommended to check the global case-sensitivity
                 settings.</para>
+            </listitem>
+            <listitem>
+            	<para><emphasis>The hostname used in the messages changes</emphasis>: If a host is sometimes logged in into a domain and sometimes it is not, its hostname might reflect this. To avoid this situation, select <guilabel>syslog-ng Agent > Destinations > IPv4 > Properties > Edit > Force DNS Hostname</guilabel>. This causes &agentabbrev; to resolve its own hostname from DNS and use the resolved FQDN in the syslog messages.</para>
             </listitem>
             <listitem>
                 <para><emphasis>Command-line parameters are ignored on Windows Vista and 2008
@@ -2402,7 +2516,28 @@
                 typically about 40-50 MB.</para>
             <!-- FIXME mi a default install dir, az elejen az installhoz is! -->
         </section>
-        <section>
+        <section id="debug_agent">
+                <title>Enabling debug logging in &agentabbrev;</title>
+                <para>In case you experience problems with The &agentabbrev; the BalaBit support team might request you to create debug logs for the application to help troubleshoot the problem. Complete the following steps:</para>
+                <procedure>
+                    <title></title>
+                    <step>
+                        <para>On the client host select <guilabel>Start > Run > regedit</guilabel>.</para>
+                    </step>
+                    <step>
+                        <para>To send the debug logs into a file, set the <guilabel>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/AgentDbgLog</guilabel> key to <parameter>2</parameter>.</para>
+                        <para>To send the debug logs to the DebugView application, set the <guilabel>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/AgentDbgLog</guilabel> key to <parameter>1</parameter>.</para>
+                    </step> 
+                    <step>
+                        <para>Reproduce the error. If you requestet file output, the <filename>syslog_ng_Agent.txt</filename> file will be created in the folder where the &agentabbrev; is installed (<filename>%PROGRAMFILES%\syslog-ng Agent\</filename> by default).</para>
+                    </step>
+                    <step>
+                        <para>After solving the problem, delete the <guilabel>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/AgentDbgLog</guilabel> key from the registry, otherwise the log file will grow and might consume the available hard disk space. The log file contains the log messages received and processed by the &agentabbrev; as well.</para>
+                    </step>
+                </procedure>
+            </section>
+
+        <section id="debug_domain_update">
                 <title>Logging domain update errors</title>
                 <para>If the domain settings are not downloaded to a domain host, the syslog-ng Agent (starting from version 3.0.6) can create a logfile to debug why the domain settings are not updated on the client. Complete the following steps:</para>
                 <procedure>
@@ -2411,10 +2546,11 @@
                         <para>On the client host select <guilabel>Start > Run > regedit</guilabel>.</para>
                     </step>
                     <step>
-                        <para>Set the <guilabel>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/GpoDbgLog</guilabel> key to <parameter>2</parameter>.</para>
+                        <para>To send the debug logs into a file, set the <guilabel>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/GpoDbgLog</guilabel> key to <parameter>2</parameter>.</para>
+                        <para>To send the debug logs to the DebugView application, set the <guilabel>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/GpoDbgLog</guilabel> key to <parameter>1</parameter>.</para>
                     </step> 
                     <step>
-                        <para>Select <guilabel>Start > Run > gpupdate</guilabel>, and a the <filename>%systemroot%\system32\syslog_gpext.txt</filename> file will be created.</para>
+                        <para>Select <guilabel>Start > Run > gpupdate</guilabel> to reproduce the error. If you requestet file output, the <filename>%systemroot%\system32\syslog_gpext.txt</filename> file will be created.</para>
                     </step>
                     <step>
                         <para>After solving the problem, delete the <guilabel>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/GpoDbgLog</guilabel> key from the registry, otherwise the <filename>%systemroot%\system32\syslog_gpext.txt</filename> file will grow every time when the domain settings of the client are updated.</para>
