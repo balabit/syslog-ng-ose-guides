@@ -558,7 +558,8 @@ source s_demo_stream {
                             UNIX-CONNECT:/opt/syslog-ng/var/run/syslog-ng.ctl -</command>.</para>
                 </note>
                 <!-- FIXME ertelmes peldat, ez nem az igazi, es reszletezni, hogy pontosan mit ir ki
-                src.udp;s_local#1;;a;processed;0 src.udp;s_local#1;;a;stamp;0 source;s_local;;a;processed;7
+                src.udp;s_local#1;;a;processed;0 
+                src.udp;s_local#1;;a;stamp;0 source;s_local;;a;processed;7
                 src.internal;s_local#0;;a;processed;7 
                 src.internal;s_local#0;;a;stamp;1222437774
                 src.host;;bzorp;d;processed;7 
@@ -1631,24 +1632,23 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
                         filters.</para>
                 </listitem>
             </itemizedlist>
-            <example>
-                <title>A simple filter statement</title>
-                <para>The following filter statement selects the messages that contain the word
-                        <parameter>deny</parameter> and come from the host
-                    <parameter>example</parameter>.</para>
-                <synopsis>filter demo_filter { host("example") and match("deny"); };</synopsis>
-                <para>For the filter to have effect, include it in a log statement:</para>
-                <synopsis>log demo_filteredlog{
+        <example>
+            <title>A simple filter statement</title>
+            <para>The following filter statement selects the messages that contain the word
+                    <parameter>deny</parameter> and come from the host
+                <parameter>example</parameter>.</para>
+            <synopsis>filter demo_filter { host("example") and match("deny" value("MESSAGE")); };</synopsis>
+            <para>For the filter to have effect, include it in a log statement:</para>
+            <synopsis>log demo_filteredlog{
         source(s1); source(s2); 
         filter(demo_filter);
         destination(d1); destination(d2); };</synopsis>
             <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and
                     <parameter>program()</parameter> filter functions accept regular expressions as
                 parameters.</para>
-            <synopsis>filter demo_regexp_filter { host("system.*1") and match("deny"); };</synopsis>
+            <synopsis>filter demo_regexp_filter { host("system.*1") and match("deny" value("MESSAGE")); };</synopsis>
         </example>
-        <para>To limit the scope of a filter function, add the <parameter>value()</parameter> option
-            and set its scope with a macro. For example, to limit the scope of the
+        <para>The <parameter>value()</parameter> parameter limits the scope of a filter function to the scope of a macro. For example, to limit the scope of the
                 <parameter>match()</parameter> filter to the text part of the message, use:</para>
         <synopsis>match("keyword" value("MESSAGE"))</synopsis>
         <para>The <parameter>value()</parameter> parameter accepts both built-in macros and
