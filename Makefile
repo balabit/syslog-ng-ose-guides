@@ -20,6 +20,8 @@ pdf: $(addprefix out/,$(PDF_OUTPUTS))
 
 syslog-ng-pe-v3.1-guide-admin-en.pdf: out/syslog-ng-pe-v3.1-guide-admin-en.pdf
 
+syslog-ng-pe-v3.1-guide-admin-en.html: out/syslog-ng-pe-v3.1-guide-admin-en.html/index.html
+
 syslog-ng-windows-agent-v3.1-guide-admin-en.pdf: out/syslog-ng-windows-agent-v3.1-guide-admin-en.pdf
 
 syslog-ng-windows-agent-v3.1-guide-admin-en.html: out/syslog-ng-windows-agent-v3.1-guide-admin-en.html/index.html
