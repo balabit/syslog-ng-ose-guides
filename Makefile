@@ -1,5 +1,5 @@
-PDF_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.pdf syslog-ng-windows-agent-v3.1-guide-admin-en.pdf
-HTML_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.html syslog-ng-windows-agent-v3.1-guide-admin-en.html
+PDF_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.pdf syslog-ng-windows-agent-v3.1-guide-admin-en.pdf syslog-ng-ibm-agent-guide-admin-en.pdf
+HTML_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.html syslog-ng-windows-agent-v3.1-guide-admin-en.html syslog-ng-ibm-agent-guide-admin-en.html
 
 all: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS)
 
@@ -26,6 +26,10 @@ syslog-ng-windows-agent-v3.1-guide-admin-en.pdf: out/syslog-ng-windows-agent-v3.
 
 syslog-ng-windows-agent-v3.1-guide-admin-en.html: out/syslog-ng-windows-agent-v3.1-guide-admin-en.html/index.html
 
+syslog-ng-ibm-agent-guide-admin-en.pdf: out/syslog-ng-ibm-agent-guide-admin-en.pdf
+
+syslog-ng-ibm-agent-guide-admin-en.html: out/syslog-ng-ibm-agent-guide-admin-en.html/index.html
+
 out/syslog-ng-pe-v3.1-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/chapters/*.xml
 	xml-stylesheet/pdf/process-profile $< $@ syslog-ng
         
@@ -46,3 +50,14 @@ out/syslog-ng-windows-agent-v3.1-guide-admin-en.html/index.html: syslog-ng-admin
 	./copy-pngs.sh out/syslog-ng-windows-agent-v3.1-guide-admin-en.html TRUE
 	            
 syslog-ng-admin-guide/syslog-ng-windows-agent-guide-en.xml: setup
+
+
+out/syslog-ng-ibm-agent-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-ibm-agent-guide-admin-en.xml syslog-ng-admin-guide/chapters/*.xml
+	xml-stylesheet/pdf/process-profile $< $@ ibm-agent
+        
+out/syslog-ng-ibm-agent-guide-admin-en.html/index.html: syslog-ng-admin-guide/syslog-ng-ibm-agent-guide-admin-en.xml syslog-ng-admin-guide/*.xml syslog-ng-admin-guide/chapters/*.xml
+	mkdir out/syslog-ng-ibm-agent-guide-admin-en.html || /bin/true
+	xml-stylesheet/html/process-profile $< $@ ibm-agent
+	./copy-pngs.sh out/syslog-ng-ibm-agent-guide-admin-en.html TRUE
+	            
+syslog-ng-admin-guide/syslog-ng-ibm-agent-guide-admin-en.xml: setup

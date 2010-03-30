@@ -35,6 +35,18 @@ case "$1" in
 	#########################################
 	;;
 
+'out/syslog-ng-ibm-agent-guide-admin-en.html')
+	#########################################
+	#syslog-ng agent for ibm admin guide
+	#########################################
+        echo Processing syslog-ng admin guide figures
+	$GET -l1 $imgroot/syslog-ng-admin-guide-3.1/
+	
+	#End of syslog-ng agent for ibm admin-guide
+	#########################################
+	;;
+
+
 '*') 
 	echo Invalid output directory
 	;;
