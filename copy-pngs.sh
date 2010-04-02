@@ -14,12 +14,12 @@ cp xml-stylesheet/pdf/arculat/admon/warning_html.png $1/warning.png
 
 case "$1" in 
 
-'out/syslog-ng-admin-guide_en.html')
+'out/syslog-ng-ose-v3.1-guide-admin-en.html')
 	#########################################
 	#syslog-ng admin guide
 	#########################################
         echo Processing syslog-mg admin guide figures
-	$GET -l1 $imgroot/syslog-ng-admin-guide-3.0/
+	$GET -l1 $imgroot/syslog-ng-admin-guide-3.1/
 	
 	#End of syslog-ng admin-guide
 	#########################################
