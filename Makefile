@@ -1,5 +1,5 @@
-PDF_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.pdf syslog-ng-windows-agent-v3.1-guide-admin-en.pdf syslog-ng-ibm-agent-guide-admin-en.pdf
-HTML_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.html syslog-ng-windows-agent-v3.1-guide-admin-en.html syslog-ng-ibm-agent-guide-admin-en.html
+PDF_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.pdf syslog-ng-windows-agent-v3.1-guide-admin-en.pdf syslog-ng-ibm-agent-guide-admin-en.pdf syslog-ng-sql-whitepaper.pdf
+HTML_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.html syslog-ng-windows-agent-v3.1-guide-admin-en.html syslog-ng-ibm-agent-guide-admin-en.html syslog-ng-sql-whitepaper.html
 
 all: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS)
 
@@ -29,6 +29,10 @@ syslog-ng-windows-agent-v3.1-guide-admin-en.html: out/syslog-ng-windows-agent-v3
 syslog-ng-ibm-agent-guide-admin-en.pdf: out/syslog-ng-ibm-agent-guide-admin-en.pdf
 
 syslog-ng-ibm-agent-guide-admin-en.html: out/syslog-ng-ibm-agent-guide-admin-en.html/index.html
+
+syslog-ng-sql-whitepaper.pdf: out/syslog-ng-sql-whitepaper.pdf
+
+syslog-ng-sql-whitepaper.html: out/syslog-ng-sql-whitepaper.html/index.html
 
 out/syslog-ng-pe-v3.1-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/chapters/*.xml
 	xml-stylesheet/pdf/process-profile $< $@ syslog-ng
@@ -61,3 +65,14 @@ out/syslog-ng-ibm-agent-guide-admin-en.html/index.html: syslog-ng-admin-guide/sy
 	./copy-pngs.sh out/syslog-ng-ibm-agent-guide-admin-en.html TRUE
 	            
 syslog-ng-admin-guide/syslog-ng-ibm-agent-guide-admin-en.xml: setup
+
+
+out/syslog-ng-sql-whitepaper.pdf: syslog-ng-admin-guide/syslog-ng-sql-whitepaper.xml syslog-ng-admin-guide/chapters/*.xml
+	xml-stylesheet/pdf/process-profile $< $@ whitepaper
+        
+out/syslog-ng-sql-whitepaper.html/index.html: syslog-ng-admin-guide/syslog-ng-sql-whitepaper.xml syslog-ng-admin-guide/*.xml syslog-ng-admin-guide/chapters/*.xml
+	mkdir out/syslog-ng-sql-whitepaper.html || /bin/true
+	xml-stylesheet/html/process-profile $< $@ whitepaper
+	./copy-pngs.sh out/syslog-ng-sql-whitepaper.html TRUE
+	            
+syslog-ng-admin-guide/syslog-ng-sql-whitepaper.xml: setup

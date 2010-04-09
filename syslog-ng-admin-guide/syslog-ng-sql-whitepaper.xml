@@ -1,0 +1,293 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article SYSTEM "../xml-stylesheet/pdf/dtd/docbookx.dtd"
+[  
+  <!ENTITY % entities SYSTEM "syslog-ng-entities.ent">
+  %entities;
+]>
+<article lang="en-EN">
+  <articleinfo>
+    <title>Collecting syslog messages into an SQL database with &product;</title>
+    <corpname>BalaBit Security IT Ltd.</corpname>
+    <author>
+      <othername>Product Marketing and Documentation Department</othername>
+    </author>
+    <keywordset>
+      <keyword>syslog-ng, &product;, &abbrev;, logging, log collection, syslog-ng documentation, syslog-ng configuration, syslog-ng manual, system logging, eventlog collection, central log server, log management</keyword>
+    </keywordset>
+    <subjectset>
+      <subject>
+        <subjectterm>Collecting syslog messages into an SQL database with &product;</subjectterm>
+      </subject>
+    </subjectset>
+    <copyright>
+      <year>2010</year>
+      <holder>BalaBit IT Security Ltd.</holder>
+    </copyright>
+    <edition>First</edition>
+    <pubdate>March 30, 2010</pubdate>
+    <abstract>
+      <title/>
+      <para>The advantages of using syslog-ng Premium Edition to collect system log (syslog) messages in an SQL database, such as Oracle, MSSQL or MySQL.</para>
+    </abstract> &legalnotice; <revhistory>
+      <revision>
+        <revnumber>First</revnumber>
+        <date>March 30, 2010</date>
+        <revremark>Initial release</revremark>
+      </revision>
+    </revhistory>
+  </articleinfo>
+  <section id="preface">
+    <title>Preface</title>
+    <para>This paper discusses the advantages of using &product; to collect system log (syslog) messages into an SQL database, such as Oracle or MySQL. The document is recommended for technical experts and decision makers working on implementing centralized logging solutions, but anyone with basic networking knowledge can fully understand its contents. The procedures and concepts described here are applicable to version &version; of &product;.</para>
+    <section>
+      <title>Summary of contents</title>
+      <para><xref linkend="chapter_intro"/> briefly describes what system logging is, and why it is useful to store log messages in a database.</para>
+      <para><xref linkend="chapter_login"/> explains how you can send your messages into the database, and what are the advantages of using &product;.</para>
+      <para><xref linkend="chapter_visualizing"/> gives you a brief overview of the tools you can use to browse and manage the log messages.</para>
+      <para><xref linkend="chapter_other"/> discusses further features of &abbrev; that can come handy for you when designing and implementing your system-logging architecture.</para>
+    </section>
+  </section>
+  
+  <section id="chapter_intro">
+    <title>Introduction</title>
+    <section>
+      <title>What is system logging</title>
+      <para>Operating systems, applications, and network devices generate text messages of various events that happen to them: a user logs in, a file is created, a network connection is opened to a remote host, etc. These messages, called log messages, are usually stored in a file on the local hard disk of the system. The aim of central system logging is to collect the log messages to a single, central log server.</para>
+      <para>For a more detailed introduction into syslog architectures, see the <ulink url="http://www.balabit.hu/dl/white_papers/syslog-ng-v2.1-whitepaper-distributed-syslog-architectures-en.pdf">Distributed syslog architectures with &product;</ulink> whitepaper.</para>
+    </section>
+    <section>
+      <title>Why is it useful to store the logs in a database</title>
+      <para>Log messages are most often stored in simple text files. This method is effective for storing the messages – writing the messages into files can be performed very fast – but does not really help in managing the recorded messages, or in retrieving particular messages for review, analysis, or other processing. Storing the log messages in a database gives you these benefits.</para>
+      <para>First and foremost, it is easy to search log messages stored in a database. You can easily select messages corresponding to a date, a particular host, or an application; not to mention the power of free-form search in the message text. All this allows you to quickly find the exact information you are looking for. The second important advantage of using a database to store logs is that you can rely on the existing infrastructure of the database: you probably do not have to do anything to get your logs automatically backed up, archived, or – in case of an incident – restored, because these have already been set up for your database.</para>
+      <para>Storing the log messages in a database also allows you to access, analyze, and visualize the messages using a variety of applications, without having to rely on command-line tools.</para>
+      <figure>
+        <title>Browsing system logs with MySQL Query Browser</title>
+        <mediaobject>
+          <imageobject role="html">
+            <imagedata format="PNG" align="center"
+              fileref="mysql-query-browser-screenshot.png"/>
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata format="PNG" contentwidth="&screenshotsize;"
+              fileref="&imgroot;/mysql-query-browser-screenshot.png"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </section>
+  </section>
+ 
+  <section id="chapter_login">
+    <title>How to log into a database using syslog-ng</title>
+    <para>The following sections describe how to log into an SQL database using syslog-ng, what are the advantages of using &product;, and what are the disadvantages of other solutions.</para>
+    <section>
+      <title>Using syslog-ng to log into an SQL database</title>
+      <para>The syslog-ng application natively supports logging into databases, you only have to set the destination database. Currently the following databases are supported:</para>
+      <itemizedlist>
+        <listitem>
+          <para>MySQL</para>
+        </listitem>
+        <listitem>
+          <para>Microsoft SQL (MSSQL)</para>
+        </listitem>
+        <listitem>
+          <para>Oracle</para>
+        </listitem>
+        <listitem>
+          <para>PostgreSQL</para>
+        </listitem>
+        <listitem>
+          <para>SQLite</para>
+        </listitem>
+      </itemizedlist>
+      <para>Native database support means that provided the database is already installed, you just simply configure syslog-ng to send the log messages into this database – no additional scripting or tweaking is required. (For detailed instructions and configuration examples, see the <ulink url="http://www.balabit.com/support/documentation/"
+        >documentation of syslog-ng</ulink>)</para>
+      <para>The syslog-ng application offers superior performance compared to other solutions for the following reasons:</para>
+      <itemizedlist>
+        <listitem>
+          <para>The syslog-ng application generates the INSERT operations feeding the messages to the database natively in a C program, which is much faster than the custom scripts used in other solutions. Scripting languages (e.g., Python, Perl) are interpreted languages and inherently slower than optimized solutions created using compiled languages, such as the C language.</para>
+        </listitem>
+        <listitem>
+          <para>The syslog-ng application uses the native interface (API) of the supported databases, which allows for much faster communication with the database than any other tool that loads data into the database from a file – that way syslog-ng can send several thousands of log messages per second into the database.</para>
+        </listitem>
+        <listitem>
+          <para>To increase the processing speed further, syslog-ng performs all processing and operations in the memory of the system, without writing any messages to the hard disk. Messages are written to the hard disk only to avoid losing messages if the destination database becomes unavailable, or cannot process messages fast enough during message bursts.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+    <section>
+      <title>Advantages of using &product;</title>
+      <para>The &abbrev; application ensures that you do not lose messages during network or system outages, because &abbrev; can store unsent messages on the local hard disk until the database server becomes available again. The &abbrev; application can also apply flow-control on the messages. Flow-control means that if the destination server or database becomes overloaded, &abbrev; can stop accepting messages from the sending hosts or applications. That way the senders are notified that there is a problem in the logging infrastructure and can act accordingly: for example, in an environment where policy compliance mandates all events to be logged, the applications may temporarily halt until the logging can be resumed, so there are no actions that are not logged.</para>
+      <para>You can also control the number of messages &abbrev; sends to the central server to ensure that sudden message bursts do not consume the bandwidth of other important applications, or to flatten the load of the server. Controlling the number of sent messages to the database is useful if the number of messages that the database can process is limited, or if you have a log analyzing application on the server that can process only a limited number of messages. Using disk-based buffering together with the rate-limiting feature of &abbrev; prevents the loss of messages, and helps to use the resources effectively without overloading backend systems.</para>
+      <para>The &abbrev; application is ideal for heterogeneous environments, allowing you to send logs into the database from several different operating systems, including Linux, Sun Solaris, AIX, HP-UX, Microsoft Windows, and IBM System i.</para>
+    </section>
+    <section>
+      <title>Other solutions</title>
+      <para>Other solutions that use syslog applications (e.g., syslogd) that do not have direct database support use the following method to write log messages into the database.</para>
+      <itemizedlist>
+        <listitem>
+          <para>The syslog application creates <command>INSERT</command> commands from the log messages using templates or scripts, and writes them into a file.</para>
+        </listitem>
+        <listitem>
+          <para>A script executes the <command>INSERT</command> commands using the client application of the database, which sends the messages to the database server.</para>
+        </listitem>
+      </itemizedlist>
+      <para>Alternatively, the following method can be also used:</para>
+      <itemizedlist>
+        <listitem>
+          <para>The syslog application creates comma-separated-value (CSV) files from the log messages using templates or scripts.</para>
+        </listitem>
+        <listitem>
+          <para>The CSV file is fed into the database using the loader application of the database.</para>
+        </listitem>
+      </itemizedlist>
+      <para>Both methods have the serious drawback that they require intensive scripting, and – depending on the amount of log traffic – may have serious performance limitations. Every message must be written to the hard disk first which can severely degrade performance, depending on the skills of the programmer who writes the scripts. But even a perfect script cannot be as effective as syslog-ng, which uses the native API of the database, without having to use hard disk operations.</para>
+      <para>Also, there is no way for the script to give feedback to the syslog application, for example it cannot request the syslog application to 'slow down' if it cannot process the messages – in contrast to the flow-control capabilities of syslog-ng.</para>
+    </section>
+    <section>
+      <title>Creating the initial database</title>
+      <para>When implementing a central syslog solution that collects the log messages into a database, it is important to create the respective database tables that store the data.</para>
+      <para>The syslog-ng application simplifies this problem by automatically creating and modifying the tables and columns if they do not exist. Indexes to the selected columns are also created automatically, so searching the database for important data is fast. The names of the tables can contain macros (e.g., logs_${YEAR}${MONTH}${DAY}) that can include the host name or the IP address of the machine sending the messages. That way you do not have to manually modify the database if you add a new machine to your syslog infrastructure – syslog-ng handles this all for you automatically.</para>
+      <para>The values of the columns entered into the database can contain any macro supported by syslog-ng (for example the hostname, name of the application sending the message, date, and so on.), or even data extracted from the text part of the message using regular expressions.</para>
+      <para>Other solutions usually use static database structure that must be created and maintained manually, although some features of syslog-ng can be reproduced with complex scripting.</para>
+    </section>
+  </section>
+  
+  <section id="chapter_visualizing">
+    <title>Visualizing messages stored in a database</title>
+    <para>Once the messages are in the database, there are a number of tools that allow you to browse or search the data. Every database provides command-line tools to access the database (for example sqlplus for Oracle), but not everyone is comfortable with the command line. The following list provides a brief overview of the most common tools, including both general database-access tools and applications specialized for viewing syslog messages. Note that the list is not exhaustive, as some databases have a large number of management utilities available from different vendors.</para>
+    <section>
+      <title>MySQL</title>
+      <itemizedlist>
+        <listitem>
+          <para><ulink url="http://www.mysql.com/products/workbench/"
+            >MySQL Administrator</ulink>: a graphical utility for managing and developing MySQL databases (available Microsoft Windows, Linux, and Mac OS X)</para>
+        </listitem>
+        <listitem>
+          <para><ulink url="http://www.mysql.com/products/workbench/">MySQL Query Browser</ulink>: a graphical utility for searching MySQL databases (available Microsoft Windows, Linux, and Mac OS X)</para>
+        </listitem>
+        <listitem>
+          <para><ulink url="http://www.toadsoft.com/toadmysql/Overview.htm">Toad for MySQL</ulink>: a graphical utility for managing and developing MySQL databases (available only for Microsoft Windows)</para>
+        </listitem>
+        <listitem>
+          <para><ulink url="http://www.phpmyadmin.net/home_page/index.php">phpMyAdmin</ulink>: a web-based application for managing and accessing MySQL databases</para>
+        </listitem>
+      </itemizedlist>
+      <para>Specialized tools</para>
+      <itemizedlist>
+        <listitem>
+          <para><ulink url="http://sourceforge.net/projects/php-syslog-ng/">php-syslog-ng</ulink>: a web application for viewing and searching syslog-ng logs</para>
+        </listitem>
+        <listitem>
+          <para><ulink url="http://sourceforge.net/projects/phpsyslogviewer/">php syslog viewer</ulink>: a web application for viewing and searching system logs</para>
+        </listitem>
+        <listitem>
+          <para><ulink url="http://sourceforge.net/projects/phplogcon/">phpLogCon</ulink>: a web application for viewing and searching system and event logs</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+    <section>
+      <title>Oracle Database</title>
+      <itemizedlist>
+        <listitem>
+          <para><ulink url="http://www.oracle.com/technology/products/database/sql_developer/index.html">Oracle SQL Developer</ulink>: a graphical utility written in Java for managing and developing Oracle databases (available for Microsoft Windows, Linux, Mac OS X, and other platforms)</para>
+        </listitem>
+        <listitem>
+          <para><ulink url="http://www.allroundautomations.com/plsqldev.html">PL/SQL Developer</ulink>: a graphical utility for managing and developing Oracle databases (available only for Microsoft Windows)</para>
+        </listitem>
+        <listitem>
+          <para><ulink url="http://www.toadsoft.com/toad_oracle.htm">Toad for Oracle</ulink>: a graphical utility for managing and developing Oracle databases (available only for Microsoft Windows)</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+    <section>
+      <title>PostgreSQL</title>
+      <itemizedlist>
+        <listitem>
+          <para><ulink url="http://www.pgadmin.org/">pgAdmin III</ulink>: a graphical utility for managing and developing PostgreSQL databases (available for Microsoft Windows, Linux, Mac OS X, and other platforms)</para>
+        </listitem>
+        <listitem>
+          <para><ulink url="http://phppgadmin.sourceforge.net/">phpPgAdmin</ulink>: a web-based application for managing and accessing PostgreSQL databases</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+    <section>
+      <title>SQLite</title>
+      <itemizedlist>
+        <listitem>
+          <para><ulink url="http://www.sqlitemanager.org/">SQLiteManager</ulink>: a web-based application for managing and accessing SQLite databases</para>
+        </listitem>
+        <listitem>
+          <para><ulink url="http://www.singular.gr/sqlite/">SQLite Explorer</ulink>: a graphical utility for accessing and managing SQLite databases (available only for Microsoft Windows)</para>
+        </listitem>
+      </itemizedlist>
+      <para>The main website of SQLite maintains a long list of management tools at <ulink url="http://www.sqlite.org/cvstrac/wiki?p=ManagementTools">http://www.sqlite.org/cvstrac/wiki?p=ManagementTools</ulink>.</para>
+    </section>
+    <section>
+      <title>General tools</title>
+      <para>Most databases are accessible using the Open Database Connectivity (ODBC) interface. ODBC makes it possible to access the contents of the database from tools like Microsoft Access and OpenOffice.org Database.</para>
+    </section>
+    <section>
+      <title>Custom applications</title>
+      <para>Naturally, you can always create a special interface tailored to your needs if required. The easiest way for this is probably to use ODBC or PHP.</para>
+      <figure>
+        <title>Browsing system logs with Toad for MySQL</title>
+        <mediaobject>
+          <imageobject role="html">
+            <imagedata format="PNG" align="center"
+              fileref="toad_for_mysql_data_screenshot.png"/>
+          </imageobject>
+          <imageobject role="fo">
+            <imagedata format="PNG" contentwidth="&screenshotsize;"
+              fileref="&imgroot;/toad_for_mysql_data_screenshot.png"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </section>
+  </section>
+  
+  <section id="chapter_other">
+    <title>Other important features</title>
+    <para>This section highlights some of the features of syslog-ng PE that were not discussed in detail so far, but are useful to know about.</para>
+    <section>
+      <title>Secure logging using SSL/TLS</title>
+      <para>Log messages may contain sensitive information that should not be accessed by third parties. Therefore, &product; uses the Transport Layer Security (TLS) protocol to encrypt the communication. TLS also allows the mutual authentication of the host and the server using X.509 certificates.</para>
+    </section>
+    <section>
+      <title>Disk-based message buffering</title>
+      <para>The &product; stores messages on the local hard disk if the central log server or the network connection becomes unavailable. The syslog-ng application automatically sends the stored messages to the server when the connection is reestablished, in the same order the messages were received. The disk buffer is persistent – no messages are lost even if syslog-ng is restarted.</para>
+    </section>
+    <section>
+      <title>Output data into various formats</title>
+      <para>The syslog-ng application does not limit what you can do with your log messages: it is meant to provide you with the most effective way to collect them. You can store your logs in files, databases, or pass them to a log analyzing application: &abbrev; can customize the messages into the format you want. You can even reorganize the contents of the log messages if you are not content with the original message format – or if it makes your log analyzing application more effective.</para>
+    </section>
+    <section>
+      <title>Select important messages</title>
+      <para>You can use various filters – ranging from very simple to really complex ones – to select messages based on their content, source, or other parameters. This is useful if you do not want to send every message to the central server, or you have to process messages differently based on their content. The syslog-ng application can dynamically create directories, files, and database tables using macros.</para>
+    </section>
+    <section>
+      <title>Control the rate of messages</title>
+      <para>You can control the number of messages &abbrev; sends to the central server to ensure that sudden message bursts do not consume the bandwidth of other important applications, or to flatten the load of the server. Controlling the number of sent messages is useful also if you have a database or a log analyzing application on the server that can process only a limited number of messages. Using disk-based buffering together with the rate-limiting feature of &abbrev; prevents the loss of messages, and helps to use the resources effectively without overloading backend systems.</para>
+    </section>
+    <section>
+      <title>Flow-control</title>
+      <para>Flow-control uses a control window to determine if there is free space in the output buffer of syslog-ng for new messages. If the output buffer is full, then the destination cannot accept new messages for some reason: for example, it is overloaded, or the network connection became unavailable. In such cases, syslog-ng stops reading messages from the sending applications or hosts until some messages have been successfully sent to the destination.</para>
+    </section>
+    <section>
+      <title>Support for IPv4 and IPv6 environments</title>
+      <para>You can deploy syslog-ng in both types of networks, and use the same system logging tool across your entire network infrastructure.</para>
+    </section>
+    <section>
+      <title>Heterogeneous environments</title>
+      <para>The syslog-ng application is the ideal choice to collect logs in massively heterogeneous environments using several different operating systems and hardware platforms, including Linux, Windows, Unix, BSD, Sun Solaris, HP-UX, and AIX. For a complete list of platforms supported by syslog-ng Premium Edition, visit <ulink url="http://www.balabit.com/network-security/syslog-ng/central-syslog-server/"
+        >http://www.balabit.com/network-security/syslog-ng/central-syslog-server/</ulink>.</para>
+    </section>
+    <section>
+      <title>Collect logs from Microsoft Windows</title>
+      <para>Using &agent;, you can collect messages from logfiles and eventlog groups, and transfer all log messages to the central syslog server using encrypted, reliable TCP connections. That way you can integrate your Windows-based and UNIX-based devices into the same logging infrastructure.</para>
+    </section>
+    <section>
+      <title>Collect logs from IBM System i</title>
+      <para>Using &agenti;, you can collect application and system messages, as well as messages from the System i security audit journal. The collected messages are forwarded to the central syslog server using encrypted, reliable TCP connections. That way you can integrate your IBM System i devices into the same logging infrastructure as your UNIX and other devices.</para>
+    </section>
+  </section>
+</article>
