@@ -2,7 +2,7 @@ PDF_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.pdf syslog-ng-windows-agent-v3.1-
 HTML_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.html syslog-ng-windows-agent-v3.1-guide-admin-en.html syslog-ng-ibm-agent-guide-admin-en.html syslog-ng-sql-whitepaper.html
 
 MANSOURCES=$(wildcard other/*.[0-9].xml)
-MANPAGES=$(subst other/,out/,$(subst .xml,,$(MANSOURCES)))
+MANPAGES=$(subst other/,out/man/,$(subst .xml,,$(MANSOURCES)))
 
 XSLTPROC_MANPAGES=xsltproc --xinclude --output $@  xml-stylesheet/pdf/docbook-xslt/manpages/docbook.xsl $<
 
@@ -86,13 +86,13 @@ $(MANPAGES): $(MANSOURCES)
 
 # Other rules needed to be added, if we add manpages to other chapters (read:
 # different extensions), although it's highly unlikely... - Folti
-out/%.1: other/%.1.xml
+out/man/%.1: other/%.1.xml
 	$(XSLTPROC_MANPAGES)
 
-out/%.5: other/%.5.xml
+out/man/%.5: other/%.5.xml
 	$(XSLTPROC_MANPAGES)
 
-out/%.8: other/%.8.xml
+out/man/%.8: other/%.8.xml
 	$(XSLTPROC_MANPAGES)
 
 clean:
