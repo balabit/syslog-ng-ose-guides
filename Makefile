@@ -1,9 +1,13 @@
 PDF_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.pdf syslog-ng-windows-agent-v3.1-guide-admin-en.pdf syslog-ng-ibm-agent-guide-admin-en.pdf syslog-ng-sql-whitepaper.pdf
 HTML_OUTPUTS = syslog-ng-pe-v3.1-guide-admin-en.html syslog-ng-windows-agent-v3.1-guide-admin-en.html syslog-ng-ibm-agent-guide-admin-en.html syslog-ng-sql-whitepaper.html
 
-all: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS)
+MANSOURCES=$(wildcard other/*.[0-9].xml)
+MANPAGES=$(subst other/,out/,$(subst .xml,,$(MANSOURCES)))
 
-.PHONY: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS)
+XSLTPROC_MANPAGES=xsltproc --xinclude --output $@  xml-stylesheet/pdf/docbook-xslt/manpages/docbook.xsl $<
+
+all: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
+
 setup:
 	[ -d xml-stylesheet ] || git clone git+ssh://git.balabit/var/scm/git/docs/xml-stylesheet.git xml-stylesheet 
 	[ -d xml-stylesheet ] && (cd xml-stylesheet; git pull)
@@ -76,3 +80,22 @@ out/syslog-ng-sql-whitepaper.html/index.html: syslog-ng-admin-guide/syslog-ng-sq
 	./copy-pngs.sh out/syslog-ng-sql-whitepaper.html TRUE
 	            
 syslog-ng-admin-guide/syslog-ng-sql-whitepaper.xml: setup
+
+manpages: $(MANPAGES)
+$(MANPAGES): $(MANSOURCES)
+
+# Other rules needed to be added, if we add manpages to other chapters (read:
+# different extensions), although it's highly unlikely... - Folti
+out/%.1: other/%.1.xml
+	$(XSLTPROC_MANPAGES)
+
+out/%.5: other/%.5.xml
+	$(XSLTPROC_MANPAGES)
+
+out/%.8: other/%.8.xml
+	$(XSLTPROC_MANPAGES)
+
+clean:
+	-rm -rf out/*
+
+.PHONY: clean setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) manpages $(MANSOURCES)
