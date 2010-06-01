@@ -1,16 +1,19 @@
 PDF_OUTPUTS = syslog-ng-ose-v3.1-guide-admin-en.pdf
 HTML_OUTPUTS = syslog-ng-ose-v3.1-guide-admin-en.html
 
-all: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS)
+MANSOURCES=$(wildcard other/*.[0-9].xml)
+MANPAGES=$(subst other/,out/man/,$(subst .xml,,$(MANSOURCES)))
 
-.PHONY: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS)
+XSLTPROC_MANPAGES=xsltproc --xinclude --output $@  xml-stylesheet/pdf/docbook-xslt/manpages/docbook.xsl $<
+
+all: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
+
 setup:
 	[ -d xml-stylesheet ] || git clone git+ssh://git.balabit/var/scm/git/docs/xml-stylesheet.git xml-stylesheet 
 	[ -d xml-stylesheet ] && (cd xml-stylesheet; git pull)
-	[ -d out ] || mkdir out
-	[ -d xml-stylesheet ] 
+	mkdir -p out
 	[ -d xml-stylesheet ] && (cd xml-stylesheet)
-	[ -d out ] || mkdir out
+	mkdir -p out
 	
 ### entry points for the user
 
@@ -26,9 +29,31 @@ out/syslog-ng-ose-v3.1-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-admin
 	xml-stylesheet/pdf/process-profile $< $@ syslog-ng
         
 out/syslog-ng-ose-v3.1-guide-admin-en.html/index.html: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/*.xml syslog-ng-admin-guide/chapters/*.xml
-	mkdir out/syslog-ng-ose-v3.1-guide-admin-en.html || /bin/true
+	mkdir -p out/syslog-ng-ose-v3.1-guide-admin-en.html
 	xml-stylesheet/html/process-profile $< $@ syslog-ng
 	./copy-pngs.sh out/syslog-ng-ose-v3.1-guide-admin-en.html TRUE
 	            
 syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml: setup
 
+manpages: setup $(MANPAGES)
+$(MANPAGES): $(MANSOURCES)
+
+# Other rules needed to be added, if we add manpages to other chapters (read:
+# different extensions), although it's highly unlikely... - Folti
+out/man/%.1: other/%.1.xml
+	$(XSLTPROC_MANPAGES)
+
+out/man/%.5: other/%.5.xml
+	$(XSLTPROC_MANPAGES)
+
+out/man/%.8: other/%.8.xml
+	$(XSLTPROC_MANPAGES)
+
+olinkdbs: $(OLINKDBS)
+$(OLINKDBS): $(OLINKDBS_IN)
+
+clean:
+	-rm -rf out/*
+
+# MANSOURCES and OLINKDBS_IN must be .PHONY otherwise they won't be regenerated everytime.
+.PHONY: clean setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) manpages $(MANSOURCES)
