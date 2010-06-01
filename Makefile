@@ -61,7 +61,6 @@ out/syslog-ng-windows-agent-v3.1-guide-admin-en.html/index.html: syslog-ng-admin
 	            
 syslog-ng-admin-guide/syslog-ng-windows-agent-guide-en.xml: setup
 
-
 out/syslog-ng-ibm-agent-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-ibm-agent-guide-admin-en.xml syslog-ng-admin-guide/chapters/*.xml
 	xml-stylesheet/pdf/process-profile $< $@ ibm-agent
         
@@ -83,7 +82,7 @@ out/syslog-ng-sql-whitepaper.html/index.html: syslog-ng-admin-guide/syslog-ng-sq
 	            
 syslog-ng-admin-guide/syslog-ng-sql-whitepaper.xml: setup
 
-manpages: $(MANPAGES)
+manpages: setup $(MANPAGES)
 $(MANPAGES): $(MANSOURCES)
 
 # Other rules needed to be added, if we add manpages to other chapters (read:
