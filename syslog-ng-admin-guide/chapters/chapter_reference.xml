@@ -2481,7 +2481,31 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                 <parameter>tls</parameter> methods do not support multicasting.</para>
             <synopsis>Declaration:
     syslog(host transport [options]);</synopsis>
-            <para id="table_destination_syslog_options">These destinations have the following options:</para> 
+            <para id="table_destination_syslog_options">These destinations have the following options:</para>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination-failover']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                <example id="example-failover-server-syslog">
+                <title>Specifying failover servers for syslog() destinations</title>
+                <para>The following example specifies two failover servers for a simple syslog() destination.</para>
+                <synopsis>destination d_syslog_tcp{
+                syslog("10.100.20.40"
+                transport("tcp")
+                port(6514)
+                failover_servers("10.2.3.4", "myfailoverserver")
+                );};</synopsis>
+                <para>The following example specifies a failover server for a TLS destination.</para>
+                <synopsis>destination d_syslog_tls{
+                syslog("10.100.20.40"
+                transport("tls")
+                port(6514)
+                failover_servers("10.2.3.4", "myfailoverserver")
+                tls(peer-verify(required-trusted)
+                ca_dir('/opt/syslog-ng/etc/syslog-ng/keys/ca.d/')
+                key_file('/opt/syslog-ng/etc/syslog-ng/keys/client_key.pem')
+                cert_file('/opt/syslog-ng/etc/syslog-ng/keys/client_certificate.pem'))
+                );};</synopsis>
+            </example>
+            </simplesect>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>  
@@ -3715,7 +3739,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                     <primary>tags</primary>
                     <secondary>as macro</secondary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> A comma-separated list of the tags assigned to the message.</para>
+            <para><guilabel>Description:</guilabel> A comma-separated list of the tags assigned to the message. Available only in &product; 3.2 and later.</para>
             <note>
                 <para>Note that the tags are not part of the log message and are not automatically transferred from a client to the server. For example, if a client uses a pattern database to tag the messages, the tags are not transferred to the server. A way of transferring the tags is to explicitly add them to the log messages using a template and the <parameter>$TAGS</parameter> macro, or to add them to the structured metadata part of messages when using the IETF-syslog message format.</para>
             </note>
