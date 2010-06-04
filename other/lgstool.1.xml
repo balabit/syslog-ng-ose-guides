@@ -55,7 +55,7 @@
         <arg>options</arg>
         <arg>file</arg>
       </cmdsynopsis>
-      <para>Use the <command>cat</command> command to display the log messages stored in the logstore file. The messages are printed to the standard output (stdout), so it is possible to use grep and other tools to find particular log messages, e.g., <command>lgstool cat /var/log/messages.lgs |grep 192.168.1.1</command>.</para>
+      <para>Use the <command>cat</command> command to display the log messages stored in the logstore file. The messages are printed to the standard output (stdout), so it is possible to use grep and other tools to find particular log messages, e.g., <command>lgstool cat /var/log/messages.lgs |grep 192.168.1.1</command>. Note that can also follow logstore files &mdash; for details on this feature, see <xref linkend="lgstool_tail"/>.</para>
       <para>The <command>cat</command> command has the following options:</para>
       <variablelist>
         <varlistentry>
@@ -233,6 +233,109 @@ TIMESTAMP @36481:
     Nonce: 0xB613F55AEFFA6DC0
     TSA: unspecified
     Extensions:</synopsis>
+    </refsect1>
+    <refsect1 id="lgstool_recover">
+      <title>The recover command</title>
+      <cmdsynopsis>
+        <command>recover</command>
+        <arg>options</arg>
+        <arg>file</arg>
+      </cmdsynopsis>
+      <para>Use the <command>recover</command> command can process and correct broken logstore files. It can also process orphaned journal files and move their contents to the respective logstore file. Encrypted, compressed, and timestamped logstore files can be recovered as well &mdash; the private key of the logstore is not needed to recover encrypted logstore files (recovering the encrypted file does not give access to its contents).</para>
+      <warning>
+          <para>The <command>lgstool</command> application cannot fetch timestamps to the chunks (message blocks), so chunks recovered with <command>lgstool</command> are not timestamped (the internal timestamp of the syslog messages is included in the messages).</para>
+      </warning>
+      <para>The <command>recover</command> command is available in &product; 3.2 and later, and has the following options:</para>
+      <variablelist>
+        <varlistentry>
+          <term><command>--compress-level</command> or <command>-c</command></term>
+          <listitem>
+            <para>Set the level of compression when processing a journal file into a compressed logstore. Default value: 3</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--debug</command> or <command>-d</command></term>
+          <listitem>
+            <para>Print diagnostic and debugging messages to stderr.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--help</command> or <command>-h</command></term>
+          <listitem>
+            <para>Display a brief help message.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--verbose</command> or <command>-v</command></term>
+          <listitem>
+            <para>Print verbose messages to stderr.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--version</command> or <command>-V</command></term>
+          <listitem>
+            <para>Display version information.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>Example:
+        <synopsis>lgstool recover mylogstore.lgs</synopsis></para>
+    </refsect1>
+    <refsect1 id="lgstool_tail">
+      <title>The tail command</title>
+      <cmdsynopsis>
+        <command>tail</command>
+        <arg>options</arg>
+        <arg>file</arg>
+      </cmdsynopsis>
+      <para>Use the <command>tail -f</command> command to follow the contents of a logstore file like the traditional <command>tail</command> command does on Linux/UNIX systems. The messages are printed to the standard output (stdout). Contents of the journal file related to the logstore file are displayed as well.</para>
+      <para>The <command>tail</command> command is available in &product; 3.2 and later, and has the following options:</para>
+      <variablelist>
+        <varlistentry>
+          <term><command>--debug</command> or <command>-d</command></term>
+          <listitem>
+            <para>Print diagnostic and debugging messages to stderr.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--help</command> or <command>-h</command></term>
+          <listitem>
+            <para>Display a brief help message.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--key=&lt;keyfile&gt;</command> or <command>-k</command></term>
+          <listitem>
+            <para>Use the specified private key to decrypt encrypted logstore files.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--lines=&lt;N&gt;</command> or <command>-n</command></term>
+          <listitem>
+            <para>Display the last N lines of the logstore file instead of the last 10. Alternatively, use <parameter>+N</parameter> to display lines starting with the Nth.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--template=&lt;template&gt;</command> or <command>-t</command></term>
+          <listitem>
+            <para>Format the messages using the specified template.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--verbose</command> or <command>-v</command></term>
+          <listitem>
+            <para>Print verbose messages to stderr.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>--version</command> or <command>-V</command></term>
+          <listitem>
+            <para>Display version information.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>Example:
+        <synopsis>lgstool tail -f -n=20 --key=mykey.pem mylogstore.lgs</synopsis></para>
     </refsect1>
     <refsect1 id="lgstool_validate">
       <title>The validate command</title>
