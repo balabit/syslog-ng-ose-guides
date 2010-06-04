@@ -3,13 +3,14 @@ HTML_OUTPUTS = syslog-ng-ose-v3.1-guide-admin-en.html
 
 MANSOURCES=$(wildcard other/*.[0-9].xml)
 MANPAGES=$(subst other/,out/man/,$(subst .xml,,$(MANSOURCES)))
+GIT_BASE=git+ssh://git.balabit/var/scm/git
 
 XSLTPROC_MANPAGES=xsltproc --xinclude --output $@  xml-stylesheet/pdf/docbook-xslt/manpages/docbook.xsl $<
 
 all: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
 
 setup:
-	[ -d xml-stylesheet ] || git clone git+ssh://git.balabit/var/scm/git/docs/xml-stylesheet.git xml-stylesheet 
+	[ -d xml-stylesheet ] || git clone $(GIT_BASE)/docs/xml-stylesheet.git xml-stylesheet 
 	[ -d xml-stylesheet ] && (cd xml-stylesheet; git pull)
 	mkdir -p out
 	[ -d xml-stylesheet ] && (cd xml-stylesheet)
