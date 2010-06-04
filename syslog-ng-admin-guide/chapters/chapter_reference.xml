@@ -2658,7 +2658,34 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
     udp(host [options]);
     tcp6(host [options]);
     udp6(host [options]);</synopsis>
+                <example id="example_destination_tcpudp">
+                    <title>Using the tcp() driver</title>
+                    <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999); localport(999)); };</synopsis>
+                    <para>If name resolution is configured, the hostname of the target server can be
+                    used as well.</para>
+                    <synopsis>destination d_tcp { tcp("target_host" port(1999); localport(999)); };</synopsis>
+                    <para>To send messages using the IETF-syslog message format without using the IETF-syslog protocol, enable the <parameter>syslog-protocol</parameter> flag:</para>
+                    <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999); flags(syslog-protocol) };</synopsis>
+                    <para>(To use the IETF-syslog protocol, see <xref linkend="reference_destination_syslog"/>.)</para>
+                </example>
             <para id="table_destination_tcp_options">These destinations have the following options:</para>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination-failover']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                <example id="example-failover-server-tcp">
+                <title>Specifying failover servers for tcp() destinations</title>
+                <para>The following example specifies two failover servers for a simple TCP destination.</para>
+                <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999) failover_servers("10.2.3.4", "third-logserver.example.com"); };</synopsis>
+                <para>The following example specifies a failover server for a TLS destination.</para>
+                <synopsis>destination d_tcp {
+         tcp("10.100.20.40" port(8989)
+                 failover_servers("10.2.3.4")
+                 tls(peer-verify(required-trusted)
+                 ca_dir('/opt/syslog-ng/etc/keys/cas/')
+                 key_file('/opt/syslog-ng/etc/keys/client-key.pem')
+                 cert_file('/opt/syslog-ng/etc/keys/client-pubcert.pem')));
+};</synopsis>
+            </example>
+            </simplesect>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
@@ -2691,6 +2718,19 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             </simplesect>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'diskbuffer_option_log_disk_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                <example id="example_diskbuffer">
+                    <title>Enabling disk-based buffering</title>
+                    <para>The following example turns on disk-based buffering for the destination. The
+                    size of the disk buffer is 4 194 304 bytes (4 megabytes). In a worst-case
+                    situation, using the default value of the <parameter>log_msg_size()</parameter>
+                    parameter (8192 bytes), this disk buffer can store at least 512 messages.
+                    Typical log messages are about 300-500 bytes long, so a disk buffer of 4
+                    megabytes can store over 8000 messages. Set the size of the disk buffer based on
+                    the average size and number of messages, and the longest estimated downtime of
+                    the server. </para>
+                    <synopsis>destination d_tcp { 
+                    tcp("10.1.2.3" port(1999) log_disk_fifo_size(4194304)); };</synopsis>
+                </example>
             </simplesect>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -2733,29 +2773,6 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             </simplesect> 
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                <example id="example_destination_tcpudp">
-                    <title>Using the tcp() driver</title>
-                    <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999); localport(999)); };</synopsis>
-                    <para>If name resolution is configured, the hostname of the target server can be
-                    used as well.</para>
-                    <synopsis>destination d_tcp { tcp("target_host" port(1999); localport(999)); };</synopsis>
-                    <para>To send messages using the IETF-syslog message format, enable the
-                    <parameter>syslog-protocol</parameter> flag:</para>
-                    <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999); flags(syslog-protocol) };</synopsis>
-                </example>
-                <example id="example_diskbuffer">
-                    <title>Enabling disk-based buffering</title>
-                    <para>The following example turns on disk-based buffering for the destination. The
-                    size of the disk buffer is 4 194 304 bytes (4 megabytes). In a worst-case
-                    situation, using the default value of the <parameter>log_msg_size()</parameter>
-                    parameter (8192 bytes), this disk buffer can store at least 512 messages.
-                    Typical log messages are about 300-500 bytes long, so a disk buffer of 4
-                    megabytes can store over 8000 messages. Set the size of the disk buffer based on
-                    the average size and number of messages, and the longest estimated downtime of
-                    the server. </para>
-                    <synopsis>destination d_tcp { 
-                    tcp("10.1.2.3" port(1999) log_disk_fifo_size(4194304)); };</synopsis>
-                </example>
             </simplesect>
         </section>
 
