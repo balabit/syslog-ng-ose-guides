@@ -594,9 +594,25 @@
         <para>The syslog-ng PE application generates an SHA-1 hash for every chunk to verify the
             integrity of the chunk. The hashes of the chunks are chained together to prevent
             injecting chunks into the logstore file. The syslog-ng application can encrypt the
-            logstore using the <parameter>aes128</parameter> algorithm in CBC mode; the hashing
-            (HMAC) algorithm is <parameter>hmac-sha1</parameter>. Currently it is not possible to
-            use other algorithms.</para>
+            logstore using various algorithms, using the <parameter>aes128</parameter> encryption algorithm in CBC mode and the <parameter>hmac-sha1</parameter> hashing (HMAC) algorithm as default.</para>
+        <section id="concepts_logstore_journal">
+            <title>Journal files</title>
+            <indexterm>
+                <primary>journal files</primary>
+            </indexterm>
+            <para>Starting with &product; 3.2, &abbrev; processes log messages into a journal file before writing them to the logstore file. That way logstore files are consistent even if &abbrev; crashes unexpectedly, avoiding losing messages. Note that this does not protect against losing messages if the operating system crashes.</para>
+            <para>A journal file is automatically created for every logstore file that &abbrev; opens. A journal file consists of journal blocks which store the log messages. When a journal block fills up with messages, &abbrev; writes the entire block into the logstore file and starts to reuse the journal block. If the messages cannot be written to the logstore file (for example, because the disk becomes unaccessible, or file operations are slow), messages are put to the next journal block (&abbrev; uses four blocks by default). When all journal blocks become full, &abbrev; will stop processing incoming traffic. &abbrev; starts accepting messages to the logstore file again when the first journal block is successfully written to the logstore file. If &abbrev; receives a HUP or STOP signal, it writes every journal block to the logstore.</para>
+            <warning>
+                <para>When every block of a journal becomes full and &abbrev; stops processing incoming traffic, <emphasis>it will not read new messages at all</emphasis> until a block is successfully written to the related logstore file. This is in contrast with flow-control, where only messages from the source related to the particular destination are not processed.</para>
+            </warning>
+            <para>&abbrev; uses a separate journal file for every logstore file; every journal file is processed by a separate thread. The journal files are stored in the memory, the total amount of memory allowed for journal files (by default, 512 MB) can be set with the <link linkend="logstore_option_journal_memory_limit"><parameter>logstore_journal_shmem_threshold()</parameter></link> global option.</para>
+            <warning>
+                <para>The messages in the journal file are in plain-text format: they are neither encrypted nor compressed. However, this is not a problem because normally the journal file is available only in the memory of the host, it is written to disk only if &abbrev; crashes. When &abbrev; is restarted, it automatically processes the journal files to the logstore files, unless a particular logstore file is not part of configuration of &abbrev;. Such orphaned journal files can be processed with the <command>lgstool recover</command> command. For details on processing orphaned journal files, see <xref linkend="lgstool_recover"/>.</para>
+            </warning>
+            <note>
+                <para>Journal files are located in the same folder as the logstore file. The name of the journal file is the same as the logstore file with <parameter>.jor</parameter> suffix added. For example, the journal file for <filename>messages.lgs</filename>is <parameter>messages.lgs.jor</parameter>.</para>
+            </note>
+        </section>
     </section>
 
     <section id="concepts_macro">
