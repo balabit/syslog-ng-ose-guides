@@ -6,16 +6,15 @@ MANPAGES=$(subst other/,out/man/,$(subst .xml,,$(MANSOURCES)))
 
 OLINKDBS_IN=$(wildcard targetdbs/*.db.in)
 OLINKDBS=$(subst .in,,$(OLINKDBS_IN))
+GIT_BASE=git+ssh://git.balabit/var/scm/git
 
 XSLTPROC_MANPAGES=xsltproc --xinclude --output $@  xml-stylesheet/pdf/docbook-xslt/manpages/docbook.xsl $<
 
 all: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
 
 setup: olinkdbs
-	[ -d xml-stylesheet ] || git clone git+ssh://git.balabit/var/scm/git/docs/xml-stylesheet.git xml-stylesheet 
+	[ -d xml-stylesheet ] || git clone $(GIT_BASE)/docs/xml-stylesheet.git xml-stylesheet
 	[ -d xml-stylesheet ] && (cd xml-stylesheet; git pull)
-	mkdir -p out
-	[ -d xml-stylesheet ] && (cd xml-stylesheet)
 	mkdir -p out
 	
 ### entry points for the user
