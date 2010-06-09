@@ -1117,11 +1117,38 @@ destination d_messages { logstore("/var/log/messages_logstore.lgs"
                             <entry>empty string</entry>
                         </row>
                     </tbody>
-                </tgroup>  
+                </tgroup>
             </informaltable>
             <para><guilabel>Description:</guilabel> Use the <parameter>multi-line-prefix()</parameter> option to process multi-line messages, that is, log messages that contain newline characters (for example, MySQL or Tomcat logs). Specify a string or regular expression that matches the beginning of the log messages. If the <parameter>multi-line-prefix()</parameter> option is set, &abbrev; ignores newline characters from the source until a line matches the regular expression again, and treat the lines between the matching lines as a single message. See also the <parameter>multi-line-garbage()</parameter> option.</para>
             <tip>
-               <para>To actually convert the lines of multi-line messages to single line (by replacing the newline characters with whitespaces), use the <parameter>flags(no-multi-line)</parameter> option in the source.</para>
+               <itemizedlist>
+               <listitem>
+               <indexterm type="parameter">
+                    <primary>indent-multi-line</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>formatting multi-line messages</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>multi-line messages</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>multiline messages</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>indenting multi-line messages</primary>
+                </indexterm>
+                   <para>To make multi-line messages more readable when written to a file, use a template in the destination and instead of the <parameter>$MESSAGE</parameter> macro, use the following: <parameter>$(indent-multi-line $MESSAGE)</parameter>. This expression inserts a tab after every newline character, indenting every line of the message after the first. For example:</para>
+                   <synopsis>destination d_file {
+                file ("/var/log/messages"
+                        template("$ISODATE $HOST $(indent-multi-line $MESSAGE)\n") );
+};</synopsis>
+                   <para>For details on using templates, see <xref linkend="configuring_macros"/>.</para>
+               </listitem>
+               <listitem>
+                   <para>To actually convert the lines of multi-line messages to single line (by replacing the newline characters with whitespaces), use the <parameter>flags(no-multi-line)</parameter> option in the source.</para>
+               </listitem>
+               </itemizedlist>
             </tip>
             <!-- FIXME examples -->
         </simplesect>
