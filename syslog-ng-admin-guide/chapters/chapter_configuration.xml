@@ -1120,7 +1120,8 @@ destination;df_facility_dot_err;;a;processed;0</synopsis>
             </indexterm>
             <para>To display the contents of a logstore file, use the <command>lgstool</command> (formerly called <command>logcat</command>)
                 command supplied with syslog-ng, for example <command>lgstool cat 
-                /var/log/messages.lgs</command>. To display the contents of encrypted log files,
+                /var/log/messages.lgs</command>. Log messages available in the journal file of the logstore (but not yet written to the logstore file itself) are displayed as well.</para>
+                <para>To display the contents of encrypted log files,
                 specify the private key of the certificate used to encrypt the file, for example
                     <command>lgstool cat -k private.key /var/log/messages.lgs</command>. The contents of
                 the file are sent to the standard output, so it is possible to use grep and other
@@ -1140,9 +1141,9 @@ destination;df_facility_dot_err;;a;processed;0</synopsis>
                 (HMAC) algorithm is <parameter>hmac-sha1</parameter>. Currently it is not possible
                 to use other algorithms.</para>
             <warning>
-                <para>If the &product; application or the computer crashes, an
-                    unclosed chunk remains at the end of the file. This chunk is marked as broken,
-                    its data stays there but is not shown by <command>logcat</command>.</para>
+                <para>If the computer running &product; crashes, an
+                    unclosed chunk remains at the end of the logstore file. This chunk is marked as broken,
+                    its data stays there but is not shown by <command>lgstool</command>.</para>
                 <!-- FIXME akkor hogy lehet megnezni? -->
             </warning>
             <para>The destination filename may include macros which get expanded when the message is
@@ -2953,7 +2954,7 @@ log { source(s_local);destination(d_syslog_tcp); };</synopsis>
             <title>A simple configuration for servers</title>
             <para>The following is a simple configuration file for syslog-ng Premium Edition that
                 collects incoming log messages and stores them in a logstore file.</para>
-            <synopsis>@version:3.0
+            <synopsis>@version:&version;
     options { 
         time_reap(30);
         mark_freq(10);
@@ -2966,9 +2967,7 @@ log { source(s_local);destination(d_syslog_tcp); };</synopsis>
     destination d_logstore { 
         logstore(
             "/var/log/syslog-ng-pe/out/logstore.lgs"
-            encrypt_certificate("/opt/syslog-ng/etc/kulcsok/public-certificate.pem")			
-            chunk_size(10000) 
-            chunk_time(1)
+            encrypt_certificate("/opt/syslog-ng/etc/keys/public-certificate.pem")			
             compress(2)
             owner("root")
             group("root")
