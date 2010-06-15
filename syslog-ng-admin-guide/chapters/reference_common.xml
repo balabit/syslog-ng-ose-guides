@@ -1161,6 +1161,9 @@ destination d_messages { logstore("/var/log/messages_logstore.lgs"
                 </tgroup>
             </informaltable>
             <para><guilabel>Description:</guilabel> Use the <parameter>multi-line-prefix()</parameter> option to process multi-line messages, that is, log messages that contain newline characters (for example, MySQL or Tomcat logs). Specify a string or regular expression that matches the beginning of the log messages. If the <parameter>multi-line-prefix()</parameter> option is set, &abbrev; ignores newline characters from the source until a line matches the regular expression again, and treat the lines between the matching lines as a single message. See also the <parameter>multi-line-garbage()</parameter> option.</para>
+            <note>
+                <para>Use as simple regular expressions as possible, because complex regular expressions can severely reduce the rate of processing multi-line messages.</para>
+            </note>
             <tip>
                <itemizedlist>
                <listitem>
@@ -1191,7 +1194,33 @@ destination d_messages { logstore("/var/log/messages_logstore.lgs"
                </listitem>
                </itemizedlist>
             </tip>
-            <!-- FIXME examples -->
+            <example>
+                <title>Processing MySQL query logs</title>
+                <indexterm>
+                    <primary>multi-line messages</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>MySQL query logs</primary>
+                </indexterm>
+                <para>The log messages of MySQL queries are a typical example for multi-line log messages. The messages start with the date and time of the query in the <parameter>YYMMDD  HH:MM:SS</parameter> format, as you can see in the following example.</para>
+                <synopsis>100609  6:46:27         31334 Connect     debian-sys-maint@localhost on
+                 31334 Statistics
+                 31334 Quit        
+100609  6:46:28         31335 Connect     debian-sys-maint@localhost on
+                 31335 Statistics
+                 31335 Quit                       31336 Connect     debian-sys-maint@localhost on
+                 31336 Query       show /*!50002 GLOBAL */ status
+                 31336 Quit        
+100609  6:46:29         31337 Connect     debian-sys-maint@localhost on
+                 31337 Query       show /*!50002 GLOBAL */ status
+                 31337 Quit</synopsis>
+                 <para>To process these messages, specify a regular expression matching the timestamp of the messages in the <parameter>multi-line-prefix()</parameter> option. Such an expression is the following:</para>
+                 <synopsis>source s_file {file ("/var/log/mysql.log" follow_freq(0) 
+                     multi-line-prefix(".*[0-9]{6}  [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}.*") 
+                     flags(no-parse));
+};</synopsis>
+                 <para>Note that the <parameter>flags(no-parse)</parameter> is needed to avoid &abbrev; trying to interpret the date in the message.</para>
+            </example>
         </simplesect>
         <simplesect id="source_commonoption_optional">
             <title>optional()</title>
