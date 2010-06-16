@@ -734,10 +734,15 @@
                         </tbody>
                     </tgroup>
                 </informaltable>
-                 <para><guilabel>Description:</guilabel> The maximum size of memory (in bytes) that &abbrev; uses for storing the journal files in the memory. Every logstore has a related journal file, this memory limit applies to the total amount of memory used by the journal files. Default value: <parameter>536870912</parameter> (512 MB).</para>
+                 <para><guilabel>Description:</guilabel> If the size of memory (in bytes) required by journal files increases above this value, &abbrev; maps only a single block of every logstore journal into the memory. Default value: <parameter>536870912</parameter> (512 MB).</para>
+                 <para id="logstore_journal_shmem_threshold_description">If the memory required for the journal files exceeds the <parameter>logstore_journal_shmem_threshold()</parameter> limit, &abbrev; will store only a single journal block of every journal file in the memory, and &mdash; if more blocks are needed for a journal &mdash; store the additional blocks on the hard disk. Opening new logstore files means allocating memory for one new journal block for every new file. In extreme situations involving large traffic, this can lead to &abbrev; consuming the entire memory of the system. Adjust the <parameter>journal_block_size()</parameter> and your file-naming conventions as needed to avoid such situations. For details on logstore journals, see <xref linkend="concepts_logstore_journal"/>.</para>
+                 <example id="example-logstore-memory-threshold">
+                    <title>Calculating memory usage of logstore journals</title>
+                    <para>If you are using the default settings (4 journal blocks for every logstore journal, one block is 1MB, <parameter>logstore_journal_shmem_threshold()</parameter> is 512MB), this means that &abbrev; will allocate 4MB memory for every open logstore file, up to 512MB if you have 128 open logstore files. Opening a new logstore file would require 4 more megabytes of memory for journaling, bringing the total required memory to 516MB, which is above the <parameter>logstore_journal_shmem_threshold()</parameter>. In this case, &abbrev; switches to storing only a single journal block in the memory, lowering the memory requirements of journaling to 129MB. However, opening more and more logstore files wil require more and more memory, and this is not limited, except when &abbrev; reaches the maximum number of files that can be open (as set in the <parameter>--fd-limit</parameter> command-line option).</para>
+                </example>
                  <example id="example-logstore-memory">
                      <title>Limiting the memory use of journal files</title>
-                     <para>The following example sets the maximum memory used by logstore journals to 32 MB. </para>
+                     <para>The following example causes &abbrev; to map only a single journal block into the host's memory if the total memory range used by logstore journals would be higher than 32 MB. </para>
                      <synopsis>options { 
     logstore_journal_shmem_threshold(33554432); 
 };
@@ -750,12 +755,12 @@ destination d_messages { logstore("/var/log/messages_logstore.lgs"
             </simplesect>
       <example id="example-logstore-journal">
                      <title>Setting journal block number and size</title>
-                     <para>The following example adjusts the <parameter>journal_block_size()</parameter> and <parameter>journal_block_count()</parameter> parameters of a logstore destination.</para>
+                     <para>The following example sets the size of a journal block to 512KB and increases the number of blocks to 5.</para>
                      <synopsis>destination d_logstore { 
                      logstore("/var/log/messages-logstore.lgs"
-                     encrypt_certificate
-                         ("/opt/syslog-ng/etc/syslog-ng/keys/public-certificate-of-the-server.pem") 
-                     journal_block_size(2000) journal_block_count(5)); 
+                     encrypt_certificate 
+                      ("/opt/syslog-ng/etc/syslog-ng/keys/public-server-certificate.pem")
+                     journal_block_size(524288) journal_block_count(5)); 
 };</synopsis>
                  </example>
     </section>
