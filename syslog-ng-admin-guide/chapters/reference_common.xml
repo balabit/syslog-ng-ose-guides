@@ -824,6 +824,10 @@ destination d_messages { logstore("/var/log/messages_logstore.lgs"
                 </indexterm>
                 <indexterm type="parameter">
                     <primary>flags</primary>
+                    <secondary>dont-store-legacy-msghdr</secondary>
+                </indexterm>
+                <indexterm type="parameter">
+                    <primary>flags</primary>
                     <secondary>empty-lines</secondary>
                 </indexterm>
                 <indexterm type="parameter">
@@ -853,7 +857,7 @@ destination d_messages { logstore("/var/log/messages_logstore.lgs"
                         <row>
                             <entry>Type:
                                 <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>empty-lines, kernel, no-multi-line, no-parse, store-legacy-msghdr,
+                            <entry>dont-store-legacy-msghdr, empty-lines, kernel, no-multi-line, no-parse, store-legacy-msghdr, store-legacy-msghdr,
                         syslog-protocol, validate-utf8</entry>
                         </row>
                         <row>
@@ -865,57 +869,67 @@ destination d_messages { logstore("/var/log/messages_logstore.lgs"
                 </tgroup>  
             </informaltable>
             <para><guilabel>Description:</guilabel> Specifies the log parsing options of the source.</para>
-            <para>Use the <parameter>empty-lines</parameter> flag to keep the empty
-                            lines of the messages. By default, syslog-ng removes empty lines
-                            automatically.</para>
-            <para>The <parameter>kernel</parameter> flag makes the source default to the
-                                <parameter>LOG_KERN | LOG_CRIT</parameter> priority if not specified
-                            otherwise. </para>
-            <para>The <parameter>no-multi-line</parameter> flag disables line-breaking
-                            in the messages; the entire message is converted to a single line.</para>
-            <para>By default, syslog-ng parses incoming messages as syslog messages. If
-                            a source does not send properly formatted messages, use the
-                                <parameter>no-parse</parameter> flag to disable message parsing for
-                            the source. As a result, syslog-ng will generate a new syslog header and
-                            put the entire incoming message into the MSG part of the syslog message.</para>
-            <para>The <parameter>no-parse</parameter> flag completely disables syslog
-                            message parsing and processes the complete line as the message part of a
-                            syslog message. Other information (timestamp, host, etc.) is added
-                            automatically. This flag is useful for parsing files not complying to
-                            the syslog format. </para>
-            <para>If the <parameter>store-legacy-msghdr</parameter> flag is enabled,
-                            syslog-ng stores the original incoming header of the log message. This
-                            is useful of the original format of a non-syslog-compliant message must
+            <itemizedlist>
+                <listitem id="flag-dont-store-legacy-msghdr">
+                    <para><emphasis>dont-store-legacy-msghdr</emphasis>: If the <parameter>dont-store-legacy-msghdr</parameter> flag is enabled, syslog-ng stores the parsed header of the syslog message in the <parameter>$MSGHDR</parameter> macro. By default, the original incoming header of the log message iis stored in the <parameter>$MSGHDR</parameter> macro.</para> 
+                    <warning>
+                        <para>Note that the behavior of handling the message header has changed in syslog-ng PE 3.2: earlier versions stored the parsed header by default, and stored the original header only if the <parameter>store-legacy-msghdr</parameter> flag was enabled.</para>
+                    </warning>
+                </listitem>
+                <listitem>
+                    <para><emphasis>empty-lines</emphasis>: Use the <parameter>empty-lines</parameter> flag to keep the empty lines of the messages. By default, syslog-ng removes empty lines automatically.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>kernel</emphasis>: The <parameter>kernel</parameter> flag makes the source default to the <parameter>LOG_KERN | LOG_CRIT</parameter> priority if not specified otherwise. </para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>no-multi-line</emphasis>: The <parameter>no-multi-line</parameter> flag disables line-breaking in the messages; the entire message is converted to a single line.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>no-parse</emphasis>: By default, syslog-ng parses incoming messages as syslog messages. If a source does not send properly formatted messages, use the <parameter>no-parse</parameter> flag to disable message parsing for the source. As a result, syslog-ng will generate a new syslog header and put the entire incoming message into the MSG part of the syslog message.</para>
+                    <para>The <parameter>no-parse</parameter> flag completely disables syslog message parsing and processes the complete line as the message part of a syslog message. Other information (timestamp, host, etc.) is added automatically. This flag is useful for parsing files not complying to the syslog format. </para>
+                </listitem>
+                <listitem>
+                    <indexterm>
+                        <primary>Snare-compatibility</primary>
+                    </indexterm>
+                    <indexterm>
+                        <primary>compatibility with Snare</primary>
+                    </indexterm>
+                    <indexterm>
+                        <primary>syslog-ng agent</primary>
+                        <secondary>Snare-compatibility</secondary>
+                    </indexterm>
+                    <indexterm>
+                        <primary>Snare</primary>
+                        <secondary>receiving Snare-compatible messages</secondary>
+                    </indexterm>
+                    <para><emphasis>store-legacy-msghdr</emphasis>: Setting flag is obsolete in syslog-ng PE 3.2 and later, because it is enabled by default. See also the <parameter>dont-store-legacy-msghdr</parameter> flag.</para>
+                    <para>If the <parameter>store-legacy-msghdr</parameter> flag is enabled,
+                            syslog-ng stores the original incoming header of the log message in the <parameter>$MSGHDR</parameter>parameter> macro. This
+                            is useful if the original format of a non-syslog-compliant message must
                             be retained (syslog-ng automatically corrects minor header errors, for example
                             adds a whitespace before <parameter>msg</parameter> in the following
                             message: <parameter>Jan 22 10:06:11 host program:msg</parameter>). Note
                             that <parameter>store-legacy-msghdr</parameter> should be enabled when
                             receiving messages from syslog-ng Agent for Windows clients that use the
                             Snare-compatible mode.</para>
-            <indexterm>
-                <primary>Snare-compatibility</primary>
-            </indexterm>
-            <indexterm>
-                <primary>compatibility with Snare</primary>
-            </indexterm>
-            <indexterm>
-                <primary>syslog-ng agent</primary>
-                <secondary>Snare-compatibility</secondary>
-            </indexterm>
-            <indexterm>
-                <primary>Snare</primary>
-                <secondary>receiving Snare-compatible messages</secondary>
-            </indexterm>
-            <para>The <parameter>syslog-protocol</parameter> flag specifies that
+                 </listitem>
+                 <listitem>
+                    <para><emphasis>syslog-protocol</emphasis>: The <parameter>syslog-protocol</parameter> flag specifies that
                             incoming messages are expected to be formatted according to the new IETF
                             syslog protocol standard. Note that this flag is not needed for the
                                 <parameter>syslog</parameter> driver.</para>
-            <para>The <parameter>validate-utf8</parameter> flag enables
+                 </listitem>
+                 <listitem>
+                    <para><emphasis>validate-utf8</emphasis>: The <parameter>validate-utf8</parameter> flag enables
                             encoding-verification for messages formatted according to the new IETF
                             syslog standard (see <xref linkend="concepts_message_ietfsyslog"/> for
                             details). If the BOM character is missing, but the message is otherwise
                             UTF-8 compliant, syslog-ng automatically adds the BOM character to the
                             message.</para>
+                 </listitem>
+            </itemizedlist>
         </simplesect>
         <simplesect id="source_commonoption_follow_freq">
             <title>follow_freq()</title>
