@@ -4046,35 +4046,8 @@ log { source(s_local);
     {subst("&lt;string or regular expression to find&gt;", "&lt;replacement string&gt;", value(&lt;field name&gt;) type() flags());};</synopsis>
         <para>The <parameter>type()</parameter> and <parameter>flags()</parameter> options are
             optional. The <parameter>type()</parameter> specifies the type of regular expression to
-            use; while the <parameter>flags()</parameter> are the flags of the regular expressions
-            (see <xref linkend="reference_regular_expressions"/> for details):</para>
-        <simplesect id="reference_rewrite_types">
-            <title>posix</title>
-                <indexterm type="parameter">
-                    <primary>posix</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Use POSIX regular expressions. If the <parameter>type()</parameter>
-                parameter is not specified, syslog-ng uses POSIX regular expressions by
-                default.</para>
-        </simplesect>
-        <simplesect>
-            <title>pcre</title>
-                <indexterm type="parameter">
-                    <primary>pcre</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Use PCRE regular expressions. Execute
-                the <command>syslog-ng -V</command> command to check if your binary 
-                supports PCRE regular expressions. Starting with &abbrev; version 3.1, PCRE expressions are supported on every platform.</para>
-        </simplesect>
-        <simplesect>
-            <title>string</title>
-                <indexterm type="parameter">
-                    <primary>string</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Match the strings literally, without regular expression support. By
-                default, only identical strings are matched. For partial matches, use
-                the <parameter>flags("prefix")</parameter> or the
-                <parameter>flags("substring")</parameter> flags.</para>
+            use; while the <parameter>flags()</parameter> are the flags of the regular expressions.
+            For details on regular expressions, see <xref linkend="reference_regular_expressions"/>.</para>
         <example id="example_rewrite_subst">
             <title>Using substitution rules</title>
             <para>The following example replaces the first occurrence of the string
@@ -4109,7 +4082,6 @@ log { source(s_local);
                 (IETF-syslog) messages to a fixed value.</para>
             <synopsis>rewrite r_sd { set("55555" value(".SDATA.meta.sequenceId")); };</synopsis>
         </example>
-        </simplesect>
     </section>
     
     <section id="reference_regular_expressions">
@@ -4117,120 +4089,170 @@ log { source(s_local);
         <indexterm significance="preferred">
             <primary>regular expressions</primary>
         </indexterm>
-        <para>Filters and substitution rewrite rules can use regular expressions. The regular expressions can use up to 255 regexp matches (<parameter>${1} ... ${255}</parameter>), but only from the last filter and only if the <parameter>flags("store-matches")</parameter> flag was set for the filter. For case-insensitive searches, use the <parameter>flags("ignore-case")</parameter> option.</para>
-        <indexterm>
-            <primary>regular expressions</primary>
-            <secondary>pcre</secondary>
+        <indexterm type="parameter">
+            <primary>type()</primary>
         </indexterm>
-        <para>By default, syslog-ng uses POSIX-style regular expressions, but if compiled with the
-            <parameter>--enable-pcre</parameter> option, Perl Compatible Regular Expressions can
-            be used as well. To use Perl Compatible Regular Expressions (PCRE), add the
-            <parameter>type("pcre")</parameter> option after the regular expression. Note that PCRE
-            expressions can be used only if syslog-ng was explicitly compiled with the
-            <parameter>--enable-pcre</parameter> option. Execute the <command>syslog-ng -V</command>
-            command to list the options supported by your binary.</para>
-        <para>Posix regular expressions have the following flag options:</para>
-        <simplesect>
-            <title>global</title>
+        <para>Filters and substitution rewrite rules can use regular expressions. The regular expressions can use up to 255 regexp matches (<parameter>${1} ... ${255}</parameter>), but only from the last filter and only if the <parameter>flags("store-matches")</parameter> flag was set for the filter. For case-insensitive searches, use the <parameter>flags("ignore-case")</parameter> option.</para>
+        
+        <para>By default, syslog-ng uses POSIX-style regular expressions. To use other expression types, add the
+            <parameter>type()</parameter> option after the regular expression.</para>
+        <para>The &abbrev; application supports the following expression types:</para>
+        <itemizedlist>
+            <listitem>
+                <para><link linkend="reference_regexp_posix">POSIX regular expressions</link></para>
+            </listitem>
+            <listitem>
+                <para><link linkend="reference_regexp_pcre">Perl Compatible Regular Expressions (PCRE)</link></para>
+            </listitem>
+            <listitem>
+                <para><link linkend="reference_regexp_string">Literal string searches</link></para>
+            </listitem>
+            <listitem>
+                <para><link linkend="reference_regexp_glob">Glob patterns without regular expression support</link></para>
+            </listitem>
+        </itemizedlist>
+        <simplesect id="reference_regexp_posix">
+            <title>posix</title>
+                <indexterm type="parameter">
+                    <primary>posix</primary>
+                </indexterm>
+            <para><guilabel>Description:</guilabel> Use POSIX regular expressions. If the <parameter>type()</parameter>
+                parameter is not specified, syslog-ng uses POSIX regular expressions by
+                default.</para>
+                <para>Posix regular expressions have the following flag options:</para>
+        <formalpara>
+            <title>global:</title>
                 <indexterm type="parameter">
                     <primary>global</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> Usable only in rewrite rules; match for every occurrence of the
+            <para>Usable only in rewrite rules; match for every occurrence of the
                 expression, not only the first one.</para>
-        </simplesect>
-        <simplesect>
-            <title>ignore-case</title>
+        </formalpara>
+        <formalpara>
+            <title>ignore-case:</title>
                 <indexterm type="parameter">
                     <primary>ignore-case</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> Disable case-sensitivity.</para>
-        </simplesect>
-        
+            <para>Disable case-sensitivity.</para>
+        </formalpara>
         <!--<row>
             <entry>newline</entry>
             <entry></entry>
             </row>-->
-        <simplesect>
-            <title>store-matches</title>
+        <formalpara>
+            <title>store-matches:</title>
                 <indexterm type="parameter">
                     <primary>store-matches</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> Store the matches of the regular expression into the <parameter>$1,
+            <para>Store the matches of the regular expression into the <parameter>$1,
                 ... $255</parameter> variables. Matches from the last filter
                 expression can be referenced in regular expressions.</para>
-        </simplesect>
-        <simplesect>
-            <title>utf8</title>
+        </formalpara>
+        <formalpara>
+            <title>utf8:</title>
                 <indexterm type="parameter">
                     <primary>utf8</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> Use UTF-8 matching.</para>
+            <para>Use UTF-8 matching.</para>
+        </formalpara>
         <example id="example_regexp_posix">
             <title>Using Posix regular expressions</title>
             <synopsis>filter f_message { message("keyword" flags("utf8" "ignore-case") );</synopsis>
-        </example>  
-        <para>PCRE regular expressions have the following flag options:</para>    
-        </simplesect>          
-        <simplesect>
-            <title>global</title>
+        </example>
+        </simplesect>
+        <simplesect id="reference_regexp_pcre">
+            <title>pcre</title>
+                <indexterm type="parameter">
+                    <primary>pcre</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>regular expressions</primary>
+                    <secondary>pcre</secondary>
+                </indexterm>
+            <para><guilabel>Description:</guilabel> Use Perl Compatible Regular Expressions (PCRE). PCRE expressions can be used if &abbrev; was compiled with the <parameter>--enable-pcre</parameter> option enabled. Execute
+                the <command>syslog-ng -V</command> command to check if your binary 
+                supports PCRE regular expressions. Starting with &abbrev; version 3.1, PCRE expressions are supported on every platform.</para>
+            <para>PCRE regular expressions have the following flag options:</para>
+        <formalpara>
+            <title>global:</title>
                 <indexterm type="parameter">
                     <primary>global</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> Usable only in rewrite rules; match for every occurrence of the
+            <para>Usable only in rewrite rules; match for every occurrence of the
                 expression, not only the first one.</para>
-        </simplesect>
-        <simplesect>
-            <title>ignore-case</title>
+        </formalpara>
+        <formalpara>
+            <title>ignore-case:</title>
                 <indexterm type="parameter">
                     <primary>ignore-case</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> Disable case-sensitivity.</para>
-        </simplesect>
-        
+            <para>Disable case-sensitivity.</para>
+        </formalpara>
         <!--<row>
             <entry>newline</entry>
             <entry>Process the string until the end of the string, ignoring newline
             characters.</entry>
             </row>-->
-        <simplesect>
-            <title>nobackref</title>
+        <formalpara>
+            <title>nobackref:</title>
                 <indexterm type="parameter">
                     <primary>nobackref</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> Do not store back references for the matches &mdash; improves
+            <para>Do not store back references for the matches &mdash; improves
                 performance.</para>
-        </simplesect>
-        <simplesect>
-            <title>store-matches</title>
+        </formalpara>
+        <formalpara>
+            <title>store-matches:</title>
                 <indexterm type="parameter">
                     <primary>store-matches</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> Store the matches of the regular expression into the <parameter>$1,
+            <para>Store the matches of the regular expression into the <parameter>$1,
                 ... $255</parameter> variables. Named matches (also called named
                 subpatterns), for example <parameter>(?&lt;name&gt;...)</parameter>,
                 are stored as well. Matches from the last filter expression can be
                 referenced in regular expressions.</para>
-        </simplesect>
-        <simplesect>
-            <title>unicode</title>
+        </formalpara>
+        <formalpara>
+            <title>unicode:</title>
                 <indexterm type="parameter">
                     <primary>unicode</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> Use Unicode support for UTF-8 matches: UTF-8 character sequences are
+            <para>Use Unicode support for UTF-8 matches: UTF-8 character sequences are
                 handled as single characters.</para>
-        </simplesect>
-        <simplesect>
-            <title>utf8</title>
+        </formalpara>
+        <formalpara>
+            <title>utf8:</title>
                 <indexterm type="parameter">
                     <primary>utf8</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> An alias for the <parameter>unicode</parameter> flag.</para>
-        </simplesect>
+            <para>An alias for the <parameter>unicode</parameter> flag.</para>
+        </formalpara>
         <example id="example_regexp_pcre">
             <title>Using PCRE regular expressions</title>
             <synopsis>rewrite r_rewrite_subst 
         {subst("a*", "?", field("message") type("pcre") flags("utf8" "global"));  };</synopsis>
         </example>
+        </simplesect>
+        <simplesect id="reference_regexp_string">
+            <title>string</title>
+                <indexterm type="parameter">
+                    <primary>string</primary>
+                </indexterm>
+            <para><guilabel>Description:</guilabel> Match the strings literally, without regular expression support. By
+                default, only identical strings are matched. For partial matches, use
+                the <parameter>flags("prefix")</parameter> or the
+                <parameter>flags("substring")</parameter> flags.</para>
+        </simplesect>
+        <simplesect id="reference_regexp_glob">
+            <title>glob</title>
+            <indexterm type="parameter">
+                    <primary>glob</primary>
+            </indexterm>
+            <indexterm>
+                <primary>glob patterns</primary>
+            </indexterm>
+            <para><guilabel>Description:</guilabel> Use glob patterns (that is, wildcards and character ranges) without regular expression support. The advantage of glob patterns to regular expressions is that globs can be processed much faster. For details on glob patterns, see the <emphasis>glob manual page</emphasis> (<command>man glob</command>).</para>
+        </simplesect>
     </section>
 
     <section id="reference_options">
