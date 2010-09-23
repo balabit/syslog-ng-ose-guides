@@ -2685,13 +2685,22 @@ log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>-->
                             the client program that constructed the message.</entry>
                     </row>
                     <row id="macro_sdata">
-                        <entry>SDATA.SDID.SDNAME</entry>
-                        <entry>The syslog-ng application automatically parses the STRUCTURED-DATA
-                            part of IETF-syslog messages, which can be referenced in macros. For
-                            example, if a log message contains the following structured data:
-                                <parameter>[exampleSDID@0 iut="3" eventSource="Application"
-                                eventID="1011"][examplePriority@0 class="high"]</parameter> you can
-                            use macros like: <parameter>${SDATA.EXAMPLE.EVENTSOURCE}</parameter>.
+                        <entry>SDATA, .SDATA.SDID.SDNAME</entry>
+                        <entry><para>The syslog-ng application automatically parses the STRUCTURED-DATA
+                            part of IETF-syslog messages, which can be referenced in macros. 
+                            The <parameter>$SDATA</parameter> macro references the entire STRUCTURED-DATA part of the message, while structured data elements can be referenced using the $.SDATA.SDID.SDNAME macro. When using STRUCTURED-DATA macros, consider the following:</para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>When referencing an element of the structured data, the macro must begin with the dot (.) character. For example, <parameter>$.SDATA.exampleSDID.eventSource</parameter>.</para>
+                        </listitem>
+                        <listitem>
+                            <para>The SDID and SDNAME parts of the macro names are case sensitive: <parameter>$.SDATA.exampleSDID.eventSource</parameter> is not the same as <parameter>$.SDATA.EXAMPLESDID.EventSource</parameter>.</para>
+                        </listitem>
+                    </itemizedlist>
+                   <para>For example, if a log message contains the following structured data:
+                <parameter>[exampleSDID@0 iut="3" eventSource="Application"
+                    eventID="1011"][examplePriority@0 class="high"]</parameter> you can
+                use macros like: <parameter>${.SDATA.exampleSDID@0.eventSource}</parameter> &mdash; this would return the <parameter>Application</parameter> string in this case.</para>
                         </entry>
                     </row>
                     <row id="macro_sec">
