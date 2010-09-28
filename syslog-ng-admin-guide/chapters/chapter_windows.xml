@@ -655,89 +655,61 @@
                     <primary>syslog-ng Agent</primary>
                     <secondary>XML</secondary>
                 </indexterm>
-                <para>Starting from syslog-ng Agent for Windows version 3.0.4, it is possible to
-                    specify the configuration of the agent in an XML file when installing the agent,
-                    and also when starting the agent. The configuration file must be a valid XML
-                    file that complies to the XML schema supplied with the &agentabbrev;.</para>
-                <note>
-                    <para>By default, the XML schema file is called
-                            <filename>syslog-ng-agent-conf.xsd</filename> and is located in the
-                        installation folder of the syslog-ng agent, next to the
-                            <filename>syslog-ng-agent.exe</filename> file.</para>
-                </note>
+                <para>Starting from &agent; version 3.2, it is possible to export the configuration of &agentabbrev; into an XML file. This configuration file can be used as the default configuration when installing the &agentabbrev; to another host, or can be imported to an existing installation using a command-line utility.</para>
+                <warning>
+                    <para>Do not manually edit or modify the exported XML file.</para>
+                </warning>
                 <procedure id="windows_xml_config_create">
-                    <title>Creating an XML configuration file for the syslog-ng agent</title>
+                    <title>Creating an XML configuration file for the &agentabbrev;</title>
+                    <formalpara>
+                        <title>Purpose:</title>
+                        <para/>
+                    </formalpara>
+                    <para>To create an XML configuration file that can be used by other &agentabbrev; configurations, perform the following steps.</para>
                     <formalpara>
                         <title>Steps:</title>
                         <para/>
                     </formalpara>
                     <step>
-                        <para>Create a new configuration file, or edit the one shown in <xref
-                                linkend="windows_xml_config_sample"/>. Use a text editor that can
-                            validate the file to the XML schema of the configuration file. One such
-                            editor is the Microsoft XML Notepad 2007 application, which is <ulink
-                                url="http://msdn.microsoft.com/en-us/xml/bb190622.aspx">available
-                            for free under this link</ulink>.</para>
+                        <para>Install the &agent; application on a host.</para>
                     </step>
                     <step>
-                        <para>When creating the configuration file, bear in mind the following
-                            points:</para>
+                        <para>Create the configuration you want to use on other hosts using the graphical interface.</para>
+                    </step>
+                    <step>
+                        <para>Right-click on <guimenu>syslog-ng Agent Settings</guimenu> and select <guimenu>Export</guimenu>. Select where to save the configuration file.</para>
+                        <para>Alternatively, you can export the configuration of &agentabbrev; from the command line using the <command>configmanager.exe -export &lt;source&gt; "destination xml file"</command> command. The &lt;source&gt; parameter determines where the configuration is imported:</para>
                         <itemizedlist>
                             <listitem>
-                                <para>For details on the format of the XML file, see
-                                    <!--<xref
-                            linkend="windows_xml_config_specification"/>-->the
-                                    sample file at <xref linkend="windows_xml_config_sample"/> and
-                                    XML schema (.xsd) file installed with the agent.</para>
+                                <para><parameter>{GPO ID}</parameter>: Export the configuration related to the specified Group Policy Object ID (for example, <parameter>{99AF1185-AB80-40B2-B4B8-41A1E907F329}</parameter>).</para>
                             </listitem>
                             <listitem>
-                                <para>File sources, event sources, servers, and filters must have a
-                                    unique index, that is, the definition of the first server should
-                                    start as <parameter> &lt;Server0 Enabled="1" Index="0"</parameter>, the
-                                    second <parameter> &lt;Server2 Enabled="1" Index="2"</parameter>, and so
-                                    on.</para>
+                                <para><parameter>localsettings</parameter>: Export the local settings of the host.</para>
                             </listitem>
                             <listitem>
-                                <para>File sources must have a unique identifier (UUID). The agent
-                                    does not create these identifiers, you must enter them into the
-                                    configuration file manually.</para>
-                            </listitem>
-                            <listitem>
-                                <para>If you do not use throttling, remove the
-                                        <parameter>Throttle</parameter> attribute from the
-                                    destination. Setting the <parameter>Throttle</parameter>
-                                    attribute to <parameter>0</parameter> is not accepted by the
-                                    agent.</para>
-                            </listitem>
-                            <listitem>
-                                <para>If you do not want the agent to send old (already existing)
-                                    messages to the logserver, use the following in the
-                                    configuration file: </para>
-                                <synopsis>&lt;syslog-ng_Agent SendOldMessages="0"&gt;</synopsis>
-                                <para>Note that when it starts, the agent automatically removes the
-                                        <parameter>SendOldMessages="0"</parameter> attribute from
-                                    the configuration file, but it will not resend the messages
-                                    after the agent is restarted.</para>
+                                <para><parameter>domainsettings</parameter>: Export the settings the host received from the domain controller.</para>
                             </listitem>
                         </itemizedlist>
                     </step>
                     <step>
-                        <para>To start the agent and use the configuration file, open a command
-                            prompt, and issue the following command: <command>syslog-ng-agent.exe -c
-                                myconfigfile.xml -d</command>. This command will start the agent in
-                            debug mode, and display any errors of the XML configuration file.</para>
+                        <para>Use the configuration file on other hosts. For details on the different options, see <xref linkend=""/>.</para>
                     </step>
-                    <step>
-                        <para>If there are no errors in the configuration file, start the agent in
-                            normal mode: <command>syslog-ng-agent.exe -c
-                            myconfigfile.xml</command>.</para>
-                        <para>To use the XML file during the installation of the agent, use the same
-                            syntax with the installer: <command>syslog-ng-agent-3.0.4-setup.exe
-                                /xmlconfig="fullpath\myconfigfile.xml"</command>. Note that the XML
-                            schema file must be in the same folder as the installer file.</para>
-                        <note>
-                            <itemizedlist>
-                                <listitem>
+                </procedure>
+                <section id="windows_xml_config_import">
+                    <title>Configuring &agentabbrev; from an XML file</title>
+                    <!-- FIXME ezt meglinkelni az install reszekbol, vagy atrakni oket oda -->
+                    <para>How you configure the &agentabbrev; application to use an XML configuration file depends on your environment. See the following list for details.</para>
+                    <warning>
+                        <para>Do not manually edit or modify the exported XML file.</para>
+                    </warning>
+                    <itemizedlist>
+                        <listitem>
+                            <para>To start an already installed, standalone &agentabbrev; using an XML configuration file, use the following command: <command>syslog-ng-agent.exe -c myconfigfile.xml</command>.</para>
+                        </listitem>
+                        <listitem>
+                            <para>To use the XML file during the installation of the &agentabbrev; application, use the following command: <command>syslog-ng-agent-3.0.4-setup.exe /xmlconfig="fullpath\myconfigfile.xml"</command>. Note that the XML
+                            schema file must be in the same folder as the installer file. By default, the XML schema file is called <filename>syslog-ng-agent-conf.xsd</filename> and is located in the installation folder of the syslog-ng agent, next to the <filename>syslog-ng-agent.exe</filename> file.</para>
+                            <note>
                                     <para>If you are using an XML-capable agent without using an XML
                                         configuration file, and you want to switch to using an XML
                                         configuration file without reinstalling the agent, execute
@@ -745,172 +717,37 @@
                                             "fullpath\myconfigfile.xml"</command> command. The
                                         syslog-ng Agent service will be re-registered to use the XML
                                         configuration file.</para>
-                                </listitem>
-                                <listitem>
-                                    <para>If you want to use the .msi installer with an xml file,
+                            </note>
+                        </listitem>
+                        <listitem>
+                            <para>If you want to use the .msi installer with an xml file,
                                         use the <command>syslog-ng-agent-3.0.4-setup.msi
                                             SLNGOPTS="/xmlconfig=fullpath\myconfigfile.xml"</command>
-                                        command, or <ulink
+                                        command, or edit the installer with the <ulink
                                             url="http://www.technipages.com/download-orca-msi-editor.html"
-                                            >edit the installer with the Orca MSI editor</ulink>,
+                                            >Orca MSI editor</ulink>,
                                         and add the
                                             <parameter>SLNGOPTS="/xmlconfig=fullpath\myconfigfile.xml"</parameter>
                                         to the installation parameters on the
                                             <guilabel>Customization</guilabel> tab.</para>
-                                </listitem>
-                            </itemizedlist>
-                        </note>
-                    </step>
-                </procedure>
-                <section id="windows_xml_config_sample">
-                    <title>Sample configuration files for the syslog-ng Agent</title>
-                    <para>The following is a sample configuration file with minimal settings for the
-                        syslog-ng Agent for Windows application.</para>
-                    <synopsis>&lt;?xml version="1.0" encoding="utf-8"?&gt;
-&lt;syslog-ng-agent-configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="c:\Program Files\syslog-ng Agent\syslog-ng-agent-conf.xsd"&gt;
-  &lt;SOFTWARE&gt;
-    &lt;BalaBit&gt;
-      &lt;syslog-ng_Agent WriteMinidump="1" SendOldMessages="1"&gt;
-        &lt;Local_Settings Enabled="1"&gt;
-          &lt;Destinations&gt;
-            &lt;Network&gt;
-              &lt;IPv4 Enabled="1" PrimaryServer="1"&gt;
-                &lt;Server Index="1" Enabled="1" ServerName="yourserver" ServerPort="514" Throttle="10000" Protocol="2" ProtocolTemplate="&lt;${PRI}&gt;${BSDDATE} ${HOST} ${APP_NAME}[${PROCESS_ID}]: ${MSG}"&gt;&lt;/Server&gt;
-              &lt;/IPv4&gt;
-            &lt;/Network&gt;
-          &lt;/Destinations&gt;
-          &lt;EventSources Enabled="1" MessageTemplate="${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})"&gt;
-            &lt;Sources Enabled="1"&gt;
-              &lt;Event Index="0" Enabled="1" Name="Application" /&gt;
-              &lt;Event Index="1" Enabled="1" Name="Security" /&gt;
-              &lt;Event Index="2" Enabled="1" Name="System" /&gt;
-            &lt;/Sources&gt;
-          &lt;/EventSources&gt;
-        &lt;/Local_Settings&gt;
-      &lt;/syslog-ng_Agent&gt;
-    &lt;/BalaBit&gt;
-  &lt;/SOFTWARE&gt;
-&lt;/syslog-ng-agent-configuration&gt;</synopsis>
-                    <para>The following is a more detailed configuration file for the syslog-ng
-                        Agent for Windows application.</para>
-                    <synopsis>&lt;?xml version="1.0" encoding="utf-8"?&gt;
-&lt;syslog-ng-agent-configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="c:\Program Files\syslog-ng Agent\syslog-ng-agent-conf.xsd"&gt;
-  &lt;SOFTWARE&gt;
-    &lt;BalaBit&gt;
-      &lt;syslog-ng_Agent WriteMinidump="1" SendOldMessages="1"&gt;
-        &lt;Local_Settings Enabled="1" RegExpIgnoreCase="0" FilterIgnoreCase="0" LogFacility="13"&gt;
-          &lt;Destinations&gt;
-            &lt;Network&gt;
-              &lt;IPv4 Enabled="1" PrimaryServer="0"&gt;
-                &lt;Server Index="0" Enabled="1" ServerName="server1" ServerPort="514" Throttle="100000" Protocol="2" ProtocolTemplate="&lt;${PRI}&gt;${BSDDATE} ${HOST} ${APP_NAME}[${PROCESS_ID}]: ${MSG}" UseSSL="0" ClientCertSubject=""&gt;
-                  &lt;FailoverServers FailoverServer0="failoverserver01" FailoverServer1="failoverserver02"&gt;&lt;/FailoverServers&gt;
-                &lt;/Server&gt;
-                &lt;Server Index="1" Enabled="1" ServerName="server1" ServerPort="514" Throttle="100000" Protocol="1" ProtocolTemplate="&lt;${PRI}&gt;${BSDDATE} ${HOST} ${MSG}" UseSSL="0" ClientCertSubject=""&gt;
-                  &lt;FailoverServers FailoverServer0="failoverserver11" FailoverServer1="failoverserver12"&gt;&lt;/FailoverServers&gt;
-                &lt;/Server&gt;
-              &lt;/IPv4&gt;
-            &lt;/Network&gt;
-          &lt;/Destinations&gt;
-          &lt;EventSources Enabled="1" MessageTemplate="${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})"&gt;
-            &lt;Sources Enabled="1"&gt;
-              &lt;Event Index="0" Enabled="1" Name="Application" /&gt;
-              &lt;Event Index="1" Enabled="1" Name="Security" /&gt;
-              &lt;Event Index="3" Enabled="1" Name="System" /&gt;
-            &lt;/Sources&gt;
-            &lt;Filter Enabled="1"&gt;
-              &lt;Formatted_Message Enabled="1"&gt;
-                &lt;Rule Index="0" Regexp="testregexp" Enabled="1" /&gt;
-                &lt;Rule Index="1" Regexp="testregexp2" Enabled="1" /&gt;
-              &lt;/Formatted_Message&gt;
-              &lt;Computer Enabled="1"&gt;
-                &lt;Rule Index="0" Computer="mycomputername1" Enabled="1" /&gt;
-                &lt;Rule Index="1" Computer="mycomputername2" Enabled="1" /&gt;
-              &lt;/Computer&gt;
-              &lt;Type Enabled="1"&gt;
-                &lt;Rule Index="0" Type="4" Enabled="1"&gt;&lt;/Rule&gt;
-                &lt;Rule Index="1" Type="4" Enabled="1"&gt;&lt;/Rule&gt;
-              &lt;/Type&gt;
-              &lt;User Enabled="1"&gt;
-                &lt;Rule Index="0" Username="TESTDOMAIN\Administrator" Enabled="1" /&gt;
-                &lt;Rule Index="1" Username="NT AUTHORITY\SYSTEM" Enabled="1" /&gt;
-              &lt;/User&gt;
-              &lt;Source_EventId Enabled="1"&gt;
-                &lt;Rule Index="0" Source="EventCreate" EventId="636" Enabled="1" /&gt;
-                &lt;Rule Index="1" Source="EventCreate" EventId="637" Enabled="1" /&gt;
-              &lt;/Source_EventId&gt;
-              &lt;Source_Category Enabled="1"&gt;
-                &lt;Rule Index="0" Source="Security" Category="Object Access" Enabled="1" /&gt;
-                &lt;Rule Index="1" Source=" EventCreate" Category="" Enabled="1" /&gt;
-              &lt;/Source_Category&gt;
-            &lt;/Filter&gt;
-          &lt;/EventSources&gt;
-          &lt;FileSources MessageTemplate="$FILE_NAME: $FILE_MESSAGE" Enabled="1" LogFacility="0" LogPriority="6"&gt;
-            &lt;Sources Enabled="1"&gt;
-              &lt;File Index="0" Enabled="1" BaseDirectory="c:\windows" FileNameFilter="*.log" Recursive="0" LastModifiedFileOnly="0" id="a455e5ba-d4e9-4b85-8711-e8bf10141028" PeriodicFileCheck="0" LogFacility="5" LogPriority="5" /&gt;
-              &lt;File Index="1" Enabled="1" BaseDirectory="c:\" FileNameFilter="*.txt" Recursive="1" LastModifiedFileOnly="1" id="b455e5ba-d4e9-4b85-8711-e8bf10141038" PeriodicFileCheck="0" /&gt;
-            &lt;/Sources&gt;
-            &lt;Filter Enabled="1"&gt;
-              &lt;Formatted_Message&gt;
-                &lt;Rule Index="0" Regexp="Verbose" Enabled="1" /&gt;
-                &lt;Rule Index="1" Regexp="Info" Enabled="1" /&gt;
-              &lt;/Formatted_Message&gt;
-            &lt;/Filter&gt;
-          &lt;/FileSources&gt;
-        &lt;/Local_Settings&gt;
-      &lt;/syslog-ng_Agent&gt;
-    &lt;/BalaBit&gt;
-  &lt;/SOFTWARE&gt;
-&lt;/syslog-ng-agent-configuration&gt;</synopsis>
-                </section>
-                <!-- <section id="windows_xml_config_specification">
-            <title>Specification of the syslog-ng agent configuration file</title>
-            <indexterm>
-                <primary>syslog-ng Agent</primary>
-                <secondary>XML schema</secondary>
-            </indexterm>
-            <para>The XML schema for the configuration file of the syslog-ng Agent for Windows
-                application is the following. </para>
-            <itemizedlist>
-                <listitem>
-                    <para><guilabel>&lt;SOFTWARE&gt;&lt;BalaBit&gt;&lt;syslog-ng_Agent&gt;</guilabel>:
-                        These are container elements for the configuration file.</para>
-                </listitem>
-                <listitem>
-                    <para><guilabel>&lt;Local_Settings&gt;</guilabel>: This element stores
-                        the configuration of the agent, and also specifies the global options used
-                        by the agent, for example:</para>
-                    <synopsis>&lt;Local_Settings Enabled="1" RegExpIgnoreCase="1" FilterIgnoreCase="0"  LogFacility="13"&gt;</synopsis>
-                    <itemizedlist>                        
-                        <listitem>
-                            <para><emphasis/>: </para>
                         </listitem>
                         <listitem>
-                            <para><emphasis/>: </para>
-                        </listitem>
-                        <listitem>
-                            <para><emphasis/>: </para>
-                        </listitem>
-                        <listitem>
-                            <para><emphasis/>: </para>
-                        </listitem>
-                        <listitem>
-                            <para><guilabel>Destinations</guilabel>: A container element for
-                                specifying the destination logservers.</para>
-                        </listitem>
-                        <listitem>
-                            <para><guilabel>EventSources</guilabel>: A container element for
-                                specifying the eventlog containers to monitor.</para>
-                        </listitem>
-                        <listitem>
-                            <para><guilabel>FileSources</guilabel>: A container element for
-                                specifying the logfiles to monitor.</para>
+                            <para>Starting with &agent; version 3.2, a command-line tool called <filename>configmanager.exe</filename> is available. To import the XML configuration file, use the following command: <command>configmanager.exe -import &lt;destination&gt; "source xml file"</command> command. The &lt;sourcename&gt; parameter determines which part of the configuration is exported:</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para><parameter>{GPO ID}</parameter>: Import the configuration to the specified Group Policy Object ID (for example, <parameter>{99AF1185-AB80-40B2-B4B8-41A1E907F329}</parameter>).</para>
+                            </listitem>
+                            <listitem>
+                                <para><parameter>localsettings</parameter>: Import the configuration as the local settings of the host.</para>
+                            </listitem>
+                            <listitem>
+                                <para><parameter>domainsettings</parameter>: Import the configuration as the domain settings of the host.</para>
+                            </listitem>
+                        </itemizedlist>
                         </listitem>
                     </itemizedlist>
-                </listitem>
-            </itemizedlist>
 
-        </section>-->
-
+                </section>
             </section>
 
         </section>
