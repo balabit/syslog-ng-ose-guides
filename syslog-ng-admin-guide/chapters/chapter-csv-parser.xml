@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]> 
+<chapter id="chapter-csv-parser">
+    <title>Parsing and segmenting structured messages</title>
+        <indexterm>
+            <primary>parsing messages</primary>
+            <secondary>concepts of</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>parsers</primary>
+        </indexterm>
+        <indexterm>
+            <primary>message parsing</primary>
+        </indexterm>
+        <indexterm>
+            <primary>parsing messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>segmenting messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>splitting messages</primary>
+        </indexterm>
+        <para>The filters and default macros of syslog-ng work well on the headers and
+            metainformation of the log messages, but are rather limited when processing the content
+            of the messages. Parsers can segment the content of the messages into name-value pairs,
+            and these names can be used as user-defined macros. Subsequent filtering or other type
+            of processing of the message can use these custom macros to refer to parts of the
+            message. Parsers are global objects most often used together with filters and rewrite rules.</para>
+        <para>For details on using parsers, see <xref linkend="configuring_parsers"/> and <xref
+                linkend="reference_parsers"/>.</para>
+        <section id="configuring_parsers">
+             <title>Parsing messages</title>
+        <para>The syslog-ng application can separate parts of log messages (i.e., the contents of
+            the $MSG macro) to named fields (columns). These fields act as user-defined macros that
+            can be referenced in message templates, file- and tablenames, etc. </para>
+        <para>Parsers are similar to filters: they must be defined in the syslog-ng configuration
+            file and used in the log statement.</para>
+        <!-- FIXME parsert/rewriteot is lehet inline definialni? -->
+        <note>
+            <para>The order of filters, rewriting rules, and parsers in the log statement is
+                important, as they are processed sequentially.
+                <!-- FIXME bovebben, peldaval, filterekhez/rewrite sectionbe is -->
+            </para>
+        </note>
+        <para>To create a parser, define the columns of the message, the delimiter or separator
+            characters, and optionally the characters that are used to escape the delimiter
+            characters (quote-pairs). For the list of parser parameters, see <xref
+                linkend="reference_parsers"/>.</para>
+        <synopsis>Declaration:
+            parser parser_name {
+            csv-parser(column1, column2, ...)
+            delimiters()
+            quote-pairs()
+            };</synopsis>
+        <para>Column names work like macros. Always use a prefix to identify the columns of the
+            parsers, for example <parameter>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</parameter>, etc. Column
+            names starting with a dot (for example <parameter>.HOST</parameter>) are reserved for use by
+            syslog-ng.</para>
+            <example id="example_parser">
+                <title>Segmenting hostnames separated with a dash</title>
+                <para>The following example separates hostnames like
+                    <parameter>example-1</parameter> and <parameter>example-2</parameter> into two
+                    parts.</para>
+                <synopsis>parser p_hostname_segmentation {
+    csv-parser(columns("HOSTNAME.NAME", "HOSTNAME.ID")
+    delimiters("-")
+    flags(escape-none)
+    template("${HOST}"));
+};
+destination d_file { file("/var/log/messages-${HOSTNAME.NAME:-examplehost}"); };
+log { source(s_local); parser(p_hostname_segmentation); destination(d_file);};</synopsis>
+            </example>
+            <example id="example_parser_apache">
+                <title>Parsing Apache log files</title>
+                <para>The following parser processes the log of Apache web servers and separates
+                    them into different fields. Apache log messages can be formatted like:</para>
+                <synopsis>"%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %T %v"</synopsis>
+                <para>Here is a sample message: </para>
+                <synopsis>192.168.1.1 - - [31/Dec/2007:00:17:10 +0100] "GET /cgi-bin/example.cgi HTTP/1.1" 200 2708 "-" "curl/7.15.5 (i4 86-pc-linux-gnu) libcurl/7.15.5 OpenSSL/0.9.8c zlib/1.2.3 libidn/0.6.5" 2 example.balabit</synopsis>
+                <para>To parse such logs, the delimiter character is set to a single whitespace
+                        (<parameter>delimiters(" ")</parameter>). Whitespaces between quotes and
+                    brackets are ignored (<parameter>quote-pairs('""[]')</parameter>).</para>
+                <synopsis>parser p_apache {
+    csv-parser(columns("APACHE.CLIENT_IP", "APACHE.IDENT_NAME", "APACHE.USER_NAME",
+        "APACHE.TIMESTAMP", "APACHE.REQUEST_URL", "APACHE.REQUEST_STATUS",
+        "APACHE.CONTENT_LENGTH", "APACHE.REFERER", "APACHE.USER_AGENT",
+        "APACHE.PROCESS_TIME", "APACHE.SERVER_NAME")
+         flags(escape-double-char,strip-whitespace)
+         delimiters(" ")
+         quote-pairs('""[]')
+         );
+};</synopsis>
+                <para>The results can be used for example to separate log messages into different
+                    files based on the APACHE.USER_NAME field. If the field is empty, the
+                        <parameter>nouser</parameter> name is assigned.</para>
+                <synopsis>log { source(s_local);
+    parser(p_apache); destination(d_file);};
+};
+destination d_file { file("/var/log/messages-${APACHE.USER_NAME:-nouser}"); };</synopsis>
+            </example>
+        <para>Multiple parsers can be used to split a part of an already parsed message into further
+            segments.</para>
+            <example id="example_parser_multiple">
+                <title>Segmenting a part of a message</title>
+                <para>The following example splits the timestamp of a parsed Apache log message into
+                    separate fields.</para>
+                <synopsis>parser p_apache_timestamp {
+    csv-parser(columns("APACHE.TIMESTAMP.DAY", "APACHE.TIMESTAMP.MONTH", "APACHE.TIMESTAMP.YEAR", "APACHE.TIMESTAMP.HOUR", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.ZONE")
+    delimiters("/: ")
+    flags(escape-none)
+    template("${APACHE.TIMESTAMP}"));
+    };
+log { source(s_local);
+    log { parser(p_apache); parser(p_apache_timestamp); destination(d_file);};
+};
+</synopsis>
+            </example>
+            <formalpara>
+                <title>Further examples:</title>
+                <para/>
+            </formalpara>
+            <itemizedlist>
+                <listitem>
+                    <para>For an example on using the <parameter>greedy</parameter> option, see <xref linkend="example_parser_greedy"/>.</para>
+                </listitem>
+            </itemizedlist>
+    </section>
+    <section id="reference_parsers_csv">
+            <title>Options of CSV parsers</title>
+            <indexterm>
+                <primary>segmenting messages</primary>
+            </indexterm>
+            <indexterm>
+                <primary>CSV parsers</primary>
+            </indexterm>
+            <indexterm>
+                <primary>splitting messages</primary>
+            </indexterm>
+            <para>The syslog-ng application can separate parts of log messages (i.e., the contents
+                of the $MSG macro) to named fields (columns). These fields act as user-defined
+                macros that can be referenced in message templates, file- and tablenames, etc. </para>
+            <para>To create a parser, define the columns of the message, the delimiter or separator
+                characters, and optionally the characters that are used to escape the delimiter
+                characters (quote-pairs).</para>
+            <synopsis>Declaration:
+    parser parser_name {
+        csv-parser(column1, column2, ...)
+        delimiters()
+        quote-pairs()
+    };</synopsis>
+            <para>Column names work like macros. Always use a prefix to identify the columns of the
+                parsers, for example <parameter>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</parameter>, etc.
+                Column names starting with a dot (for example <parameter>.HOST</parameter>) are reserved
+                for use by syslog-ng. </para>
+            <simplesect id="parser_options">
+                <title>csv-parser</title>
+                <indexterm type="parameter">
+                    <primary>csv-parser</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="50pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Synopsis:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>csv-parser(columns("PARSER.COLUMN1", "PARSER.COLUMN2", ...))</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> Specifies the type of parser to use, and the name of the columns
+                                to separate messages to. Currently only the
+                                <parameter>csv-parser</parameter> is implemented, which can separate
+                                columns based on delimiter characters and strings.</para>
+            </simplesect>
+            <simplesect>
+                <title>delimiters</title>
+                <indexterm type="parameter">
+                    <primary>delimiters</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="50pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Synopsis:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>delimiters("&lt;delimiter_characters&gt;")</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The character that separates the columns in the message.</para>
+            </simplesect>
+            <simplesect>
+                <title>flags()</title>
+                <indexterm type="parameter">
+                    <primary>flags()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="50pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Synopsis:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>drop-invalid, escape-none, escape-backslash, escape-double-char,
+                                greedy, strip-whitespace</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> When the <parameter>drop-invalid</parameter> option is set,
+                                    the parser does not process messages that have less columns than
+                                    defined in the parser. Using this option practically turns the
+                                    parser into a special filter, that matches messages that have
+                                    the predifined number of columns (using the specified
+                                    delimiters).</para>
+                <para>The <parameter>escape-none, escape-backslash,
+                                        escape-double-char</parameter> flags set the escaping rules
+                                    used by the parser. </para>
+                <para>The <parameter>greedy</parameter> option assigns the remainder
+                                    of the message to the last column, regardless of the delimiter
+                                    characters set. You can use this option to process messages
+                                    where the number of columns varies.</para>
+                <para>The <parameter>strip-whitespace</parameter> flag removes
+                                    trailing whitespaces from the beginning and the end of the
+                                    columns.</para>
+                <example id="example_parser_greedy">
+                <title>Adding the end of the message to the last column</title>
+                <para>If the <parameter>greedy</parameter> option is enabled, the syslog-ng
+                    application adds the not-yet-parsed part of the message to the last column,
+                    ignoring any delimiter characters that may appear in this part of the message.</para>
+                <para>For example, you receive the following comma-separated message:
+                        <parameter>example 1, example2, example3</parameter>, and you segment it
+                    with the following parser:</para>
+                <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(","));</synopsis>
+                <para>The <parameter>COLUMN1</parameter>, <parameter>COLUMN2</parameter>, and
+                        <parameter>COLUMN3</parameter> variables will contain the strings
+                        <parameter>example1</parameter>, <parameter>example2</parameter>, and
+                        <parameter>example3</parameter>, respectively. If the message looks like
+                        <parameter>example 1, example2, example3, some more information</parameter>,
+                    then any text appearing after the third comma (i.e., <parameter>some more
+                        information</parameter>) is not parsed, and possibly lost if you use only
+                    the variables to reconstruct the message (for example, to send it to different
+                    columns of an SQL table). </para>
+                <para>Using the <parameter>greedy</parameter> flag will assign the remainder of the
+                    message to the last column, so that the <parameter>COLUMN1</parameter>,
+                        <parameter>COLUMN2</parameter>, and <parameter>COLUMN3</parameter> variables
+                    will contain the strings <parameter>example1</parameter>,
+                    <parameter>example2</parameter>, and <parameter>example3, some more
+                    information</parameter>.</para>
+                <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(",") flags(greedy));</synopsis>
+            </example>
+            </simplesect>
+            <simplesect>
+                <title>quote-pairs()</title>
+                <indexterm type="parameter">
+                    <primary>quote-pairs()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="50pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Synopsis:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>quote-pairs('&lt;quote_pairs&gt;')</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> List quote-pairs between single quotes. Delimiter characters
+                                enclosed between quote characters are ignored. Note that the
+                                beginning and ending quote character does not have to be identical,
+                                for example <parameter>[}</parameter> can also be a quote-pair. For an example of using <parameter>quote-pairs()</parameter> to parse Apache log files, see <xref="example_parser_apache"/>.</para>
+            </simplesect>
+            <simplesect>
+                <title>template()</title>
+                <indexterm type="parameter">
+                    <primary>template()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="50pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Synopsis:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>template("${&lt;macroname&gt;}")</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The macro that contains the part of the message that the parser
+                                will process. It can also be a macro created by a previous parser of
+                                the log path. By default, this is empty and the parser processes the
+                                entire message. For examples, see <xref linkend="example_parser"/> and <xref linkend="example_parser_multiple"/>.</para>
+            </simplesect>
+        </section>
+</chapter>
