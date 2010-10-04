@@ -389,9 +389,9 @@
             <note>
                 <indexterm significance="preferred">
                     <primary>syslog-ng agent</primary>
-                    <secondary>upgrading to 3.1</secondary>
+                    <secondary>upgrading to 3.2</secondary>
                 </indexterm>
-                <para>Upgrading to &agent; version 3.1 is supported only from &agentabbrev; version
+                <para>Upgrading to &agent; version 3.2 is supported only from &agentabbrev; version
                     3.0.7.</para>
             </note>
             <itemizedlist>
@@ -704,20 +704,17 @@
                     </warning>
                     <itemizedlist>
                         <listitem>
-                            <para>To start an already installed, standalone &agentabbrev; using an XML configuration file, use the following command: <command>syslog-ng-agent.exe -c myconfigfile.xml</command>.</para>
+                            <para>To start an already installed, standalone &agentabbrev; using an XML configuration file, execute the following steps in a command line:</para>
+                            <orderedlist>
+                                <listitem><para><command>cd &lt;syslog-ng agent installation directory&gt;</command></para></listitem>
+                                <listitem><para><command>net stop "syslog-ng agent"</command></para></listitem>
+                                <listitem><para><command>syslog-ng-agent.exe -i &lt;PATH&gt;\configuration.xml</command></para></listitem>
+                                <listitem><para><command>net start "syslog-ng agent"</command></para></listitem>
+                            </orderedlist>
+                            
                         </listitem>
                         <listitem>
-                            <para>To use the XML file during the installation of the &agentabbrev; application, use the following command: <command>syslog-ng-agent-3.0.4-setup.exe /xmlconfig="fullpath\myconfigfile.xml"</command>. Note that the XML
-                            schema file must be in the same folder as the installer file. By default, the XML schema file is called <filename>syslog-ng-agent-conf.xsd</filename> and is located in the installation folder of the syslog-ng agent, next to the <filename>syslog-ng-agent.exe</filename> file.</para>
-                            <note>
-                                    <para>If you are using an XML-capable agent without using an XML
-                                        configuration file, and you want to switch to using an XML
-                                        configuration file without reinstalling the agent, execute
-                                        the <command>syslog-ng-agent.exe -i
-                                            "fullpath\myconfigfile.xml"</command> command. The
-                                        syslog-ng Agent service will be re-registered to use the XML
-                                        configuration file.</para>
-                            </note>
+                            <para>To use the XML file during the installation of the &agentabbrev; application, navigate to <guimenu>Setup syslog-ng Agent for Windows operating mode</guimenu> window and select <guimenu>XML mode</guimenu>. In the next window, browse your XML configuration. Note that the XML schema file will be installed in the &agentabbrev; directory.</para>
                         </listitem>
                         <listitem>
                             <para>If you want to use the .msi installer with an xml file,
@@ -732,7 +729,7 @@
                                             <guilabel>Customization</guilabel> tab.</para>
                         </listitem>
                         <listitem>
-                            <para>Starting with &agent; version 3.2, a command-line tool called <filename>configmanager.exe</filename> is available. To import the XML configuration file, use the following command: <command>configmanager.exe -import &lt;destination&gt; "source xml file"</command> command. The &lt;sourcename&gt; parameter determines which part of the configuration is exported:</para>
+                            <para>Starting with &agent; version 3.2, a command-line tool called <filename>configmanager.exe</filename> is available. To import the XML configuration file, use the following command: <command>configmanager.exe -import &lt;destination&gt; "source xml file"</command> command. The &lt;destination&gt; parameter determines which configuration the XML configuration will be converted to:</para>
                         <itemizedlist>
                             <listitem>
                                 <para><parameter>{GPO ID}</parameter>: Import the configuration to the specified Group Policy Object ID (for example, <parameter>{99AF1185-AB80-40B2-B4B8-41A1E907F329}</parameter>).</para>
@@ -796,19 +793,18 @@
                         application.</para>
                 </step>
                 <step>
-                    <para>Select <guibutton>syslog-ng Agent Settings > Destinations >
-                            Network</guibutton>, and double-click on <guimenu>IPv4</guimenu>.</para>
+                    <para>Select <guibutton>syslog-ng Agent Settings > Destinations</guibutton>, and double-click on <guimenu>Add new server</guimenu>.</para>
                 </step>
                 <step>
-                    <para>Select <guibutton>Add</guibutton>, and enter the hostname or the IP
+                    <para>Enter the hostname or the IP
                         address of the logserver into the <guilabel>Server Name</guilabel> field. If
                         your logserver is configured to accept messages on a non-standard port, type
                         the port number into the <guilabel>Server Port</guilabel> field.</para>
                 </step>
                 <step>
                     <!-- FIXME Ezt a templates reszt kulon helyre is ki kellene rakni, hogy konnyebb legyen megtalalni -->
-                    <para>Select the protocol used to transfer log messages and press
-                            <guibutton>Reset</guibutton> to apply the selected template. The
+                    <para>On <guimenu>Messages</guimenu>tab, select the protocol used to transfer log messages and press
+                            <guimenu>Reset</guimenu> to apply the selected template. The
                         following protocol templates are available:</para>
                     <itemizedlist>
                         <listitem>
@@ -863,7 +859,7 @@
                                     <secondary>adding macros to SDATA</secondary>
                                 </indexterm>
                                 <!-- FIXME we should find a better place for this info, or structure the procedure differently -->
-                                <para>When using the IETF-syslog protocol to transfer Eventlog messages, the &agentabbrev; application can include the macros (name-value pairs) in the SDATA part of the log message. Select the data to add to the log messages from the <guimenu>SDATA Contents in case of Windows Events</guimenu><!-- FIXME this label should be changed --> field. The following options are available:</para>
+                                <para>When using the IETF-syslog protocol to transfer Eventlog messages, the &agentabbrev; application can include the macros (name-value pairs) in the SDATA part of the log message. Select the data to add to the log messages from the <guimenu>Metadata to include</guimenu> list. The following options are available:</para>
                                 <itemizedlist>
                                     <listitem>
                                         <para><parameter>None</parameter>: Include only the data mandated by RFC5424.</para>
@@ -888,9 +884,7 @@
                             </indexterm>
                             <para><guimenu>Snare Protocol</guimenu>: Send
                                 log messages in a format compatible with the Snare log monitoring
-                                tool, using the following template:
-                                    <parameter>&lt;${PRI}&gt;${BSDDATE} ${HOST}
-                                ${MSG}</parameter>. This template cannot be modified.</para>
+                                tool.</para>
                             <warning>
                                 <para>3.1 and earlier versions of the &agent; application used an imperfect message template to send Snare-compatible messages. This has been corrected in the <guimenu>Snare Protocol</guimenu> option. If you need the old, imperfect mode of operation, select a syslog protocol and select <guilabel>Message
                                 Type > Agent v3.1 Snare Compatible Message Type</guilabel>, then click
