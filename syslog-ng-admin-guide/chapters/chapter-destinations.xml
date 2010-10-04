@@ -1,0 +1,1648 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]> 
+<chapter id="chapter-destinations">
+    <title>Destinations and destination drivers</title>
+        <indexterm significance="preferred">
+            <primary>destinations</primary>
+        </indexterm>
+        <indexterm significance="preferred">
+            <primary>destination drivers</primary>
+        </indexterm>
+        <para>A destination is where a log message is sent if the filtering rules match. Similarly
+            to sources, destinations consist of one or more drivers, each defining where and how
+            messages are sent.</para>
+        <tip>
+            <para>If no drivers are defined for a destination, all messages sent to the destination
+                are discarded. This is equivalent to omitting the destination from the log
+                statement.</para>
+        </tip>
+        <para>To define a destination, add a destination statement to the syslog-ng configuration
+            file using the following syntax: <indexterm>
+                <primary>destinations</primary>
+                <secondary>defining</secondary>
+            </indexterm>
+            <synopsis>destination &lt;identifier&gt; { 
+                destination-driver(params); destination-driver(params); ... };</synopsis>
+        </para>
+        <example>
+            <title>A simple destination statement</title>
+            <para>The following destination statement sends messages to the TCP port
+                <parameter>1999</parameter> of the <parameter>10.1.2.3</parameter> host.</para>
+            <synopsis>destination d_demo_tcp { tcp("10.1.2.3" port(1999)); };</synopsis>
+            <para>If name resolution is configured, the hostname of the target server can be used as
+                well.</para>
+            <synopsis>destination d_tcp { tcp("target_host" port(1999); localport(999)); };</synopsis>
+        </example>
+        <para>The following table lists the destination drivers available in syslog-ng.</para>
+        <table id="table_destination_drivers">
+            <title>Destination drivers available in syslog-ng</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary>list of</secondary>
+            </indexterm>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_destinations_file">file()</link>
+                        </entry>
+                        <entry>Writes messages to the specified file.</entry>
+                    </row>                    
+                    <row>
+                        <entry>
+                            <link linkend="configuring_destinations_pipe">fifo(), pipe()</link>
+                        </entry>
+                        <entry>Writes messages to the specified named pipe.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_destinations_program">program()</link>
+                        </entry>
+                        <entry>Forks and launches the specified program, and sends messages to its standard input.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_destinations_sql">sql()</link>
+                        </entry>
+                        <entry>Sends messages into an SQL database. In addition to the standard syslog-ng packages, the <parameter>sql()</parameter> destination requires database-specific packages to be installed. Refer to the section appropriate for your platform in <xref linkend="chapter_install"/>.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_destinations_syslog">syslog()</link>
+                        </entry>
+                        <entry>Sends messages to the specified remote host using the <link linkend="concepts_message_ietfsyslog">IETF-syslog protocol</link>. The IETF standard supports message transport using the UDP, TCP, and TLS networking protocols.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_destinations_tcpudp">tcp() and tcp6()</link>
+                        </entry>
+                        <entry>Sends messages to the specified TCP port of a remote host using the <link linkend="concepts_message_bsdsyslog">BSD-syslog protocol</link> over IPv4 and IPv6, respectively.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_destinations_tcpudp">udp() and udp6()</link>
+                        </entry>
+                        <entry>Sends messages to the specified UDP port of a remote host using the <link linkend="concepts_message_bsdsyslog">BSD-syslog protocol</link> over IPv4 and IPv6, respectively.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_destinations_unixstream">unix-dgram()</link>
+                        </entry>
+                        <entry>Sends messages to the specified unix socket in <parameter>SOCK_DGRAM</parameter> style (BSD).</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_destinations_unixstream">unix-stream()</link>
+                        </entry>
+                        <entry>Sends messages to the specified unix socket in <parameter>SOCK_STREAM</parameter> style (Linux).</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_destination_usertty">usertty()</link>
+                        </entry>
+                        <entry>Sends messages to the terminal of the specified user, if the user is logged in.</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <section id="configuring_destinations_file">
+            <title>Storing messages in plain-text files</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>file()</parameter> driver</secondary>
+            </indexterm>
+            <para>The file driver is one of the most important destination drivers in syslog-ng. It
+                allows to output messages to the specified text file, or to a set of files. </para>
+            <para>The destination filename may include macros which get expanded when the message is
+                written, thus a simple <parameter>file()</parameter> driver may create several
+                files: for example, &abbrev; can store the messages of client hosts in a separate file for each host. For more information on available macros see <xref linkend="reference_macros"
+                />. </para>
+            <para>If the expanded filename refers to a directory which does not exist, it will be
+                created depending on the <parameter>create_dirs()</parameter> setting (both global
+                and a per destination option).</para>
+            <para>The <parameter>file()</parameter> has a single required parameter that specifies
+                the filename that stores the log messages. For the list of available optional
+                parameters, see <xref linkend="reference_destination_file"/>.</para>
+            <synopsis>Declaration:
+                file(filename options());</synopsis>
+            <example id="example_destination_file">
+                <title>Using the file() driver</title>
+                <synopsis>destination d_file { file("/var/log/messages" ); };</synopsis>
+            </example>
+            <example id="example_destination_file_macro">
+                <title>Using the file() driver with macros in the file name and a template for the
+                        message</title>
+                <synopsis>destination d_file {
+        file("/var/log/$YEAR.$MONTH.$DAY/messages"
+             template("$HOUR:$MIN:$SEC $TZ $HOST [$LEVEL] $MSG $MSG\n")
+             template_escape(no));
+};</synopsis>
+            </example>
+            <note>
+                <para>When using the <parameter>file()</parameter> destination, update the
+                    configuration of your log rotation program to rotate these files. Otherwise, the
+                    log files can become very large.</para>
+            </note>
+            <warning>
+                <para>Since the state of each created file must be tracked by syslog-ng, it consumes
+                    some memory for each file. If no new messages are written to a file within 60
+                    seconds (controlled by the <parameter>time_reap()</parameter> global option), it
+                    is closed, and its state is freed. </para>
+                <para>Exploiting this, a DoS attack can be mounted against the system. If the number
+                    of possible destination files and its needed memory is more than the amount
+                    available on the syslog-ng server. </para>
+                <para>The most suspicious macro is <parameter>$PROGRAM</parameter>, where the number
+                    of possible variations is rather high. Do not use the
+                    <parameter>$PROGRAM</parameter> macro in insecure environments.</para>
+            </warning>
+            <section id="reference_destination_file">
+                <title>file() destination options</title>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>file()</parameter> driver</secondary>
+                </indexterm>
+                <para>The <parameter>file()</parameter> driver outputs messages to the specified text file, or to a set of files. The <parameter>file()</parameter> destination has the following options:</para>
+                <warning>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//warning[@id = 'warning-fd-ulimit']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </warning>
+                <!-- FIXME required parameters?? -->
+                <simplesect>
+                    <title>create_dirs()</title>
+                    <indexterm type="parameter">
+                        <primary>create_dirs()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>yes or no</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>no</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Enable creating non-existing directories.</para>
+                </simplesect>
+                <simplesect>
+                    <title>dir_group()</title>
+                    <indexterm type="parameter">
+                        <primary>dir_group()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>root</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> The group of directories created by syslog-ng.</para>
+                </simplesect>
+                <simplesect>
+                    <title>dir_owner()</title>
+                    <indexterm type="parameter">
+                        <primary>dir_owner()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>root</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> The owner of directories created by syslog-ng.</para>
+                </simplesect>
+                <simplesect>
+                    <title>dir_perm()</title>
+                    <indexterm type="parameter">
+                        <primary>dir_perm()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>number</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>0600</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> The permission mask of directories created by syslog-ng. Log
+                                    directories are only created if a file after macro expansion refers
+                                    to a non-existing directory, and directory creation is enabled (see
+                                    the <parameter>create_dirs()</parameter> option below). For octal
+                                    numbers prefix the number with <parameter>0</parameter>, for example use
+                                        <parameter>0755</parameter> for
+                                    <parameter>rwxr-xr-x</parameter>.</para>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>     
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_fsync']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <title>group()</title>
+                    <indexterm type="parameter">
+                        <primary>group()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>root</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Set the group of the created file to the one specified.</para>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_local_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>      
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <title>overwrite_if_older()</title>
+                    <indexterm type="parameter">
+                        <primary>overwrite_if_older()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>number</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>0</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> If set to a value higher than 0, syslog-ng checks when the file
+                                    was last modified before starting to write into the file. If the
+                                    file is older than the specified amount of time (in seconds), then
+                                    syslog-ng removes the existing file and opens a new file with the
+                                    same name. In combination with for example the
+                                    <parameter>$WEEKDAY</parameter> macro, this can be used for simple
+                                    log rotation, in case not all history has to be kept. (Note that in
+                                    this weekly log rotation example if its Monday 00:01, then the file
+                                    from last Monday is not seven days old, because it was probably last
+                                    modified shortly before 23:59 last Monday, so it is actually not
+                                    even six days old. So in this case, set the
+                                        <parameter>overwrite_if_older()</parameter> parameter to
+                                    a-bit-less-than-six-days, for example, to
+                                    <parameter>518000</parameter> seconds.</para>
+                </simplesect>
+                <simplesect>
+                    <title>owner()</title>
+                    <indexterm type="parameter">
+                        <primary>owner()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>root</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Set the owner of the created file to the one specified.</para>
+                </simplesect>
+                <simplesect>
+                    <title>perm()</title>
+                    <indexterm type="parameter">
+                        <primary>perm()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>number</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>0600</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> The permission mask of the file if it is created by syslog-ng.
+                                    For octal numbers prefix the number with <parameter>0</parameter>,
+                                    for example use <parameter>0755</parameter> for
+                                    <parameter>rwxr-xr-x</parameter>.</para>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>   
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+            </section>
+        </section>
+        <section id="configuring_destinations_pipe">
+            <title>Sending messages to named pipes</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>pipe()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>pipe()</parameter> driver sends messages to a named pipe like
+                    <filename>/dev/xconsole</filename>. </para>
+            <para>The pipe driver has a single required parameter, specifying the filename of the
+                pipe to open. The filename can include macros. For the list of available optional
+                parameters, see <xref linkend="reference_destination_pipe"/>.</para>
+            <synopsis>Declaration:
+                pipe(filename);</synopsis>
+            <warning>
+                <para>As of syslog-ng Open Source Edition 3.0.2, pipes are created automatically. In
+                    earlier versions, you had to create the pipe using the
+                    <command>mkfifo(1)</command> command. </para>
+            </warning>
+            <example id="example_destination_pipe">
+                <title>Using the pipe() driver</title>
+                <synopsis>destination d_pipe { pipe("/dev/xconsole"); };</synopsis>
+            </example>
+            <section id="reference_destination_pipe">
+                <title>pipe() destination options</title>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>pipe()</parameter> driver</secondary>
+                </indexterm>
+                <para>This driver sends messages to a named pipe like
+                    <filename>/dev/xconsole</filename>. </para>
+                <para>The <parameter>pipe()</parameter> destination has the following options:</para>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <title>group()</title>
+                    <indexterm type="parameter">
+                        <primary>group()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>root</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Set the group of the pipe to the one specified.</para>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <title>owner()</title>
+                    <indexterm type="parameter">
+                        <primary>owner()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>root</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Set the owner of the pipe to the one specified.</para>
+                </simplesect>
+                <simplesect>
+                    <title>perm()</title>
+                    <indexterm type="parameter">
+                        <primary>perm()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>number</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>0600</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel>The permission mask of the pipe. For octal numbers prefix the
+                                    number with '0', for example: use 0755 for rwxr-xr-x.</para>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+            </section>
+        </section>
+        <section id="configuring_destinations_program">
+            <title>Sending messages to external applications</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>program()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>program()</parameter> driver starts an external application or
+                script and sends the log messages to its standard input
+                (<parameter>stdin</parameter>). </para>
+            <para>The <parameter>program()</parameter> driver has a single required parameter,
+                specifying a program name to start. The program is executed with the help of the
+                current shell, so the command may include both file patterns and I/O redirections.
+                For the list of available optional parameters, see <xref
+                    linkend="reference_destination_program"/>.</para>
+            <synopsis>Declaration: 
+                program(command_to_run);</synopsis>
+            <note>
+                <para>The syslog-ng application automatically restarts the external program if it
+                    exits for reliability reasons. However it is not recommended to launch programs
+                    for single messages, because if the message rate is high, launching several
+                    instances of an application might overload the system, resulting in Denial of
+                    Service. </para>
+            </note>
+            <para>Note that the message format does not include the priority and facility values by
+                default. To add these values, specify a template for the program destination, as
+                shown in the following example.</para>
+            <example id="example_destination_program">
+                <title>Using the program() destination driver</title>
+                <synopsis>destination d_prog { program("/bin/script" template("&lt;$PRI&gt;$DATE $HOST $MSG\n"); ); };</synopsis>
+            </example>
+            <section id="reference_destination_program">
+                <title>program() destination options</title>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>program()</parameter> driver</secondary>
+                </indexterm>
+                <para>This driver starts an external application or script and sends the log messages to
+                    its standard input (<parameter>stdin</parameter>). </para>
+                <para>The <parameter>program()</parameter> destination has the following options:</para>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+            </section>
+        </section>
+        <section id="configuring_destinations_sql">
+            <title>Storing messages in an SQL database</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>sql()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary>database driver</secondary>
+            </indexterm>
+            <para>The <parameter>sql()</parameter> driver sends messages into an SQL database.
+                Currently the Microsoft SQL (MSSQL), MySQL, Oracle, PostgreSQL, and SQLite databases
+                are supported.</para>
+                <!-- FIXME ezt valahogy visszarakni -->
+<!--            <para>The <parameter>sql()</parameter> driver has the following required parameters:</para>
+            <simplesect>
+                    <xi:include href="chapter_reference.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_type']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                    <xi:include href="chapter_reference.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_database']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                    <xi:include href="chapter_reference.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_table']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                    <xi:include href="chapter_reference.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_columns']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                    <xi:include href="chapter_reference.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_values']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <para>For the list of available optional parameters, see <xref
+                    linkend="reference_destination_sql"/>.</para> -->
+            <synopsis>Declaration: 
+    sql(database_type host_parameters database_parameters [options]);</synopsis>
+            <warning>
+                <para>The syslog-ng application requires read and write access to the SQL table,
+                    otherwise it cannot verify that the destination table exists.</para>
+                <para>Currently the syslog-ng application has default schemas for the different
+                    databases and uses these defaults if the database schema (for example columns and
+                    column types) is not defined in the configuration file. However, these schemas
+                    will be deprecated and specifying the exact database schema will be required in
+                    later versions of syslog-ng. </para>
+            </warning>
+            <note>
+                <para>In addition to the standard syslog-ng packages, the
+                    <parameter>sql()</parameter> destination requires database-specific packages to
+                    be installed. These packages are automatically installed by the binary syslog-ng
+                    installer.</para>
+                <para>The <parameter>sql()</parameter> driver is currently not available for every
+                    platform that is supported by syslog-ng. For a list of platforms that support
+                    the <parameter>sql()</parameter> driver, visit <ulink
+                        url="http://www.balabit.com/network-security/syslog-ng/central-syslog-server/"
+                        >http://www.balabit.com/network-security/syslog-ng/central-syslog-server/</ulink>.</para>
+            </note>
+            <para>The <parameter>table</parameter> and <parameter>value</parameter> parameters can
+                include macros to create tables and columns dynamically (see <xref
+                    linkend="reference_macros"/> for details).</para>
+            <warning>
+                <para>When using macros in table names, note that some databases limit the maximum
+                    allowed length of table names. Consult the documentation of the database for
+                    details.</para>
+            </warning>
+            <para>Inserting the records into the database is performed by a separate thread. The
+                syslog-ng application automatically performs the escaping required to insert the
+                messages into the database. </para>
+            <example id="example_destination_sql">
+                <title>Using the sql() driver</title>
+                <indexterm>
+                    <primary>destinations</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>PostgreSQL</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <para>The following example sends the log messages into a PostgreSQL database
+                    running on the <parameter>logserver</parameter> host. The messages are inserted
+                    into the <parameter>logs</parameter> database, the name of the table includes
+                    the exact date and the name of the host sending the messages. The syslog-ng
+                    application automatically creates the required tables and columns, if the user
+                    account used to connect to the database has the required privileges.</para>
+                <synopsis>destination d_sql { 
+  sql(type(pgsql)
+  host("logserver") username("syslog-ng") password("password")
+  database("logs")
+  table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
+  columns("datetime", "host", "program", "pid", "message")
+  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  indexes("datetime", "host", "program", "pid", "message"));
+  };</synopsis>
+                <para>The following example specifies the type of the database columns as well:</para>
+                <synopsis>destination d_sql { 
+  sql(type(pgsql)
+  host("logserver") username("syslog-ng") password("password")
+  database("logs")
+  table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
+  columns("datetime varchar(16)", "host varchar(32)", "program  varchar(20)", "pid varchar(8)", "message  varchar(200)")
+  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  indexes("datetime", "host", "program", "pid", "message"));
+};</synopsis>
+            </example>
+            <section id="configuring_sql_oracle">
+                <title>Using the sql() driver with an Oracle database</title>
+                <indexterm>
+                    <primary>Oracle</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <para>The Oracle sql destination has some special aspects that are important to
+                    note.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>The hostname of the database server is set in the
+                                <filename>tnsnames.ora</filename> file, not in the
+                            <parameter>host</parameter> parameter of the
+                            <parameter>sql()</parameter> destination.</para>
+                        <para>Make sure to set the Oracle-related environment variables properly, so
+                            syslog-ng and the Oracle client will find the file. The following
+                            variables must be set: <parameter>ORACLE_BASE</parameter>,
+                                <parameter>ORACLE_HOME</parameter>, and
+                            <parameter>ORACLE_SID</parameter>. See the documentation of the Oracle
+                            Instant Client for details. </para>
+                    </listitem>
+                    <listitem>
+                        <para>As certain database versions limit the maximum length of table names,
+                            macros in the table names should be used with care.</para>
+                    </listitem>
+                    <listitem>
+                        <!-- FIXME kiszedni, ha megjavul -->
+                        <para>In the current version of syslog-ng PE, the types of database columns
+                            must be explicitly set for the Oracle destination. The column used to
+                            store the text part of the syslog messages should be able to store
+                            messages as long as the longest message permitted by syslog-ng,
+                            therefore it is usually recommended to use the
+                            <parameter>varchar2</parameter> or <parameter>clob</parameter> column
+                            type. (The maximum length of the messages can be set using the
+                                <parameter>log_msg_size()</parameter> option.) See the following
+                            example for details.</para>
+                    </listitem>
+                </itemizedlist>
+                <example id="example_destination_sql_oracle">
+                    <title>Using the sql() driver with an Oracle database</title>
+                    <indexterm>
+                        <primary>destinations</primary>
+                        <secondary>sql() configuration</secondary>
+                    </indexterm>
+                    <indexterm>
+                        <primary>Oracle</primary>
+                        <secondary>sql() configuration</secondary>
+                    </indexterm>
+                    <para>The following example sends the log messages into an Oracle database running
+                        on the <parameter>logserver</parameter> host, which must be set in the
+                        <filename>/etc/tnsnames.ora</filename> file. The messages are inserted into
+                        the <parameter>LOGS</parameter> database, the name of the table includes the
+                        exact date when the messages were sent. The syslog-ng application automatically
+                        creates the required tables and columns, if the user account used to connect to
+                        the database has the required privileges.</para>
+                    <synopsis>destination d_sql { 
+  sql(type(oracle)
+  username("syslog-ng") password("password")
+  database("LOGS")
+  table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")
+  columns("datetime varchar(16)", "host varchar(32)", "program varchar(32)", "pid varchar(8)", "message varchar2")                        
+  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  indexes("datetime", "host", "program", "pid", "message"));
+  };</synopsis>
+                    <para>The Oracle Instant Client retrieves the address of the database server from
+                        the <filename>/etc/tnsnames.ora</filename> file. Edit or create this file as
+                        needed for your configuration. A sample is provided below.</para>
+                    <synopsis>LOGS =
+(DESCRIPTION =
+(ADDRESS_LIST =
+(ADDRESS = (PROTOCOL = TCP)
+(HOST = logserver)
+(PORT = 1521))
+)
+(CONNECT_DATA =
+(SERVICE_NAME = EXAMPLE.SERVICE)
+)
+)</synopsis>
+                </example>
+            </section>
+            <section id="configuring_sql_mssql">
+                <title>Using the sql() driver with a Microsoft SQL database</title>
+                <indexterm>
+                    <primary>Microsoft SQL</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>MSSQL</primary>
+                    <secondary>sql() configuration</secondary>
+                </indexterm>
+                <para>The <parameter>mssql</parameter> database driver can access Microsoft SQL
+                    (MSSQL) destinations. This driver has some special aspects that are important to
+                    note.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>The date format used by the MSSQL database must be explicitly set in
+                            the <filename>/etc/locales.conf</filename> file of the syslog-ng server.
+                            See the following example for details.</para>
+                    </listitem>
+                    <listitem>
+                        <para>As certain database versions limit the maximum length of table names,
+                            macros in the table names should be used with care.</para>
+                    </listitem>
+                    <listitem>
+                        <!-- FIXME kiszedni, ha megjavul -->
+                        <para>In the current version of syslog-ng PE, the types of database columns
+                            must be explicitly set for the MSSQL destination. The column used to
+                            store the text part of the syslog messages should be able to store
+                            messages as long as the longest message permitted by syslog-ng. The
+                                <parameter>varchar</parameter> column type can store maximum 4096
+                            bytes-long messages. The maximum length of the messages can be set using
+                            the <parameter>log_msg_size()</parameter> option. See the following
+                            example for details.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Remote access for SQL users must be explicitly enabled on the
+                            Microsoft Windows host running the Microsoft SQL Server. See <xref
+                                linkend="configure_mssql_server"/> for details.</para>
+                    </listitem>
+                </itemizedlist>
+                <example id="example_destination_sql_mssql">
+                    <title>Using the sql() driver with an MSSQL database</title>
+                    <indexterm>
+                        <primary>destinations</primary>
+                        <secondary>sql() configuration</secondary>
+                    </indexterm>
+                    <indexterm>
+                        <primary>MSSQL</primary>
+                        <secondary>sql() configuration</secondary>
+                    </indexterm>
+                    <para>The following example sends the log messages into an MSSQL database running on
+                        the <parameter>logserver</parameter> host. The messages are inserted into the
+                        <parameter>syslogng</parameter> database, the name of the table includes the
+                        exact date when the messages were sent. The syslog-ng application automatically
+                        creates the required tables and columns, if the user account used to connect to
+                        the database has the required privileges.</para>
+                    <synopsis>destination d_mssql { 
+sql(type(mssql) host("logserver") port("1433") 
+  username("syslogng") password("syslogng") database("syslogng") 
+  table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")columns("datetime varchar(16)", "host varchar(32)",
+  "program varchar(32)", "pid varchar(8)", "message varchar(4096)")
+  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  indexes("datetime", "host", "program", "pid"));
+  };</synopsis>
+                    <para>The date format used by the MSSQL database must be explicitly set in the
+                        <filename>/etc/locales.conf</filename> file of the syslog-ng server. Edit or
+                        create this file as needed for your configuration. A sample is provided below.</para>
+                    <synopsis>[default]
+date = "%Y-%m-%d %H:%M:%S"</synopsis>
+                </example>
+            </section>
+            <section id="reference_destination_sql">
+                <title>sql() destination options</title>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>sql()</parameter> driver</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary>database driver</secondary>
+                </indexterm>
+                <para>This driver sends messages into an SQL database. The <parameter>sql()</parameter> destination has the following options:</para>
+                <simplesect id="sql_option_columns">
+                    <title>columns</title>
+                    <indexterm type="parameter">
+                        <primary>columns</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string list</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>"date", "facility", "level", "host", "program", "pid", "message"</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Name of the columns storing the data in <parameter>fieldname
+                                    [dbtype]</parameter> format. The <parameter>[dbtype]</parameter>
+                                    parameter is optional, and specifies the type of the field. By
+                                    default, syslog-ng creates <parameter>text</parameter> columns. Note
+                                    that not every database engine can index text fields.</para>
+                </simplesect>
+                <simplesect id="sql_option_database">
+                    <title>database</title>
+                    <indexterm type="parameter">
+                        <primary>database</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>n/a</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Name of the database that stores the logs.</para>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <title>host</title>
+                    <indexterm type="parameter">
+                        <primary>host</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>hostname or IP address</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>n/a</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Hostname of the database server. Note that Oracle destinations do
+                                    not use this parameter, but retrieve the hostname from the
+                                    <filename>/etc/tnsnames.ora</filename> file.</para>
+                    <note>
+                        <para>If you specify <parameter>host="localhost"</parameter>, syslog-ng will use a
+                            socket to connect to the local database server. Use
+                            <parameter>host="127.0.0.1"</parameter> to force TCP communication between
+                            syslog-ng and the local database server.</para>
+                        <para>To specify the socket to use, set and export the
+                            <parameter>MYSQL_UNIX_PORT</parameter> environment variable, for example
+                            <command>MYSQL_UNIX_PORT=/var/lib/mysql/mysql.sock; export
+                                MYSQL_UNIX_PORT</command>.</para>
+                    </note>
+                </simplesect>
+                <simplesect id="sql_option_indexes">
+                    <title>indexes</title>
+                    <indexterm type="parameter">
+                        <primary>indexes</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string list</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>"date", "facility", "host", "program"</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> The list of columns that are indexed by the database to speed up
+                                    searching. To disable indexing for the destination, include the
+                                    empty <parameter>indexes()</parameter> parameter in the destination,
+                                    simply omitting the <parameter>indexes</parameter> parameter will
+                                    cause syslog-ng to request indexing on the default columns.</para>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_local_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect id="sql_option_null">
+                    <title>null</title>
+                    <indexterm type="parameter">
+                        <primary>null</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry/>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> If the content of a column matches the string specified in the
+                                    <parameter>null()</parameter> parameter, the contents of the
+                                    column will be replaced with an SQL NULL value. If unset (by
+                                    default), the option does not match on any string. See the <xref
+                                        linkend="example_destination_sql_null"/> for details.</para>
+                    <example id="example_destination_sql_null">
+                        <title>Using SQL NULL values</title>
+                        <indexterm>
+                            <primary>destinations</primary>
+                            <secondary>sql() configuration</secondary>
+                        </indexterm>
+                        <indexterm>
+                            <primary>SQL NULL values</primary>
+                        </indexterm>
+                        <para>The <parameter>null()</parameter> parameter of the SQL driver can be used to
+                            replace the contents of a column with a special SQL NULL value. To replace every
+                            column that contains an empty string with NULL, use the
+                            <parameter>null("")</parameter> option, for example</para>
+                        <synopsis>destination d_sql { 
+                        sql(type(pgsql)
+                        host("logserver") username("syslog-ng") password("password")
+                        database("logs")
+                        table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
+                        columns("datetime", "host", "program", "pid", "message")
+                        values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+                        indexes("datetime", "host", "program", "pid", "message")
+                        null(""));                    
+                        };</synopsis>
+                        <para>To replace only a specific column (for example <parameter>pid</parameter>) if it is
+                            empty, assign a default value to the column, and use this default value in the
+                            <parameter>null()</parameter> parameter:</para>
+                        <synopsis>destination d_sql { 
+                        sql(type(pgsql)
+                        host("logserver") username("syslog-ng") password("password")
+                        database("logs")
+                        table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
+                        columns("datetime", "host", "program", "pid", "message")
+                        values("$R_DATE", "$HOST", "$PROGRAM", "${PID:-@@NULL@@}", "$MSGONLY")
+                        indexes("datetime", "host", "program", "pid", "message")
+                        null("@@NULL@@"));                    
+                        };</synopsis>
+                        <para>Ensure that the default value you use does not appear in the actual log
+                            messages, because other occurrences of this string will be replaced with NULL as
+                            well.</para>
+                    </example>
+                </simplesect>
+                <simplesect>
+                    <title>password</title>
+                    <indexterm type="parameter">
+                        <primary>password</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>n/a</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Password of the database user.</para>
+                </simplesect>
+                <simplesect id="sql_option_table">
+                    <title>table</title>
+                    <indexterm type="parameter">
+                        <primary>table</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>n/a</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Name of the database table to use (can include macros). When
+                                    using macros, note that some databases limit the length of table
+                                    names.</para>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect id="sql_option_type">
+                    <title>type</title>
+                    <indexterm type="parameter">
+                        <primary>type</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>mssql, mysql, oracle, pgsql, or sqlite3</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>n/a</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Specifies the type of the database, i.e., the DBI database driver
+                                    to use. Use the <parameter>mssql</parameter> option to send logs to
+                                    an MSSQL database. See the examples of the databases on the
+                                    following sections for details.</para>
+                </simplesect>
+                <simplesect>
+                    <title>username</title>
+                    <indexterm type="parameter">
+                        <primary>username</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>n/a</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Name of the database user.</para>
+                </simplesect>
+                <simplesect id="sql_option_values">
+                    <title>values</title>
+                    <indexterm type="parameter">
+                        <primary>values</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string list</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>"${R_YEAR}-${R_MONTH}-${R_DAY} ${R_HOUR}:${R_MIN}:${R_SEC}",
+                                    "$FACILITY", "$LEVEL", "$HOST", "$PROGRAM", "$PID", "$MSGONLY"</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel>The parts of the message to store in the fields specified in the
+                                    <parameter>columns</parameter> parameter.</para>
+                </simplesect>
+            </section>
+        </section>
+        <section id="configuring_destinations_syslog">
+            <title>Sending messages to a remote logserver using the IETF-syslog protocol</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>syslog()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>syslog()</parameter> driver sends messages to a remote host (for example
+                a syslog-ng server or relay) on the local intranet or internet using the new
+                standard syslog protocol developed by IETF (see <xref
+                    linkend="concepts_message_ietfsyslog"/> for details about the new protocol). The
+                protocol supports sending messages using the UDP, TCP, or the encrypted TLS
+                networking protocols.</para>
+            <para>The required arguments of the driver are the address of the destination host
+                (where messages should be sent). The transport method (networking protocol) is
+                optional, syslog-ng uses the TCP protocol by default. For the list of available
+                optional parameters, see <xref linkend="reference_destination_syslog"/>.</para>
+            <synopsis>Declaration:
+                syslog(host transport [options]);</synopsis>
+            <note>
+                <para>Note that the <parameter>syslog</parameter> destination driver has required
+                    parameters, while the source driver defaults to the local bind address, and
+                    every parameter is optional. </para>
+            </note>
+            <para>The <parameter>udp</parameter> transport method automatically sends multicast
+                packets if a multicast destination address is specified. The
+                <parameter>tcp</parameter> and <parameter>tls</parameter> methods do not support
+                multicasting.</para>
+            <note>
+                <para>The default ports for the different transport protocols are as follows: UDP
+                    &mdash; 514; TLS &mdash; 6514.</para>
+                <!-- FIXME mi a syslog-TCP default portja? -->
+            </note>
+            <example id="example_destination_syslog">
+                <title>Using the syslog() driver</title>
+                <synopsis>destination d_tcp { syslog(ip("10.1.2.3") transport("tcp") port(1999) localport(999)); };</synopsis>
+                <para>If name resolution is configured, the hostname of the target server can be
+                used as well.</para>
+                <synopsis>destination d_tcp { syslog(ip("target_host") transport("tcp") port(1999) localport(999)); };</synopsis>
+                <para>Send the log messages using TLS encryption and use mutual authentication. See
+                    <xref linkend="tlsoptions"/> for details on the encryption and
+                authentication options.</para>
+                <synopsis>destination d_syslog_tls{ 
+                syslog("10.100.20.40"
+                transport("tls")
+                port(6514)
+                tls(peer-verify(required-trusted)
+                ca_dir('/opt/syslog-ng/etc/syslog-ng/keys/ca.d/')
+                key_file('/opt/syslog-ng/etc/syslog-ng/keys/client_key.pem')
+                cert_file('/opt/syslog-ng/etc/syslog-ng/keys/client_certificate.pem'))
+                );};</synopsis>
+            </example>
+            <section id="reference_destination_syslog">
+                <title>syslog() destination options</title>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>syslog()</parameter> driver</secondary>
+                </indexterm>
+                <para>The <parameter>syslog()</parameter> driver sends messages to a remote host (for example
+                    a syslog-ng server or relay) on the local intranet or internet using the RFC5424 syslog protocol developed by IETF (see <xref
+                        linkend="concepts_message_ietfsyslog"/> for details about the protocol). The
+                    protocol supports sending messages using the UDP, TCP, or the encrypted TLS
+                    networking protocols.</para>
+                <para id="table_destination_syslog_options">These destinations have the following options:</para> 
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_ip_tos']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_ip_ttl']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_keep_alive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_localip']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>  
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_localport']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect id="destination_option_port">
+                    <title>port() or destport()</title>
+                    <indexterm type="parameter">
+                        <primary>port() or destport()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>number</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>601</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> The port number to connect to. Note that the default port numbers
+                        used by syslog-ng do not comply with the latest RFC which was
+                        published after the release of syslog-ng 3.0.2, therefore the
+                        default port numbers will change in the future releases.</para>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_broadcast']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_rcvbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_sndbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_spoof_source']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_tls']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <title>transport</title>
+                    <indexterm type="parameter">
+                        <primary>transport</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>udp, tcp, or tls</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>tcp</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>  
+                    </informaltable>
+                    <para><guilabel>Description:</guilabel> Specifies the protocol used to receive messages from the source.</para>
+                    <simplesect>
+                        <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    </simplesect>
+                </simplesect>
+            </section>
+        </section>
+        <section id="configuring_destinations_tcpudp">
+            <title>Sending messages to a remote logserver using the legacy BSD-syslog protocol</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>tcp()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>tcp6()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>udp()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>udp6()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>tcp()</parameter>, <parameter>tcp6()</parameter>,
+                <parameter>udp()</parameter>, and <parameter>udp6()</parameter> drivers send
+                messages to another host (for example a syslog-ng server or relay) on the local intranet
+                or internet using the UDP or TCP protocol. The <parameter>tcp6()</parameter> and
+                    <parameter>udp6()</parameter> drivers use the IPv6 network protocol.</para>
+            <para>All four drivers have a single required parameter specifying the destination host
+                address, where messages should be sent. For the list of available optional
+                parameters, see <xref linkend="reference_destination_tcpudp"/>.</para>
+            <para>The <parameter>udp()</parameter> and <parameter>udp6()</parameter> drivers
+                automatically send multicast packets if a multicast destination address is
+                specified. The <parameter>tcp()</parameter> and <parameter>tcp6()</parameter>
+                drivers do not support multicasting.</para>
+            <synopsis>Declaration:
+                tcp(host [options]);
+                udp(host [options]);
+                tcp6(host [options]);
+                udp6(host [options]);</synopsis>
+            <example id="example_destination_tcpudp">
+                <title>Using the tcp() driver</title>
+                <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999) localport(999)); };</synopsis>
+                <para>If name resolution is configured, the hostname of the target server can be
+                used as well.</para>
+                <synopsis>destination d_tcp { tcp("target_host" port(1999) localport(999)); };</synopsis>
+                <para>To send messages using the IETF-syslog message format without using the IETF-syslog protocol, enable the <parameter>syslog-protocol</parameter> flag:</para>
+                <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999) flags(syslog-protocol) ); };</synopsis>
+                <para>(To use the IETF-syslog protocol, see <xref linkend="reference_destination_syslog"/>.)</para>
+            </example>
+            <section id="reference_destination_tcpudp">
+                <title>tcp(), tcp6(), udp(), and udp6() destination options</title>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>tcp()</parameter> driver</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>tcp6()</parameter> driver</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>udp()</parameter> driver</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>udp6()</parameter> driver</secondary>
+                </indexterm>
+                <para>This driver sends messages to another host on the local intranet or internet according to RFC3164 using
+                    the UDP or TCP protocol. The <parameter>tcp6()</parameter> and
+                    <parameter>udp6()</parameter> drivers use the IPv6 network protocol.</para>
+                <para id="table_destination_tcp_options">These destinations have the following options:</para>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_ip_tos']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_ip_ttl']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_keep_alive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_localip']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_localport']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_port']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect> 
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_broadcast']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_rcvbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_sndbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_spoof_source']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_tls']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect> 
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+            </section>
+        </section>
+        <section id="configuring_destinations_unixstream">
+            <title>Sending messages to UNIX domain sockets</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>unix-stream()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>unix-dgram()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>unix-stream()</parameter> and <parameter>unix-dgram()</parameter>
+                drivers send messages to a UNIX domain socket in either
+                <parameter>SOCK_STREAM</parameter> or <parameter>SOCK_DGRAM</parameter> mode. </para>
+            <para>Both drivers have a single required argument specifying the name of the socket to
+                connect to. For the list of available optional parameters, see <xref
+                    linkend="reference_destination_unixstream"/>.</para>
+            <synopsis>Declaration: 
+                unix-stream(filename [options]);
+                unix-dgram(filename [options]);</synopsis>
+            <example id="example_destination_unixstream">
+                <title>Using the unix-stream() driver</title>
+                <synopsis>destination d_unix_stream { unix-stream("/var/run/logs"); };</synopsis>
+            </example>
+            <section id="reference_destination_unixstream">
+                <title>unix-stream() and unix-dgram() destination options</title>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>unix-stream()</parameter> driver</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>unix-dgram()</parameter> driver</secondary>
+                </indexterm>
+                <para>These drivers send messages to a unix socket in either
+                    <parameter>SOCK_STREAM</parameter> or <parameter>SOCK_DGRAM</parameter> mode. The <parameter>unix-stream()</parameter> and <parameter>unix-dgram()</parameter>
+                destinations have the following options:</para>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_keep_alive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_broadcast']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_rcvbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_sndbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect> 
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+            </section>
+         </section>
+        <section id="reference_destination_usertty">
+            <title>Sending messages to a user terminal &mdash; usertty() destination</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>usertty()</parameter> driver</secondary>
+            </indexterm>
+            <para>This driver writes messages to the terminal of a logged-in user. </para>
+            <para>The <parameter>usertty()</parameter> driver has a single required argument,
+                specifying a username who should receive a copy of matching messages. Use the asterisk <parameter>*</parameter> to specify every user currently logged in to the system.</para>
+            <synopsis>Declaration: 
+usertty(username);</synopsis>
+            <para>The <parameter>usertty()</parameter> does not have any further options nor does it
+                support templates.</para>
+            <example>
+                <title>Using the usertty() driver</title>
+                <synopsis>destination d_usertty { usertty("root"); };</synopsis>
+            </example>
+        </section>
+</chapter>
