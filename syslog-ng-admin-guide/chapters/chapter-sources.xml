@@ -1,0 +1,1429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  
+<!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]> 
+<chapter id="chapter-sources">
+    <title>Collecting log messages &mdash; sources and source drivers</title>
+    <indexterm>
+        <primary>source drivers</primary>
+        <secondary>reference</secondary>
+    </indexterm>
+
+    <section id="sources">
+        <title>How sources work</title>
+        <indexterm significance="preferred">
+            <primary>sources</primary>
+        </indexterm>
+        <indexterm significance="preferred">
+            <primary>source drivers</primary>
+        </indexterm>
+        <para>A source is where syslog-ng receives log messages. Sources consist of one or more
+            drivers, each defining where and how messages are received.</para>
+        <para>To define a source, add a source statement to the syslog-ng configuration file using
+            the following syntax: <indexterm>
+                <primary>destinations</primary>
+                <secondary>defining</secondary>
+            </indexterm>
+            <synopsis>source &lt;identifier&gt; { source-driver(params); source-driver(params); ... };</synopsis>
+        </para>
+        <example>
+            <title>A simple source statement</title>
+            <para>The following source statement receives messages on the TCP port
+                <parameter>1999</parameter> of the interface having the
+                <parameter>10.1.2.3</parameter> IP address.</para>
+            <synopsis>source s_demo_tcp { tcp(ip(10.1.2.3) port(1999)); };</synopsis>
+        </example>
+        <example>
+            <title>A source statement using two source drivers</title>
+            <para>The following source statement receives messages on the
+                <parameter>1999</parameter> TCP port and the <parameter>1999</parameter> UDP port of
+                the interface having the <parameter>10.1.2.3</parameter> IP address.</para>
+            <synopsis>source s_demo_two_drivers { 
+           tcp(ip(10.1.2.3) port(1999)); 
+           udp(ip(10.1.2.3) port(1999)); };</synopsis>
+        </example>
+        <example>
+            <title>Setting default priority and facility</title>
+            <indexterm>
+                <primary>setting facility</primary>
+            </indexterm>
+            <indexterm>
+                <primary>overriding facility</primary>
+            </indexterm>
+            <para>If the message received by the source does not have a proper syslog header, you
+                can use the <parameter>default-facility()</parameter> and
+                    <parameter>default-priority()</parameter> options to set the facility and
+                priority of the messages. Note that these values are applied only to messages that
+                do not set these parameters in their header.</para>
+            <synopsis>source headerless_messages { udp(default-facility(syslog) default-priority(emerg)); };</synopsis>
+        </example>
+
+        <para>Define a source only once. The same source can be used in several log paths.
+            Duplicating sources causes syslog-ng to open the source (TCP/IP port, file, etc.) more
+            than once, which might cause problems. For example, include the
+            <parameter>/dev/log</parameter> file source only in one source statement, and use this
+            statement in more than one log path if needed. </para>
+        <para>To collect log messages on a specific platform, it is important to know how the native
+                <parameter>syslogd</parameter> communicates on that platform. The following table
+            summarizes the operation methods of <parameter>syslogd</parameter> on some of the tested
+            platforms:</para>
+        <!-- FIXME belevenni a hianyzo, de tamogatott platformokat, es forrasokat pl. AIX, HP-UX, ... 
+        osszegyujteni, hogy az egyes platformokon milyen forrasokat kell felvenni ahhoz, 
+            hogy a syslog-ng a nativ syslog funkcionalitasat tudja 
+        -->
+        <table>
+            <title>Communication methods used between the applications and syslogd</title>
+            <indexterm>
+                <primary>sources</primary>
+                <secondary>on different platforms</secondary>
+            </indexterm>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Platform</entry>
+                        <entry>Method</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>Linux</entry>
+                        <entry>A <parameter>SOCK_STREAM</parameter> unix socket named
+                                <parameter>/dev/log</parameter>; some of the distributions switched
+                            over to using <parameter>SOCK_DGRAM</parameter>, though applications
+                            still work with either method. </entry>
+                    </row>
+                    <row>
+                        <entry>BSD flavors</entry>
+                        <entry>A <parameter>SOCK_DGRAM</parameter> unix socket named
+                                <parameter>/var/run/log</parameter>.</entry>
+                    </row>
+                    <row>
+                        <entry>Solaris (2.5 or below)</entry>
+                        <entry>An SVR4 style <parameter>STREAMS</parameter> device named
+                                <parameter>/dev/log</parameter>.</entry>
+                    </row>
+                    <row>
+                        <entry>Solaris (2.6 or above)</entry>
+                        <entry>In addition to the <parameter>STREAMS</parameter> device used in
+                            earlier versions, 2.6 uses a new multithreaded IPC method called door.
+                            By default the door used by <parameter>syslogd</parameter> is
+                                <parameter>/etc/.syslog_door</parameter>. </entry>
+                    </row>
+                    <row>
+                        <entry>HP-UX 11 or later</entry>
+                        <entry>HP-UX uses a named pipe called <filename>/dev/log</filename> that is
+                            padded to 2048 bytes, for example <parameter>source s_hp-ux {pipe ("/dev/log"
+                                pad_size(2048)}</parameter>.</entry>
+                    </row>
+                    <row>
+                        <!-- FIXME -->
+                        <entry>AIX 5.2 and 5.3</entry>
+                        <entry>A <parameter>SOCK_STREAM</parameter> or
+                            <parameter>SOCK_DGRAM</parameter> unix socket called
+                            <filename>/dev/log</filename>.</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <para>Each possible communication mechanism has a corresponding source driver in syslog-ng.
+            For example, to open a unix socket with <parameter>SOCK_DGRAM</parameter> style
+            communication use the driver <parameter>unix-dgram</parameter>. The same socket using
+            the <parameter>SOCK_STREAM</parameter> style &mdash; as used under Linux &mdash;
+            is called <parameter>unix-stream</parameter>. </para>
+        <example>
+            <title>Source statement on a Linux based operating system</title>
+            <para>The following source statement collects the following log messages:</para>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis>internal()</emphasis>: Messages generated by syslog-ng.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>udp(ip(0.0.0.0) port(514))</emphasis>: Messages arriving to the
+                            <parameter>514/UDP</parameter> port of any interface of the host.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>unix-stream("/dev/log");</emphasis>: Messages arriving to the
+                            <parameter>/dev/log</parameter> socket.</para>
+                </listitem>
+            </itemizedlist>
+            <synopsis>source s_demo { 
+           internal(); 
+           udp(ip(0.0.0.0) port(514)); 
+           unix-stream("/dev/log"); };</synopsis>
+        </example>
+        <para>The following table lists the source drivers available in syslog-ng.</para>
+        <table id="table_source_drivers">
+            <title>Source drivers available in syslog-ng</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary>list of</secondary>
+            </indexterm>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>Name</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_sources_internal">internal()</link>
+                        </entry>
+                        <entry>Messages generated internally in syslog-ng.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_sources_file">file()</link>
+                        </entry>
+                        <entry>Opens the specified file and reads messages.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_sources_pipe">pipe(), fifo</link>
+                        </entry>
+                        <entry>Opens the specified named pipe and reads messages.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="reference_source_program">program()</link>
+                        </entry>
+                        <entry>Opens the specified application and reads messages from its standard output.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_sources_sunstreams">sun-stream(), sun-streams()</link>
+                        </entry>
+                        <entry>Opens the specified <parameter>STREAMS</parameter> device on Solaris systems and reads incoming messages.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_sources_syslog">syslog()</link>
+                        </entry>
+                        <entry>Listens for incoming messages using the new <link linkend="concepts_message_ietfsyslog">IETF-standard syslog protocol</link>.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_sources_tcpudp">tcp(), tcp6()</link>
+                        </entry>
+                        <entry>Listens on the specified TCP port for incoming messages using the <link linkend="concepts_message_bsdsyslog">BSD-syslog protocol</link> over IPv4 and IPv6 networks, respectively.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_sources_tcpudp">udp(), udp6()</link>
+                        </entry>
+                        <entry>Listens on the specified UDP port for incoming messages using the <link linkend="concepts_message_bsdsyslog">BSD-syslog protocol</link> over IPv4 and IPv6 networks, respectively.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_sources_unixstream">unix-dgram()</link>
+                        </entry>
+                        <entry>Opens the specified unix socket in <parameter>SOCK_DGRAM</parameter> mode and listens for incoming messages.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link linkend="configuring_sources_unixstream">unix-stream()</link>
+                        </entry>
+                        <entry>Opens the specified unix socket in <parameter>SOCK_STREAM</parameter> mode and listens for incoming messages.</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+    <section id="configuring_sources_internal">
+        <title>Collecting internal messages</title>
+        <para>All messages generated internally by syslog-ng use this special source. To collect
+            warnings, errors and notices from syslog-ng itself, include this source in one of
+            your source statements. </para>
+        <synopsis>internal()</synopsis>
+        <para>The syslog-ng application will issue a warning upon startup if none of the defined
+            log paths reference this driver. </para>
+        <example id="example_source_internal">
+            <title>Using the internal() driver</title>
+            <synopsis>source s_local { internal(); };</synopsis>
+        </example>
+        <section id="reference_log_statistics">
+            <title>Log statistics</title>
+            <indexterm>
+                <primary>log statistics</primary>
+            </indexterm>
+            <indexterm>
+                <primary>statistics</primary>
+            </indexterm>
+            <para>Periodically, syslog-ng sends a message containing statistics about the
+                received messages, and about any lost messages since the last such message. It
+                includes a <parameter>processed</parameter> entry for every source and
+                destination, listing the number of messages received or sent, and a
+                    <parameter>dropped</parameter> entry including the IP address of the server
+                for every destination where syslog-ng has lost messages. The
+                    <parameter>center(received)</parameter> entry shows the total number of
+                messages received from every configured sources.</para>
+            <para>The following is a sample log statistics message for a configuration that has
+                a single source (<parameter>s_local</parameter>) and a network and a local file
+                destination (<parameter>d_network</parameter> and
+                <parameter>d_local</parameter>, respectively). All incoming messages are sent to
+                both destinations.</para>
+            <synopsis>Log statistics;
+                dropped='tcp(AF_INET(192.168.10.1:514))=6439',
+                processed='center(received)=234413',
+                processed='destination(d_tcp)=234413',
+                processed='destination(d_local)=234413',
+                processed='source(s_local)=234413'</synopsis>
+            <indexterm>
+                <primary>log statistics</primary>
+                <secondary>on unix-socket</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>message statistics</primary>
+            </indexterm>
+            <indexterm>
+                <primary>message</primary>
+                <secondary>statistics</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>statistics</primary>
+            </indexterm>
+            <para>Log statistics can be also retrieved on-demand using one of the following options:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Use the
+                        <command>socat</command> application: <command>echo STATS | socat -vv
+                        UNIX-CONNECT:/opt/syslog-ng/var/run/syslog-ng.ctl -</command></para>
+                </listitem>
+                <listitem>
+                    <para>If you have an OpenBSD-style
+                    <command>netcat</command> application installed, use the <command>echo STATS |
+                    nc -U var/run/syslog-ng.ctl</command> command. Note that the <command>netcat</command> included in most Linux distributions is a GNU-style version that is not
+                    suitable to query the statistics of syslog-ng.</para>
+                </listitem>
+                <listitem>
+                    <para>Starting from &product; version 3.1, &product; includes the syslog-ng-ctl utility. Use the <command>syslog-ng-ctl stats</command> command.</para>
+                </listitem>
+            </itemizedlist>
+            <para>The statistics include a list of source
+                groups and destinations, as well as the number of processed messages for each.
+                The verbosity of the statistics can be set using the
+                <parameter>stats_level()</parameter> option. See <xref
+                    linkend="reference_options"/> for details. An example output is shown below.</para>
+            <synopsis>src.internal;s_all#0;;a;processed;6445
+src.internal;s_all#0;;a;stamp;1268989330
+destination;df_auth;;a;processed;404
+destination;df_news_dot_notice;;a;processed;0
+destination;df_news_dot_err;;a;processed;0
+destination;d_ssb;;a;processed;7128
+destination;df_uucp;;a;processed;0
+source;s_all;;a;processed;7128
+destination;df_mail;;a;processed;0
+destination;df_user;;a;processed;1
+destination;df_daemon;;a;processed;1
+destination;df_debug;;a;processed;15
+destination;df_messages;;a;processed;54
+destination;dp_xconsole;;a;processed;671
+dst.tcp;d_network#0;10.50.0.111:514;a;dropped;5080
+dst.tcp;d_network#0;10.50.0.111:514;a;processed;7128
+dst.tcp;d_network#0;10.50.0.111:514;a;stored;2048
+destination;df_syslog;;a;processed;6724
+destination;df_facility_dot_warn;;a;processed;0
+destination;df_news_dot_crit;;a;processed;0
+destination;df_lpr;;a;processed;0
+destination;du_all;;a;processed;0
+destination;df_facility_dot_info;;a;processed;0
+center;;received;a;processed;0
+destination;df_kern;;a;processed;70
+center;;queued;a;processed;0
+destination;df_facility_dot_err;;a;processed;0</synopsis>
+            <para>The statistics are semicolon separated; every line contains statistics for a particular object (for example source, destination, tag, etc.). The statistics have the following fields:</para>
+            <orderedlist>
+                <listitem>
+                    <para>The type of the object (for example <parameter>dst.file</parameter>, <parameter>tag</parameter>, <parameter>src.facility</parameter>)</para>
+                </listitem>
+                <listitem>
+                    <para>The ID of the object used in the syslog-ng configuration file, for example <parameter>d_internal</parameter> or <parameter>source.src_tcp</parameter>. The <parameter>#0</parameter> part means that this is the first destination in the destination group.</para>
+                </listitem>
+                <listitem>
+                    <para>The instance ID (destination) of the object, for example the filename of a file destination, or the name of the application for a program source or destination.</para>
+                </listitem>
+                <listitem>
+                    <para>The status of the object. One of the following:</para>
+                    <itemizedlist>
+                        <listitem>
+                            <para><parameter>a</parameter> - active. At the time of quering the statistics, the source or the destination was still alive (it continuously received statistical data).</para>
+                        </listitem>
+                        <listitem>
+                            <para><parameter>d</parameter> - dynamic. Such objects may not be continuously available, for example, like statistics based on the sender's hostname.</para>
+                        </listitem>
+                        <listitem>
+                            <para><parameter>o</parameter> - This object was once active, but stopped receiving messages. (For example a dynamic object may disappear and become orphan.)</para>
+                        </listitem>
+                    </itemizedlist>
+                </listitem>
+                <listitem>
+                    <para>The type of the statistics:</para>
+                    <itemizedlist>
+                        <listitem>
+                            <para><parameter>processed</parameter>: The number of messages that successfully reached their destination.</para>
+                        </listitem>
+                        <listitem>
+                            <para><parameter>dropped</parameter>: The number of dropped messages &mdash; &abbrev; could not send the messages to the destination and the output buffer got full, so messages were lost.</para>
+                        </listitem>
+                        <listitem>
+                            <para><parameter>stored</parameter>: The number of messages stored in the message queue, waiting to be sent to the destination.</para>
+                        </listitem>
+                        <listitem>
+                            <para><parameter>suppressed</parameter>: The number of suppressed messages (if the <parameter>suppress()</parameter> feature is enabled).</para>
+                        </listitem>
+                        <listitem>
+                            <para><parameter>stamp</parameter>: The UNIX timestamp of the last message sent to the destination.</para>
+                        </listitem>
+                    </itemizedlist>
+                </listitem>
+                <listitem>
+                    <para>The number of such messages.</para>
+                </listitem>
+            </orderedlist>
+            <note>
+                <para>Note that certain statistics are available only if the <parameter>stats-level()</parameter> option is set to a higher value.</para>
+            </note>
+        </section>
+    </section>
+    <section id="configuring_sources_file">
+        <title>Collecting messages from text files</title>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>file()</parameter> driver</secondary>
+        </indexterm>
+        <para>Collects log messages from plain-text files, for example from the logfiles of an Apache
+            webserver.</para>
+        <para>The syslog-ng application notices if a file is renamed or replaced with a new
+            file, so it can correctly follow the file even if logrotation is used. When
+            syslog-ng is restarted, it records the position of the last sent log message, and
+            continues to send messages from this position after the restart.</para>
+        <para>The file driver has a single required parameter specifying the file to open. For
+            the list of available optional parameters, see <xref linkend="reference_source_file"
+            />. </para>
+        <synopsis>Declaration:
+            file(filename);</synopsis>
+            <example id="example_source_file">
+                <title>Using the file() driver</title>
+                <synopsis>source s_file { file("/var/log/messages"); };</synopsis>
+            </example>
+            <example>
+                <title>Tailing files</title>
+                <para>The following source checks the <filename>access.log</filename> file every
+                second for new messages.</para>
+                <synopsis>source s_tail { file("/var/log/apache/access.log" 
+    follow_freq(1) flags(no-parse)); };</synopsis>
+        </example>
+        <note>
+            <para>If the message does not have a proper syslog header, syslog-ng treats messages
+                received from files as sent by the <parameter>kern</parameter> facility. Use the
+                    <parameter>default-facility</parameter> and
+                <parameter>default-priority</parameter> options in the source definition to
+                assign a different facility if needed.</para>
+        </note>
+        <para>The kernel usually sends log messages to a special file
+            (<parameter>/dev/kmsg</parameter> on BSDs, <parameter>/proc/kmsg</parameter> on
+            Linux). The <parameter>file()</parameter> driver reads log messages from such files.
+            The syslog-ng application can periodically check the file for new log messages if
+            the <parameter>follow_freq()</parameter> option is set. </para>
+        <note>
+            <para>On Linux, the <parameter>klogd</parameter> daemon can be used in addition to
+                syslog-ng to read kernel messages and forward them to syslog-ng.
+                    <parameter>klogd</parameter> used to preprocess kernel messages to resolve
+                symbols etc., but as this is deprecated by <parameter>ksymoops</parameter> there
+                is really no point in running both <parameter>klogd</parameter> and syslog-ng in
+                parallel. Also note that running two processes reading
+                <filename>/proc/kmsg</filename> at the same time might result in dead-locks. </para>
+            <para>When using syslog-ng to read messages from the <filename>/proc/kmsg</filename>
+                file, syslog-ng automatically disables the <parameter>follow_freq()</parameter>
+                parameter to avoid blocking the file.</para>
+        </note>
+        <section id="reference_source_file">
+            <title>file() source options</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>file()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>file()</parameter> driver has the following options:</para>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_default-facility']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_default-priority']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>          
+            <simplesect>
+                <title>file</title>
+                <indexterm type="parameter">
+                    <primary>file</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>filename with path</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry/>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The file to read messages from. Note that only syslog-ng PE supports wildcards in the filename (but not in the pathname). To monitor the subdirectories as well, use the <parameter><link linkend="source_file_recursive">recursive</link></parameter> option.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_encoding']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_follow_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_keep_timestamp']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>            
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_fetch_limit']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_iw_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_msg_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_prefix']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_optional']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_pad_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_program_override']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect id="source_file_recursive">
+                <title>recursive</title>
+                <indexterm type="parameter">
+                    <primary>recursive</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>yes or no</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>no</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> When enabled, syslog-ng PE monitors every subdirectory of the directory set in the path of the <parameter>file</parameter> parameter, and reads log messages from files with the set filename. The <parameter>recursive</parameter> option can be used together with wildcards in the filename.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_tags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_time_zone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+        </section>
+    </section>
+    <section id="configuring_sources_pipe">
+        <title>Collecting messages from named pipes</title>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>pipe()</parameter> driver</secondary>
+        </indexterm>
+        <para>The pipe driver opens a named pipe with the specified name and listens for
+            messages. It is used as the native message delivery protocol on HP-UX.</para>
+        <para>The pipe driver has a single required parameter, specifying the filename of the
+            pipe to open. For the list of available optional parameters, see <xref
+                linkend="reference_source_pipe"/>.</para>
+        <synopsis>Declaration:
+            pipe(filename);</synopsis>
+        <note>
+            <para>As of syslog-ng Open Source Edition 3.0.2, pipes are created automatically. In
+                earlier versions, you had to create the pipe using the
+                <command>mkfifo(1)</command> command. </para>
+        </note>
+        <para>Pipe is very similar to the <parameter>file()</parameter> driver, but there are a
+            few differences, for example <parameter>pipe()</parameter> opens its argument in
+            read-write mode, therefore it is not recommended to be used on special files like
+                <filename>/proc/kmsg</filename>.</para>
+        <warning>
+            <para>It is not recommended to use <parameter>pipe()</parameter> on anything else
+                than real pipes. </para>
+        </warning>
+        <example id="example_source_pipe">
+            <title>Using the pipe() driver</title>
+            <synopsis>source s_pipe { pipe("/dev/pipe" pad_size(2048)); };</synopsis>
+        </example>
+        <section id="reference_source_pipe">
+            <title>pipe() source options</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>pipe()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>pipe</parameter> driver has the following options:</para>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_follow_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_keep_timestamp']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_fetch_limit']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect> 
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_iw_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>    
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_msg_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_prefix']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_optional']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect> 
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_pad_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <title>pipe</title>
+                <indexterm type="parameter">
+                    <primary>pipe</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>filename with path</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry/>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The filename of the pipe to read messages from.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_program_override']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>      
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_tags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_time_zone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+        </section>
+    </section>
+    <section id="configuring_source_program">
+        <title>Receiving messages from external applications</title>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>program()</parameter> driver</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>reading messages form external applications</primary>
+        </indexterm>
+        <para>The program driver starts an external application and reads messages from the
+            standard output (stdout) of the application. It is mainly useful to receive log
+            messages from daemons that accept incoming messages and convert them to log
+            messages.</para>
+        <para>The program driver has a single required parameter, specifying the name of the
+            application to start.</para>
+        <synopsis>Declaration:
+program(filename);</synopsis>
+        <example id="example_source_program">
+            <title>Using the program() driver</title>
+            <synopsis>source s_program { program("/etc/init.d/mydaemon"); };</synopsis>
+        </example>
+        <note>
+            <para>The program is restarted automatically if it exits.</para>
+        </note>
+        <section id="reference_source_program">
+            <title>program() source options</title>
+            <para>The <parameter>program</parameter> driver has the following options:</para>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_follow_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_keep_timestamp']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_fetch_limit']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>         
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_iw_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_msg_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_prefix']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect> 
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_optional']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_pad_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>       
+            <simplesect>
+                <title>program</title>
+                <indexterm type="parameter">
+                    <primary>program</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>filename with path</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry/>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The name of the application to start and read messages from.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_program_override']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>                
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_tags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_time_zone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+        </section>
+    </section>
+    <section id="configuring_sources_sunstreams">
+        <title>Collecting messages on Sun Solaris</title>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>sun-streams()</parameter> driver</secondary>
+        </indexterm>
+        <para>Solaris uses its <parameter>STREAMS</parameter> framework to send messages to the
+                <parameter>syslogd</parameter> process. Solaris 2.5.1 and above uses an IPC
+            called <emphasis>door</emphasis> in addition to <parameter>STREAMS</parameter>, to
+            confirm the delivery of a message. The syslog-ng application supports the IPC
+            mechanism via the <parameter>door()</parameter> option (see below).</para>
+        <note>
+            <para>The <parameter>sun-streams()</parameter> driver must be enabled when the
+                syslog-ng application is compiled (see <command>./configure --help</command>).</para>
+        </note>
+        <para>The <parameter>sun-streams()</parameter> driver has a single required argument
+            specifying the <parameter>STREAMS</parameter> device to open, and the
+                <parameter>door()</parameter> option. For the list of available optional
+            parameters, see <xref linkend="reference_source_sunstreams"/>.</para>
+        <synopsis>Declaration:
+    sun-streams(name_of_the_streams_device door(filename_of_the_door));</synopsis>
+        <example id="example_source_sunstreams">
+            <title>Using the sun-streams() driver</title>
+            <synopsis>source s_stream { sun-streams("/dev/log" door("/etc/.syslog_door")); };</synopsis>
+        </example>
+        <section id="reference_source_sunstreams">
+            <title>sun-streams() source options</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>sun-streams()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>sun-streams()</parameter> driver has the following options.</para>
+            <simplesect>
+                <title>door()</title>
+                <indexterm type="parameter">
+                    <primary>door()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>none</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> Specifies the filename of a door to open, needed on Solaris above 2.5.1.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>               
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_follow_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_keep_timestamp']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>         
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_fetch_limit']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>   
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_iw_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_msg_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_prefix']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect> 
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_optional']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>   
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_pad_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>          
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_program_override']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>           
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_tags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>     
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_time_zone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+        </section>
+    </section>
+    <section id="configuring_sources_syslog">
+        <title>Collecting messages using the IETF syslog protocol</title>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>syslog()</parameter> driver</secondary>
+        </indexterm>
+        <para>The <parameter>syslog()</parameter> driver enables to receive messages from the
+            network using the new standard syslog protocol and message format (also called
+            IETF-syslog protocol; described in RFC 5424-28, see <xref
+                linkend="concepts_message_ietfsyslog"/>). UDP, TCP, and TLS-encrypted TCP can
+            all be used to transport the messages.</para>
+        <indexterm>
+            <primary>TLS</primary>
+        </indexterm>
+        <para>For the list of available optional parameters, see <xref
+                linkend="reference_source_syslog"/>.</para>
+        <!-- FIXME mi a kotelezo parameter? -->
+        <synopsis>Declaration:
+        syslog(ip() port() transport() options());</synopsis>
+        <example id="example_source_syslog">
+            <title>Using the syslog() driver</title>
+            <para>TCP source listening on the localhost on port 1999.</para>
+            <synopsis>source s_syslog { syslog(ip(127.0.0.1) port(1999) transport("tcp")); };</synopsis>
+            <para>UDP source with defaults.</para>
+            <synopsis>source s_udp { syslog( transport("udp")); };</synopsis>
+            <para>Encrypted source where the client is also authenticated. See <xref linkend="tlsoptions"/> for details on the encryption settings.</para>
+            <synopsis>source s_syslog_tls{ syslog(
+    ip(10.100.20.40)
+    transport("tls")
+    tls(
+    peer-verify(required-trusted)
+    ca_dir('/opt/syslog-ng/etc/syslog-ng/keys/ca.d/')
+    key_file('/opt/syslog-ng/etc/syslog-ng/keys/server_privatekey.pem')
+    cert_file('/opt/syslog-ng/etc/syslog-ng/keys/server_certificate.pem')
+    )
+    );};</synopsis>
+        </example>
+        <section id="reference_source_syslog">
+            <title>syslog() source options</title>
+            <!-- FIXME update ha lesz syslog6 -->
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>syslog()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>TLS</primary>
+            </indexterm>
+            <para>The <parameter>syslog()</parameter> driver has the following options.</para>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_follow_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect> 
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_host_override']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_ip']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_ip_tos']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>      
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_ip_ttl']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>            
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_keep_alive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_keep_hostname']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_keep_timestamp']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_fetch_limit']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_iw_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>    
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_msg_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>  
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_prefix']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>         
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_max_connections']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_optional']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_pad_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_port']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_program_override']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_broadcast']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_rcvbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_sndbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_tags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_tcp_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect> 
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_time_zone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>  
+            <simplesect>
+                <title>transport</title>
+                <indexterm type="parameter">
+                    <primary>transport</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>udp, tcp, or tls</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>tcp</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> Specifies the protocol used to receive messages from the source.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_tls']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_use_dns']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_use_fqdn']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>  
+        </section>
+    </section>
+    <section id="configuring_sources_tcpudp">
+        <title>Collecting messages from remote hosts using the BSD syslog protocol</title>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>tcp()</parameter> driver</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>tcp6()</parameter> driver</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>udp()</parameter> driver</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>udp6()</parameter> driver</secondary>
+        </indexterm>
+        <para>The <parameter>tcp()</parameter>, <parameter>tcp6()</parameter>,
+            <parameter>udp()</parameter>, <parameter>udp6()</parameter> drivers can receive
+            syslog messages conforming to RFC3164 from the network using the TCP and UDP networking protocols. The
+                <parameter>tcp6()</parameter> and <parameter>udp6()</parameter> drivers use the
+            IPv6 network protocol, while <parameter>tcp()</parameter> and
+            <parameter>udp()</parameter> use IPv4.</para>
+        <para>UDP is a simple datagram oriented protocol, which provides "best effort service"
+            to transfer messages between hosts. It may lose messages, and no attempt is made at
+            the protocol level to retransmit such lost messages. The <emphasis>
+                <link linkend="concepts_message_bsdsyslog">BSD-syslog</link>
+            </emphasis> protocol traditionally uses UDP.</para>
+        <para>TCP provides connection-oriented service, which basically means that the path of
+            the messages is flow-controlled. Along this path, each message is acknowledged, and
+            retransmission is done for lost packets. Generally it is safer to use TCP, because
+            lost connections can be detected, and no messages get lost, assuming that the TCP
+            connection does not break. When a TCP connection is broken the 'in-transit' messages
+            that were sent by syslog-ng but not yet received on the other side are lost.
+            (Basically these messages are still sitting in the socket buffer of the sending host
+            and syslog-ng has no information about the fate of these messages). </para>
+        <para>The <parameter>tcp()</parameter> and <parameter>udp()</parameter> drivers do not
+            have any required parameters. By default they bind to the
+            <parameter>0.0.0.0:514</parameter> address, which means that syslog-ng will listen
+            on all available interfaces, port 514. To limit accepted connections to only one
+            interface, use the <parameter>localip()</parameter> parameter as described below.
+            For the list of available optional parameters, see <xref
+                linkend="reference_source_tcpudp"/>.</para>
+        <synopsis>Declaration:
+            tcp([options]);
+            udp([options]);</synopsis>
+        <note>
+            <para>The tcp port 514 is reserved for use with <command>rshell</command>, so select
+                a different port if syslog-ng and <command>rshell</command> is used at the same
+                time. </para>
+        </note>
+        <para>If you specify a multicast bind address to <parameter>udp()</parameter> and
+                <parameter>udp6()</parameter>, syslog-ng will automatically join the necessary
+            multicast group. TCP does not support multicasting. </para>
+        <para>The syslog-ng application supports TLS (Transport Layer Security,
+            also known as SSL) for the tcp() and tcp6() drivers. See the TLS-specific options
+            below and <xref linkend="tls_serverauth"/> for details. For the list of available
+            optional parameters, see <xref linkend="reference_source_tcpudp"/>.</para>
+        <tip>
+            <para>The <parameter>syslog()</parameter> driver also supports TLS-encrypted connections.</para>
+        </tip>
+        <indexterm>
+            <primary>TLS</primary>
+        </indexterm>
+        <example id="example_source_tcpudp">
+            <title>Using the udp() and tcp() drivers</title>
+            <para>A simple udp() source with default settings.</para>
+            <synopsis>source s_udp { udp(); };# An UDP source with default settings.</synopsis>
+            <para>A TCP source listening on the localhost interface, with a limited number of
+            connections allowed.</para>
+            <synopsis>source s_tcp { tcp(ip(127.0.0.1) port(1999) max-connections(10)); };</synopsis>
+            <para>A TCP source listening on a TLS-encrypted channel.</para>
+            <synopsis>source s_tcp { tcp(ip(127.0.0.1) port(1999) 
+           tls(peer-verify('required-trusted') 
+               key_file('/opt/syslog-ng/etc/syslog-ng/syslog-ng.key') 
+           cert_file('/opt/syslog-ng/etc/syslog-ng/syslog-ng.crt'))); 
+};</synopsis>
+            <para>A TCP source listening for messages using the IETF-syslog message format. Note
+            that for transferring IETF-syslog messages, generally you are recommended to use
+            the <parameter>syslog()</parameter> driver on both the client and the server, as
+            it uses both the IETF-syslog message format and the protocol. See <xref
+                linkend="configuring_sources_syslog"/> for details.</para>
+            <synopsis>source s_tcp_syslog { tcp(ip(127.0.0.1) port(1999) flags(syslog-protocol) ); };</synopsis>
+        </example>
+        <section id="reference_source_tcpudp">
+            <title>tcp(), tcp6(), udp() and udp6() source options</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>tcp()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>tcp6()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>udp()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>udp6()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>tcp()</parameter>, <parameter>tcp6()</parameter>,
+                <parameter>udp()</parameter>, <parameter>udp6()</parameter> drivers can receive
+                messages conforming to RFC3164 from the network using the TCP and UDP networking protocols.</para>
+            <para>The following options are valid for <parameter>tcp()</parameter>,
+                    <parameter>tcp6()</parameter>, <parameter>udp()</parameter>, and
+                    <parameter>udp6()</parameter> drivers: </para>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_encoding']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_follow_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_host_override']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_ip']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_ip_tos']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_ip_ttl']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_keep_alive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_keep_hostname']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_keep_timestamp']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_fetch_limit']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_iw_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_msg_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_prefix']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_max_connections']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_pad_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_port']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_program_override']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_broadcast']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_rcvbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_sndbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_tcp_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_tags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>      
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_time_zone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_tls']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_use_dns']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>   
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_use_fqdn']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+        </section>
+    </section>
+    <section id="configuring_sources_unixstream">
+        <title>Collecting messages from UNIX domain sockets</title>
+        <para>The <parameter>unix-stream()</parameter> and <parameter>unix-dgram()</parameter>
+            drivers open an <parameter>AF_UNIX</parameter> socket and start listening on it for
+            messages. The <parameter>unix-stream()</parameter> driver is primarily used on Linux
+            and uses <parameter>SOCK_STREAM</parameter> semantics (connection oriented, no
+            messages are lost); while <parameter>unix-dgram()</parameter> is used on BSDs and
+            uses <parameter>SOCK_DGRAM</parameter> semantics: this may result in lost local
+            messages if the system is overloaded. </para>
+        <para>To avoid denial of service attacks when using connection-oriented protocols, the
+            number of simultaneously accepted connections should be limited. This can be
+            achieved using the <parameter>max-connections()</parameter> parameter. The default
+            value of this parameter is quite strict, you might have to increase it on a busy
+            system. </para>
+        <para>Both unix-stream and unix-dgram have a single required argument that specifies the
+            filename of the socket to create. For the list of available optional parameters, see
+                <xref linkend="reference_source_unixstream"/></para>
+        <synopsis>Declaration: 
+            unix-stream(filename [options]);
+            unix-dgram(filename [options]);</synopsis>
+        <note>
+            <para><parameter>syslogd</parameter> on Linux originally used
+                <parameter>SOCK_STREAM</parameter> sockets, but some distributions switched to
+                    <parameter>SOCK_DGRAM</parameter> around 1999 to fix a possible DoS problem.
+                On Linux you can choose to use whichever driver you like as syslog clients
+                automatically detect the socket type being used. </para>
+        </note>
+        <para>The difference between the unix-stream and unix-dgram drivers is similar to the
+            difference between the TCP and UDP network protocols. Use the following guidelines
+            to select which driver to use in a particular situation:</para>
+        <para>Choose unix-stream if you would choose TCP (stream) instead of UDP (datagram). The
+            unix-stream driver offers the following features:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Increased reliability</para>
+            </listitem>
+            <listitem>
+                <para>Ordered delivery of messages</para>
+            </listitem>
+            <listitem>
+                <para>Client-side notification of failures</para>
+            </listitem>
+        </itemizedlist>
+        <para>Choose unix-dgram if you would choose TCP (stream) over UDP (datagram). The
+            unix-dgram driver offers the following features:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Decreased possibility of Dos by opening too many connections (a local
+                    vulnerability)</para>
+            </listitem>
+            <listitem>
+                <para>Less overhead</para>
+            </listitem>
+        </itemizedlist>
+        <para>However, the client does not notice if a message is lost when using the unix-dgram
+            driver.</para>
+        <example id="example_source_unixstream">
+            <title>Using the unix-stream() and unix-dgram() drivers</title>
+            <synopsis>source s_stream { unix-stream("/dev/log" max-connections(10)); };</synopsis>
+            <synopsis>source s_dgram { unix-dgram("/var/run/log"); };</synopsis>
+        </example>
+        <section id="reference_source_unixstream">
+            <title>unix-stream() and unix-dgram() source options</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>unix-stream()</parameter> driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>unix-dgram()</parameter> driver</secondary>
+            </indexterm>
+            <para>These two drivers behave similarly: they open an <parameter>AF_UNIX</parameter>
+                socket and start listening on it for messages. The following options can be specified for these divers:</para>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_encoding']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_follow_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>        
+            <simplesect>
+                <title>group()</title>
+                <indexterm type="parameter">
+                    <primary>group()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>root</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> Set the gid of the socket.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_host_override']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <title>keep-alive()</title>
+                <indexterm type="parameter">
+                    <primary>keep-alive()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>yes or no</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>yes</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> Selects whether to keep connections open when syslog-ng is restarted; cannot be used with <parameter>unix-dgram()</parameter>.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_keep_timestamp']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>          
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_fetch_limit']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_iw_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>      
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_msg_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>         
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_prefix']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <title>max-connections()</title>
+                <indexterm type="parameter">
+                    <primary>max-connections()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>number</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>256</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> Limits the number of simultaneously open connections. Cannot be
+                                used with <parameter>unix-dgram()</parameter>.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_optional']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <title>owner()</title>
+                <indexterm type="parameter">
+                    <primary>owner()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>root</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> Set the uid of the socket.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_pad_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <title>perm()</title>
+                <indexterm type="parameter">
+                    <primary>perm()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>number</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>0666</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> Set the permission mask. For octal numbers prefix the number with '0', for example: use 0755 for rwxr-xr-x.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_program_override']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_broadcast']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>             
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_rcvbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_sndbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_tags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_time_zone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+        </section>
+    </section>
+</chapter>
