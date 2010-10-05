@@ -1,5 +1,5 @@
-PDF_OUTPUTS = syslog-ng-ose-v3.1-guide-admin-en.pdf
-HTML_OUTPUTS = syslog-ng-ose-v3.1-guide-admin-en.html
+PDF_OUTPUTS = syslog-ng-ose-v3.2-guide-admin-en.pdf
+HTML_OUTPUTS = syslog-ng-ose-v3.2-guide-admin-en.html
 
 MANSOURCES=$(wildcard other/*.[0-9].xml)
 MANPAGES=$(subst other/,out/man/,$(subst .xml,,$(MANSOURCES)))
@@ -22,14 +22,14 @@ html: $(addsuffix /index.html,$(addprefix out/,$(HTML_OUTPUTS)))
 
 pdf: $(addprefix out/,$(PDF_OUTPUTS))
 
-syslog-ng-ose-v3.1-guide-admin-en.pdf: out/syslog-ng-ose-v3.1-guide-admin-en.pdf
+syslog-ng-ose-v3.2-guide-admin-en.pdf: out/syslog-ng-ose-v3.2-guide-admin-en.pdf
 
-syslog-ng-ose-v3.1-guide-admin-en.html: out/syslog-ng-ose-v3.1-guide-admin-en.html/index.html
+syslog-ng-ose-v3.2-guide-admin-en.html: out/syslog-ng-ose-v3.2-guide-admin-en.html/index.html
 
-out/syslog-ng-ose-v3.1-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/chapters/*.xml
+out/syslog-ng-ose-v3.2-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/chapters/*.xml
 	xml-stylesheet/pdf/process-profile $< $@ syslog-ng
         
-out/syslog-ng-ose-v3.1-guide-admin-en.html/index.html: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/*.xml syslog-ng-admin-guide/chapters/*.xml
+out/syslog-ng-ose-v3.2-guide-admin-en.html/index.html: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/*.xml syslog-ng-admin-guide/chapters/*.xml
 	mkdir -p out/syslog-ng-ose-v3.1-guide-admin-en.html
 	xml-stylesheet/html/process-profile $< $@ syslog-ng
 	./copy-pngs.sh out/syslog-ng-ose-v3.1-guide-admin-en.html TRUE
