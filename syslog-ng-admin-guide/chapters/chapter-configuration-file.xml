@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  
+<!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]> 
+<chapter id="chapter-configuration-file">
+    <title>The &abbrev; configuration file</title>
+    <section id="configuration-syntax">
+        <title>The configuration syntax in detail</title>
+        <section id="config_file">
+            <title>The syslog-ng configuration file</title>
+            <indexterm significance="preferred">
+                <primary>syslog-ng.conf</primary>
+            </indexterm>
+            <para>The syslog-ng application is configured by editing the
+                <filename>syslog-ng.conf</filename> file. Use any regular text editor application to
+                modify the file. The precompiled syslog-ng packages include sample configuration files
+                as well.</para>
+            <para>Every syslog-ng configuration file must begin with a line containing the version
+                information of syslog-ng. For syslog-ng version &version;, this line looks like:</para>
+            <synopsis>@version:&version;</synopsis>
+            <para>Versioning the configuration file was introduced in syslog-ng 3.0. If the configuration file does not contain the version information, syslog-ng assumes
+                that the file is for syslog-ng version 2.x. In this case it interprets the configuration
+                and sends warnings about the parts of the configuration that should be updated. Version
+                3.0 and later will correctly operate with configuration files of version 2.x, but the
+                default values of certain parameters have changed since 3.0.</para>
+            <para>All identifiers, option names and attributes, and any other strings used in the
+                syslog-ng configuration file are case sensitive. Objects must be defined before they are
+                referenced in another statement.</para>
+            <example>
+                <title>A simple configuration file</title>
+                <para>The following is a very simple configuration file for syslog-ng: it collects the
+                    internal messages of syslog-ng and the messages from <parameter>/dev/log</parameter>
+                    into the <filename>/var/log/messages_syslog-ng.log</filename> file.</para>
+                <synopsis>@version:&version;
+source s_local { unix-stream("/dev/log"); internal(); };
+destination d_file {file("/var/log/messages_syslog-ng.log"); };
+log { source(s_local); destination(d_file); };</synopsis>
+            </example>
+            <tip>
+                <para>Before activating a new configuration, check that your configuration file is
+                    syntactically correct using the <command>syslog-ng --syntax-only</command> command.</para>
+                <para>To activate the configuration, reload the configuration of syslog-ng using the
+                        <command>/etc/init.d/syslog-ng reload</command> command.</para>
+            </tip>
+            <para>The <filename>syslog-ng.conf</filename> file is
+                located under the <filename>/opt/syslog-ng/etc/</filename> directory.</para>
+            <note>
+                <para>Earlier versions of &abbrev; stored the configuration file in
+                    different directories, depending on the platform; typically under
+                        <filename>/etc/syslog-ng/</filename>.</para>
+            </note>
+    </section>
+    <section id="defining_global_objects">
+        <title>Defining global objects</title>
+        <indexterm>
+            <primary>global objects</primary>
+            <secondary>defining</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>defining global objects</primary>
+        </indexterm>
+        <para id="global_objects_para1">Global objects (for example sources, destinations, log paths, or
+            filters) are defined in the syslog-ng configuration file. Object definitions consist of
+            the following elements: </para>
+        <itemizedlist id="global_objects_syntax">
+            <listitem>
+                <para><emphasis>Type of the object</emphasis>: One of <parameter>source</parameter>,
+                        <parameter>destination</parameter>, <parameter>log</parameter>,
+                        <parameter>filter</parameter>, <parameter>parser</parameter>,
+                        <parameter>rewrite</parameter> rule, or
+                <parameter>template</parameter>.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Identifier of the object</emphasis>: A unique name identifying the
+                    object. When using a reserved word as an identifier, enclose the identifier in
+                    quotation marks.</para>
+                <tip>
+                    <para>Use identifiers that refer to the type of the object they identify. For
+                        example, prefix source objects with <parameter>s_</parameter>, destinations
+                        with <parameter>d_</parameter>, and so on. </para>
+                </tip>
+            </listitem>
+            <listitem>
+                <para><emphasis>Parameters</emphasis>: The parameters of the object, enclosed in
+                    braces <parameter>{parameters}</parameter>.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Semicolon</emphasis>: Object definitions end with a semicolon
+                        (<parameter>;</parameter>).</para>
+            </listitem>
+        </itemizedlist>
+        <para id="global_objects_para2">The syntax is summarized as follows:</para>
+        <synopsis>type identifier { parameters };</synopsis>
+        <para>Objects have parameters; some of them are required, others are optional. Required
+            parameters are positional, meaning that they must be specified in a defined order.
+            Optional arguments can be specified in any order using the
+            <literal>option(value)</literal> format. If a parameter (optional or required) is not
+            specified, its default value is used. The parameters and their default values are listed
+            in the reference section of the particular object. See <xref linkend="chapter_reference"
+            /> for details.</para>
+        <example>
+            <title>Using required and optional parameters</title>
+            <para>The <parameter>unix-stream()</parameter> source driver has a single required
+                argument: the name of the socket to listen on. Optional parameters follow the socket
+                name in any order, so the following source definitions have the same effect: </para>
+            <synopsis>source s_demo_stream1 { 
+        unix-stream("/dev/log" max-connections(10) group(log)); };
+source s_demo_stream2 { 
+        unix-stream("/dev/log" group(log) max-connections(10)); };</synopsis>
+        </example>
+        <para>To add comments to the configuration file, start a line with <parameter>#</parameter>
+            and write your comments. These lines are ignored by syslog-ng.</para>
+        <synopsis># Comment: This is a stream source
+source s_demo_stream { 
+        unix-stream("/dev/log" max-connections(10) group(log)); };</synopsis>
+        </section>
+        <section id="configfile_syntax">
+            <title>Notes about the configuration syntax</title>
+            <para>When you are editing the syslog-ng configuration file, note the following points:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>When writing the names of options and parameters (or other reserved
+                        words), the hyphen (<parameter>-</parameter>) and underscore
+                        (<parameter>_</parameter>) characters are equivalent, for example
+                            <parameter>max-connections(10)</parameter> and
+                            <parameter>max_connections(10)</parameter> are both correct.</para>
+                </listitem>
+                <listitem>
+                    <para>Number can be prefixed with <parameter>+</parameter> or
+                        <parameter>-</parameter> to indicate positive or negative values. Numbers
+                        beginning with zero (<parameter>0</parameter>) or <parameter>0x</parameter>
+                        are treated as octal or hexadecimal numbers, respectively.</para>
+                </listitem>
+                <listitem>
+                    <para>You can use commas (<parameter>,</parameter>) to separate options or other
+                        parameters for readability; syslog-ng completely ignores them. The following
+                        declarations are equivalent:</para>
+                    <synopsis>source s_demo_stream { 
+        unix-stream("/dev/log" max-connections(10) group(log)); };</synopsis>
+                    <synopsis>source s_demo_stream { 
+        unix-stream("/dev/log", max-connections(10), group(log)); };</synopsis>
+                </listitem>
+                <listitem>
+                    <para>Strings between single quotes (<parameter>'string'</parameter>) are
+                        treated literally, you do not have to escape special characters. This makes
+                        writing and reading regular expressions much more simple: it is recommended
+                        to use single quotes when writing regular expressions.</para>
+                </listitem>
+                <listitem>
+                    <para>When enclosing strings between double-quotes
+                        (<parameter>"string"</parameter>), you have to escape special characters:
+                        for example when enclosing a regular expression that uses the
+                        <parameter>\</parameter> character to escape a special character, you have
+                        to add an extra <parameter>\</parameter> (for example
+                        <parameter>"\\n"</parameter>). It is recommended to use single quotes
+                        instead.</para>
+                </listitem>
+                <listitem>
+                    <para>Enclosing normal strings between double-quotes
+                        (<parameter>"string"</parameter>) is not necessary, you can just omit the
+                        double-quotes. For example when writing filters,
+                        <parameter>match("sometext")</parameter> and
+                        <parameter>match(sometext)</parameter> will both match for the
+                            <parameter>sometext</parameter> string.</para>
+                </listitem>
+                <listitem>
+                    <para>When enclosing object IDs (for example the name of a destination) between
+                        double-quotes (<parameter>"mydestination"</parameter>), the ID can include
+                        whitespace as well, for example:</para>
+                    <synopsis>source "s demo stream" { 
+        unix-stream("/dev/log" max-connections(10) group(log)); };</synopsis>
+                </listitem>
+            </itemizedlist>
+        </section>
+    </section>
+    <section>
+        <title>Managing large syslog-ng configurations</title>
+        <!-- FIXME jumplist -->
+        <section id="including-config-files">
+            <title>Including configuration files</title>
+            <indexterm>
+                <primary>syslog-ng.conf</primary>
+                <secondary>includes</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>configuration file</primary>
+                <secondary>including other files</secondary>
+            </indexterm>
+            <para>The syslog-ng application supports including external files in its configuration
+                file, so parts of its configuration can be managed separately. To include the
+                contents of a file in the syslog-ng configuration, use the following syntax</para>
+            <synopsis>include "filename";</synopsis>
+            <para>This imports the entire file into the configuration of syslog-ng, at the location
+                of the include statement. If you specify a directory, syslog-ng will try to include
+                every file in alphabetic order. When including configuration files, consider the
+                following points:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>If an object is defined twice (for example the original syslog-ng configuration
+                        file and the file imported into this configuration file both define the same
+                        option, source, or other object), then the object that is defined later in
+                        the configuration file will be effective. For example, if you set a global
+                        option at the beginning of the configuration file, and later include a file
+                        that defines the same option with a different value, then the option defined
+                        in the imported file will be used.</para>
+                </listitem>
+                <listitem>
+                    <para>Files can be embedded into each other: the included files can contain
+                        include statements as well, up to a maximum depth of 15 levels.</para>
+                </listitem>
+                <listitem>
+                    <para>Include statements can only be used at top level of the configuration
+                        file. For example, the following is correct:</para>
+                    <synopsis>@version:&version;
+include "example.conf";</synopsis>
+                    <para>But the following is not:</para>
+                    <synopsis>source s_example {
+    include "example.conf"
+     };</synopsis>
+                </listitem>
+            </itemizedlist>
+            <warning>
+                <para>The syslog-ng application will not start if it cannot find a file that is to
+                    be included in its configuration. Always double-check the filenames, paths, and
+                    access rights when including configuration files, and use the
+                        <command>--syntax-only</command> command-line option to check your
+                    configuration.</para>
+            </warning>
+        </section>
+        <section id="config-blocks">
+            <title>Reusing configuration blocks</title>
+            <indexterm>
+                <primary>configuration snippets</primary>
+            </indexterm>
+            <indexterm>
+                <primary>reusing snippets</primary>
+            </indexterm>
+            <para>Starting with &abbrev; 3.2, parts of a configuration file can be easily reused, you have to define the block (for example, a source) once, and reference it later. Any syslog-ng object can be a block. Use the following syntax to define a block:</para>
+            <synopsis>block type name (&lt;contents of the block&gt;)</synopsis>
+            <para>For example, the elements of the <link linkend="FIXME">Source Configuration Library (SCL)</link> are configurations blocks. Blocks may be nested into each other, so for example an SCL may be built from other blocks.</para>
+            <para>To use a block in your configuration file, you have to do two things:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Include the file defining the block in the <filename>syslog-ng.conf</filename> file &mdash; or a file already included into <filename>syslog-ng.conf</filename>.</para>
+                </listitem>
+                <listitem>
+                    <para>Reference the name of the block in your configuration file. This will insert the block into your configuration. For example, to use a block called <parameter>myblock</parameter>, include the following line in your configuration:</para>
+                    <synopsis>myblock()</synopsis>
+                </listitem>
+            </itemizedlist>
+            <example id="example-configuration-block">
+                <title>Reusing configuration blocks</title>
+                <para>Suppose you are running an application on your hosts that logs into the <filename>/opt/var/myapplication.log</filename> file. Create a file (for example, <filename>myblocks.conf</filename>) that stores a source describing this file and how it should be read:</para>
+                <synopsis>block source myappsource { file("/opt/var/myapplication.log" 
+        follow_freq(1) default-facility(syslog)); };</synopsis>
+                <para>Include this file in your main syslog-ng configuration file,reference the block, and use it in a logpath:</para>
+                <synopsis>@version:&version;
+include "&lt;correct/path&gt;/myblocks.conf";
+source s_myappsource myappsource()
+...
+log { source(s_myappsource); destination(…); };</synopsis>
+            </example>
+            <tip>
+                <para>Since the block is inserted into the &abbrev; configuration when &abbrev; is started, the block can be generated dynamically using an external script if needed. This is useful when you are running &abbrev; on different hosts and you want to keep the main configuration identical.</para>
+                <para>If you want to reuse more than a single configuration object, for example, a logpath and the definitions of its sources and destinations, use the include feature to reuse the entire snippet. For details, see <xref linkend="including-config-files"/>.</para>
+            </tip>
+        </section>
+    </section>
+</chapter>
