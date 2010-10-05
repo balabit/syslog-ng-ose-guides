@@ -174,7 +174,44 @@ source s_demo_stream {
             </itemizedlist>
         </section>
     </section>
-    <section>
+    <section id="config-global-variables">
+        <title>Global and environmental variables</title>
+        <indexterm>
+                <primary>syslog-ng.conf</primary>
+                <secondary>global variables</secondary>
+        </indexterm>
+        <indexterm>
+                <primary>syslog-ng.conf</primary>
+                <secondary>environmental variables</secondary>
+        </indexterm>
+        <indexterm>
+                <primary>environmental variables</primary>
+        </indexterm>
+        <indexterm>
+                <primary>global variables</primary>
+        </indexterm>
+        <para>Starting with &abbrev; version 3.2, it is possible to define global variables in the configuration file. Global variables are actually <parameter>name-value</parameter> pairs; when syslog-ng processes the configuration file during startup, it automatically replaces <parameter>´name´</parameter> with <parameter>value</parameter>. To define a global variable, use the following syntax:</para>
+        <synopsis>@define name "value"</synopsis>
+        <para>To use the variable, insert the name of the variable enclosed between backticks (<parameter>´</parameter>, similarly to using variables in Linux shells) anywhere in the configuration file.</para>
+        <tip>
+            <para>The environmental variables of the host are automatically imported and can be used as global variables.</para>
+        </tip>
+        <example id="example-global-variables">
+            <title>Using global variables</title>
+            <para>For example, if an application is creating multiple log files in a directory, you can store the path in a global variable, and use it in your source definitions.</para>
+            <synopsis>@define mypath "/opt/myapp/logs"
+        source s_myapp_1 { file("´mypath´/access.log" follow_freq(1)); };
+        source s_myapp_2 { file("´mypath´/error.log" follow_freq(1)); };
+        source s_myapp_3 { file("´mypath´/debug.log" follow_freq(1)); };</synopsis>
+            <para>The &abbrev; application will interpret this as:</para>
+            <synopsis>@define mypath "/opt/myapp/logs"
+        source s_myapp_1 { file("/opt/myapp/logs/access.log" follow_freq(1)); };
+        source s_myapp_2 { file("/opt/myapp/logs/error.log" follow_freq(1)); };
+        source s_myapp_3 { file("/opt/myapp/logs/debug.log" follow_freq(1)); };</synopsis>
+        </example>
+        <!-- FIXME Value-ra milyen megkotesek vannak? Karakter, hossz, stb. -->
+    </section>
+    <section id="large-configs">
         <title>Managing large syslog-ng configurations</title>
         <!-- FIXME jumplist -->
         <section id="including-config-files">
