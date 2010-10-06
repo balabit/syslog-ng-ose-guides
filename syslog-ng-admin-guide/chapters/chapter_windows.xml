@@ -72,6 +72,9 @@
                     <para>Microsoft Windows Server 2003</para>
                 </listitem>
                 <listitem>
+                    <para>Microsoft Windows 2000</para>
+                </listitem>
+                <listitem>
                     <para>Microsoft Windows XP</para>
                 </listitem>
                 <listitem>
@@ -88,6 +91,9 @@
                 <para>The &agent; application supports the XML-based eventlog used format on
                     Microsoft Windows Vista and Microsoft Windows Server 2008, and Windows 7, and
                     also offers full support for 64-bit operating systems.</para>
+            </note>
+            <note>
+                <para>Managing &agentabbrev; from a Windows 2000 domain controller is not supported.</para>
             </note>
         </section>
     </chapter>
@@ -124,7 +130,14 @@
                 possible to use an XML-based configuration file. For details, see <xref
                     linkend="windows_xml_config"/>.</para>
         </note>
-            <procedure id="windows_install_standalone">
+        <formalpara><title>Installer types:</title><para/></formalpara>
+        <itemizedlist>
+            <listitem><para><filename>syslog-ng-agent-&lt;version&gt;-setup.exe</filename> is the general installer. This installs an agent that can be configured with a local configuration, XML configuration file and can receive configuration from domain group policy.</para></listitem>
+            <listitem><para><filename>syslog-ng-agent-nosnapin-&lt;version&gt;-setup.exe</filename> is a special installer. .NET environment is not required for it. This installs an agent that can only be configured with an XML configuration file, and can receive configuration from domain group policy.</para></listitem>
+            <listitem><para><filename>syslog-ng-agent-setup-&lt;version&gt;-&lt;amd64/i386&gt;.msi</filename> is an MSI installer for domain clients, installing with group policy.</para></listitem>
+        </itemizedlist>
+        
+        <procedure id="windows_install_standalone">
                 <title>Installing the &agentabbrev; in standalone mode</title>
                 <indexterm>
                 <primary>syslog-ng agent</primary>
@@ -237,10 +250,6 @@
                             <guilabel>Property</guilabel>, and change the value of the
                             <guilabel>SENDOLDMESSAGES</guilabel> field to
                         <parameter>yes</parameter>.</para>
-                    <para>Alternatively, you can also create an XML configuration file for the
-                        agent, and configure it to send the old messages. For details on using an
-                        XML-based configuration file for the installation, see <xref
-                            linkend="windows_xml_config"/>.</para>
                 </note>
                 <formalpara>
                     <title>Steps:</title>
@@ -316,7 +325,7 @@
             </procedure>
         </section>
         <section id="windows_install_silent">
-            <title>Unattended installation</title>
+            <title>Silent installation</title>
             <para>The &agent; application can be installed in silent mode as well, without requiring
                 any user interaction. The various installer options can be specified as command-line
                 options. The following options are available:</para>
@@ -324,8 +333,8 @@
                 <varlistentry>
                     <term><command>/S</command></term>
                     <listitem>
-                        <para>Start the installer in unattended mode. This option is required for
-                            the unattended installation.</para>
+                        <para>Start the installer in silent mode. This option is required for
+                            the silent installation.</para>
                     </listitem>
                 </varlistentry>
                 <varlistentry>
@@ -357,7 +366,7 @@
                     <term><command>/SENDOLDMSGS=</command></term>
                     <listitem>
                         <para>If set to <parameter>YES</parameter>, the &agentabbrev; will forward
-                            every message available in its message sources. By default, only new
+                            every message available in its message sources. By default, it is <parameter>FALSE</parameter>, meaning that only new
                             messages are forwarded.</para>
                     </listitem>
                 </varlistentry>
@@ -396,7 +405,7 @@
             </note>
             <itemizedlist>
                 <listitem>
-                    <para>If a host is running the syslog-ng agent in standalone mode, download and
+                    <para>If a host is running &agentabbrev; in standalone mode, download and
                         execute the
                             <filename>syslog-ng-agent-&lt;versionnumber&gt;-setup.exe</filename>
                         installer on the host and verify that the displayed information is correct.
@@ -404,7 +413,7 @@
                         window.</para>
                 </listitem>
                 <listitem>
-                    <para>If a domain host is running the syslog-ng agent that was installed by the
+                    <para>If a domain host is running the &agentabbrev; that was installed by the
                         domain controller from the <parameter>.msi</parameter> installer package,
                         complete the steps described in <xref
                             linkend="windows_install_domain_controller"/>. The system will
@@ -412,7 +421,7 @@
                         for Windows application.</para>
                 </listitem>
                 <listitem>
-                    <para>If a domain host is running the syslog-ng agent that was installed
+                    <para>If a domain host is running the &agentabbrev; that was installed
                         manually from the
                             <filename>syslog-ng-agent-nosnapin-&lt;versionnumber&gt;-setup.exe</filename>
                         file, run the new
@@ -420,6 +429,9 @@
                         file on the host. After the installation is complete, select <guilabel>Start
                             > Run</guilabel> and execute the <command>gpupdate</command> command to
                         refresh the domain settings of the agent.</para>
+                </listitem>
+                <listitem>
+                    <para>If &agentabbrev; has been installed with an XML configuration file with <filename>syslog-ng-agent-&lt;versionnumber&gt;-setup.exe</filename> or <filename>syslog-ng-agent-nosnapin-&lt;versionnumber&gt;-setup.exe</filename>, download and execute the same installer. It will display the previous XML configuration file, and upgrades it if desired.</para>
                 </listitem>
             </itemizedlist>
         </section>
@@ -525,6 +537,9 @@
                                 <xref linkend="windows_inheritance"/>.</para>
                     </listitem>
                 </itemizedlist>
+                <note>
+                    <para>Managing &agentabbrev; from a Windows 2000 domain controller is not supported.</para>
+                </note>
                 <procedure id="windows_configure_domain_hosts">
                     <title>Configuring the &agentabbrev;s of the domain hosts</title>
                     <indexterm>
@@ -628,21 +643,27 @@
                         <primary>syslog-ng Agent</primary>
                         <secondary>inheriting settings</secondary>
                     </indexterm>
-                    <para>Group policies for the syslog-ng Agent can be specified at different
-                        levels, for example at the domain level, at the organization unit level, at
-                        the computer level, or also as a local policy of the computer. When
-                        evaluating its configuration settings, the syslog-ng Agent follows the
-                        standard policy-inheritance methods of Windows. If the configuration of the
-                        syslog-ng Agent is specified at multiple levels (for example on the domain
-                        level and also at the computer level), then the more specific (or lower
-                        level) setting is used (that is, the computer level in the above example).
-                        If a setting is not configured at a level, the setting of the next higher
-                        level is used (for example if something is not configured on the computer
-                        level, then the setting of the organization unit &mdash; or if it is not
-                        specified in the policy of organization unit, then the setting of the domain
-                        policy &mdash; is used). If a setting is not configured in any group policy,
-                        the syslog-ng Agent checks its local policy settings, and uses the local
-                        setting if available.</para>
+                    <para>The &agentabbrev; follows the standard policy-inheritance methods of Windows:</para>
+                    <para>GPOs (Group Policy Objects) from parent containers are inherited by default. When multiple GPOs apply to these computers, the settings in the GPOs are aggregated. The final value of a given policy setting is set only by the highest precedent GPO that contains the setting. (However, the final value for a few settings will actually be the combination of values across GPOs.) In this processing order, sites are applied first, but have the least precedence. OUs (Organization Units) are processed last, but have the highest precedence.</para>
+                    <para>When multiple group policy objects are assigned, the group policies are applied in the following order:</para>
+                    <orderedlist>
+                        <listitem><para>The local group policy object is applied.</para></listitem>
+                        <listitem><para>The group policy objects linked to sites are applied. If multiple GPOs exist for a site, they are applied in the order specified by the administrator.</para></listitem>
+                        <listitem><para>GPOs linked to the domains are applied in the specified order.</para></listitem>
+                        <listitem><para>GPOs linked to OUs are applied. The OU group policy objects are set from the largest to the smallest organizational unit; that is, first the parent OU and then the child OU. By default, a policy applied later overwrites a policy that was applied earlier. Hence, the settings in a child OU can override the settings in the parent OU.</para></listitem>
+                        <listitem><para>If any group policy is not configured, the syslog-ng Agent checks its local policy settings, and uses the local setting if available.</para></listitem>
+                    </orderedlist>
+                    <para>The following are the rules regarding group policy settings inheritance:</para>
+                    <itemizedlist>
+                        <listitem><para>A policy setting is configured (<guimenu>Enabled</guimenu> or <guimenu>Disabled</guimenu>) for a parent OU, and the same policy setting is not configured for its child OUs. The child OUs inherit the parent’s policy.</para></listitem>
+                        <listitem><para>A policy setting is configured (<guimenu>Enabled</guimenu> or <guimenu>Disabled</guimenu>) for a parent OU, and the same policy setting is configured for its child OUs. The child OUs settings override the settings inherited from the parent’s OU. There is a specific case, when the type of this setting is list:</para>
+                        <itemizedlist>
+                            <listitem><para>The &agentabbrev; will aggregate the contents of these lists and will use the same elements only once.</para></listitem>
+                            <listitem><para>If any policy is not configured (<guimenu>Not Configured</guimenu>), no inheritance takes place.</para></listitem>
+                        </itemizedlist>
+                        </listitem>
+                    </itemizedlist>
+                    
                 </section>
             </section>
             <section id="windows_xml_config">
@@ -718,7 +739,7 @@
                         </listitem>
                         <listitem>
                             <para>If you want to use the .msi installer with an xml file,
-                                        use the <command>syslog-ng-agent-3.0.4-setup.msi
+                                        use the <command>syslog-ng-agent-3.2.1-setup.msi
                                             SLNGOPTS="/xmlconfig=fullpath\myconfigfile.xml"</command>
                                         command, or edit the installer with the <ulink
                                             url="http://www.technipages.com/download-orca-msi-editor.html"
@@ -1186,7 +1207,7 @@
                         <para/>
                     </formalpara>
                     <para>The &agent; application can collect log messages from text
-                    files. It can process messages spanning multiple lines, and supports the use of wildcards (<parameter>*</parameter>) in filenames and foldernames to be able to follow log files that are automatically rotated.
+                        files. It can process messages spanning multiple lines, and supports the use of wildcards (<parameter>*</parameter>, <parameter>?</parameter>) in filenames to be able to follow log files that are automatically rotated.
                     To configure file sources, complete the following steps:</para>
                     <formalpara>
                         <title>Steps:</title>
@@ -1202,8 +1223,7 @@
                                 <guilabel>Enable</guilabel> option.</para>
                     </step>
                     <step>
-                        <para>Select <guibutton>Add > Browse</guibutton>, and select the log file or
-                            the folder containing the log files in the <guilabel>Base
+                        <para>Select <guibutton>Add > Browse</guibutton>, and select the folder containing the log files in the <guilabel>Base
                                 Directory</guilabel> field. Select or enter the name and extension
                             of the log files in the <guilabel>File Name Filter</guilabel> field.
                             Wildcards may be used. The syslog-ng agent will forward log messages
@@ -1267,10 +1287,10 @@
                                         <guilabel>Recursive</guilabel> options.</para>
                             </listitem>
                             <listitem>
-                                <para>To change the log facility or the log priority associated to
+                                <para>To change the log facility or the log severity associated to
                                     the file source, select the desired facility or priority from
                                     the <guilabel>Log Facility</guilabel> or <guilabel>Log
-                                        Priority</guilabel> fields, respectively.</para>
+                                        Severity</guilabel> fields, respectively.</para>
                                 <note>
                                     <para>Significant changes to the settings of a file source may
                                         cause the syslog-ng Agent to resend the entire contents of
@@ -1529,8 +1549,8 @@
                     <para>Select <guimenu>syslog-ng Agent Settings > Destinations</guimenu>.</para>
                 </step>
                 <step>
-                    <para>Select the server that accepts encrypted connections and click
-                            <guibutton>Edit</guibutton>.</para>
+                    <para>Right-click on the server that accepts encrypted connections and select
+                            <guibutton>Properties</guibutton>.</para>
                 </step>
                 <step>
                     <para>Select the <guibutton>Use SSL</guibutton> option.</para>
@@ -2087,10 +2107,7 @@
                     <para>Note that the $MESSAGE macro contains not only the text of the log
                         message, but also additional information received from the message source,
                         such as the name of the eventlog container, or the file, as set in the
-                        eventlog-specific and file-specific templates. For details on modifying the
-                        eventlog-specific and file-specific templates, see <xref
-                            linkend="windows_macros_eventlog"/> and <xref
-                            linkend="windows_macros_eventlog"/>.</para>
+                        eventlog-specific and file-specific templates.</para>
                     <note>
                         <para>Templates are assigned to a single destination server, so it is
                             possible to use different templates for different servers. However, a
@@ -2115,81 +2132,6 @@
                 </step>
                 <step>
                     <para>To activate the changes, restart the syslog-ng Agent service.</para>
-                </step>
-            </procedure>
-            <procedure id="windows_macros_eventlog">
-                <title>Customizing eventlog messages</title>
-                <formalpara>
-                    <title>Purpose:</title>
-                    <para/>
-                </formalpara>
-            <para>To customize the format of eventlog messages, complete the following procedure.
-                This template is applied by the $MESSAGE macro to format messages received from the
-                eventlog.</para>
-                <formalpara>
-                    <title>Steps:</title>
-                    <para/>
-                </formalpara>
-                <step>
-                    <para>Start the configuration interface of the syslog-ng Agent for Windows
-                        application.</para>
-                </step>
-                <step>
-                    <para>Select <guibutton>syslog-ng Agent Settings</guibutton>, right-click on
-                            <guimenu>Eventlog Sources</guimenu> and select
-                            <guimenu>Properties</guimenu>.</para>
-                </step>
-                <step>
-                    <para>Type the message format into the <guilabel>Message Template</guilabel>
-                        field. You can use date- and eventlog-related macros (for a list of macros, see <xref
-                            linkend="windows_macros"/>).The message customized
-                        here is included in the server-specific templates using the
-                            <parameter>MESSAGE</parameter> macro.</para>
-                    <!-- FIXME link -->
-                    <para>By default, the following is sent about file messages:
-                            <parameter>${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}:
-                            [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})</parameter>.</para>
-                </step>
-                <step>
-                    <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
-                        activate the changes, restart the syslog-ng Agent service.</para>
-                </step>
-            </procedure>
-            <procedure id="windows_macros_file">
-                <title>Customizing file messages</title>
-                <formalpara>
-                    <title>Purpose:</title>
-                    <para/>
-                </formalpara>
-            <para>To customize the format of file messages, complete the following procedure. This
-                template is applied by the $MESSAGE macro to format messages received from the log
-                files.</para>
-                <formalpara>
-                    <title>Steps:</title>
-                    <para/>
-                </formalpara>
-                <step>
-                    <para>Start the configuration interface of the syslog-ng Agent for Windows
-                        application.</para>
-                </step>
-                <step>
-                    <para>Select <guibutton>syslog-ng Agent Settings</guibutton>, right-click on
-                            <guimenu>File Sources</guimenu> and select
-                        <guimenu>Properties</guimenu>.</para>
-                </step>
-                <step>
-                    <para>Type the message format into the <guilabel>Message Template</guilabel>
-                        field. You can use date- and file-related macros (for a list of macros, see <xref
-                            linkend="windows_macros"/>). The message customized
-                        here is included in the server-specific templates using the
-                            <parameter>MESSAGE</parameter> macro.</para>
-                    <!-- FIXME link -->
-                    <para>By default, the following is sent about file messages:
-                            <parameter>$FILE_NAME: $FILE_MESSAGE</parameter>.</para>
-                </step>
-                <step>
-                    <para>Select <guibutton>Apply</guibutton>, then <guibutton>OK</guibutton>. To
-                        activate the changes, restart the syslog-ng Agent service.</para>
                 </step>
             </procedure>
 
