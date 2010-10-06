@@ -860,7 +860,7 @@
                                 Starting from version 3.0, syslog-ng also supports the
                                 IETF-protocol.</para>
                                 <note>
-                                    <para>Starting with version 3.2, the &agent; application uses the IETF-syslog protocol by default.</para>
+                                    <para>Starting with version 3.2, the &agent; application uses the IETF-syslog protocol by default, and the default metadata to include is <parameter>Macro names and values</parameter>.</para>
                                 </note>
                                 <indexterm>
                                     <primary>SDATA</primary>
@@ -887,16 +887,17 @@
                                         <synopsis>[meta sequenceId="value" sysUpTime="value"] [origin ip="value" software="value"]</synopsis>
                                     </listitem>
                                     <listitem>
-                                        <para><parameter>EventData</parameter>: Include the name-vaule pairs from the <parameter>EventData > &lt;Data&gt;</parameter> field of the log message and the <parameter>Keyword</parameter> value from the System part of the XML Eventlog messages. Note that these fields are available only on Windows Vista and newer operating systems, and &agentabbrev; 3.1. automatically included these values in the log messages.</para>
+                                        <para><parameter>Macro names and values</parameter>: Include every available Event macro, except <parameter>EVENT_MSG (EVENT_MESSAGE)</parameter> and macros with null value.</para>
+                                        <para>This is the default setting.</para>
+                                        <synopsis>499 &lt;132&gt;1 2010-09-28T12:02:30+02:00 zts-win004.ztswin2003dom.balabit testapp 1220 - [meta sequenceId="1" sysUpTime="1"][origin ip="zts-win004.ztswin2003dom.balabit" software="testapp"][win@18372.4 EVENT_ID="1000" EVENT_NAME="Application" EVENT_REC_NUM="1673" EVENT_SID="S-1-5-21-3460971693-970282485-2299281428-1001" EVENT_SID_TYPE="User" EVENT_SOURCE="testapp" EVENT_TYPE="Warning" EVENT_USERNAME="ZTS-WIN004\\balabit"] ﻿ZTS-WIN004\balabit: Application testapp: [Warning] test message (EventID 1000)</synopsis>
+                                    </listitem>
+                                    <listitem>
+                                        <para><parameter>EventData (deprecated Agent v3.1 functionality)</parameter>: Include the name-vaule pairs from the <parameter>EventData > &lt;Data&gt;</parameter> field of the log message and the <parameter>Keyword</parameter> value from the System part of the XML Eventlog messages. Note that these fields are available only on Windows Vista and newer operating systems, and &agentabbrev; 3.1. automatically included these values in the log messages.</para>
                                         <synopsis>[EventData@18372.4 "name"="value"] [Keywords@18372.4 Keyword="value"]</synopsis>
                                         <para>See the following sample log message:</para>
                                         <synopsis>338 &lt;132&gt;1 2010-09-28T12:02:30+02:00 zts-win004.ztswin2003dom.balabit testapp 1620 - [meta sequenceId="1" sysUpTime="1"][origin ip="zts-win004.ztswin2003dom.balabit" software="testapp"][EventData@18372.4 Data="test message"][Keywords@18372.4 Keyword="Classic"] ﻿ZTS-WIN004\balabit: Application testapp: [Warning] test message (EventID 1000)332</synopsis>
                                     </listitem>
-                                    <listitem>
-                                        <para><parameter>Macro names and values</parameter>: Include every available Event macro, except <parameter>EVENT_MSG (EVENT_MESSAGE)</parameter> and macros with null value.</para>
-                                        <para>See the following sample log message:</para>
-                                        <synopsis>499 &lt;132&gt;1 2010-09-28T12:02:30+02:00 zts-win004.ztswin2003dom.balabit testapp 1220 - [meta sequenceId="1" sysUpTime="1"][origin ip="zts-win004.ztswin2003dom.balabit" software="testapp"][win@18372.4 EVENT_ID="1000" EVENT_NAME="Application" EVENT_REC_NUM="1673" EVENT_SID="S-1-5-21-3460971693-970282485-2299281428-1001" EVENT_SID_TYPE="User" EVENT_SOURCE="testapp" EVENT_TYPE="Warning" EVENT_USERNAME="ZTS-WIN004\\balabit"] ﻿ZTS-WIN004\balabit: Application testapp: [Warning] test message (EventID 1000)</synopsis>
-                                    </listitem>
+                                    
                                 </itemizedlist>
                         </listitem>
                         <listitem>
@@ -908,9 +909,12 @@
                                 tool.</para>
                             <warning>
                                 <para>3.1 and earlier versions of the &agent; application used an imperfect message template to send Snare-compatible messages. This has been corrected in the <guimenu>Snare Protocol</guimenu> option. If you need the old, imperfect mode of operation, select a syslog protocol and select <guilabel>Message
-                                Type > Agent v3.1 Snare Compatible Message Type</guilabel>, then click
+                                Type > Agent v3.1 Snare Compatible Message Type (deprecated)</guilabel>, then click
                                 <guilabel>Reset Event Message Template</guilabel>.</para>
                             </warning>
+                            <note>
+                                <para>You cannot modify the log format if you have selected this protocol. Snare is a tab-separated message format.</para>
+                            </note>
                         </listitem>
                     </itemizedlist>
                     <note>
@@ -1893,6 +1897,7 @@
                             <para>To apply filters only to a specific destination, select <guimenu>syslog-ng Agent Settings > Destinations</guimenu>, select the destination server, then select <guimenu>Event Filters</guimenu>. Right-click <guimenu>Event Filters</guimenu>.</para>
                         </listitem>
                     </itemizedlist>
+                    <note><para>If you want to use both global and local (server side) filtering, first global filters will be applied to the eventlog messages and then the local filters.</para></note>
                 </step>
                 <step>
                     <para>Select <guilabel>Properties > Enable > OK</guilabel>.</para>
@@ -2008,12 +2013,13 @@
                 <step>
                     <itemizedlist>
                         <listitem>
-                            <para>To apply filters globally to every eventlog message, select <guimenu>syslog-ng Agent Settings > Destinations > Global File Filters</guimenu>, and right-click <guimenu>Global File Filters</guimenu>.</para>
+                            <para>To apply filters globally to every file message, select <guimenu>syslog-ng Agent Settings > Destinations > Global File Filters</guimenu>, and right-click <guimenu>Global File Filters</guimenu>.</para>
                         </listitem>
                         <listitem>
                             <para>To apply filters only to a specific destination, select <guimenu>syslog-ng Agent Settings > Destinations</guimenu>, select the destination server, then select <guimenu>File Filters</guimenu>. Right-click <guimenu>File Filters</guimenu>.</para>
                         </listitem>
                     </itemizedlist>
+                    <note><para>If you want to use both global and local (server side) filtering, first global filters will be applied to the file messages and then the local filters.</para></note>
                 </step>
                 <step>
                     <para>Select <guilabel>Properties > Enable > OK</guilabel>.</para>
@@ -2247,24 +2253,28 @@
                     </simplesect>
                     <simplesect id="HOST">
                         <title>HOST</title>
-                        <para><guilabel>Description:</guilabel>Name of the host sending the message.
+                        <para><guilabel>Description:</guilabel> Name of the host sending the message.
                             Hostnames are automatically converted to lowercase.</para>
                     </simplesect>
                     <simplesect id="MESSAGE">
                         <title>MESSAGE</title>
-                        <para><guilabel>Description:</guilabel>The content of the message, including
+                        <para><guilabel>Description:</guilabel> The content of the message, including
                             the text of the message and any file- or event-specific macros that are
                             set for the source.</para>
                     </simplesect>
                     <simplesect>
                         <title>MSG</title>
-                        <para><guilabel>Description:</guilabel>An alias for the
+                        <para><guilabel>Description:</guilabel> An alias for the
                             <link linkend="MESSAGE"><parameter>MESSAGE</parameter></link> macro.</para>
                     </simplesect>
                     <simplesect>
                         <title>PRI</title>
-                        <para><guilabel>Description:</guilabel>Priority header of the message,
+                        <para><guilabel>Description:</guilabel> Priority header of the message,
                             storing the facility and the level of the message.</para>
+                    </simplesect>
+                    <simplesect>
+                        <title>PROCESS_ID</title>
+                        <para><guilabel>Description:</guilabel> PID of the application the message came from.</para>
                     </simplesect>
                     <simplesect>
                         <title>STRUCTURED_DATA</title>
@@ -2579,15 +2589,17 @@
             <section id="windows_command_line">
                 <title>Command-line options</title>
                 <para>The syslog-ng Agent for Windows application has the following command-line
-                    options:</para>
+                options:</para>
+                <note><para>Command-line options are case-insensitive. The options consist of a single letter introduced by either "<parameter>-</parameter>" or "<parameter>/</parameter>".</para></note>
+                <note><para>On Windows Vista or above, command line options will only work with administrator permission.</para></note>
                 <variablelist>
                     <varlistentry>
                         <term>
-                            <command>-e</command>
+                            <command>-c</command>
                         </term>
                         <listitem>
-                            <para>Start the syslog-ng Agent in debug mode and send the messages to
-                                the Application eventlog container.</para>
+                            <para>Start the syslog-ng Agent using the specified XML configuration
+                                file.</para>
                         </listitem>
                     </varlistentry>
                     <varlistentry>
@@ -2600,6 +2612,23 @@
                                 (<ulink
                                     url="http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx"
                                     >available here</ulink>).</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>
+                            <command>-e</command>
+                        </term>
+                        <listitem>
+                            <para>Start the syslog-ng Agent in debug mode and send the messages to
+                                the Application eventlog container.</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>
+                            <command>-h</command>
+                        </term>
+                        <listitem>
+                            <para>Display a help message about the command-line options.</para>
                         </listitem>
                     </varlistentry>
                     <varlistentry>
@@ -2620,14 +2649,6 @@
                     </varlistentry>
                     <varlistentry>
                         <term>
-                            <command>-h</command>
-                        </term>
-                        <listitem>
-                            <para>Display a help message about the command-line options.</para>
-                        </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term>
                             <command>-v</command>
                         </term>
                         <listitem>
@@ -2636,26 +2657,27 @@
                     </varlistentry>
                     <varlistentry>
                         <term>
-                            <command>-t</command>
+                            <command>-x</command>
                         </term>
-                        <listitem>
-                            <para>Terminate the currently running syslog-ng Agent.</para>
-                        </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term>
-                            <command>-c</command>
-                        </term>
-                        <listitem>
-                            <para>Start the syslog-ng Agent using the specified XML configuration
-                                file.</para>
-                        </listitem>
+                        <listitem><para>Validate XML configuration file without importing it.</para></listitem>
                     </varlistentry>
                 </variablelist>
                 <para>To use these options, select <guilabel>Start > Run > cmd</guilabel>, navigate
                     to the directory where the syslog-ng Agent is installed (for example <command>cd
                         C:\Windows\Program Files\BalaBit\syslog-ng Agent\</command>), and execute
                     the <command>syslog-ng-agent.exe</command> file with the required option.</para>
+                <example>
+                    <title>Using command line options</title>
+                    <para>To start &agentabbrev; in debug mode:</para>
+                    <command>syslog-ng-agent.exe -d</command>
+                    <para>To start syslog-ng Agent with XML configuration file:</para>
+                    <command>syslog-ng-agent.exe -c C:\ConfigFiles\syslog-ng-agent-conf.xml
+                    </command>
+                    <para>To register syslog-ng Agent as a service using XML configuration file:
+                    </para>
+                    <command>syslog-ng-agent.exe -i C:\ConfigFiles\syslog-ng-agent-conf.xml
+                    </command>
+                </example>
             </section>
         </section>
     </chapter>
