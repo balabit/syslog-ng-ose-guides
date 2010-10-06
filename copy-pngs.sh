@@ -26,12 +26,12 @@ case "$1" in
 	#########################################
 	;;
 
-'out/syslog-ng-windows-agent-v3.1-guide-admin-en.html')
+'out/syslog-ng-windows-agent-v3.2-guide-admin-en.html')
 	#########################################
 	#syslog-ng agent for windows admin guide
 	#########################################
         echo Processing syslog-ng admin guide figures
-	$GET -l1 $imgroot/syslog-ng-admin-guide-3.1/
+	$GET -l1 $imgroot/windows-agent-admin-guide-3.2/
 	
 	#End of syslog-ng agent for windows admin-guide
 	#########################################
