@@ -1054,6 +1054,92 @@ program(filename);</synopsis>
             </simplesect>  
         </section>
     </section>
+    <section id="configuring-source-system">
+        <title>Collecting the system-specific log messages of a platform</title>
+        <indexterm type="parameter">
+            <primary>system()</primary>
+        </indexterm>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>system()</parameter> driver</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>scl</primary>
+            <secondary><parameter>system()</parameter></secondary>
+        </indexterm>
+        <para>Starting with version 3.2, &abbrev; can automatically collect the system-specific log messages of the host on a number of platforms using the <parameter>system()</parameter> driver. If the <parameter>system()</parameter> driver is included in the &abbrev; configuration file, &abbrev; executes the <filename>/opt/syslog-ng/scl/system/generate-system-source.sh</filename> script during startup, and adds the following sources to the &abbrev; configuration.</para>
+        <warning>
+            <para>If &abbrev; does not recognize the platform it is installed on, it does not add any sources.</para>
+        </warning>
+        <table>
+			<title>Sources automatically added by &product;</title>
+			<tgroup cols="2">
+				<thead>
+					<row>
+						<entry>Platform</entry>
+						<entry>Message source</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>Linux</entry>
+						<entry>
+                            <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?>
+                            <synopsis>unix-dgram("/dev/log");</synopsis>
+                            <synopsis>file("/proc/kmsg" program-override("kernel") flags(kernel));</synopsis>
+                        </entry>
+                    </row>
+                    <row>
+						<entry>Solaris 8</entry>
+						<entry>
+                            <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?>
+                            <synopsis>sun-streams("/dev/log");</synopsis>
+                        </entry>
+                    </row>
+                    <row>
+						<entry>Solaris 9</entry>
+						<entry>
+                            <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?>
+                            <synopsis>sun-streams("/dev/log" door("/etc/.syslog_door"));</synopsis>
+                        </entry>
+                    </row>
+                    <row>
+						<entry>Solaris 10</entry>
+						<entry>
+                            <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?>
+                            <synopsis>sun-streams("/dev/log" door("/var/run/syslog_door"));</synopsis>
+                        </entry>
+                    </row>
+                    <row>
+						<entry>FreeBSD</entry>
+						<entry>
+                            <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?>
+                            <synopsis>unix-dgram("/var/run/log");</synopsis>
+                            <synopsis>unix-dgram("/var/run/logpriv" perm(0600));</synopsis>
+                            <synopsis>file("/dev/klog" follow-freq(0) program-override("kernel") flags(no-parse));</synopsis>
+                        </entry>
+                    </row>
+                    <row>
+						<entry>HP-UX</entry>
+						<entry>
+                            <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?>
+                            <synopsis>pipe("/dev/log" pad_size(2048));</synopsis>
+                        </entry>
+                    </row>
+                    <row>
+						<entry>AIX and Tru64</entry>
+						<entry>
+                            <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?>
+                            <synopsis>unix-dgram("/dev/log");</synopsis>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <note>
+            <para>The <parameter>system()</parameter> driver is actually an element of the syslog-ng <link linkend="FIXME">Source Configuration Library (SCL)</link>, a reusable configuration snippet tailored to handle process accounting logs. For details on using or writing SCLs, see <xref linkend="FIXME"/>.</para>
+        </note>
+    </section>
     <section id="configuring_sources_tcpudp">
         <title>Collecting messages from remote hosts using the BSD syslog protocol</title>
         <indexterm>
