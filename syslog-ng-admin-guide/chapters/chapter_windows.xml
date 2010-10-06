@@ -45,9 +45,6 @@
                 <para>Can be managed from a domain controller using group policies.</para>
             </listitem>
             <listitem>
-                <para>Assigns unique message IDs.</para>
-            </listitem>
-            <listitem>
                 <para>Only basic filtering is supported by the agent, message segmenting, parsing,
                     and classification is not.</para>
             </listitem>
@@ -69,13 +66,13 @@
             </indexterm>
             <itemizedlist id="windows-supported-platforms">
                 <listitem>
-                    <para>Microsoft Windows Server 2003</para>
-                </listitem>
-                <listitem>
                     <para>Microsoft Windows 2000</para>
                 </listitem>
                 <listitem>
                     <para>Microsoft Windows XP</para>
+                </listitem>
+                <listitem>
+                    <para>Microsoft Windows Server 2003</para>
                 </listitem>
                 <listitem>
                     <para>Microsoft Windows Vista</para>
@@ -134,7 +131,7 @@
         <itemizedlist>
             <listitem><para><filename>syslog-ng-agent-&lt;version&gt;-setup.exe</filename> is the general installer. This installs an agent that can be configured with a local configuration, XML configuration file and can receive configuration from domain group policy.</para></listitem>
             <listitem><para><filename>syslog-ng-agent-nosnapin-&lt;version&gt;-setup.exe</filename> is a special installer. .NET environment is not required for it. This installs an agent that can only be configured with an XML configuration file, and can receive configuration from domain group policy.</para></listitem>
-            <listitem><para><filename>syslog-ng-agent-setup-&lt;version&gt;-&lt;amd64/i386&gt;.msi</filename> is an MSI installer for domain clients, installing with group policy.</para></listitem>
+            <listitem><para><filename>syslog-ng-agent-setup-&lt;version&gt;-&lt;amd64/i386&gt;.msi</filename> is an MSI installer for domain clients, installing by group policy.</para></listitem>
         </itemizedlist>
         
         <procedure id="windows_install_standalone">
@@ -434,42 +431,6 @@
                     <para>If &agentabbrev; has been installed with an XML configuration file with <filename>syslog-ng-agent-&lt;versionnumber&gt;-setup.exe</filename> or <filename>syslog-ng-agent-nosnapin-&lt;versionnumber&gt;-setup.exe</filename>, download and execute the same installer. It will display the previous XML configuration file, and upgrades it if desired.</para>
                 </listitem>
             </itemizedlist>
-        </section>
-        <section id="windows_upgrade_30x">
-            <title>Upgrading syslog-ng Agent for Windows 2.x to 3.0.x</title>
-            <indexterm significance="preferred">
-                <primary>syslog-ng agent</primary>
-                <secondary>upgrading to 3.0</secondary>
-            </indexterm>
-            <para>To upgrade the syslog-ng agent application on hosts that are not members of a
-                domain, install the executable (<parameter>.exe</parameter>) version of the
-                syslog-ng Agent for Windows installer and select <guimenu>Standalone
-                    mode</guimenu>. The installer automatically receives and converts every setting
-                of version 2.1.x and 2.2beta, and continues to send the log messages to the
-                configured destination. At the end of the installation, the new configuration
-                interface is displayed, where you can start using the new features of the syslog-ng
-                agent.</para>
-            <para>To upgrade the syslog-ng agent application on hosts that are members of a domain,
-                install the executable (<parameter>.exe</parameter>) version of the syslog-ng Agent
-                for Windows installer and select <guimenu>Manage syslog-ng Agent centrally using
-                    Group Policy</guimenu>. After that, the installer asks if you want to use the
-                existing configuration as a Local Policy, or as a Group Policy. (Selecting both
-                options is also possible, although seldom needed.)</para>
-            <para>If you decide to use it as a Group Policy, enter the unique name for the policy,
-                or select it from the list of available policies. Any local settings are
-                automatically added to the group policy, so these local settings will be applied to
-                every computer that belongs to the selected group policy. Afterwards, the installer
-                converts every setting of version 2.1.x and 2.2beta, and also automatically
-                downloads any group policies that are configured on the domain controller.</para>
-            <warning>
-                <para>If there are any group policies for the syslog-ng agent configured on the
-                    domain controller, downloading the group policies to the clients will overwrite
-                    the local settings.</para>
-            </warning>
-            <note>
-                <para>Upgrading from version 2.1 is supported for the 32-bit Windows XP and Server
-                    2003 platforms.</para>
-            </note>
         </section>
     </chapter>
     <chapter id="chapter_configuration">
@@ -913,8 +874,13 @@
                                 <guimenu>Reset Event Message Template</guimenu>.</para>
                             </warning>
                             <note>
-                                <para>You cannot modify the log format if you have selected this protocol. Snare is a tab-separated message format.</para>
+                                <para>Snare is a tab-separated message format. Within the message part, agent replaces CRLF with 2 space, TAB character with 1 space.</para><para>You cannot modify the log format if you have selected this protocol.</para>>
                             </note>
+                            <example>
+                                <title>Snare log</title>
+                                <synopsis>&lt;134&gt;Oct 06 13:49:41    zts-win019.ztswin2008dom.balabit    MSWinEventLog   1   Application 1   Wed Oct 06 13:49:41 2010    1   syslog-ng Agent S-1-5-21-551780264-1021859348-3425375765-1003   User    Information zts-win019.ztswin2008dom.balabit    None        Application started 1</synopsis>
+                            </example>
+                            
                         </listitem>
                     </itemizedlist>
                     <note>
@@ -1998,7 +1964,7 @@
                     <para><emphasis>Message Contents</emphasis>: Filter the text of the message,
                         that is, the contents of the <link linkend="FILE_MESSAGE"><parameter>FILE_MESSAGE</parameter></link> macro. In this filter you can use regular expressions.</para>
                 </listitem>
-                <listitem><para><emphasis>File Name</emphasis>: Filter on the file name. Corresponds with the <link linkend="FILE_NAME"><parameter>FILE_NAME</parameter></link> macro. In this filter you can use regular expressions.</para></listitem>
+                <listitem><para><emphasis>File Name</emphasis>: Filter on the file name. Corresponds with the <link linkend="FILE_NAME"><parameter>FILE_NAME</parameter></link> macro. In this filter you can use regular expressions. Only available for destination file filters.</para></listitem>
             </itemizedlist>
             <para>To modify the filters used for file messages, complete the following
                 procedure:</para>
@@ -2595,7 +2561,7 @@
                 <variablelist>
                     <varlistentry>
                         <term>
-                            <command>-c</command>
+                            <command>/c</command>
                         </term>
                         <listitem>
                             <para>Start the syslog-ng Agent using the specified XML configuration
@@ -2604,7 +2570,7 @@
                     </varlistentry>
                     <varlistentry>
                         <term>
-                            <command>-d</command>
+                            <command>/d</command>
                         </term>
                         <listitem>
                             <para>Start the syslog-ng Agent in debug mode. The debug messages can be
@@ -2616,7 +2582,7 @@
                     </varlistentry>
                     <varlistentry>
                         <term>
-                            <command>-e</command>
+                            <command>/e</command>
                         </term>
                         <listitem>
                             <para>Start the syslog-ng Agent in debug mode and send the messages to
@@ -2625,7 +2591,7 @@
                     </varlistentry>
                     <varlistentry>
                         <term>
-                            <command>-h</command>
+                            <command>/h</command>
                         </term>
                         <listitem>
                             <para>Display a help message about the command-line options.</para>
@@ -2633,7 +2599,7 @@
                     </varlistentry>
                     <varlistentry>
                         <term>
-                            <command>-i</command>
+                            <command>/i</command>
                         </term>
                         <listitem>
                             <para>Install the syslog-ng Agent service into the services list.</para>
@@ -2641,7 +2607,7 @@
                     </varlistentry>
                     <varlistentry>
                         <term>
-                            <command>-r</command>
+                            <command>/r</command>
                         </term>
                         <listitem>
                             <para>Remove the syslog-ng Agent service from the services list.</para>
@@ -2649,7 +2615,7 @@
                     </varlistentry>
                     <varlistentry>
                         <term>
-                            <command>-v</command>
+                            <command>/v</command>
                         </term>
                         <listitem>
                             <para>Display version information.</para>
@@ -2657,7 +2623,7 @@
                     </varlistentry>
                     <varlistentry>
                         <term>
-                            <command>-x</command>
+                            <command>/x</command>
                         </term>
                         <listitem><para>Validate XML configuration file without importing it.</para></listitem>
                     </varlistentry>
@@ -2669,13 +2635,13 @@
                 <example>
                     <title>Using command line options</title>
                     <para>To start &agentabbrev; in debug mode:</para>
-                    <command>syslog-ng-agent.exe -d</command>
+                    <command>syslog-ng-agent.exe /d</command>
                     <para>To start syslog-ng Agent with XML configuration file:</para>
-                    <command>syslog-ng-agent.exe -c C:\ConfigFiles\syslog-ng-agent-conf.xml
+                    <command>syslog-ng-agent.exe /c C:\ConfigFiles\syslog-ng-agent-conf.xml
                     </command>
                     <para>To register syslog-ng Agent as a service using XML configuration file:
                     </para>
-                    <command>syslog-ng-agent.exe -i C:\ConfigFiles\syslog-ng-agent-conf.xml
+                    <command>syslog-ng-agent.exe /i C:\ConfigFiles\syslog-ng-agent-conf.xml
                     </command>
                 </example>
             </section>
