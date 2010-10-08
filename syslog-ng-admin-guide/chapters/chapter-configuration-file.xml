@@ -15,41 +15,61 @@
             <para>The syslog-ng application is configured by editing the
                 <filename>syslog-ng.conf</filename> file. Use any regular text editor application to
                 modify the file. The precompiled syslog-ng packages include sample configuration files
-                as well.</para>
-            <para>Every syslog-ng configuration file must begin with a line containing the version
-                information of syslog-ng. For syslog-ng version &version;, this line looks like:</para>
-            <synopsis>@version:&version;</synopsis>
-            <para>Versioning the configuration file was introduced in syslog-ng 3.0. If the configuration file does not contain the version information, syslog-ng assumes
-                that the file is for syslog-ng version 2.x. In this case it interprets the configuration
-                and sends warnings about the parts of the configuration that should be updated. Version
-                3.0 and later will correctly operate with configuration files of version 2.x, but the
-                default values of certain parameters have changed since 3.0.</para>
-            <para>All identifiers, option names and attributes, and any other strings used in the
-                syslog-ng configuration file are case sensitive. Objects must be defined before they are
-                referenced in another statement.</para>
-            <example>
-                <title>A simple configuration file</title>
-                <para>The following is a very simple configuration file for syslog-ng: it collects the
-                    internal messages of syslog-ng and the messages from <parameter>/dev/log</parameter>
-                    into the <filename>/var/log/messages_syslog-ng.log</filename> file.</para>
-                <synopsis>@version:&version;
-source s_local { unix-stream("/dev/log"); internal(); };
-destination d_file {file("/var/log/messages_syslog-ng.log"); };
-log { source(s_local); destination(d_file); };</synopsis>
-            </example>
-            <tip>
-                <para>Before activating a new configuration, check that your configuration file is
-                    syntactically correct using the <command>syslog-ng --syntax-only</command> command.</para>
-                <para>To activate the configuration, reload the configuration of syslog-ng using the
-                        <command>/etc/init.d/syslog-ng reload</command> command.</para>
-            </tip>
-            <para>The <filename>syslog-ng.conf</filename> file is
+                as well. The <filename>syslog-ng.conf</filename> file is
                 located under the <filename>/opt/syslog-ng/etc/</filename> directory.</para>
             <note>
                 <para>Earlier versions of &abbrev; stored the configuration file in
                     different directories, depending on the platform; typically under
                         <filename>/etc/syslog-ng/</filename>.</para>
             </note>
+            <para>Every syslog-ng configuration file must begin with a line containing the version
+                information of syslog-ng. For syslog-ng version &version;, this line looks like:</para>
+            <synopsis>@version: &version;</synopsis>
+            <para>Versioning the configuration file was introduced in syslog-ng 3.0. If the configuration file does not contain the version information, syslog-ng assumes
+                that the file is for syslog-ng version 2.x. In this case it interprets the configuration
+                and sends warnings about the parts of the configuration that should be updated. Version
+                3.0 and later will correctly operate with configuration files of version 2.x, but the
+                default values of certain parameters have changed since 3.0.</para>
+            <example>
+                <title>A simple configuration file</title>
+                <para>The following is a very simple configuration file for syslog-ng: it collects the
+                    internal messages of syslog-ng and the messages from <parameter>/dev/log</parameter>
+                    into the <filename>/var/log/messages_syslog-ng.log</filename> file.</para>
+                <synopsis>@version: &version;
+
+source s_local { unix-stream("/dev/log"); internal(); };
+
+destination d_file {file("/var/log/messages_syslog-ng.log"); };
+
+log { source(s_local); destination(d_file); };</synopsis>
+            </example>
+            <para>As a syslog-ng user described on a <ulink url="http://www.gossamer-threads.com/lists/gentoo/user/209108">mailing list</ulink>:</para>
+            <blockquote><attribution>Alan McKinnon</attribution>
+                <para><parameter>Syslog-ng's config file format was written by programmers for programmers to be understood by programmers. That may not have been the stated intent, but it is how things turned out. The syntax is exactly that of C, all the way down to braces and statement terminators.</parameter></para>
+            </blockquote>
+            <itemizedlist>
+                <listitem>
+                    <para>The main body of the configuration file consists of object definitions: sources, destinations, logpaths define which log message are received and where they are sent. All identifiers, option names and attributes, and any other strings used in the syslog-ng configuration file are case sensitive. Objects must be defined before they are referenced in another statement. Object definitions (also called statements) have the following syntax:</para>
+                    <synopsis>object_type object_id {&lt;options&gt;};</synopsis>
+                    <para>For example, the following line defines a source and calls it <parameter>s_internal</parameter>.</para>
+                    <synopsis>source s_internal { internal(); };</synopsis>
+                    <para>The object can be later referenced in other statements using its ID, for example, the previous source is used as a parameter of the following log statement:</para>
+                    <synopsis>log { source(s_internal); destination(d_file); };</synopsis>
+                </listitem>
+                <listitem>
+                    <para>The parameters and options within a statement are similar to function calls of the C programming language: the name of the option followed by a list of its parameters enclosed within brackets and terminated with a semicolon.</para>
+                    <synopsis>option(parameter1, parameter2); option2(parameter1, parameter2);</synopsis>
+                    <para>For example, the following source statement has three options; the first two options (<parameter>file()</parameter> and <parameter>follow_freq()</parameter>) have a single parameter, while the third one (<parameter>flags()</parameter>) has two parameters:</para>
+                    <synopsis>source s_tail { file("/var/log/apache/access.log" 
+    follow_freq(1) flags(no-parse, validate-utf8)); };</synopsis>
+                </listitem>
+            </itemizedlist>
+            <tip>
+                <para>Before activating a new configuration, check that your configuration file is
+                    syntactically correct using the <command>syslog-ng --syntax-only</command> command.</para>
+                <para>To activate the configuration, reload the configuration of syslog-ng using the
+                        <command>/etc/init.d/syslog-ng reload</command> command.</para>
+            </tip>
     </section>
     <section id="defining_global_objects">
         <title>Defining global objects</title>
@@ -255,7 +275,7 @@ source s_demo_stream {
                 <listitem>
                     <para>Include statements can only be used at top level of the configuration
                         file. For example, the following is correct:</para>
-                    <synopsis>@version:&version;
+                    <synopsis>@version: &version;
 include "example.conf";</synopsis>
                     <para>But the following is not:</para>
                     <synopsis>source s_example {
@@ -298,10 +318,10 @@ include "example.conf";</synopsis>
             <example id="example-configuration-block">
                 <title>Reusing configuration blocks</title>
                 <para>Suppose you are running an application on your hosts that logs into the <filename>/opt/var/myapplication.log</filename> file. Create a file (for example, <filename>myblocks.conf</filename>) that stores a source describing this file and how it should be read:</para>
-                <synopsis>block source myappsource { file("/opt/var/myapplication.log" 
-        follow_freq(1) default-facility(syslog)); };</synopsis>
+                <synopsis>block source myappsource { 
+                file("/opt/var/myapplication.log" follow_freq(1) default-facility(syslog)); };</synopsis>
                 <para>Include this file in your main syslog-ng configuration file,reference the block, and use it in a logpath:</para>
-                <synopsis>@version:&version;
+                <synopsis>@version: &version;
 include "&lt;correct/path&gt;/myblocks.conf";
 source s_myappsource myappsource()
 ...
