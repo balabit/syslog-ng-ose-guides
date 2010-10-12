@@ -701,7 +701,7 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
             <para>The expression may contain the following elements: </para>
             <itemizedlist>
                 <listitem>
-                    <para>The functions listed in <xref linkend="filterfunc"/>. Some of the
+                    <para>The functions listed in <xref linkend="reference_filters"/>. Some of the
                         functions accept extended regular expressions as parameters.</para>
                 </listitem>
                 <listitem>
@@ -724,22 +724,15 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
         destination(d1); destination(d2); };</synopsis>
                 <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and <parameter>program()</parameter> filter functions accept regular expressions as parameters.</para>
                 <synopsis>filter demo_regexp_filter { host("system.*1") and match("deny" value("MESSAGE")); };</synopsis>
+                <para>The <parameter>value()</parameter> parameter of the <parameter>match</parameter> function limits the scope of the function to the text part of the message (that is, the part returned by the <parameter>$MESSAGE</parameter> macro). For details on using the <parameter>match()</parameter> filter function, see <xref linkend="reference-filters-match"/>.</para>
             </example>
-            <para>The <parameter>value()</parameter> parameter limits the scope of a filter function to the scope of a macro. For example, to limit the scope of the
-                    <parameter>match()</parameter> filter to the text part of the message, use:</para>
-            <synopsis>match("keyword" value("MESSAGE"))</synopsis>
-            <para>The <parameter>value()</parameter> parameter accepts both built-in macros and
-                user-defined ones created with a parser. Do not prefix the macros with the $ sign. For
-                details on macros and parsers, see <xref linkend="configuring_macros"/> and <xref
-                    linkend="configuring_parsers"/>.</para>
-            <note>
-                <para>When a log statement includes multiple filter statements, syslog-ng sends a
-                    message to the destination only if all filters are true for the message. In other
-                    words, the filters are connected with the logical <parameter>AND</parameter>
-                    operator. In the following example, no message arrives to the destination, because
-                    the filters are exclusive (the hostname of a client cannot be
-                    <parameter>example1</parameter> and <parameter>example2</parameter> at the same
-                    time):</para>
+            <para>When a log statement includes multiple filter statements, syslog-ng sends a
+                message to the destination only if all filters are true for the message. In other
+                words, the filters are connected with the logical <parameter>AND</parameter>
+                operator. In the following example, no message arrives to the destination, because
+                the filters are exclusive (the hostname of a client cannot be
+                <parameter>example1</parameter> and <parameter>example2</parameter> at the same
+                time):</para>
                 <synopsis>filter demo_filter1 { host("example1"); };
 filter demo_filter2 { host("example2"); };
 
@@ -747,25 +740,24 @@ log demo_filteredlog {
 	source(s1); source(s2); 
 	filter(demo_filter1); filter(demo_filter2);
 	destination(d1); destination(d2); };</synopsis>
-                <para>To select the messages that come from either host
-                    <parameter>example1</parameter> or <parameter>example2</parameter>, use a single
-                    filter expression:</para>
-                <synopsis>filter demo_filter { host("example1") or host("example2"); };
+            <para>To select the messages that come from either host
+                <parameter>example1</parameter> or <parameter>example2</parameter>, use a single
+                filter expression:</para>
+            <synopsis>filter demo_filter { host("example1") or host("example2"); };
                 
 log demo_filteredlog {
 	source(s1); source(s2); 
 	filter(demo_filter);
 	destination(d1); destination(d2); };</synopsis>
-                <para>Use the <parameter>not</parameter> operator to invert filters, for example, to
-                    select the messages that were not sent by host <parameter>example1</parameter>: </para>
-                <synopsis>filter demo_filter { not host("example1"); };</synopsis>
-                <para>However, to select the messages that were not sent by host
-                    <parameter>example1</parameter> or <parameter>example2</parameter>, you have to use
-                    the <parameter>and</parameter> operator (that's how boolean logic works):</para>
-                <synopsis>filter demo_filter { not host("example1") and not host("example2"); };</synopsis>
-                <para>Alternatively, you can use parentheses to avoid this confusion:</para>
-                <synopsis>filter demo_filter { not (host("example1") or host("example2")); };</synopsis>
-            </note>
+            <para>Use the <parameter>not</parameter> operator to invert filters, for example, to
+                select the messages that were not sent by host <parameter>example1</parameter>: </para>
+            <synopsis>filter demo_filter { not host("example1"); };</synopsis>
+            <para>However, to select the messages that were not sent by host
+                <parameter>example1</parameter> or <parameter>example2</parameter>, you have to use
+                the <parameter>and</parameter> operator (that's how boolean logic works):</para>
+            <synopsis>filter demo_filter { not host("example1") and not host("example2"); };</synopsis>
+            <para>Alternatively, you can use parentheses to avoid this confusion:</para>
+            <synopsis>filter demo_filter { not (host("example1") or host("example2")); };</synopsis>
 
         <indexterm>
             <primary>regular expressions</primary>
@@ -776,7 +768,7 @@ log demo_filteredlog {
             <secondary>escaping</secondary>
         </indexterm><!-- FIXME ez is inkabb a regexpes fejezetbe kellene! vagy lejjebb a filter+regexbe -->
         <para>In the extended regular expressions, the characters <parameter>()[].*?+^$|</parameter>
-            are used as special symbols. Therefore, these characters have to be preceded with a
+            are used as special symbols. Therefore, these characters must be preceded with a
             backslash (<parameter>\</parameter>) if they are meant literally. For example, the
                 <parameter>\$40</parameter> expression matches the <parameter>$40</parameter>
             string. Backslashes have to be escaped as well if they are meant literally. For example,
@@ -807,64 +799,92 @@ log demo_filteredlog {
                         <parameter>.*</parameter> in your expressions, for example
                     <parameter>f.*ilter</parameter>.</para>
             </note>
-            <para>
-                <indexterm>
-                    <primary>filters</primary>
-                    <secondary>facility and priority (level) ranges</secondary>
-                </indexterm> The <parameter>level()</parameter> filter can select messages
-                corresponding to a single importance level, or a level-range. To select messages of
-                a specific level, use the name of the level as a filter parameter, for example use the
-                following to select warning messages:</para>
-            <synopsis>level(warning)</synopsis>
-            <para>To select a range of levels, include the beginning and the ending level in the
-                filter, separated with two dots (<parameter>..</parameter>). For example, to select
-                every message of error or higher level, use the following filter:</para>
-            <synopsis>level(err..emerg)</synopsis>
-            <para>Similarly, messages sent by a range of facilities can also be selected. Note that
-                this is only possible when using the name of the facilities. It is not possible to
-                select ranges the numerical codes of the facilities.</para>
-            <synopsis>facility(local0..local5)</synopsis>
-            <para>For a complete list of the available levels and facilities, see <xref
-                    linkend="reference_filters"/>. </para>
-            <para>For a complete description on the above functions, see <xref
+            <para>For a complete description on filter functions, see <xref
                     linkend="reference_filters"/>. </para>
         </section>
         <section id="regular_expressions">
-            <title>Optimizing regular expressions in filters</title>
-            <indexterm>
-                <primary>filters</primary>
-            </indexterm>
-            <indexterm>
+            <title>Using regular expressions in filters</title>
+            <para>
+                <indexterm>
                 <primary>regular expressions</primary>
-            </indexterm>
-            <indexterm>
-                <primary>optimizing syslog-ng performance</primary>
-                <secondary>regular expressions</secondary>
-            </indexterm>
-            <para>Some filter functions accept regular expressions as parameters. But evaluating
-                general regular expressions puts a high load on the CPU, which can cause problems
-                when the message traffic is very high. Often the regular expression can be replaced
-                with simple filter functions and logical operators. Using simple filters and logical
-                operators, the same effect can be achieved at a much lower CPU load.</para>
-            <example>
-                <title>Optimizing regular expressions in filters</title>
-                <para>Suppose you need a filter that matches the following error message logged by
-                    the <parameter>xntpd</parameter> NTP daemon:</para>
-                <synopsis>xntpd[1567]: time error -1159.777379 is too large (set clock manually);</synopsis>
-                <para>The following filter uses regular expressions and matches every instance and
-                    variant of this message.</para>
-                <synopsis>filter f_demo_regexp {
+                <secondary>posix</secondary>
+                </indexterm>
+                The <parameter>host()</parameter>, <parameter>match()</parameter>, and
+                    <parameter>program()</parameter> filter functions accept regular expressions as
+                parameters. The exact type of the regular expression to use can be specified with the
+                    <parameter>type()</parameter> option. The following expression types are available:</para>
+            <simplesect id="reference_filter_types">
+                <title>posix</title>
+                    <indexterm type="parameter">
+                        <primary>posix</primary>
+                    </indexterm>
+                <para><guilabel>Description:</guilabel> Use POSIX regular expressions. If the <parameter>type()</parameter>
+                                parameter is not specified, syslog-ng uses POSIX regular expressions by
+                                default. For additional details on the use and flags of regular
+                                expressions, see <xref linkend="reference_regular_expressions"
+                            />.</para>
+            </simplesect>
+            <simplesect>
+                <title>pcre</title>
+                    <indexterm type="parameter">
+                        <primary>pcre</primary>
+                    </indexterm>
+                <para><guilabel>Description:</guilabel> Use PCRE regular expressions. Execute
+                                the <command>syslog-ng -V</command> command to check if your binary 
+                                supports PCRE regular expressions. Starting with &abbrev; version 3.1, PCRE expressions are supported on every platform. For additional details on the use and flags of
+                                regular expressions, see <xref linkend="reference_regular_expressions"
+                                />.</para>
+            </simplesect>
+            <simplesect>
+                <title>string</title>
+                    <indexterm type="parameter">
+                        <primary>string</primary>
+                    </indexterm>
+                <para><guilabel>Description:</guilabel> Match the strings literally, without regular expression support. By
+                                default, only identical strings are matched. For partial matches, use
+                                the <parameter>flags("prefix")</parameter> or the
+                                    <parameter>flags("substring")</parameter> flags.</para>
+            </simplesect>
+            <section id="optimizing-regular-expressions">
+                <title>Optimizing regular expressions</title>
+                <indexterm>
+                    <primary>filters</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>regular expressions</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>optimizing regular expressions</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>optimizing syslog-ng performance</primary>
+                    <secondary>regular expressions</secondary>
+                </indexterm>
+                <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and <parameter>program()</parameter> filter functions and some other syslog-ng objects accept regular expressions as parameters. But evaluating
+                    general regular expressions puts a high load on the CPU, which can cause problems
+                    when the message traffic is very high. Often the regular expression can be replaced
+                    with simple filter functions and logical operators. Using simple filters and logical
+                    operators, the same effect can be achieved at a much lower CPU load.</para>
+                <example>
+                    <title>Optimizing regular expressions in filters</title>
+                    <para>Suppose you need a filter that matches the following error message logged by
+                        the <parameter>xntpd</parameter> NTP daemon:</para>
+                    <synopsis>xntpd[1567]: time error -1159.777379 is too large (set clock manually);</synopsis>
+                    <para>The following filter uses regular expressions and matches every instance and
+                        variant of this message.</para>
+                    <synopsis>filter f_demo_regexp {
     program("demo_program") and
     match("time error .* is too large .* set clock manually"); };</synopsis>
-                <para>Segmenting the <parameter>match()</parameter> part of this filter into
-                    separate <parameter>match()</parameter> functions greatly improves the
-                    performance of the filter. </para>
-                <synopsis>filter f_demo_optimized_regexp {
+                    <para>Segmenting the <parameter>match()</parameter> part of this filter into
+                        separate <parameter>match()</parameter> functions greatly improves the
+                        performance of the filter. </para>
+                    <synopsis>filter f_demo_optimized_regexp {
     program("demo_program") and
     match("time error") and 
     match("is too large") and 
     match("set clock manually"); };</synopsis>
-            </example>
+                </example>
+            </section>
         </section>
         <section id="tagging_messages">
             <title>Tagging messages</title>
@@ -944,7 +964,12 @@ log demo_filteredlog {
                 <secondary>facilities, </secondary>
             </indexterm>
             <para>The <parameter>facility()</parameter> filter accepts both the name and the numerical
-                code of the facility or the importance level. The syslog-ng application recognizes the
+                code of the facility or the importance level.</para>
+            <para>Messages sent by a range of facilities can also be selected. Note that
+                this is only possible when using the name of the facilities. It is not possible to
+                select ranges the numerical codes of the facilities.</para>
+            <synopsis>facility(local0..local5)</synopsis>
+            <para>The syslog-ng application recognizes the
                 following facilities: (Note that some of these facilities are available only on specific
                 platforms.)</para>
             <!-- FIXME authpriv -->
@@ -1143,12 +1168,25 @@ log demo_filteredlog {
                 <parameter>crit</parameter>, <parameter>err</parameter>, <parameter>warning</parameter>,
                     <parameter>notice</parameter>, <parameter>info</parameter>,
                 <parameter>debug</parameter>. </para>
+            <indexterm>
+                <primary>filters</primary>
+                <secondary>facility and priority (level) ranges</secondary>
+            </indexterm>
+            <para>The <parameter>level()</parameter> filter can select messages
+                corresponding to a single importance level, or a level-range. To select messages of
+                a specific level, use the name of the level as a filter parameter, for example use the
+                following to select warning messages:</para>
+            <synopsis>level(warning)</synopsis>
+            <para>To select a range of levels, include the beginning and the ending level in the
+                filter, separated with two dots (<parameter>..</parameter>). For example, to select
+                every message of error or higher level, use the following filter:</para>
+            <synopsis>level(err..emerg)</synopsis>
             </simplesect>
-            <simplesect>
+            <simplesect id="reference-filters-match">
                 <title>match()</title>
-                    <indexterm type="parameter">
-                        <primary>match()</primary>
-                    </indexterm>
+                <indexterm type="parameter">
+                    <primary>match()</primary>
+                </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
                         <colspec colnum="1" colwidth="50pt"/>
@@ -1167,10 +1205,12 @@ log demo_filteredlog {
                                 2.1 and earlier, the <parameter>match()</parameter> filter was applied
                                 only to the text of the message, excluding the headers. This
                                 functionality has been moved to the <parameter>message()</parameter>
-                                filter. To limit the scope of the match to a specific part of the
-                                message (identified with a macro), use the <parameter>match(regexp
-                                    value("MACRO"))</parameter> syntax. Do not include the $ sign in the
-                                parameter of the <parameter>value()</parameter> option.</para>
+                                filter.</para>
+                <indexterm type="parameter">
+                    <primary>value()</primary>
+                </indexterm>
+                <para>To limit the scope of the match to a specific part of the message (identified with a macro), use the <parameter>match(regexp value("MACRO"))</parameter> syntax. Do not include the $ sign in the parameter of the <parameter>value()</parameter> option.</para>
+                <para>The <parameter>value()</parameter> parameter accepts both built-in macros and user-defined ones created with a parser. For details on macros and parsers, see <xref linkend="configuring_macros"/> and <xref linkend="configuring_parsers"/>.</para>
             </simplesect>
             <simplesect>
                 <title>message()</title>
@@ -1297,51 +1337,6 @@ log demo_filteredlog {
     };</synopsis>
                 </example>
             </simplesect>
-            
-        <section>
-            <title>Using regular expressions in filters</title>
-            <para>
-                <indexterm>
-                <primary>regular expressions</primary>
-                <secondary>posix</secondary>
-                </indexterm>
-                The <parameter>host()</parameter>, <parameter>match()</parameter>, and
-                    <parameter>program()</parameter> filter functions accept regular expressions as
-                parameters. The exact type of the regular expression to use can be specified with the
-                    <parameter>type()</parameter> option. The following expression types are available:</para>
-            <simplesect id="reference_filter_types">
-                <title>posix</title>
-                    <indexterm type="parameter">
-                        <primary>posix</primary>
-                    </indexterm>
-                <para><guilabel>Description:</guilabel> Use POSIX regular expressions. If the <parameter>type()</parameter>
-                                parameter is not specified, syslog-ng uses POSIX regular expressions by
-                                default. For additional details on the use and flags of regular
-                                expressions, see <xref linkend="reference_regular_expressions"
-                            />.</para>
-            </simplesect>
-            <simplesect>
-                <title>pcre</title>
-                    <indexterm type="parameter">
-                        <primary>pcre</primary>
-                    </indexterm>
-                <para><guilabel>Description:</guilabel> Use PCRE regular expressions. Execute
-                                the <command>syslog-ng -V</command> command to check if your binary 
-                                supports PCRE regular expressions. Starting with &abbrev; version 3.1, PCRE expressions are supported on every platform. For additional details on the use and flags of
-                                regular expressions, see <xref linkend="reference_regular_expressions"
-                                />.</para>
-            </simplesect>
-            <simplesect>
-                <title>string</title>
-                    <indexterm type="parameter">
-                        <primary>string</primary>
-                    </indexterm>
-                <para><guilabel>Description:</guilabel> Match the strings literally, without regular expression support. By
-                                default, only identical strings are matched. For partial matches, use
-                                the <parameter>flags("prefix")</parameter> or the
-                                    <parameter>flags("substring")</parameter> flags.</para>
-            </simplesect>
-            </section>
         </section>
     </section>
     <section id="example_dropping_messages">
@@ -1351,6 +1346,9 @@ log demo_filteredlog {
         </indexterm>
         <indexterm>
             <primary>dropping messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>discarding messages</primary>
         </indexterm>
         <para>To skip the processing of a message without sending it to a destination, create a log
             statement with the appropriate filters, but do not include any destination in the
