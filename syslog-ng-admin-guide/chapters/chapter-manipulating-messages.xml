@@ -695,6 +695,7 @@ destination d_file {
         <para>Rewrite rules are similar to filters: they must be defined in the syslog-ng
             configuration file and used in the log statement.</para>
         <!-- FIXME parsert/rewriteot is lehet inline definialni? -->
+        <!-- FIXME options should be restructured to simplesects -->
         <note>
             <para>The order of filters, rewriting rules, and parsers in the log statement is
                 important, as they are processed sequentially.
@@ -710,8 +711,18 @@ destination d_file {
             details). The only exceptions are the FACILITY, SEVERITY, TAGS, and the date-related fields, which cannot be rewritten. As of syslog-ng 3.1, it is also possible to rewrite the structured-data fields of
             messages complying to the RFC5424 (IETF-syslog) message format. Substitution rules use the following syntax:</para>
         <synopsis>Declaration:
-    rewrite &lt;name_of_the_rule&gt;
-        {subst("&lt;string or regular expression to find&gt;", "&lt;replacement string&gt;", value(&lt;field name&gt;), flags());};</synopsis>
+    rewrite &lt;name_of_the_rule&gt; 
+            {
+            subst("&lt;string or regular expression to find&gt;", 
+                "&lt;replacement string&gt;", value(&lt;field name&gt;), flags()
+                );
+            };</synopsis>
+            <indexterm type="parameter">
+                <primary>rewrite()</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>subst()</primary>
+            </indexterm>
         <para>The <parameter>type()</parameter> and <parameter>flags()</parameter> options are
             optional. The <parameter>type()</parameter> specifies the type of regular expression to
             use; while the <parameter>flags()</parameter> are the flags of the regular expressions.
@@ -750,6 +761,9 @@ destination d_file {
         <synopsis>Declaration:
             rewrite &lt;name_of_the_rule&gt;
                 {set("&lt;string to include&gt;", value(&lt;field name&gt;));};</synopsis>
+        <indexterm type="parameter">
+            <primary>set()</primary>
+        </indexterm>
         <example id="example_rewrite_set">
             <title>Setting message fields to a particular value</title>
             <para>The following example sets the HOST field of the message to
@@ -761,6 +775,38 @@ destination d_file {
             <para>It is also possible to set the value of a field that does not exist yet, and create a new name-value pair that is associated with the message. The following example created the <parameter>MODIFIED</parameter> field and sets its value to <parameter>yes</parameter>. If you use the <parameter>$MODIFIED</parameter> macro in a template or SQL table, its value will be <parameter>yes</parameter> for every message that was processed with this rewrite rule, and empty for every other message.</para>
             <synopsis>rewrite r_rewrite_set{set("yes", value("MODIFIED"));};</synopsis>
         </example>
+        <section id="conditional-rewrite">
+            <title>Conditional rewrites</title>
+            <indexterm type="parameter">
+                <primary>condition()</primary>
+            </indexterm>
+            <indexterm>
+                <primary>conditional rewrites</primary>
+            </indexterm>
+            <indexterm>
+                <primary>rewrite if</primary>
+            </indexterm>
+            <indexterm>
+                <primary>rewriting messages</primary>
+                <secondary>conditional rewrites</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>filtering rewrites</primary>
+            </indexterm>
+            <para>Starting with version 3.2, it is possible to apply a rewrite rule to a message only if certain conditions are met. The <parameter>condition()</parameter> option effectively embeds a filter expression into the rewrite rule: the message is modified only if the message passes the filter. If the condition is not met, the message is passed to the next element of the log path (that is, the element following the rewrite rule in the log statement, for example, the destination). Any filter expression normally used in filters can be used as a rewrite condition. Existing filter statements can be referenced using the <parameter>filter()</parameter> function within the condition.</para>
+            <tip>
+                <para>Using conditions in rewrite rules can simplify your &abbrev; configuration file, as you do not need to create separate log paths to modify certain messages.</para>
+            </tip>
+            <example id="example-conditional-rewrite">
+                <title>Using conditional rewriting</title>
+                <para>The following example sets the HOST field of the message to
+                <parameter>myhost</parameter> only if the message was sent by the <parameter>myapplication</parameter> program.</para>
+                <synopsis>rewrite r_rewrite_set{set("myhost", value("HOST") condition(program("myapplication")));};</synopsis>
+                <para>The following example is identical to the previous one, except that the condition references an existing filter template.</para>
+                <synopsis>filter f_rewritefilter {program("myapplication");};
+rewrite r_rewrite_set{set("myhost", value("HOST") condition(filter(f_rewritefilter)));};</synopsis>
+            </example>
+        </section>
     </section>
     <section id="reference_regular_expressions">
         <title>Regular expressions</title>
