@@ -708,65 +708,6 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         filter(demo_filter);
         destination(d1);};</synopsis>
             </example>
-            <indexterm>
-                <primary>string comparison</primary>
-            </indexterm>
-            <indexterm>
-                <primary>value comparison</primary>
-            </indexterm>
-            <indexterm>
-                <primary>comparing values</primary>
-            </indexterm>
-            <indexterm>
-                <primary>filters</primary>
-                <secondary>comparing values</secondary>
-            </indexterm>
-            <para>Starting with &abbrev; version 3.2, it is also possible to compare the results of filters to numerical and string values. String comparison uses alphabetical: it determines if a string is alphabetically greater or equal to another string. The following operators are available:</para>
-            <table>
-                <title>Numerical and string comparison operators</title>
-                <?dbfo keep-together="auto" ?>
-                <tgroup cols="3">
-                    <thead>
-                        <row>
-                            <entry>Numerical operator</entry>
-                            <entry>String operator</entry>
-                            <entry>Meaning</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>==</entry>
-                            <entry>eq</entry>
-                            <entry>Equals</entry>
-                        </row>
-                        <row>
-                            <entry>!=</entry>
-                            <entry>ne</entry>
-                            <entry>Not equal to</entry>
-                        </row>
-                        <row>
-                            <entry>&gt;</entry>
-                            <entry>gt</entry>
-                            <entry>Greater than</entry>
-                        </row>
-                        <row>
-                            <entry>&lt;</entry>
-                            <entry>lt</entry>
-                            <entry>Less than</entry>
-                        </row>
-                        <row>
-                            <entry>&gt;=</entry>
-                            <entry>ge</entry>
-                            <entry>Greater than or equal</entry>
-                        </row>
-                        <row>
-                            <entry>=&lt;</entry>
-                            <entry>le</entry>
-                            <entry>Less than or equal</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
         </section>
         <section id="filters-boolean">
             <title>Combining filters with boolean operators</title>
@@ -828,6 +769,122 @@ log demo_filteredlog {
             <tip>
                 <para>Filters are often used together with log path flags. For details, see <xref linkend="reference_logflags"/>.</para>
             </tip>
+        </section>
+        <section id="filters-comparing">
+            <title>Comparing macro values in filters</title>
+            <indexterm>
+                <primary>filters</primary>
+                <secondary>comparing values</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>ge</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>gt</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>eq</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>ne</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>le</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>lt</primary>
+            </indexterm>
+            <indexterm>
+                <primary>string comparison</primary>
+            </indexterm>
+            <indexterm>
+                <primary>value comparison</primary>
+            </indexterm>
+            <indexterm>
+                <primary>comparing values</primary>
+            </indexterm>
+            <indexterm>
+                <primary>filters</primary>
+                <secondary>comparing values</secondary>
+            </indexterm>
+            <para>Starting with &abbrev; version 3.2, it is also possible to compare macro values and templates as numerical and string values. String comparison uses alphabetical: it determines if a string is alphabetically greater or equal to another string. Use the following syntax to compare macro values or templates. For details on macros and templates, see <xref linkend="customizing-message-format"/>.</para>
+            <synopsis>filter &lt;filter-id&gt; 
+        {"&lt;macro-or-template&gt;" operator "&lt;value-or-macro-or-template&gt;"};</synopsis>
+            <example id="example-comparison">
+                <title>Comparing macro values in filters</title>
+                <para>The following expression selects log messages containing a PID (that is, <parameter>$PID</parameter> macro is not empty):</para>
+                <synopsis>filter f_pid {"$PID" !=""};</synopsis>
+                <para>The following expression accomplishes the same, but uses a template as the left argument of the operator and compares the values as strings:</para>
+                <synopsis>filter f_pid {"$HOST$PID" eq "$HOST"};</synopsis>
+            </example>
+            <para>Note that:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>The macro or template must be enclosed in double-quotes.</para>
+                </listitem>
+                <listitem>
+                    <para>The <parameter>$</parameter> character must be used before macros.</para>
+                </listitem>
+                <listitem>
+                    <para>Using comparator operators can be equivalent to using filter functions, but is somewhat slower. For example, using <parameter>"$HOST" eq "myhost"</parameter> is equivalent to using <parameter>host("myhost")</parameter>.</para>
+                </listitem>
+                <listitem>
+                    <para>You can use any macro in the expression, including user-defined macros from parsers and results of pattern database classifications.</para>
+                </listitem>
+                <listitem>
+                    <para>The results of filter functions are boolean values, so they cannot be compared to other values.</para>
+                </listitem>
+                <listitem>
+                    <para>You can use boolean operators to combine comparison expressions.</para>
+                    <!-- FIXME tenyleg? ha igen, peldat is!-->
+                </listitem>
+            </itemizedlist>
+            <para>The following operators are available:</para>
+            <table>
+                <title>Numerical and string comparison operators</title>
+                <?dbfo keep-together="auto" ?>
+                <tgroup cols="3">
+                    <thead>
+                        <row>
+                            <entry>Numerical operator</entry>
+                            <entry>String operator</entry>
+                            <entry>Meaning</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>==</entry>
+                            <entry>eq</entry>
+                            <entry>Equals</entry>
+                        </row>
+                        <row>
+                            <entry>!=</entry>
+                            <entry>ne</entry>
+                            <entry>Not equal to</entry>
+                        </row>
+                        <row>
+                            <entry>&gt;</entry>
+                            <entry>gt</entry>
+                            <entry>Greater than</entry>
+                        </row>
+                        <row>
+                            <entry>&lt;</entry>
+                            <entry>lt</entry>
+                            <entry>Less than</entry>
+                        </row>
+                        <row>
+                            <entry>&gt;=</entry>
+                            <entry>ge</entry>
+                            <entry>Greater than or equal</entry>
+                        </row>
+                        <row>
+                            <entry>=&lt;</entry>
+                            <entry>le</entry>
+                            <entry>Less than or equal</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
         </section>
         <section id="regular_expressions">
             <title>Using wildcards and regular expressions in filters</title>
