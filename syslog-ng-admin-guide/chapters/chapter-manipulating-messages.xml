@@ -808,7 +808,7 @@ rewrite r_rewrite_set{set("myhost", value("HOST") condition(filter(f_rewritefilt
             </example>
         </section>
     </section>
-    <section id="reference_regular_expressions">
+    <section id="regular-expressions">
         <title>Regular expressions</title>
         <indexterm significance="preferred">
             <primary>regular expressions</primary>
@@ -816,11 +816,29 @@ rewrite r_rewrite_set{set("myhost", value("HOST") condition(filter(f_rewritefilt
         <indexterm type="parameter">
             <primary>type()</primary>
         </indexterm>
-        <para>Filters and substitution rewrite rules can use regular expressions. In regular expressions, the characters <parameter>()[].*?+^$|</parameter> are used as special symbols. Therefore, these characters must be preceded with a
-            backslash (<parameter>\</parameter>) if they are meant literally. For example, the
-                <parameter>\$40</parameter> expression matches the <parameter>$40</parameter>
-            string. Backslashes have to be escaped as well if they are meant literally. For example,
-            the <parameter>\\d</parameter> expression matches the <parameter>\d</parameter> string.</para>
+        <para>Filters and substitution rewrite rules can use regular expressions. In regular expressions, the characters <parameter>()[].*?+^$|\</parameter> are used as special symbols. Depending on how you want to use these characters and which quotation mark you use, these characters must be used differently, as summarized below.</para>
+        <itemizedlist>
+            <listitem>
+                <para>Strings between single quotes (<parameter>'string'</parameter>) are
+                    treated literally, you do not have to escape special characters. This makes
+                    writing and reading regular expressions much more simple: it is recommended
+                    to use single quotes when writing regular expressions.</para>
+            </listitem>
+            <listitem>
+                <para>When enclosing strings between double-quotes (<parameter>"string"</parameter>), you have to escape special characters, that is, to precede them with a backslash (<parameter>\</parameter>) character if they are meant literally. For example, the <parameter>\$40</parameter> expression matches the <parameter>$40</parameter> string. Backslashes have to be escaped as well if they are meant literally, for example, the <parameter>\\d</parameter> expression matches the <parameter>\d</parameter> string.</para>
+                <tip>
+                    <para>If you use single quotes in, you do not need to escape the backslash, for example <parameter>match("\\.")</parameter> is equivalent to <parameter>match('\.')</parameter>.</para>
+                </tip>
+            </listitem>
+            <listitem>
+                <para>Enclosing normal strings between double-quotes
+                    (<parameter>"string"</parameter>) is not necessary, you can just omit the
+                    double-quotes. For example when writing filters,
+                    <parameter>match("sometext")</parameter> and
+                    <parameter>match(sometext)</parameter> will both match for the
+                        <parameter>sometext</parameter> string.</para>
+            </listitem>
+        </itemizedlist>
         <indexterm>
             <primary>regular expressions</primary>
             <secondary>case-insensitive</secondary>
@@ -832,12 +850,6 @@ rewrite r_rewrite_set{set("myhost", value("HOST") condition(filter(f_rewritefilt
         <indexterm>
             <primary>escaping special characters</primary>
         </indexterm>
-        
-        <tip>
-            <para>If you use single quotes in, you do not need to escape the backslash, for example
-                    <parameter>match("\\.")</parameter> is equivalent to
-                <parameter>match('\.')</parameter>.</para>
-        </tip>
         <para>By default, all regular expressions are case sensitive. To disable the case
             sensitivity of the expression, add the <parameter>flags(ignore-case)</parameter> option
             to the regular expression.</para>
