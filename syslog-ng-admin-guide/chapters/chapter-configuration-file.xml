@@ -5,23 +5,24 @@
  %entities;]> 
 <chapter id="chapter-configuration-file">
     <title>The &abbrev; configuration file</title>
-    <section id="configuration-syntax">
-        <title>The configuration syntax in detail</title>
-        <section id="config_file">
-            <title>The syslog-ng configuration file</title>
+    <section id="config_file">
+        <title>The syslog-ng configuration file</title>
+        <para>The syslog-ng application is configured by editing the
+            <filename>syslog-ng.conf</filename> file. Use any regular text editor application to
+            modify the file. The location of the configuration file depends on how you installed &abbrev;:</para>
+        <itemizedlist>
+            <listitem>
+                <para><emphasis role="bold">Binary packages downloaded from the BalaBit website</emphasis>: The <filename>syslog-ng.conf</filename> file is located under the <filename>/opt/syslog-ng/etc/</filename> directory. The precompiled &abbrev; packages include sample configuration files as well. These package are available at <ulink url="http://www.balabit.com/network-security/syslog-ng/opensource-logging-system/downloads/upgrade">http://www.balabit.com/network-security/syslog-ng/opensource-logging-system/downloads/upgrade</ulink>.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis role="bold">Third-party packages</emphasis>: Native packages of a platform (like the ones downloaded from Linux repositories) typically place the configuration file under the <filename>/etc/syslog-ng/</filename> directory.</para>
+            </listitem>
+        </itemizedlist>
+        <section id="configuration-syntax">
+            <title>The configuration syntax in detail</title>
             <indexterm significance="preferred">
                 <primary>syslog-ng.conf</primary>
             </indexterm>
-            <para>The syslog-ng application is configured by editing the
-                <filename>syslog-ng.conf</filename> file. Use any regular text editor application to
-                modify the file. The precompiled syslog-ng packages include sample configuration files
-                as well. The <filename>syslog-ng.conf</filename> file is
-                located under the <filename>/opt/syslog-ng/etc/</filename> directory.</para>
-            <note>
-                <para>Earlier versions of &abbrev; stored the configuration file in
-                    different directories, depending on the platform; typically under
-                        <filename>/etc/syslog-ng/</filename>.</para>
-            </note>
             <para>Every syslog-ng configuration file must begin with a line containing the version
                 information of syslog-ng. For syslog-ng version &version;, this line looks like:</para>
             <synopsis>@version: &version;</synopsis>
@@ -51,6 +52,33 @@ log { source(s_local); destination(d_file); };</synopsis>
                 <listitem>
                     <para>The main body of the configuration file consists of object definitions: sources, destinations, logpaths define which log message are received and where they are sent. All identifiers, option names and attributes, and any other strings used in the syslog-ng configuration file are case sensitive. Objects must be defined before they are referenced in another statement. Object definitions (also called statements) have the following syntax:</para>
                     <synopsis>object_type object_id {&lt;options&gt;};</synopsis>
+                    <itemizedlist id="global_objects_syntax">
+                        <listitem>
+                            <para><emphasis>Type of the object</emphasis>: One of <parameter>source</parameter>,
+                                    <parameter>destination</parameter>, <parameter>log</parameter>,
+                                    <parameter>filter</parameter>, <parameter>parser</parameter>,
+                                    <parameter>rewrite</parameter> rule, or
+                            <parameter>template</parameter>.</para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis>Identifier of the object</emphasis>: A unique name identifying the
+                                object. When using a reserved word as an identifier, enclose the identifier in
+                                quotation marks.</para>
+                            <tip>
+                                <para>Use identifiers that refer to the type of the object they identify. For
+                                    example, prefix source objects with <parameter>s_</parameter>, destinations
+                                    with <parameter>d_</parameter>, and so on. </para>
+                            </tip>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis>Parameters</emphasis>: The parameters of the object, enclosed in
+                                braces <parameter>{parameters}</parameter>.</para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis>Semicolon</emphasis>: Object definitions end with a semicolon
+                                    (<parameter>;</parameter>).</para>
+                        </listitem>
+                    </itemizedlist>
                     <para>For example, the following line defines a source and calls it <parameter>s_internal</parameter>.</para>
                     <synopsis>source s_internal { internal(); };</synopsis>
                     <para>The object can be later referenced in other statements using its ID, for example, the previous source is used as a parameter of the following log statement:</para>
@@ -62,6 +90,27 @@ log { source(s_local); destination(d_file); };</synopsis>
                     <para>For example, the following source statement has three options; the first two options (<parameter>file()</parameter> and <parameter>follow_freq()</parameter>) have a single parameter, while the third one (<parameter>flags()</parameter>) has two parameters:</para>
                     <synopsis>source s_tail { file("/var/log/apache/access.log" 
     follow_freq(1) flags(no-parse, validate-utf8)); };</synopsis>
+                     <para>Objects may have required and optional parameters. Required parameters are positional, meaning that they must be specified in a defined order. Optional parameters can be specified in any order using the <literal>option(value)</literal> format. If a parameter (optional or required) is not specified, its default value is used. The parameters and their default values are listed in the reference section of the particular object.</para>
+                    <example>
+                        <title>Using required and optional parameters</title>
+                        <para>The <parameter>unix-stream()</parameter> source driver has a single required
+                            argument: the name of the socket to listen on. Optional parameters follow the socket
+                            name in any order, so the following source definitions have the same effect: </para>
+                        <synopsis>source s_demo_stream1 { 
+        unix-stream("/dev/log" max-connections(10) group(log)); };
+source s_demo_stream2 { 
+        unix-stream("/dev/log" group(log) max-connections(10)); };</synopsis>
+                    </example>
+                </listitem>
+                <listitem>
+                    <para>Some options are global options, or can be set globally for example, whether &abbrev; should use DNS resolution to resolve IP addresses. Global options are detailed in <xref linkend="chapter-global-options"/>.</para>
+                    <synopsis>options { use_dns(no); };</synopsis>
+                </listitem>
+                <listitem>
+                    <para>To add comments to the configuration file, start a line with <parameter>#</parameter> and write your comments. These lines are ignored by syslog-ng.</para>
+                    <synopsis># Comment: This is a stream source
+source s_demo_stream { 
+        unix-stream("/dev/log" max-connections(10) group(log)); };</synopsis>
                 </listitem>
             </itemizedlist>
             <tip>
@@ -70,70 +119,6 @@ log { source(s_local); destination(d_file); };</synopsis>
                 <para>To activate the configuration, reload the configuration of syslog-ng using the
                         <command>/etc/init.d/syslog-ng reload</command> command.</para>
             </tip>
-    </section>
-    <section id="defining_global_objects">
-        <title>Defining global objects</title>
-        <indexterm>
-            <primary>global objects</primary>
-            <secondary>defining</secondary>
-        </indexterm>
-        <indexterm>
-            <primary>defining global objects</primary>
-        </indexterm>
-        <para id="global_objects_para1">Global objects (for example sources, destinations, log paths, or
-            filters) are defined in the syslog-ng configuration file. Object definitions consist of
-            the following elements: </para>
-        <itemizedlist id="global_objects_syntax">
-            <listitem>
-                <para><emphasis>Type of the object</emphasis>: One of <parameter>source</parameter>,
-                        <parameter>destination</parameter>, <parameter>log</parameter>,
-                        <parameter>filter</parameter>, <parameter>parser</parameter>,
-                        <parameter>rewrite</parameter> rule, or
-                <parameter>template</parameter>.</para>
-            </listitem>
-            <listitem>
-                <para><emphasis>Identifier of the object</emphasis>: A unique name identifying the
-                    object. When using a reserved word as an identifier, enclose the identifier in
-                    quotation marks.</para>
-                <tip>
-                    <para>Use identifiers that refer to the type of the object they identify. For
-                        example, prefix source objects with <parameter>s_</parameter>, destinations
-                        with <parameter>d_</parameter>, and so on. </para>
-                </tip>
-            </listitem>
-            <listitem>
-                <para><emphasis>Parameters</emphasis>: The parameters of the object, enclosed in
-                    braces <parameter>{parameters}</parameter>.</para>
-            </listitem>
-            <listitem>
-                <para><emphasis>Semicolon</emphasis>: Object definitions end with a semicolon
-                        (<parameter>;</parameter>).</para>
-            </listitem>
-        </itemizedlist>
-        <para id="global_objects_para2">The syntax is summarized as follows:</para>
-        <synopsis>type identifier { parameters };</synopsis>
-        <para>Objects have parameters; some of them are required, others are optional. Required
-            parameters are positional, meaning that they must be specified in a defined order.
-            Optional arguments can be specified in any order using the
-            <literal>option(value)</literal> format. If a parameter (optional or required) is not
-            specified, its default value is used. The parameters and their default values are listed
-            in the reference section of the particular object. See <xref linkend="chapter_reference"
-            /> for details.</para>
-        <example>
-            <title>Using required and optional parameters</title>
-            <para>The <parameter>unix-stream()</parameter> source driver has a single required
-                argument: the name of the socket to listen on. Optional parameters follow the socket
-                name in any order, so the following source definitions have the same effect: </para>
-            <synopsis>source s_demo_stream1 { 
-        unix-stream("/dev/log" max-connections(10) group(log)); };
-source s_demo_stream2 { 
-        unix-stream("/dev/log" group(log) max-connections(10)); };</synopsis>
-        </example>
-        <para>To add comments to the configuration file, start a line with <parameter>#</parameter>
-            and write your comments. These lines are ignored by syslog-ng.</para>
-        <synopsis># Comment: This is a stream source
-source s_demo_stream { 
-        unix-stream("/dev/log" max-connections(10) group(log)); };</synopsis>
         </section>
         <section id="configfile_syntax">
             <title>Notes about the configuration syntax</title>
@@ -215,7 +200,7 @@ source s_demo_stream {
         </indexterm>
         <para>Starting with &abbrev; version 3.2, it is possible to define global variables in the configuration file. Global variables are actually <parameter>name-value</parameter> pairs; when syslog-ng processes the configuration file during startup, it automatically replaces <parameter>´name´</parameter> with <parameter>value</parameter>. To define a global variable, use the following syntax:</para>
         <synopsis>@define name "value"</synopsis>
-        <para>To use the variable, insert the name of the variable enclosed between backticks (<parameter>´</parameter>, similarly to using variables in Linux shells) anywhere in the configuration file.</para>
+        <para>The value can be any string, but special characters must be escaped.<!-- FIXME link az escapelos reszre -->To use the variable, insert the name of the variable enclosed between backticks (<parameter>´</parameter>, similarly to using variables in Linux shells) anywhere in the configuration file.</para>
         <tip>
             <para>The environmental variables of the host are automatically imported and can be used as global variables.</para>
         </tip>
@@ -232,7 +217,7 @@ source s_demo_stream {
         source s_myapp_2 { file("/opt/myapp/logs/error.log" follow_freq(1)); };
         source s_myapp_3 { file("/opt/myapp/logs/debug.log" follow_freq(1)); };</synopsis>
         </example>
-        <!-- FIXME Value-ra milyen megkotesek vannak? Karakter, hossz, stb. -->
+        <!-- FIXME escapelos peldat is -->
     </section>
     <section id="large-configs">
         <title>Managing large syslog-ng configurations</title>
