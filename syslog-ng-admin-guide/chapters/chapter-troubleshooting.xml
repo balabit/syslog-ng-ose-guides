@@ -151,6 +151,57 @@
                 </step>
             </procedure>
         </section>
+        <section id="syslog-ng-strace-truss-tusc">
+            <title>Collecting debugging information with strace, truss, or tusc</title>
+            <indexterm>
+                <primary>troubleshooting</primary>
+                <secondary>truss</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>troubleshooting</primary>
+                <secondary>strace</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>troubleshooting</primary>
+                <secondary>tusc</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>truss</primary>
+            </indexterm>
+            <indexterm>
+                <primary>strace</primary>
+            </indexterm>
+            <indexterm>
+                <primary>tusc</primary>
+            </indexterm>
+            <para>To properly troubleshoot certain situations, it can be useful to trace which system calls &abbrev; performs. How this is performed depends on the platform running &abbrev;. In general, note the following points:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>When &abbrev; is started, a supervisor process might stay in the foreground, while the actual syslog-ng daemon goes to the background. Always trace the background process.</para>
+                </listitem>
+                <listitem>
+                    <para>Apart from the system calls, the time between two system calls can be important as well. Make sure that your tracing tool records the time information as well. For details on how to do that, refer to the manual page of your specific tool (for example, <command>strace</command> on Linux, or <command>truss</command> on Solaris and BSD).</para>
+                </listitem>
+                <listitem> 
+                    <para>Run your tracing tool in verbose mode, and if possible, set it to print long output strings, so the messages are not truncated.</para>
+                </listitem>
+                <listitem>
+                    <para>When using <command>strace</command>, also record the output of <command>lsof</command> to see which files are accessed.</para>
+                </listitem>
+            </itemizedlist>
+            <para>The following are examples for tracing system calls of syslog-ng on some platforms. The output is saved into the <filename>/tmp/syslog-ng-trace.txt</filename> file, sufficed with the PID of the related syslog-ng process.The path of the syslog-ng binary assumes that ypu have installed &abbrev; from the official &abbrev; binaries available at the BalaBit website &mdash; native distribution-specific packages may use different paths.</para>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis>Linux</emphasis>: <command> strace -o /tmp/trace.txt -s256 -ff -ttT /opt/syslog-ng/sbin/syslog-ng -f /opt/syslog-ng/etc/syslog-ng.conf -Fdv</command></para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>HP-UX</emphasis>: <command>tusc -f -o /tmp/syslog-ng-trace.txt -T /opt/syslog-ng/sbin/syslog-ng</command></para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>IBM AIX and Solaris</emphasis>: <command>truss -f -o /tmp/syslog-ng-trace.txt -r all -w all -u libc:: /opt/syslog-ng/sbin/syslog-ng -p 10000 -d -d -d</command></para>
+                </listitem>
+            </itemizedlist>
+        </section>
         <section id="syslog-ng-failure-script">
             <title>Running a failure script</title>
             <indexterm>
@@ -159,7 +210,7 @@
             </indexterm>
             <indexterm>
                 <primary>troubleshooting</primary>
-                <secondary>failure scrip</secondary>
+                <secondary>failure script</secondary>
             </indexterm>
             <indexterm>
                 <primary>failure script</primary>
