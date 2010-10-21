@@ -135,7 +135,7 @@ destination d_file {
         </note>
         </section>
         <section id="reference_macros">
-        <title>Macros in &abbrev;</title>
+        <title>Macros of &abbrev;</title>
         <indexterm>
             <primary>macros</primary>
             <secondary>reference</secondary>
@@ -684,6 +684,89 @@ destination d_file {
             <para><guilabel>Description:</guilabel> The English name of the day.</para>
         </simplesect>
     </section>
+        <section id="template-functions">
+            <title>Template functions</title>
+            <indexterm>
+                <primary>template functions</primary>
+            </indexterm>
+            <indexterm>
+                <primary>templates</primary>
+                <secondary>template functions</secondary>
+            </indexterm>
+            <para>A template function is a transformation: it modifies the way macros or name-value pairs are expanded. Template functions can be used in template definitions, or when macros are used in the configuration of &abbrev;. Template functions use the following syntax:</para>
+            <synopsis>$(function-name parameter1 parameter2 parameter3 ...)</synopsis>
+            <para>For example, the <parameter>$(echo)</parameter> template function simply returns the value of the macro it receives as a parameter, thus <parameter>$(echo $HOST)</parameter> is equivalent to <parameter>$HOST</parameter></para>.
+            <parameter>The parameters of template functions are separated by a whitespace character. If you want to use a longer string or multiple macros as a single parameter, enclose the parameter in double-quotes. For example:</parameter>
+            <synopsis>$(echo "$HOST $PROGRAM $PID")</synopsis>
+            <para>Template functions can be nested into each other, so the parameter of a template function can be another template function, like:</para>
+            <synopsis>$(echo $(echo $HOST))</synopsis>
+            <para>For details on using template functions, see the descriptions of the individual template functions in <xref linkend="reference-template-functions"/>.</para>
+        </section>
+        <section id="reference-template-functions">
+            <title>Template functions of &abbrev;</title>
+            <para>The following template functions are available in &abbrev;.</para>
+            <simplesect id="template-function-echo">
+                <title>echo</title>
+                    <indexterm type="parameter">
+                        <primary>echo</primary>
+                    </indexterm>
+                <para><guilabel>Syntax:</guilabel> <synopsis>$(echo argument)</synopsis></para>
+                <para><guilabel>Description:</guilabel> Returns the value of its argument. using <parameter>$(echo $HOST)</parameter> is equivalent to <parameter>$HOST</parameter>.</para>
+            </simplesect>
+            <simplesect id="template-function-grep">
+                <title>grep</title>
+                    <indexterm type="parameter">
+                        <primary>grep</primary>
+                    </indexterm>
+                <para><guilabel>Syntax:</guilabel> <synopsis>$(grep condition value-to-select)</synopsis><!-- FIXME pontositani --></para>
+                <para><guilabel>Description:</guilabel> The <parameter>grep</parameter> template function is useful when using a pattern database to correlate related log messages. The <parameter>grep</parameter> template function can be used to filter the messages of the same context when the index of the particular message is not known.</para>
+                <example>
+                    <title>Using the grep template function</title>
+                    <para>The following example selects the message of the context that has a <parameter>username</parameter> name-value pair with the <parameter>root</parameter> value, and returns the value of the <parameter>auth_method</parameter> name-value pair.</para>
+                    <synopsis>$(grep ("${username}" == "root") ${auth_method})</synopsis>
+                </example>
+                <para>It is possible to specify multiple name-value pairs as parameters, separated with commas. If multiple messages match the condition of <parameter>grep</parameter>, these will be returned also separated by commas. This can be used for example to collect the e-mail recipients from postfix messages.</para>
+                <!-- FIXME konkret peldat! -->
+            </simplesect>
+            <simplesect id="template-function-if">
+                <title>if</title>
+                    <indexterm type="parameter">
+                        <primary>if</primary>
+                    </indexterm>
+                <para><guilabel>Syntax:</guilabel> <synopsis>$(if (&lt;condition&gt;) &lt;true template&gt; &lt;false template&gt;)</synopsis></para>
+                <para><guilabel>Description:</guilabel> Returns the value of the <parameter>&lt;true template&gt;</parameter> parameter if the <parameter>&lt;condition&gt;</parameter> is true. If the <parameter>&lt;condition&gt;</parameter> is false, the value of <parameter>&lt;false template&gt;</parameter> is returned.</para>
+                <example>
+                    <title>Using pattern databases and the if template function</title>
+                    <para>The following example returns <parameter>violation</parameter> if the <parameter>username</parameter> name-value pair of a message processed with pattern database is <parameter>root</parameter>, and <parameter>system</parameter> otherwise.</para>
+                    <synopsis>$(if ("${username}" == "root") "violation" "system")</synopsis>
+                    <para>This can be used to set the class of a message in pattern database rules based on the condition.</para>
+                    <synopsis>&lt;value name="username"&gt;$(if ("${username}" == "root") "violation" "system")&lt;/value&gt;</synopsis>
+                    <indexterm>
+                        <primary>template functions</primary>
+                        <secondary>embedding</secondary>
+                    </indexterm>
+                    <para>Since template functions can be embedded into each other, it is possible to use another template function as the template of the first one. For example, the following expression returns <parameter>root</parameter> if the username is <parameter>root</parameter>, <parameter>admin</parameter> if the username is <parameter>joe</parameter>, and <parameter>normal user</parameter> otherwise.</para>
+                    <synopsis>&lt;value name="username"&gt;
+        $(if ("${username}" == "root") 
+            "root" 
+            $(if ("${usracct.username}" == "joe") "admin" "normal user") 
+            "normal user")&lt;/value&gt;</synopsis>
+                </example>
+            </simplesect>
+            <simplesect id="template-function-ipv4-to-int">
+                <title>ipv4-to-int</title>
+                    <indexterm type="parameter">
+                        <primary>ipv4-to-int</primary>
+                    </indexterm>
+                <para><guilabel>Syntax:</guilabel> <synopsis>$(ipv4-to-int parameter)</synopsis></para>
+                <para><guilabel>Description:</guilabel> Converts the specified IPv4 address to its numeric representation.</para>
+                <!-- FIXME peldat-->
+                <note>
+                    <para>This template function is available only if the <filename>convertfuncs</filename> module has been loaded. By default, &abbrev; loads every available module.</para>
+                    <!-- FIXME link a modulokrol szolo leirasra-->
+                </note>
+            </simplesect>
+        </section>
     </section>
     <section id="modifying-messages">
         <title>Modifying messages</title>
