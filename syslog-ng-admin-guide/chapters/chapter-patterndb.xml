@@ -433,48 +433,73 @@
                                 to identify the applications sending log messages.</para>
                         </listitem>
                         <listitem>
+                            <indexterm type="parameter">
+                                <primary>id &mdash; ruleset</primary>
+                            </indexterm>
                             <para><emphasis>id</emphasis>: A unique ID of the application,
                                 for example, the md5 sum of the <parameter>name</parameter>
                                 attribute.</para>
                         </listitem>
                         <listitem>
+                            <indexterm type="parameter">
+                                <primary>description &mdash; ruleset</primary>
+                            </indexterm>
                             <para><guimenu>description</guimenu>: OPTIONAL &mdash; A
                                 description of the ruleset or the application.</para>
                         </listitem>
                         <listitem>
+                            <indexterm type="parameter">
+                                <primary>url &mdash; ruleset</primary>
+                            </indexterm>
                             <para><guimenu>url</guimenu>: OPTIONAL &mdash; An URL
                                 referring to further information about the ruleset or the
                                 application.</para>
                         </listitem>
-                        <listitem>
-                            <para><guimenu>pattern</guimenu>: The name of the application
-                                &mdash; syslog-ng matches this value to the $PROGRAM
-                                header of the syslog message to find the rulesets applicable
-                                to the syslog message. This element is also called
-                                    <parameter>program pattern</parameter>. For example <synopsis>&lt;pattern&gt;su&lt;/pattern&gt;</synopsis>
-                                <note>
-                                    <para>If the
-                                        <parameter>&lt;pattern&gt;</parameter>
-                                        element of a ruleset is not specified, -ng will use
-                                        this ruleset as a fallback ruleset: it will apply
-                                        the ruleset to messages that have an empty PROGRAM
-                                        header, or if none of the program patterns matched
-                                        the PROGRAM header of the incoming message. </para>
-                                </note>
-                            </para>
+                        <listitem id="patterndb-schema-patterns">
+                            <para><guimenu>&lt;patterns&gt;</guimenu>: A container element storing program names also called <parameter>program pattern</parameter>. For example:</para>
+                            <synopsis>&lt;patterns&gt;
+    &lt;pattern&gt;su&lt;/pattern&gt;
+&lt;patterns&gt;</synopsis>
+                            <indexterm type="parameter">
+                                <primary>patterns</primary>
+                            </indexterm>
+                            <para>A <parameter>&lt;patterns&gt;</parameter> element may contain any number of <guimenu>&lt;pattern&gt;</guimenu> elements.</para>
+                            <itemizedlist>
+                                <listitem>
+                                    <indexterm type="parameter">
+                                        <primary>pattern &mdash; ruleset</primary>
+                                    </indexterm>
+                                    <para><guimenu>pattern</guimenu>: The name of the application &mdash; syslog-ng matches this value to the $PROGRAM header of the syslog message to find the rulesets applicable to the syslog message.</para>
+                                    <para>Specifying multiple patterns is useful if two or more applications have different names (that is, different $PROGRAM fields), but otherwise use the send identical log messages.</para>
+                                    <synopsis>&lt;patterns&gt;
+    &lt;pattern&gt;firstapplication&lt;/pattern&gt;
+    &lt;pattern&gt;otherapplication&lt;/pattern&gt;
+&lt;patterns&gt;</synopsis>
+                                    <para>It is not necessary to use multiple patterns if only the end of the $PROGRAM fields is different, use only the beginning of the $PROGRAM field as the <parameter>pattern</parameter>. For example, the Postfix e-mail server sends messages using different process names, but all of them begin with the <parameter>postfix</parameter> string.</para>
+                                </listitem>
+                            </itemizedlist>
+                            <note>
+                                <para>If the <parameter>&lt;pattern&gt;</parameter> element of a ruleset is not specified, &abbrev; will use this ruleset as a fallback ruleset: it will apply the ruleset to messages that have an empty PROGRAM header, or if none of the program patterns matched the PROGRAM header of the incoming message. </para>
+                            </note>
                         </listitem>
                         <listitem>
                             <para><guimenu>&lt;rules&gt;</guimenu>: A container
                                 element for the rules of the ruleset.</para>
+                            <indexterm type="parameter">
+                                <primary>rules</primary>
+                            </indexterm>
                             <itemizedlist>
                                 <listitem>
+                                    <indexterm type="parameter">
+                                        <primary>rule</primary>
+                                    </indexterm>
                                     <para><guimenu>&lt;rule&gt;</guimenu>: An
                                         element containing message patterns and how a
                                         message that matches these patterns is classified.
-                                        For example:
-                                        <synopsis>&lt;rule provider='balabit'
-                                        id='f57196aa-75fd-11dd-9bba-001e6806451b'
-                                        class='violation'&gt;</synopsis></para>
+                                        For example:</para>
+                                        <synopsis>&lt;rule provider='balabit' id='f57196aa-75fd-11dd-9bba-001e6806451b' class='violation'&gt;</synopsis>
+                                    <para>The following example specifies attributes for correlating messages as well. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
+                                    <synopsis>&lt;rule provider='balabit' id='f57196aa-75fd-11dd-9bba-001e6806451b' class='violation' context-id='same-session' context-scope='process' context-timeout='360'&gt;</synopsis>
                                     <note>
                                         <para>If the following characters appear in the
                                           message, they must be escaped in the rule as
@@ -505,22 +530,84 @@
                                         elements.</para>
                                 </listitem>
                                 <listitem>
+                                    <indexterm type="parameter">
+                                        <primary>provider</primary>
+                                    </indexterm>
                                     <para><emphasis>provider</emphasis>: The provider of the
                                         rule. This is used to distinguish between who
                                         supplied the rule; i.e., if it has been created by
                                         BalaBit, or added to the xml by a local user.</para>
                                 </listitem>
                                 <listitem>
+                                    <indexterm type="parameter">
+                                        <primary>id &mdash; rule</primary>
+                                    </indexterm>
                                     <para><emphasis>id</emphasis>: The globally unique ID of
                                         the rule.</para>
                                 </listitem>
                                 <listitem>
+                                    <indexterm type="parameter">
+                                        <primary>class</primary>
+                                    </indexterm>
                                     <para><emphasis>class</emphasis>: The class of the rule
                                         &mdash; syslog-ng assigns this class to the
                                         messages matching a pattern of this rule.</para>
                                 </listitem>
-
+                                <listitem id="patterndb-schema-context-id">
+                                    <indexterm type="parameter">
+                                        <primary>context-id</primary>
+                                    </indexterm>
+                                    <para><emphasis>context-id</emphasis>: OPTIONAL &mdash; An identifier to group related log messages when using the pattern database to correlate events. The ID can be a descriptive string describing the events related to the log message (for example, <parameter>ssh-sessions</parameter> for log messages related to SSH traffic), but can also contain macros to generate IDs dynamically. When using macros in IDs, see also the <link linkend="patterndb-schema-context-scope"><parameter>context-scope</parameter></link> attribute. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
+                                    <note>
+                                        <para>The &abbrev; application determines the context of the message <emphasis>after</emphasis> the pattern matching is completed. This means that macros and name-value pairs created by the matching pattern database rule can be used as context-id macros.</para>
+                                    </note>
+                                </listitem>
+                                <listitem id="patterndb-schema-context-timeout">
+                                    <indexterm type="parameter">
+                                        <primary>context-timeout</primary>
+                                    </indexterm>
+                                    <para><emphasis>context-timeout</emphasis>: OPTIONAL &mdash; The number of seconds the context is stored. Note that for high-traffic logservers, storing open contexts for long time can require significant amount of memory. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
+                                </listitem>
+                                <listitem id="patterndb-schema-context-scope">
+                                    <indexterm type="parameter">
+                                        <primary>context-scope</primary>
+                                    </indexterm>
+                                    <para><emphasis>context-scope</emphasis>: OPTIONAL &mdash; Specifies which messages belong to the same context. This attribute is used to determine the context of the message if the <link linkend="patterndb-schema-context-id"><parameter>context-id</parameter></link> does not specify any macros. Usually, <parameter>context-scope</parameter> acts a filter for the context, with <parameter>context-id</parameter> refining the filtering if needed. The <parameter>context-scope</parameter> attribute has the following possible values:</para>
+                                    <itemizedlist>
+                                        <listitem>
+                                            <indexterm type="parameter">
+                                                <primary>process &mdash; context-scope</primary>
+                                            </indexterm>
+                                            <para><emphasis>process</emphasis>: Only messages that are generated by the same process of a client belong to the same context, that is, messages that have identical $HOST, $PROGRAM and $PID values. This is the default behavior of &abbrev; if <parameter>context-scope</parameter> is not specified.</para>
+                                        </listitem>
+                                        <listitem>
+                                            <indexterm type="parameter">
+                                                <primary>program &mdash; context-scope</primary>
+                                            </indexterm>
+                                            <para><emphasis>program</emphasis>: Messages that are generated by the same application of a client belong to the same context, that is, messages that have identical $HOST and $PROGRAM values.</para>
+                                        </listitem>
+                                        <listitem>
+                                            <indexterm type="parameter">
+                                                <primary>host &mdash; context-scope</primary>
+                                            </indexterm>
+                                            <para><emphasis>host</emphasis>: Every message generated by a client belongs to the same context, only the $HOST value of the messages must be identical. </para>
+                                        </listitem>
+                                        <listitem>
+                                            <indexterm type="parameter">
+                                                <primary>global &mdash; context-scope</primary>
+                                            </indexterm>
+                                            <para><emphasis>global</emphasis>: Every message belongs to the same context.</para>
+                                        </listitem>
+                                    </itemizedlist>
+                                    <note>
+                                        <para>Using the <parameter>context-scope</parameter> attribute is significantly faster than using macros in the <parameter>context-id</parameter> attribute.</para>
+                                    </note>
+                                    <para>For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
+                                </listitem>
                                 <listitem>
+                                    <indexterm type="parameter">
+                                        <primary>patterns &mdash; rule</primary>
+                                    </indexterm>
                                     <para><guimenu>&lt;patterns&gt;</guimenu>: An
                                         element containing the patterns of the rule. If a
                                           <guimenu>&lt;patterns&gt;</guimenu>
