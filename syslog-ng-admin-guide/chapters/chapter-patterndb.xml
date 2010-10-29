@@ -337,8 +337,146 @@
                     >http://creativecommons.org/licenses/by-sa/3.0/us/legalcode</ulink>.</para>
         </section>
     </section>
+    <section id="patterndb-correlation">
+        <title>Correlating log messages</title>
+        <indexterm>
+            <primary>message correlation</primary>
+        </indexterm>
+        <indexterm>
+            <primary>correlating messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>pattern databases</primary>
+            <secondary>correlating messages</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>message context</primary>
+        </indexterm>
+        <indexterm>
+            <primary>context of messages</primary>
+        </indexterm>
+        <para>Starting with version 3.2, the &abbrev; application is able to correlate log messages identified using pattern databases.</para>
+        <para>Log messages are supposed to describe events, but applications often separate information about a single event into different log messages. For example, the Postfix e-mail server logs the sender and recipient addresses into separate log messages, or in case of an unsuccessful login attempt, the OpenSSH server sends a log message about the authentication failure, and the reason of the failure in the next message.</para>
+        <para>Of course, messages that are not so directly related can be correlated as well, for example, login-logout messages, and so on.</para>
+        <para>To correlate log messages, &abbrev; uses the pattern database to add messages into message-groups called contexts. A context consists of a series of log messages that are related to each other in some way, for example, the log messages of an SSH session can belong to the same context. As new messages come in, they may be added to a context. Also, when an incoming message is identified it can trigger actions to be performed, for example, generate a new message that contains all the important information that was stored previously in the context. (For details on triggering actions and generating messages, see <xref linkend="patterndb-triggers-actions"/>.)</para>
+        <para>There are two attributes for pattern database rules that determine if a message matching the rule is added to a context: <parameter>context-scope</parameter> and <parameter>context-id</parameter>. The <parameter>context-scope</parameter> attribute acts as an early filter, selecting messages sent by the same process ($HOST$PROGRAM$PID is identical), application ($HOST$PROGRAM is identical), or host, while the <parameter>context-id</parameter> actually adds the message to the context specified in the id. The <parameter>context-id</parameter> can be a simple string, or can contain macros or values extracted from the log messages for further filtering.</para>
+        <para>Another parameter of a rule is the <parameter>context-timeout</parameter> attribute, which determines how long a context is stored, that is, how long &abbrev; waits for related messages to arrive. Note the following points about timeout values:</para>
+        <itemizedlist>
+            <listitem>
+                <para>When a new message is added to a context, &abbrev; will restart the timeout using the <parameter>context-timeout</parameter> set for the new message.</para>
+            </listitem>
+            <listitem>
+                <para>When calculating if the timeout has already expired or not, &abbrev; uses the timestamps of the incoming messages, not system time elapsed between receiving the two messages. That way &abbrev; can be used to process and correlate already existing log messages offline. However, the timestamps of the messages must be in chronological order (that is, a new message cannot be older than the one already processed), and if a message is newer than the current system time (that is, it seems to be coming from the future), &abbrev; will replace its timestamp with the current system time.</para>
+            </listitem>
+            <listitem>
+                <para>Avoid using unnecessarily long timeout values on high-traffic systems, as storing the contexts for many messages can require considerable memory. For example, if two related messages usually arrive within seconds, it is not needed to set the timeout to several hours.</para>
+            </listitem>
+        </itemizedlist>
+        <example>
+            <title>Using message correlation</title>
+            <synopsis>&lt;rule id="..." context-id="ssh-session" context-timeout="86400" context-scope="process"&gt;
+    &lt;patterns&gt;
+        &lt;pattern&gt;Accepted @ESTRING:usracct.authmethod: @for @ESTRING:usracct.username: @from @ESTRING:usracct.device: @port @ESTRING:: @@ANYSTRING:usracct.service@&lt;/pattern&gt;
+    &lt;/patterns&gt;
+...
+&lt;/rule&gt;</synopsis>
+        </example>
+        <para>For details on configuring message correlation, see the description of the <link linkend="patterndb-schema-context-id">context-id</link>, <link linkend="patterndb-schema-context-timeout">context-timeout</link>, and <link linkend="patterndb-schema-context-id">context-scope</link> attributes of pattern database rules.</para>
+    </section>
+    <section id="patterndb-triggers-actions">
+        <title>Triggering actions for identified messages</title>
+        <indexterm>
+            <primary>alerting</primary>
+        </indexterm>
+        <indexterm>
+            <primary>actions</primary>
+        </indexterm>
+        <indexterm>
+            <primary>secondary messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>generating alerts</primary>
+        </indexterm>
+        <indexterm>
+            <primary>triggers</primary>
+        </indexterm>
+        <indexterm>
+            <primary>triggered messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>message triggers</primary>
+        </indexterm>
+        <para>Starting with version 3.2, the &abbrev; application is able to generate (trigger) messages automatically if certain events occur, for example, a specific log message is received, or the correlation timeout of a message expires. Basically, you can define messages for every pattern database rule that are emitted when a message matching the rule is received. Triggering messages is often used together with message correlation, but can also be used separately.</para>
+        <note>
+            <para>Currently &abbrev; sends the generated messages to its <parameter>internal()</parameter> source, but this will change in future versions.</para>
+        </note>
+        <para>The generated message must be configured in the pattern database rule. It is possible to create an entire message, use macros and values extracted from the original message with pattern database, and so on.</para>
+        <example id="example-patterndb-trigger">
+            <title>Generating messages for pattern database matches</title>
+            <para>When inserted in a pattern database rule, the following example generates a message when a message matching the rule is received.</para>
+            <synopsis>&lt;actions&gt;
+    &lt;action&gt;
+        &lt;message&gt;
+            &lt;values&gt;
+                &lt;value name="MESSAGE"&gt;A log message from $HOST matched rule number $.classifier.rule_id&lt;/value&gt;
+            &lt;/values&gt;
+        &lt;/message&gt;
+    &lt;/action&gt;
+&lt;/actions&gt;</synopsis>
+            <para>To limit when a message is triggered, use the <parameter>condition</parameter> attribute and specify a filter expression: the action will be executed only if the condition is met. For example, the following action is executed only if the message was sent by the host called <parameter>myhost</parameter>.</para>
+            <synopsis>&lt;action condition="${HOST} == example"&gt;</synopsis>
+        </example>
+        <para>For details on configuring actions, see the description of the <link linkend="patterndb-schema-actions">pattern database format</link>.</para>
+        <para>To perform an external action when a message is triggered, for example, to send the message in an e-mail, you have to route the generated messages to an external application using the <parameter>program()</parameter> destination.</para>
+        <example id="example-trigger-email">
+            <title>Sending triggered messages to external applications</title>
+            <para>The following sample configuration selects the triggered messages and sends them to an external script.</para>
+            <orderedlist>
+                <listitem>
+                    <para>Set a field in the triggered message that is easy to identify and filter. For example:</para>
+                    <synopsis>&lt;values&gt;
+    &lt;value name="MESSAGE"&gt;A log message from $HOST matched rule number $.classifier.rule_id&lt;/value&gt;
+    &lt;value name="TRIGGER"&gt;yes&lt;/value&gt;
+&lt;/values&gt;</synopsis>
+                </listitem>
+                <listitem>
+                    <para>Create a destination that will process the triggered messages.</para>
+                    <synopsis>destination d_triggers { program("/bin/myscript"; ); };</synopsis>
+                </listitem>
+                <listitem>
+                    <para>Create a filter that selects the triggered messages from the internal source.</para>
+                    <synopsis>filter f_triggers {match("yes" value ("TRIGGER") type(string));};</synopsis>
+                </listitem>
+                <listitem>
+                    <para>Create a logpath that selects the triggered messages from the internal source and sends them to the script:</para>
+                    <synopsis>log { source(s_local); filter(f_triggers); destination(d_triggers); };</synopsis>
+                </listitem>
+                <listitem>
+                    <para>Create a script that will actually process the generated messages, for example:</para>
+                    <synopsis>#!/usr/bin/perl
+while (&lt;&gt;) {
+        # body of the script to send emails, snmp traps, and so on
+}</synopsis>
+                </listitem>
+            </orderedlist>
+        </example>
+        <para>Certain features of generating messages can be used only if message correlation is used as well.</para>
+        <itemizedlist>
+            <listitem>
+                <para>The &abbrev; application automatically fills the fields for the generated message based on the scope of the context, for example, the HOST and program fields if the <parameter>context-scope</parameter> is <parameter>program</parameter>.</para>
+            </listitem>
+            <listitem>
+                <para>When used together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <parameter>@&lt;distance-of-referenced-message-from-the-current&gt;</parameter> suffix to the macro. For example, if there are three log messages in a context, and you are creating a generated message for the third log message, the <parameter>${HOST}@1</parameter> expression refers to the host field of the previous (second) message in the context, <parameter>${PID}@2</parameter> to the PID of the first message, and so on.</para>
+            </listitem>
+            <listitem>
+                <para>It is possible to generate a message when the <parameter>context-timeout</parameter> of the original message expires and no new message is added to the context during this time. To accomplish this, include the <parameter>trigger="timeout"</parameter> attribute in the action element:</para>
+                <synopsis>&lt;action trigger="timeout"&gt;</synopsis>
+            </listitem>
+        </itemizedlist>
+        <para>For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
+    </section>
     <section id="reference_parsers_pattern_databases">
-        <title>Pattern databases</title>
+        <title>Creating pattern databases</title>
         <xi:include href="../../common/chapters/patterndb_common.xml"
             xmlns:xi="http://www.w3.org/2001/XInclude"
             xpointer="element(patterndb-using-parsers)"/>
