@@ -214,48 +214,74 @@ log { source(s_local);
                         </tbody>
                     </tgroup>  
                 </informaltable>
-                <para><guilabel>Description:</guilabel> When the <parameter>drop-invalid</parameter> option is set,
-                                    the parser does not process messages that have less columns than
-                                    defined in the parser. Using this option practically turns the
-                                    parser into a special filter, that matches messages that have
-                                    the predifined number of columns (using the specified
-                                    delimiters).</para>
-                <para>The <parameter>escape-none, escape-backslash,
-                                        escape-double-char</parameter> flags set the escaping rules
-                                    used by the parser. </para>
-                <para>The <parameter>greedy</parameter> option assigns the remainder
-                                    of the message to the last column, regardless of the delimiter
-                                    characters set. You can use this option to process messages
-                                    where the number of columns varies.</para>
-                <para>The <parameter>strip-whitespace</parameter> flag removes
-                                    trailing whitespaces from the beginning and the end of the
-                                    columns.</para>
-                <example id="example_parser_greedy">
-                <title>Adding the end of the message to the last column</title>
-                <para>If the <parameter>greedy</parameter> option is enabled, the syslog-ng
-                    application adds the not-yet-parsed part of the message to the last column,
-                    ignoring any delimiter characters that may appear in this part of the message.</para>
-                <para>For example, you receive the following comma-separated message:
-                        <parameter>example 1, example2, example3</parameter>, and you segment it
-                    with the following parser:</para>
-                <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(","));</synopsis>
-                <para>The <parameter>COLUMN1</parameter>, <parameter>COLUMN2</parameter>, and
-                        <parameter>COLUMN3</parameter> variables will contain the strings
-                        <parameter>example1</parameter>, <parameter>example2</parameter>, and
-                        <parameter>example3</parameter>, respectively. If the message looks like
-                        <parameter>example 1, example2, example3, some more information</parameter>,
-                    then any text appearing after the third comma (i.e., <parameter>some more
-                        information</parameter>) is not parsed, and possibly lost if you use only
-                    the variables to reconstruct the message (for example, to send it to different
-                    columns of an SQL table). </para>
-                <para>Using the <parameter>greedy</parameter> flag will assign the remainder of the
-                    message to the last column, so that the <parameter>COLUMN1</parameter>,
-                        <parameter>COLUMN2</parameter>, and <parameter>COLUMN3</parameter> variables
-                    will contain the strings <parameter>example1</parameter>,
-                    <parameter>example2</parameter>, and <parameter>example3, some more
-                    information</parameter>.</para>
-                <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(",") flags(greedy));</synopsis>
-            </example>
+                <para><guilabel>Description:</guilabel> Specifies various options for parsing the message. The following flags are available:</para>
+                <itemizedlist>
+                    <listitem>
+                        <indexterm type="parameter">
+                            <primary>drop-invalid</primary>
+                        </indexterm>
+                        <para><emphasis>drop-invalid</emphasis>: When the <parameter>drop-invalid</parameter> option is set, the parser does not process messages that do not match the parser. For example, a message does not match the parser if it has less columns than specified in the parser, or it has more columns but the <parameter>greedy</parameter> flag is not enabled. Using the <parameter>drop-invalid</parameter> option practically turns the parser into a special filter, that matches messages that have the predefined number of columns (using the specified delimiters).</para>
+                        <tip>
+                            <para>Messages dropped as invalid can be processed by a <parameter>fallback</parameter> log path. For details on the <parameter>fallback</parameter> option, see <xref linkend="reference_logflags"/>.</para>
+                        </tip>
+                    </listitem>
+                    <listitem>
+                        <indexterm type="parameter">
+                            <primary>escape-backslash</primary>
+                        </indexterm>
+                        <para><emphasis>escape-backslash</emphasis>: The parsed message uses the backslash (<parameter>\</parameter>) character to escape quote characters.</para>
+                    </listitem>
+                    <listitem>
+                        <indexterm type="parameter">
+                            <primary>escape-double-char</primary>
+                        </indexterm>
+                        <para><emphasis>escape-double-char</emphasis>: The parsed message repeats the quote character when the quote character is used literally. For example, to escape a comma (<parameter>,</parameter>), the message contains two commas (<parameter>,,</parameter>).</para>
+                    </listitem>
+                    <listitem>
+                        <indexterm type="parameter">
+                            <primary>escape-none</primary>
+                        </indexterm>
+                        <para><emphasis>escape-none</emphasis>: The parsed message does not use any escaping for using the quote character literally.</para>
+                    </listitem>
+                    <listitem>
+                        <indexterm type="parameter">
+                            <primary>greedy</primary>
+                        </indexterm>
+                        <para><emphasis>greedy</emphasis>: The <parameter>greedy</parameter> option assigns the remainder of the message to the last column, regardless of the delimiter characters set. You can use this option to process messages where the number of columns varies.</para>
+                        <example id="example_parser_greedy">
+                            <title>Adding the end of the message to the last column</title>
+                            <para>If the <parameter>greedy</parameter> option is enabled, the syslog-ng
+                                application adds the not-yet-parsed part of the message to the last column,
+                                ignoring any delimiter characters that may appear in this part of the message.</para>
+                            <para>For example, you receive the following comma-separated message:
+                                    <parameter>example 1, example2, example3</parameter>, and you segment it
+                                with the following parser:</para>
+                            <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(","));</synopsis>
+                            <para>The <parameter>COLUMN1</parameter>, <parameter>COLUMN2</parameter>, and
+                                    <parameter>COLUMN3</parameter> variables will contain the strings
+                                    <parameter>example1</parameter>, <parameter>example2</parameter>, and
+                                    <parameter>example3</parameter>, respectively. If the message looks like
+                                    <parameter>example 1, example2, example3, some more information</parameter>,
+                                then any text appearing after the third comma (i.e., <parameter>some more
+                                    information</parameter>) is not parsed, and possibly lost if you use only
+                                the variables to reconstruct the message (for example, to send it to different
+                                columns of an SQL table). </para>
+                            <para>Using the <parameter>greedy</parameter> flag will assign the remainder of the
+                                message to the last column, so that the <parameter>COLUMN1</parameter>,
+                                    <parameter>COLUMN2</parameter>, and <parameter>COLUMN3</parameter> variables
+                                will contain the strings <parameter>example1</parameter>,
+                                <parameter>example2</parameter>, and <parameter>example3, some more
+                                information</parameter>.</para>
+                            <synopsis>csv_parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(",") flags(greedy));</synopsis>
+                        </example>
+                    </listitem>
+                    <listitem>
+                        <indexterm type="parameter">
+                            <primary>strip-whitespace</primary>
+                        </indexterm>
+                        <para><emphasis>strip-whitespace</emphasis>: The <parameter>strip-whitespace</parameter> flag removes trailing whitespaces from the beginning and the end of the columns.</para>
+                    </listitem>
+                </itemizedlist>
             </simplesect>
             <simplesect>
                 <title>quote-pairs()</title>
