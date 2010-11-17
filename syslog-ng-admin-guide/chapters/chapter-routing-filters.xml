@@ -690,12 +690,21 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
                     filters.</para>
             </listitem>
             <listitem>
+                <para><xref linkend="filters-boolean"/> shows how to create complex filters using boolean operators.</para>
+            </listitem>
+            <listitem>
+                <para><xref linkend="filters-comparing"/> explains how to evaluate macros in filters.</para>
+            </listitem>
+            <listitem>
                 <para><xref linkend="regular_expressions"/> provides tips on using regular
                     expressions.</para>
             </listitem>
             <listitem>
                 <para><xref linkend="tagging_messages"/> explains how to tag messages and how to
                     filter on the tags.</para>
+            </listitem>
+            <listitem>
+                <para><xref linkend="reference_filters"/> is a detailed description of the filter functions available in &abbrev;.</para>
             </listitem>
         </itemizedlist>
         <section id="configuring_filters">
@@ -995,7 +1004,84 @@ log demo_filteredlog {
                 <secondary>reference</secondary>
             </indexterm>
             <para>The following functions may be used in the filter statement, as described in <xref linkend="filters"/>.</para>
-            <simplesect id="filterfunc">
+            <table id="table_filter_functions">
+                <title>Filter functions available in &abbrev;</title>
+                <indexterm>
+                    <primary>filter functions</primary>
+                    <secondary>list of</secondary>
+                </indexterm>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Name</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>
+                                <link linkend="filter-facility">facility()</link>
+                            </entry>
+                            <entry>Filter messages based on the sending facility.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <link linkend="filter-filter">filter()</link>
+                            </entry>
+                            <entry>Call another filter function.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <link linkend="filter-host">host()</link>
+                            </entry>
+                            <entry>Filter messages based on the sending host.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <link linkend="filter-priority">level() or priority()</link>
+                            </entry>
+                            <entry>Filter messages based on their priority.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <link linkend="reference-filters-match">match()</link>
+                            </entry>
+                            <entry>Use a regular expression to filter messages based on a specified header or content field.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <link linkend="filter-message">message()</link>
+                            </entry>
+                            <entry>Use a regular expression to filter messages based their content.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <link linkend="filter-netmask">netmask()</link>
+                            </entry>
+                            <entry>Filter messages based on the IP address of the sending host.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <link linkend="filter-program">program()</link>
+                            </entry>
+                            <entry>Filter messages based on the sending application.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <link linkend="filter-source">source()</link>
+                            </entry>
+                            <entry>Select messages of the specified &abbrev; source statement.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <link linkend="filter-tags">tags()</link>
+                            </entry>
+                            <entry>Select messages having the specified tag.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <simplesect id="filter-facility">
                 <title>facility()</title>
                     <indexterm type="parameter">
                         <primary>facility()</primary>
@@ -1157,7 +1243,7 @@ log demo_filteredlog {
                                 predefined and can be referenced by their usual name. Facility codes
                                 above 24 are not defined but can be used by this alternate syntax.</para>
             </simplesect>
-            <simplesect>
+            <simplesect id="filter-filter">
                 <title>filter()</title>
                     <indexterm type="parameter">
                         <primary>filter()</primary>
@@ -1176,7 +1262,7 @@ log demo_filteredlog {
                 </informaltable>
                 <para><guilabel>Description:</guilabel> Call another filter rule and evaluate its value.</para>
             </simplesect>
-            <simplesect>
+            <simplesect id="filter-host">
                 <title>host()</title>
                     <indexterm type="parameter">
                         <primary>host()</primary>
@@ -1196,7 +1282,7 @@ log demo_filteredlog {
                 <para><guilabel>Description:</guilabel> Match messages by using a regular expression against the hostname
                                 field of log messages.</para>
             </simplesect>
-            <simplesect>
+            <simplesect id="filter-priority">
                 <title>level() or priority()</title>
                     <indexterm type="parameter">
                         <primary>level() or priority()</primary>
@@ -1214,28 +1300,28 @@ log demo_filteredlog {
                     </tgroup>  
                 </informaltable>
                 <para><guilabel>Description:</guilabel> Match messages based on priority.</para>
-                        <indexterm>
-                <primary>filters</primary>
-                <secondary>priorities</secondary>
-            </indexterm>
-            <para>The <parameter>level()</parameter> filter accepts the following levels:
-                    <parameter>emerg</parameter>, <parameter>alert</parameter>,
-                <parameter>crit</parameter>, <parameter>err</parameter>, <parameter>warning</parameter>,
-                    <parameter>notice</parameter>, <parameter>info</parameter>,
-                <parameter>debug</parameter>. </para>
-            <indexterm>
-                <primary>filters</primary>
-                <secondary>facility and priority (level) ranges</secondary>
-            </indexterm>
-            <para>The <parameter>level()</parameter> filter can select messages
-                corresponding to a single importance level, or a level-range. To select messages of
-                a specific level, use the name of the level as a filter parameter, for example use the
-                following to select warning messages:</para>
-            <synopsis>level(warning)</synopsis>
-            <para>To select a range of levels, include the beginning and the ending level in the
-                filter, separated with two dots (<parameter>..</parameter>). For example, to select
-                every message of error or higher level, use the following filter:</para>
-            <synopsis>level(err..emerg)</synopsis>
+                <indexterm>
+                    <primary>filters</primary>
+                    <secondary>priorities</secondary>
+                </indexterm>
+                <para>The <parameter>level()</parameter> filter accepts the following levels:
+                        <parameter>emerg</parameter>, <parameter>alert</parameter>,
+                    <parameter>crit</parameter>, <parameter>err</parameter>, <parameter>warning</parameter>,
+                        <parameter>notice</parameter>, <parameter>info</parameter>,
+                    <parameter>debug</parameter>. </para>
+                <indexterm>
+                    <primary>filters</primary>
+                    <secondary>facility and priority (level) ranges</secondary>
+                </indexterm>
+                <para>The <parameter>level()</parameter> filter can select messages
+                    corresponding to a single importance level, or a level-range. To select messages of
+                    a specific level, use the name of the level as a filter parameter, for example use the
+                    following to select warning messages:</para>
+                <synopsis>level(warning)</synopsis>
+                <para>To select a range of levels, include the beginning and the ending level in the
+                    filter, separated with two dots (<parameter>..</parameter>). For example, to select
+                    every message of error or higher level, use the following filter:</para>
+                <synopsis>level(err..emerg)</synopsis>
             </simplesect>
             <simplesect id="reference-filters-match">
                 <title>match()</title>
@@ -1267,7 +1353,7 @@ log demo_filteredlog {
                 <para>To limit the scope of the match to a specific part of the message (identified with a macro), use the <parameter>match(regexp value("MACRO"))</parameter> syntax. Do not include the $ sign in the parameter of the <parameter>value()</parameter> option.</para>
                 <para>The <parameter>value()</parameter> parameter accepts both built-in macros and user-defined ones created with a parser or using a pattern database. For details on macros and parsers, see <xref linkend="configuring_macros"/>, <xref linkend="configuring_parsers"/>, and <xref linkend="patterndb-filters"/>.</para>
             </simplesect>
-            <simplesect>
+            <simplesect id="filter-message">
                 <title>message()</title>
                     <indexterm type="parameter">
                         <primary>message()</primary>
@@ -1290,7 +1376,7 @@ log demo_filteredlog {
                                 functionality was performed by the <parameter>match()</parameter>
                                 filter.</para>
             </simplesect>
-            <simplesect>
+            <simplesect id="filter-netmask">
                 <title>netmask()</title>
                     <indexterm type="parameter">
                         <primary>netmask()</primary>
@@ -1313,7 +1399,7 @@ log demo_filteredlog {
                                 not the contents of the <parameter>HOST</parameter> field of the
                                 message.</para>
             </simplesect>
-            <simplesect>
+            <simplesect id="filter-program">
                 <title>program()</title>
                     <indexterm type="parameter">
                         <primary>program()</primary>
@@ -1333,7 +1419,7 @@ log demo_filteredlog {
                 <para><guilabel>Description:</guilabel> Match messages by using a regular expression against the program name
                                 field of log messages.</para>
             </simplesect>
-            <simplesect>
+            <simplesect id="filter-source">
                 <title>source()</title>
                     <indexterm type="parameter">
                         <primary>source()</primary>
@@ -1355,7 +1441,7 @@ log demo_filteredlog {
                                 groups &mdash; only messages originating from the selected source
                                 group are sent to the destination of the embedded log statement.</para>
             </simplesect>
-            <simplesect>
+            <simplesect id="filter-tags">
                 <title>tags()</title>
                     <indexterm type="parameter">
                         <primary>tags()</primary>
