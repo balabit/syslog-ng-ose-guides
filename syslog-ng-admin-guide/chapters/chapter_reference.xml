@@ -31,6 +31,18 @@
                 <title>Using the internal() driver</title>
                 <synopsis>source s_local { internal(); };</synopsis>
             </example>
+            <formalpara>
+                <title>The syslog-ng sends the following message types from internal() source:</title>
+                <para/>        
+            </formalpara>
+            <itemizedlist>
+                <listitem><para><emphasis>fatal</emphasis>: Priority value: critical (2); Facility value: syslog (5)</para></listitem>
+                <listitem><para><emphasis>error</emphasis>: Priority value: error (3); Facility value: syslog (5)</para></listitem>
+                <listitem><para><emphasis>warning</emphasis>: Priority value: warning (4); Facility value: syslog (5)</para></listitem>
+                <listitem><para><emphasis>notice</emphasis>: Priority value: notice (5); Facility value: syslog (5)</para></listitem>
+                <listitem><para><emphasis>info</emphasis>: Priority value: info (6); Facility value: syslog (5)</para></listitem>
+            </itemizedlist>
+            
         </section>
         <section id="reference_source_file">
             <title>file()</title>
@@ -1092,6 +1104,12 @@
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
                 <title>overwrite_if_older()</title>
                 <indexterm type="parameter">
                     <primary>overwrite_if_older()</primary>
@@ -1786,6 +1804,12 @@
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
                 <title>owner()</title>
                 <indexterm type="parameter">
                     <primary>owner()</primary>
@@ -1887,7 +1911,13 @@
             </simplesect>  
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>  
+            </simplesect>
+            <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>  
@@ -1980,6 +2010,46 @@
                     </tgroup>  
                 </informaltable>
                 <para><guilabel>Description:</guilabel> Name of the database that stores the logs.</para>
+            </simplesect>
+            <!-- FIXME ez az OSE doksiból let copy-pastelve chapter-destinations-ból csak a verziószám különbözik, és az OSE-ben nincs id -->
+            <simplesect id="sql_option_flags">
+                <title>flags()</title>
+                <indexterm type="parameter">
+                    <primary>flags()</primary>
+                    <secondary>for SQL destinations</secondary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>list of flags</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>empty string</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> Flags related to the <parameter>sql()</parameter> destination.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para><emphasis>dont-create-tables</emphasis>: Enable this flag to prevent &abbrev; from creating non-existing database tables automatically. The &abbrev; application typically has to create tables if you use macros in the table names. Available in &abbrev; version 4.0 and later.</para>
+                        <indexterm type="parameter">
+                            <primary>dont-create-tables</primary>
+                        </indexterm>
+                    </listitem>
+                    <listitem>
+                        <para><emphasis>explicit-commits</emphasis>: By default, &abbrev; commits every log message to the target database individually. When the <parameter>explicit-commits</parameter> option is enabled, messages are committed in batches. This improves the performance, but results in some latency, as the messages are not immediately sent to the database. The size and frequency of batched commits can be set using the <parameter>flush_lines</parameter> and <parameter>flush_timeout</parameter> parameters. The <parameter>explicit-commits</parameter> option is available in &abbrev; version 4.0 and later.</para>
+                        <indexterm type="parameter">
+                            <primary>explicit-commits</primary>
+                        </indexterm>
+                    </listitem>
+                </itemizedlist>
             </simplesect>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -2098,6 +2168,30 @@
                     </tgroup>  
                 </informaltable>
                 <para><guilabel>Description:</guilabel> Password of the database user.</para>
+            </simplesect>
+            <simplesect id="sql_option_retry_sql_inserts">
+                <title>retry_sql_inserts</title>
+                <indexterm type="parameter">
+                    <primary>retry_sql_inserts</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>number</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>3</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The number of insertion attempts. If syslog-ng could not insert a line into the database, it will attempt it again until the number of attempt reaches <parameter>retry_sql_inserts</parameter>, than drops the line. For example syslog-ng will try to insert a line maximum three times by default (once for first insertion and twice if the first insertion was failed).</para>
             </simplesect>
             <simplesect id="sql_option_table">
                 <title>table</title>
@@ -2442,6 +2536,12 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
+            <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
             <simplesect id="destination_option_port">
                 <title>port() or destport()</title>
                 <indexterm type="parameter">
@@ -2656,6 +2756,12 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_port']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect> 
             <simplesect>
@@ -2732,6 +2838,12 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             </simplesect>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_keep_alive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_broadcast']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -5407,6 +5519,100 @@ log { source(s_local);
         <simplesect id="logstore_option_journal_memory_limit">
             <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'logstore_journal_shmem_threshold']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
+        
+        <simplesect id='global_options_mark'>
+            <title>mark() (DEPRECATED)</title>
+            <indexterm type="parameter">
+                <primary>mark()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="80pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Accepted values:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>number</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>1200</entry>
+                        </row>
+                    </tbody>
+                </tgroup>  
+            </informaltable>
+            <para><guilabel>Description:</guilabel> Obsolete alias for <parameter>mark_freq</parameter>. <parameter>Mark</parameter> is an "I am alive" signal from the specified destination (or internal source) driver of syslog-ng. Using mark message the syslog-ng can detect the unexpected loss of connection as it tries to send this message even if there is no normal message to be sent.</para>
+        </simplesect>
+        <simplesect id='global_options_mark_freq'>
+            <title>mark_freq()</title>
+            <indexterm type="parameter">
+                <primary>mark_freq()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="80pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Accepted values:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>number</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>1200</entry>
+                        </row>
+                    </tbody>
+                </tgroup>  
+            </informaltable>
+            <para><guilabel>Description:</guilabel> An alias for the obsolete <parameter>mark()</parameter> option,
+                retained for compatibility with syslog-ng version 1.6.x. The number of seconds between two <parameter>MARK</parameter>
+                messages. <parameter>MARK</parameter> messages are generated when there
+                was no message traffic to inform the receiver that the connection is
+                still alive. If set
+                to zero (<parameter>0</parameter>), no <parameter>MARK</parameter>
+                messages are sent. The <parameter>mark-freq</parameter> can be set for global option and/or every <parameter>MARK</parameter> capable destination driver if <parameter>mark-mode</parameter> is periodical or dst-idle or host-idle. If <parameter>mark-freq</parameter> isn't defined in the destination, then the <parameter>mark-freq</parameter> will be inherited from the global options. If the destination uses internal <parameter>mark-mode</parameter>, then the global <parameter>mark-freq</parameter> will be valid (does not matter what <parameter>mark-freq</parameter> set in the destination side).</para>
+        </simplesect>
+        <simplesect id='global_options_mark_mode'>
+            <title>mark_mode()</title>
+            <indexterm type="parameter">
+                <primary>mark_mode()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="80pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Accepted values:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry><parameter>internal</parameter> | <parameter>dst-idle</parameter> | <parameter>host-idle</parameter> | <parameter>periodical</parameter> | <parameter>none</parameter> | <parameter>global</parameter></entry>
+                        </row>
+                        <row>
+                            <entry morerows="1">Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry morerows="1"><para><parameter>internal</parameter> for file, pipe, program, unix-dgram, unix-stream drivers</para>
+                                <para><parameter>global</parameter> for syslog, tcp, udp destinations</para>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>  
+            </informaltable>
+            <para><guilabel>Description:</guilabel>The <parameter>mark-mode()</parameter> option can be set for the following destination drivers: file(), program(), unix_dgram(), unix_stream(), udp(), udp6(), tcp(), tcp6(), pipe(), syslog() and in global option.</para>
+            <itemizedlist>
+                <listitem><para><parameter>internal</parameter>: When internal mark mode is selected, internal source should be placed in the log path as this mode does not generate mark by itself at the destination. This mode only yelds the mark messages from internal source. This is the mode as syslog-ng 3.x worked. <parameter>MARK</parameter> will be generated by internal source if there was NO traffic on local sources:</para>
+                    <para><parameter>file()</parameter>, <parameter>pipe()</parameter>, <parameter>unix-stream()</parameter>, <parameter>unix-dgram()</parameter>, <parameter>program()</parameter></para></listitem>
+                <listitem><para><parameter>dst-idle</parameter>: Sends <parameter>mark</parameter> signal if there was NO traffic on destination drivers. <parameter>Mark</parameter> signal from internal source will be dropped.</para>
+                    <para><parameter>MARK</parameter> signal can be sent by the following destination drivers: <parameter>tcp()</parameter>, <parameter>udp()</parameter>, <parameter>syslog()</parameter>, <parameter>program()</parameter>, <parameter>file()</parameter>, <parameter>pipe()</parameter>, <parameter>unix-stream()</parameter>, <parameter>unix-dgram()</parameter>.</para></listitem>
+                <listitem><para><parameter>host-idle</parameter>: Sends <parameter>mark</parameter> signal if there was NO local message on destination drivers. For example <parameter>mark</parameter> is generated even if messages were received from tcp. <parameter>Mark</parameter> signal from internal source will be dropped.</para>
+                    <para><parameter>MARK</parameter> signal can be sent by the following destination drivers: <parameter>tcp()</parameter>, <parameter>udp()</parameter>, <parameter>syslog()</parameter>, <parameter>program()</parameter>, <parameter>file()</parameter>, <parameter>pipe()</parameter>, <parameter>unix-stream()</parameter>, <parameter>unix-dgram()</parameter>.</para></listitem>
+                <listitem><para><parameter>periodical</parameter>: Sends <parameter>mark</parameter> signal perodically, regardless of traffic on destination driver. <parameter>Mark</parameter> signal from internal source will be dropped.</para>
+                    <para><parameter>MARK</parameter> signal can be sent by the following destination drivers: <parameter>tcp()</parameter>, <parameter>udp()</parameter>, <parameter>syslog()</parameter>, <parameter>program()</parameter>, <parameter>file()</parameter>, <parameter>pipe()</parameter>, <parameter>unix-stream()</parameter>, <parameter>unix-dgram()</parameter>.</para></listitem>
+                <listitem><para><parameter>none</parameter>: Destination driver drops all <parameter>MARK</parameter> messages.</para></listitem>
+                <listitem><para><parameter>global</parameter>: Destination driver uses the global <parameter>mark-mode</parameter> setting. The syslog-ng interprets syntax error if the global <parameter>mark-mode</parameter> is global.</para></listitem>
+            </itemizedlist>
+            
+        </simplesect>
         <simplesect>
             <title>normalize_hostnames()</title>
                 <indexterm type="parameter">
@@ -5460,61 +5666,7 @@ log { source(s_local);
                             privileges, use this option with the <parameter>-1</parameter>
                         value.</para>
         </simplesect>
-        <simplesect>
-            <title>mark()</title>
-                <indexterm type="parameter">
-                    <primary>mark()</primary>
-                </indexterm>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="2">
-                    <colspec colnum="1" colwidth="80pt"/>
-                    <tbody>
-                        <row>
-                            <entry>Accepted values:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>number</entry>
-                        </row>
-                        <row>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>1200</entry>
-                        </row>
-                    </tbody>
-                </tgroup>  
-            </informaltable>
-            <para><guilabel>Description:</guilabel> An alias for the obsolete <parameter>mark_freq()</parameter> option,
-                            retained for compatibility with syslog-ng version 1.6.x.</para>
-        </simplesect>
-        <simplesect>
-            <title>mark_freq()</title>
-                <indexterm type="parameter">
-                    <primary>mark_freq()</primary>
-                </indexterm>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="2">
-                    <colspec colnum="1" colwidth="80pt"/>
-                    <tbody>
-                        <row>
-                            <entry>Accepted values:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>number</entry>
-                        </row>
-                        <row>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>1200</entry>
-                        </row>
-                    </tbody>
-                </tgroup>  
-            </informaltable>
-            <para><guilabel>Description:</guilabel> The number of seconds between two <parameter>MARK</parameter>
-                            messages. <parameter>MARK</parameter> messages are generated when there
-                            was no message traffic to inform the receiver that the connection is
-                            still alive. Note that only local messages postpone the sending of the
-                                <parameter>MARK</parameter> message, relayed messages do not. If set
-                            to zero (<parameter>0</parameter>), no <parameter>MARK</parameter>
-                            messages are sent.</para>
-        </simplesect>
+        
         <simplesect>
             <title>perm()</title>
                 <indexterm type="parameter">

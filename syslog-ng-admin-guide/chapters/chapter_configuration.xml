@@ -34,7 +34,7 @@
             <para>The following is a very simple configuration file for syslog-ng: it collects the
                 internal messages of syslog-ng and the messages from <parameter>/dev/log</parameter>
                 into the <filename>/var/log/messages_syslog-ng.log</filename> file.</para>
-            <synopsis>@version:3.0
+            <synopsis>@version:3.2
                 
 source s_local { unix-stream("/dev/log"); internal(); };
 
@@ -259,12 +259,14 @@ source s_demo_stream {
                         unix-stream("/dev/log", max-connections(10), group(log)); };</synopsis>
                 </listitem>
                 <listitem>
+                    <para>When a string is enclosed into apostrophes (<parameter>'</parameter>), there is no interpreting for the string at all. For example the output of <parameter>'\x41'</parameter> is <parameter>\x41</parameter> (characters as follows: backslash, <parameter>x</parameter>(letter), <parameter>4</parameter>(number), <parameter>1</parameter>(number)).</para>
                     <para>Strings between single quotes (<parameter>'string'</parameter>) are
                         treated literally, you do not have to escape special characters. This makes
                         writing and reading regular expressions much more simple: it is recommended
                         to use single quotes when writing regular expressions.</para>
                 </listitem>
                 <listitem>
+                    <para>When a string is enclosed into quotation marks (<parameter>"</parameter>), the string is intepreted. For example the output of the <parameter>"\x41"</parameter> is simply the letter <parameter>a</parameter>. Therefore special characters like <parameter>\</parameter>(backslash) <parameter>"</parameter>(quotation mark) must be escaped (<parameter>\\</parameter> and <parameter>\"</parameter>). The following expressions are interpreted: <parameter>\a</parameter>; <parameter>\n</parameter>; <parameter>\r</parameter>; <parameter>\t</parameter>; <parameter>\v</parameter>.</para>              
                     <para>When enclosing strings between double-quotes
                         (<parameter>"string"</parameter>), you have to escape special characters:
                         for example when enclosing a regular expression that uses the
@@ -280,6 +282,7 @@ source s_demo_stream {
                         <parameter>match("sometext")</parameter> and
                         <parameter>match(sometext)</parameter> will both match for the
                             <parameter>sometext</parameter> string.</para>
+                    <note><para>Only strings without whitespace or special characters can be used without quotes or double quotes.</para></note>
                 </listitem>
                 <listitem>
                     <para>When enclosing object IDs (for example the name of a destination) between
@@ -727,6 +730,16 @@ destination;df_facility_dot_err;;a;processed;0</synopsis>
                     file, syslog-ng automatically disables the <parameter>follow_freq()</parameter>
                     parameter to avoid blocking the file.</para>
             </note>
+            <para>All file-related information is in the <parameter>file@18372.4</parameter> block. When the source is file and the transport protocol is syslog or syslog-protocol flags were used in the destination side, the message will contain all the source file-related information:</para>
+            <itemizedlist>
+                <listitem><para><emphasis>size</emphasis>: size of the file</para></listitem>
+                <listitem><para><emphasis>position</emphasis>: file position the message was read from</para></listitem>
+                <listitem><para><emphasis>name</emphasis>: name of the file </para></listitem>
+            </itemizedlist>
+            <example>
+                <title>File-related information in message</title>
+                <para><synopsis>309 &lt;38&gt;1 2010-10-19T15:50:45.018203+02:00 server1 localprg 1234 - [timeQuality isSynced="0" tzKnown="0"][file@18372.4 size="184567" pos="1024" name="/var/tmp/msg.txt"] seq: 0000000001, runid: 1287496244, stamp: 2010-10-19T15:50:45 messagetext</synopsis></para>
+            </example>
         </section>
         <section id="configuring_sources_pipe">
             <title>Collecting messages from named pipes</title>
