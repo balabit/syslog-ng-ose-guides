@@ -1,5 +1,5 @@
-PDF_OUTPUTS = syslog-ng-pe-v4.0-guide-admin-en.pdf syslog-ng-windows-agent-v3.2-guide-admin-en.pdf syslog-ng-ibm-agent-guide-admin-en.pdf syslog-ng-sql-whitepaper.pdf
-HTML_OUTPUTS = syslog-ng-pe-v4.0-guide-admin-en.html syslog-ng-windows-agent-v3.2-guide-admin-en.html syslog-ng-ibm-agent-guide-admin-en.html syslog-ng-sql-whitepaper.html
+PDF_OUTPUTS = syslog-ng-pe-v4.0-guide-admin-en.pdf syslog-ng-windows-agent-v3.2-guide-admin-en.pdf syslog-ng-ibm-agent-guide-admin-en.pdf syslog-ng-sql-whitepaper.pdf syslog-ng-4.0-whatsnew-en.pdf
+HTML_OUTPUTS = syslog-ng-pe-v4.0-guide-admin-en.html syslog-ng-windows-agent-v3.2-guide-admin-en.html syslog-ng-ibm-agent-guide-admin-en.html syslog-ng-sql-whitepaper.html syslog-ng-4.0-whatsnew-en.html
 
 MANSOURCES=$(wildcard other/*.[0-9].xml)
 MANPAGES=$(subst other/,out/man/,$(subst .xml,,$(MANSOURCES)))
@@ -38,6 +38,10 @@ syslog-ng-ibm-agent-guide-admin-en.html: out/syslog-ng-ibm-agent-guide-admin-en.
 syslog-ng-sql-whitepaper.pdf: out/syslog-ng-sql-whitepaper.pdf
 
 syslog-ng-sql-whitepaper.html: out/syslog-ng-sql-whitepaper.html/index.html
+
+syslog-ng-4.0-whatsnew-en.pdf: out/syslog-ng-4.0-whatsnew-en.pdf
+
+syslog-ng-4.0-whatsnew-en.html: out/syslog-ng-4.0-whatsnew-en.html/index.html
 
 out/syslog-ng-pe-v4.0-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/chapters/*.xml
 	xml-stylesheet/pdf/process-profile $< $@ syslog-ng
@@ -80,6 +84,16 @@ out/syslog-ng-sql-whitepaper.html/index.html: syslog-ng-admin-guide/syslog-ng-sq
 	./copy-pngs.sh out/syslog-ng-sql-whitepaper.html TRUE
 	            
 syslog-ng-admin-guide/syslog-ng-sql-whitepaper.xml: setup
+
+out/syslog-ng-4.0-whatsnew-en.pdf: whatsnew/syslog-ng-4.0-whatsnew-en.xml
+	xml-stylesheet/pdf/process-profile $< $@ whitepaper
+        
+out/syslog-ng-4.0-whatsnew-en.html/index.html: whatsnew/syslog-ng-4.0-whatsnew-en.xml 
+	mkdir -p out/syslog-ng-4.0-whatsnew-en.html
+	xml-stylesheet/html/process-profile $< $@ whitepaper
+	./copy-pngs.sh out/syslog-ng-4.0-whatsnew-en.html TRUE
+	            
+syslog-ng-admin-guide/syslog-ng-4.0-whatsnew-en.xml: setup
 
 manpages: setup $(MANPAGES)
 $(MANPAGES): $(MANSOURCES)
