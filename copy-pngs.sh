@@ -4,12 +4,12 @@
 
 case "$1" in 
 
-'out/syslog-ng-pe-v3.1-guide-admin-en.html')
+'out/syslog-ng-pe-v4.0-guide-admin-en.html')
 	#########################################
 	#syslog-ng admin guide
 	#########################################
         echo Processing syslog-ng admin guide figures
-	$GET -l1 $imgroot/syslog-ng-admin-guide-3.1/
+	$GET -l1 $imgroot/syslog-ng-pe-guides-4.0/
 	
 	#End of syslog-ng admin-guide
 	#########################################
