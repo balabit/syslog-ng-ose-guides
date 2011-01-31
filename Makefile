@@ -1,5 +1,5 @@
-PDF_OUTPUTS = syslog-ng-pe-v4.0-guide-admin-en.pdf syslog-ng-windows-agent-v3.2-guide-admin-en.pdf syslog-ng-ibm-agent-guide-admin-en.pdf syslog-ng-sql-whitepaper.pdf syslog-ng-4.0-whatsnew-en.pdf
-HTML_OUTPUTS = syslog-ng-pe-v4.0-guide-admin-en.html syslog-ng-windows-agent-v3.2-guide-admin-en.html syslog-ng-ibm-agent-guide-admin-en.html syslog-ng-sql-whitepaper.html syslog-ng-4.0-whatsnew-en.html
+PDF_OUTPUTS = syslog-ng-pe-v4.0-guide-admin-en.pdf syslog-ng-windows-agent-v4.0-guide-admin-en.pdf syslog-ng-ibm-agent-guide-admin-en.pdf syslog-ng-sql-whitepaper.pdf syslog-ng-4.0-whatsnew-en.pdf
+HTML_OUTPUTS = syslog-ng-pe-v4.0-guide-admin-en.html syslog-ng-windows-agent-v4.0-guide-admin-en.html syslog-ng-ibm-agent-guide-admin-en.html syslog-ng-sql-whitepaper.html syslog-ng-4.0-whatsnew-en.html
 
 MANSOURCES=$(wildcard other/*.[0-9].xml)
 MANPAGES=$(subst other/,out/man/,$(subst .xml,,$(MANSOURCES)))
@@ -25,11 +25,11 @@ pdf: $(addprefix out/,$(PDF_OUTPUTS))
 
 syslog-ng-pe-v4.0-guide-admin-en.pdf: out/syslog-ng-pe-v4.0-guide-admin-en.pdf
 
-syslog-ng-pe-v4.0-guide-admin-en.html: syslog-ng-ibm-agent-guide-admin-en.html syslog-ng-windows-agent-v3.2-guide-admin-en.html out/syslog-ng-pe-v4.0-guide-admin-en.html/index.html
+syslog-ng-pe-v4.0-guide-admin-en.html: syslog-ng-ibm-agent-guide-admin-en.html syslog-ng-windows-agent-v4.0-guide-admin-en.html out/syslog-ng-pe-v4.0-guide-admin-en.html/index.html
 
-syslog-ng-windows-agent-v3.2-guide-admin-en.pdf: out/syslog-ng-windows-agent-v3.2-guide-admin-en.pdf
+syslog-ng-windows-agent-v4.0-guide-admin-en.pdf: out/syslog-ng-windows-agent-v4.0-guide-admin-en.pdf
 
-syslog-ng-windows-agent-v3.2-guide-admin-en.html: out/syslog-ng-windows-agent-v3.2-guide-admin-en.html/index.html
+syslog-ng-windows-agent-v4.0-guide-admin-en.html: out/syslog-ng-windows-agent-v4.0-guide-admin-en.html/index.html
 
 syslog-ng-ibm-agent-guide-admin-en.pdf: out/syslog-ng-ibm-agent-guide-admin-en.pdf
 
@@ -54,13 +54,13 @@ out/syslog-ng-pe-v4.0-guide-admin-en.html/index.html: syslog-ng-admin-guide/sysl
 syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml: setup
 
 
-out/syslog-ng-windows-agent-v3.2-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-windows-agent-guide-en.xml syslog-ng-admin-guide/chapters/*.xml
+out/syslog-ng-windows-agent-v4.0-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-windows-agent-guide-en.xml syslog-ng-admin-guide/chapters/*.xml
 	xml-stylesheet/pdf/process-profile $< $@ windows-agent
         
-out/syslog-ng-windows-agent-v3.2-guide-admin-en.html/index.html: syslog-ng-admin-guide/syslog-ng-windows-agent-guide-en.xml syslog-ng-admin-guide/*.xml syslog-ng-admin-guide/chapters/*.xml
-	mkdir -p  out/syslog-ng-windows-agent-v3.2-guide-admin-en.html
+out/syslog-ng-windows-agent-v4.0-guide-admin-en.html/index.html: syslog-ng-admin-guide/syslog-ng-windows-agent-guide-en.xml syslog-ng-admin-guide/*.xml syslog-ng-admin-guide/chapters/*.xml
+	mkdir -p  out/syslog-ng-windows-agent-v4.0-guide-admin-en.html
 	xml-stylesheet/html/process-profile $< $@ windows-agent
-	./copy-pngs.sh out/syslog-ng-windows-agent-v3.2-guide-admin-en.html TRUE
+	./copy-pngs.sh out/syslog-ng-windows-agent-v4.0-guide-admin-en.html TRUE
 	            
 syslog-ng-admin-guide/syslog-ng-windows-agent-guide-en.xml: setup
 
