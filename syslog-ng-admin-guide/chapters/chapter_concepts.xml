@@ -1795,6 +1795,14 @@
                         see the <parameter>ts_format()</parameter> option in <xref
                             linkend="reference_options"/>.</para>
                 </note>
+                <para>The syslog-ng will truncate the following fields:</para>
+                <itemizedlist>
+                    <listitem><para>If <emphasis>APP-NAME</emphasis> is longer than 48 characters it will be truncated to 48 characters.</para></listitem>
+                    <listitem><para>If <emphasis>PROC-ID</emphasis> is longer than 128 characters it will be truncated to 128 characters.</para></listitem>
+                    <listitem><para>If <emphasis>MSGID</emphasis> is longer than 32 characters it will be truncated to 32 characters.</para></listitem>
+                    <listitem><para>If <emphasis>HOSTNAME</emphasis> is longer than 255 characters it will be truncated to 255 characters.</para></listitem>
+                </itemizedlist>
+                
             </section>
             <section id="ietfsyslog_structureddata">
                 <title>The STRUCTURED-DATA message part</title>
@@ -1807,6 +1815,43 @@
                     referenced in macros (for details, see <xref linkend="reference_macros"/>). An
                     example STRUCTURED-DATA block looks like:</para>
                 <synopsis>[exampleSDID@0 iut="3" eventSource="Application" eventID="1011"][examplePriority@0 class="high"]</synopsis>
+                <para>All file-related information is in the <parameter>file@18372.4</parameter> block. When the source is file and the transport protocol is syslog or syslog-protocol flags were used in the destination side, the message will contain all the source file-related information:</para>
+                <itemizedlist>
+                    <listitem><para><emphasis>size</emphasis>: size of the file</para></listitem>
+                    <listitem><para><emphasis>position</emphasis>: file position the message was read from</para></listitem>
+                    <listitem><para><emphasis>name</emphasis>: name of the file </para></listitem>
+                </itemizedlist>
+                <example>
+                    <title>File-related information in message</title>
+                    <para><synopsis>309 &lt;38&gt;1 2010-10-19T15:50:45.018203+02:00 server1 localprg 1234 - [timeQuality isSynced="0" tzKnown="0"][file@18372.4 size="184567" pos="1024" name="/var/tmp/msg.txt"] seq: 0000000001, runid: 1287496244, stamp: 2010-10-19T15:50:45 messagetext</synopsis></para>
+                </example>
+<para><parameter>tzKnown</parameter></para>
+                    <itemizedlist>
+                        <listitem><para>If the timezone is known, <parameter>tzKnown = 1</parameter></para></listitem>
+                        <listitem><para>If there is no information about the timezone, <parameter>tzKnown = 0</parameter></para></listitem>
+                    </itemizedlist>
+                <para><parameter>isSynced</parameter></para>
+                    <itemizedlist>
+                        <listitem><para>If timestamp does not contain any cisco specific prefix, <parameter>isSynced = 0</parameter></para></listitem>
+                        <listitem><para>If timestamp contains the "<parameter>*</parameter>" cisco specific prefix, <parameter>isSynced = 0</parameter></para></listitem>
+                        <listitem><para>If timestamp contains the "<parameter>.</parameter>" cisco specific prefix, <parameter>isSynced = 1</parameter></para></listitem>
+                    </itemizedlist>
+                <para><parameter>sequenceId</parameter></para>
+                    <itemizedlist>
+                        <listitem><para>The syslog-ng calculates sequenceId when processing a new message from a local source; it is not calculated for relayed messages.</para></listitem>
+                    </itemizedlist>
+                <para><emphasis>Restrictions:</emphasis> syslog-ng cannot process the following syslog format message:</para>
+<itemizedlist>
+    <listitem><para>SDATA contains extra SP before SD-ID.</para>
+    <example>
+        <title>SDATA contains extra SP before SD-ID</title>
+        <synopsis>[ exampleSDID@0 a="almafa"]</synopsis>
+    </example>
+    </listitem>
+    <listitem><para>SD-ID size is longer than 32 characters</para></listitem>
+    <listitem><para>SD-NAME is longer than 32 characters</para></listitem>
+</itemizedlist>
+                <para>These messages that are specified as invalid in RFC5424.</para>
             </section>
 
             <section id="ietfsyslog_msg">
@@ -1814,7 +1859,7 @@
                 <para>The MSG part contains the text of the message itself. The encoding of the text
                     must be UTF-8 if the BOM character is present in the message. If the message
                     does not contain the BOM character, the encoding is treated as unknown. Usually
-                    messages arriving from legacy sources do not include the BOM character.</para>
+                    messages arriving from legacy sources do not include the BOM character. CRLF characters will not be removed from the message.</para>
             </section>
         </section>
 
