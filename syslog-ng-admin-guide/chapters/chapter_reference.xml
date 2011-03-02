@@ -74,6 +74,7 @@
                     <parameter>default-priority</parameter> options in the source definition to
                     assign a different facility if needed.</para>
             </note>
+            <para>When syslog-ng reads the source file, it stores the last position in the <filename>/opt/syslog-ng/var/syslog-ng.persist</filename> file.</para>
             <para>The <parameter>file()</parameter> driver has the following options:</para>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_default-facility']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -2005,12 +2006,12 @@
                             <row>
                                 <entry>Default:
                                     <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                <entry>n/a</entry>
+                                <entry>logs</entry>
                             </row>
                         </tbody>
                     </tgroup>  
                 </informaltable>
-                <para><guilabel>Description:</guilabel> Name of the database that stores the logs.</para>
+                <para><guilabel>Description:</guilabel> Name of the database that stores the logs. Macros cannot be used in database name.</para>
             </simplesect>
             <!-- FIXME ez az OSE doksiból let copy-pastelve chapter-destinations-ból csak a verziószám különbözik, és az OSE-ben nincs id -->
             <simplesect id="sql_option_flags">
@@ -2107,6 +2108,12 @@
                 <para><guilabel>Description:</guilabel> The list of columns that are indexed by the database to speed up
                                 searching. To disable indexing for the destination, include the
                                 empty <parameter>indexes()</parameter> parameter in the destination.</para>
+                <para>The syslog-ng will create the name of indexes automaticaly with the following method:</para>
+                <itemizedlist>
+                    <listitem><para>In case of MsSQL, PostgreSQL, MySQL or SQLite or (Oracle but tablename &lt; 30 characters): <parameter>{table}_{column}_idx</parameter>.</para></listitem>
+                    <listitem><para>In case of Oracle and tablename &gt; 30 characters: <parameter>md5sum of {table}_{column}-1</parameter> and the first character will be replaced by "i" character and the md5sum will be truncated to 30 characters.</para></listitem>
+                </itemizedlist>
+                
             </simplesect>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_local_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -2234,7 +2241,7 @@
                             <row>
                                 <entry>Default:
                                     <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                <entry>n/a</entry>
+                                <entry>messages</entry>
                             </row>
                         </tbody>
                     </tgroup>  
@@ -2263,7 +2270,7 @@
                             <row>
                                 <entry>Default:
                                     <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                <entry>n/a</entry>
+                                <entry>mysql</entry>
                             </row>
                         </tbody>
                     </tgroup>  
@@ -2315,13 +2322,21 @@
                                 <entry>Default:
                                     <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>"${R_YEAR}-${R_MONTH}-${R_DAY} ${R_HOUR}:${R_MIN}:${R_SEC}",
-                                "$FACILITY", "$LEVEL", "$HOST", "$PROGRAM", "$PID", "$MSGONLY"</entry>
+"$FACILITY", "$LEVEL", "$HOST", "$PROGRAM", "$PID", "$MSGONLY"</entry>
                             </row>
                         </tbody>
                     </tgroup>  
                 </informaltable>
                 <para><guilabel>Description:</guilabel>The parts of the message to store in the fields specified in the
                                 <parameter>columns</parameter> parameter.</para>
+                <para>It is possible to give a special value calling: default (without quotation marks).It means that the value will be used that is the default of the column type of this value.</para>
+                <example>
+                    <title>Value: default</title>
+                    <synopsis>columns("date datetime", "host varchar(32)", "row_id serial")
+values("$R_DATE", "$HOST", default)</synopsis>
+                </example>
+                
+       
             </simplesect>
             <note>
                 <para>If you specify <parameter>host="localhost"</parameter>, syslog-ng will use a
@@ -2480,6 +2495,215 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                     messages, because other occurrences of this string will be replaced with NULL as
                     well.</para>
             </example>
+            <section>
+                <title>The way syslog-ng interacts with the database</title>
+                <formalpara>
+                    <title>Used SQL operations by syslog-ng</title>
+                    <para/>
+                </formalpara>
+                <para><emphasis>Create table:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>If the given table does not exist, syslog-ng tries to create it with the given column types.</para></listitem>
+                    <listitem><para>The syslog-ng automatically creates the required tables and columns, if the user account used to connect to the database has the required privileges.</para></listitem>
+                    <listitem><para>If syslog-ng cannot create or alter a table, it tries to do it again when reach the next time_reopen.</para></listitem>
+                </itemizedlist>
+                <para><emphasis>Alter table:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>If the table structure is different from given structure in an existing table, syslog-ng tries to add columns in this table but never will delete or modify an existing column.</para></listitem>
+                    <listitem><para>If syslog-ng cannot create or alter a table, it tries to do it again when reach the next time_reopen.</para></listitem>
+                    <listitem><para>The syslog-ng requires read and write access to the SQL table, otherwise it cannot verify that the destination table exists.</para></listitem>
+                </itemizedlist>
+                <para><emphasis>Insert table:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>Insert new records in a table.</para></listitem>
+                    <listitem><para>Inserting the records into the database is performed by a separate thread.</para></listitem>
+                    <listitem><para>The syslog-ng application automatically performs the escaping required to insert the messages into the database.</para></listitem>
+                    <listitem><para>If insert returns with error, syslog-ng tries to insert the message +two times by default, then drops it. Retrying time is the value of time_reopen().</para></listitem>
+                </itemizedlist>
+                <formalpara>
+                    <title>Encoding</title>
+                    <para/>
+                </formalpara>
+                <para>The syslog-ng uses UTF-8 by default when writes logs into database.</para>
+                <formalpara>
+                    <title>Start/stop and reload</title>
+                    <para/>
+                </formalpara>
+                <para><emphasis>Start:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>The syslog-ng will connect to database automatically after starting regardless existing incoming messages.</para></listitem>
+                </itemizedlist>
+                <para><emphasis>Stop:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>The syslog-ng will close the connection to database before shutting down.</para></listitem>
+                </itemizedlist>
+                <para><emphasis>Possibility of losing logs:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>The syslog-ng cannot lose logs during shutting down if disk buffer was given and it is not full yet.</para></listitem>
+                    <listitem><para>The syslog-ng cannot lose logs during shutting down if disk buffer was not given.</para></listitem>
+                </itemizedlist>
+                <para><emphasis>Reload:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>The syslog-ng will close the connection to database if it received SIGHUP signal (reload).</para></listitem>
+                    <listitem><para>It will reconnect to the database when it tries to send a new message to this database again.</para></listitem>
+                </itemizedlist>
+                <formalpara>
+                    <title>Macros:</title>
+                    <para/>
+                </formalpara>
+                <para>The value of $SEQNUM macro will be overrided by sql driver regardless of local or relayed incoming message.</para>
+                <para>It will be grown continously.</para>
+            </section>
+            <section>
+                <title>Supported SQL types by platform</title>
+                <table id="table-supportedsqltypes">
+                    <title></title>
+                    <tgroup cols="6">
+                        <thead>
+                            <row>
+                                <entry>platform/database</entry>
+                                <entry>MsSQL</entry>
+                                <entry>MySQL</entry>
+                                <entry>PgSQL</entry>
+                                <entry>SQLite</entry>
+                                <entry>Oracle</entry>
+                            </row>
+                        </thead>
+                        <tbody>
+                            <row>
+                                <entry>linux-glibc2.3.6</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                            </row>
+                            <row>
+                                <entry>linux-glibc2.3.2</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                            </row>
+                            <row>
+                                <entry>linux-glibc2.1.3 </entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                            </row>
+                            <row>
+                                <entry>freebsd-6.1</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>n</entry>
+                            </row>
+                            <row>
+                                <entry>freebsd-7.1</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>n</entry>
+                            </row>
+                            <row>
+                                <entry>freebsd-8.0</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>n</entry>
+                            </row>
+                            <row>
+                                <entry>solaris-10_sparc</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                            </row>
+                            <row>
+                                <entry>solaris-10_amd64</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>n</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                            </row>
+                            <row>
+                                <entry>solaris-9_sparc</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>n</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                            </row>
+                            <row>
+                                <entry>solaris-9_i386</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                            </row>
+                            <row>
+                                <entry>solaris-8</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>n</entry>
+                            </row>
+                            <row>
+                                <entry>hpux-11_parisc</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                            </row>
+                            <row>
+                                <entry>hpux-11v2_ia64</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>n</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                            </row>
+                            <row>
+                                <entry>aix</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>y</entry>
+                                <entry>n</entry>
+                            </row>
+                            <row>
+                                <entry>tru64-5.1b</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                                <entry>n</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </table>
+            </section>
+            <section>
+                <title>MySQL-specific interaction methods</title>
+                <para>To specify the socket to use, set and export the MYSQL_UNIX_PORT environment variable, for example MYSQL_UNIX_PORT=/var/lib/mysql/mysql.sock; export MYSQL_UNIX_PORT.</para>
+            </section>
+            <section>
+                <title>MsSQL-specific interaction methods</title>
+                <para>In SQL Server 2005 this restriction is lifted - kind of. The total length of all key columns in an index cannot exceed 900 bytes.</para>
+                <para>If you are using null() in your configuration, be sure that the columns allow NULL to insert. You should give the column like this: "datetime varchar(16) NULL".</para>
+                <para>The date format used by the MSSQL database must be explicitly set in the /etc/locales.conf file of the syslog-ng server. [default] date = "%Y-%m-%d %H:%M:%S".</para>
+            </section>
         </section>
 
         <section id="reference_destination_syslog">
