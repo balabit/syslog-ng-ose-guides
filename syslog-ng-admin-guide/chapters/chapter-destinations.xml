@@ -914,6 +914,75 @@ sql(type(mssql) host("logserver") port("1433")
 date = "%Y-%m-%d %H:%M:%S"</synopsis>
                 </example>
             </section>
+             <section id="sql-interactions-syslog-ng">
+                <title>The way syslog-ng interacts with the database</title>
+                <formalpara>
+                    <title>Used SQL operations by syslog-ng</title>
+                    <para/>
+                </formalpara>
+                <para><emphasis>Create table:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>If the given table does not exist, syslog-ng tries to create it with the given column types.</para></listitem>
+                    <listitem><para>The &abbrev; application automatically creates the required tables and columns, if the user account used to connect to the database has the required privileges.</para></listitem>
+                    <listitem><para>If syslog-ng cannot create or alter a table, it tries to do it again when reach the next time_reopen.</para></listitem>
+                </itemizedlist>
+                <para><emphasis>Alter table:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>If the table structure is different from given structure in an existing table, syslog-ng tries to add columns in this table but never will delete or modify an existing column.</para></listitem>
+                    <listitem><para>If &abbrev; cannot create or alter a table, it tries to do it again when reach the next time_reopen.</para></listitem>
+                    <listitem><para>The &abbrev; application requires read and write access to the SQL table, otherwise it cannot verify that the destination table exists.</para></listitem>
+                </itemizedlist>
+                <para><emphasis>Insert table:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>Insert new records in a table.</para></listitem>
+                    <listitem><para>Inserting the records into the database is performed by a separate thread.</para></listitem>
+                    <listitem><para>The &abbrev; application automatically performs the escaping required to insert the messages into the database.</para></listitem>
+                    <listitem><para>If insert returns with error, syslog-ng tries to insert the message +two times by default, then drops it. Retrying time is the value of time_reopen().</para></listitem>
+                </itemizedlist>
+                <formalpara>
+                    <title>Encoding</title>
+                    <para/>
+                </formalpara>
+                <para>The &abbrev; application uses UTF-8 by default when writes logs into database.</para>
+                <formalpara>
+                    <title>Start/stop and reload</title>
+                    <para/>
+                </formalpara>
+                <para><emphasis>Start:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>The &abbrev; application will connect to database automatically after starting regardless existing incoming messages.</para></listitem>
+                </itemizedlist>
+                <para><emphasis>Stop:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>The &abbrev; application will close the connection to database before shutting down.</para></listitem>
+                </itemizedlist>
+                <para><emphasis>Possibility of losing logs:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>The &abbrev; application cannot lose logs during shutting down if disk buffer was given and it is not full yet.</para></listitem>
+                    <listitem><para>The &abbrev; application cannot lose logs during shutting down if disk buffer was not given.</para></listitem>
+                </itemizedlist>
+                <para><emphasis>Reload:</emphasis></para>
+                <itemizedlist>
+                    <listitem><para>The &abbrev; application will close the connection to database if it received SIGHUP signal (reload).</para></listitem>
+                    <listitem><para>It will reconnect to the database when it tries to send a new message to this database again.</para></listitem>
+                </itemizedlist>
+                <formalpara>
+                    <title>Macros:</title>
+                    <para/>
+                </formalpara>
+                <para>The value of $SEQNUM macro will be overrided by sql driver regardless of local or relayed incoming message.</para>
+                <para>It will be grown continously.</para>
+                <section>
+	                <title>MySQL-specific interaction methods</title>
+	                <para>To specify the socket to use, set and export the <parameter>MYSQL_UNIX_PORT</parameter> environment variable, for example <parameter>MYSQL_UNIX_PORT=/var/lib/mysql/mysql.sock; export MYSQL_UNIX_PORT</parameter>.</para>
+	            </section>
+	            <section>
+	                <title>MsSQL-specific interaction methods</title>
+	                <para>In SQL Server 2005 this restriction is lifted - kind of. The total length of all key columns in an index cannot exceed 900 bytes.</para>
+	                <para>If you are using <parameter>null()</parameter> in your configuration, be sure that the columns allow <parameter>NULL</parameter> to insert. Give the column as the following example: <parameter>"datetime varchar(16) NULL"</parameter>.</para>
+	                <para>The date format used by the MSSQL database must be explicitly set in the <filename>/etc/locales.conf</filename> file of the syslog-ng server. <parameter>[default] date = "%Y-%m-%d %H:%M:%S"</parameter>.</para>
+	            </section>
+            </section>
             <section id="reference_destination_sql">
                 <title>sql() destination options</title>
                 <indexterm>
@@ -970,12 +1039,12 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                                 <row>
                                     <entry>Default:
                                         <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>n/a</entry>
+                                    <entry>logs</entry>
                                 </row>
                             </tbody>
                         </tgroup>  
                     </informaltable>
-                    <para><guilabel>Description:</guilabel> Name of the database that stores the logs.</para>
+                    <para><guilabel>Description:</guilabel> Name of the database that stores the logs. Macros cannot be used in database name.</para>
                 </simplesect>
                 <simplesect>
                     <title>flags()</title>
@@ -1088,6 +1157,11 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                                     empty <parameter>indexes()</parameter> parameter in the destination,
                                     simply omitting the <parameter>indexes</parameter> parameter will
                                     cause syslog-ng to request indexing on the default columns.</para>
+                    <para>The &abbrev; application will create the name of indexes automaticaly with the following method:</para>
+					<itemizedlist>
+						<listitem><para>In case of MsSQL, PostgreSQL, MySQL or SQLite or (Oracle but tablename &lt; 30 characters): <parameter>{table}_{column}_idx</parameter>.</para></listitem>
+						<listitem><para>In case of Oracle and tablename &gt; 30 characters: <parameter>md5sum of {table}_{column}-1</parameter> and the first character will be replaced by "i" character and the md5sum will be truncated to 30 characters.</para></listitem>
+					</itemizedlist>
                 </simplesect>
                 <simplesect>
                     <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_local_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -1228,7 +1302,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                                 <row>
                                     <entry>Default:
                                         <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>n/a</entry>
+                                    <entry>messages</entry>
                                 </row>
                             </tbody>
                         </tgroup>  
@@ -1257,7 +1331,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                                 <row>
                                     <entry>Default:
                                         <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>n/a</entry>
+                                    <entry>mysql</entry>
                                 </row>
                             </tbody>
                         </tgroup>  
@@ -1316,6 +1390,12 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                     </informaltable>
                     <para><guilabel>Description:</guilabel>The parts of the message to store in the fields specified in the
                                     <parameter>columns</parameter> parameter.</para>
+                    <para>It is possible to give a special value calling: default (without quotation marks).It means that the value will be used that is the default of the column type of this value.</para>
+					<example>
+						<title>Value: default</title>
+						<synopsis>columns("date datetime", "host varchar(32)", "row_id serial")
+	values("$R_DATE", "$HOST", default)</synopsis>
+					</example>
                 </simplesect>
             </section>
         </section>
