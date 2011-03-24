@@ -27,11 +27,11 @@ syslog-ng-pe-v4.1-guide-admin-en.pdf: out/syslog-ng-pe-v4.1-guide-admin-en.pdf
 syslog-ng-pe-v4.1-guide-admin-en.html: out/syslog-ng-pe-v4.1-guide-admin-en.html/index.html
 
 out/syslog-ng-pe-v4.1-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/chapters/*.xml
-	xml-stylesheet/pdf/process-profile $< $@ syslog-ng
+	xml-stylesheet/pdf/process-profile $< $@ pe
         
 out/syslog-ng-pe-v4.1-guide-admin-en.html/index.html: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/*.xml syslog-ng-admin-guide/chapters/*.xml
 	mkdir -p out/syslog-ng-ose-v3.1-guide-admin-en.html
-	xml-stylesheet/html/process-profile $< $@ syslog-ng
+	xml-stylesheet/html/process-profile $< $@ pe
 	./copy-pngs.sh out/syslog-ng-ose-v3.1-guide-admin-en.html TRUE
 	            
 syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml: setup
