@@ -284,17 +284,38 @@
             />.</para>
         <synopsis>Declaration:
             file(filename);</synopsis>
-            <example id="example_source_file">
-                <title>Using the file() driver</title>
-                <synopsis>source s_file { file("/var/log/messages"); };</synopsis>
-            </example>
-            <example>
-                <title>Tailing files</title>
-                <para>The following source checks the <filename>access.log</filename> file every
-                second for new messages.</para>
-                <synopsis>source s_tail { file("/var/log/apache/access.log" 
+        <indexterm condition="pe">
+			<primary>wildcards</primary>
+			<secondary>in file sources</secondary>
+		</indexterm>
+		<para id="reference_file_wildcard" condition="pe">In &abbrev;, the filename (but not the pathname)
+                may include wildcard characters (for example <parameter>*</parameter>). Note that when
+                using wildcards in filenames, always set how often syslog-ng should check the file
+                for new messages using the <parameter>follow_freq()</parameter> parameter.</para>
+            <para id="reference_file_wildcard_inotify" condition="pe">When using wildcards, syslog-ng PE monitors
+                every matching file, and can receive new log messages from any of the files.
+                However, monitoring (polling) many files (that is, more than ten) has a significant
+                overhead and may affect performance. On Linux this overhead is not so significant,
+                because &abbrev; uses the inotify feature of the kernel.</para>
+		<example id="example_source_file">
+			<title>Using the file() driver</title>
+			<synopsis>source s_file { file("/var/log/messages"); };</synopsis>
+		</example>
+		<example>
+			<title>Tailing files</title>
+			<para>The following source checks the <filename>access.log</filename> file every
+			second for new messages.</para>
+			<synopsis>source s_tail { file("/var/log/apache/access.log" 
             follow_freq(1) flags(no-parse)); };</synopsis>
         </example>
+        <example id="example_source_file_wildcard" condition="pe">
+			<title>Using wildcards in the filename</title>
+			<para>The following example monitors every file with the <filename>.log</filename>
+			extension in the <filename>/var/application</filename> directory for log
+			messages. Note that only syslog-ng PE supports wildcards in the file and
+			pathnames.</para>
+			<synopsis>source s_file { file("/var/application/*.log" follow_freq(1));};</synopsis>
+		</example>
         <note>
             <para>If the message does not have a proper syslog header, syslog-ng treats messages
                 received from files as sent by the <parameter>kern</parameter> facility. Use the
@@ -421,6 +442,46 @@
             </simplesect>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_program_override']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect id="source_file_recursive" condition="pe">
+                <title>recursive</title>
+                <indexterm type="parameter">
+                    <primary>recursive</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>yes or no</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>no</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> When enabled, &abbrev; monitors every subdirectory of the
+                                directory set in the path of the <parameter>file</parameter>
+                                parameter, and reads log messages from files with the set filename.
+                                The <parameter>recursive</parameter> option can be used together
+                                with wildcards in the filename.</para>
+                <example id="example_source_file_recursive">
+                    <title>Monitoring multiple directories</title>
+                    <para>The following example reads files having the <parameter>.log</parameter>
+                    extension from the <parameter>/var/application/</parameter> directory and its
+                    subdirectories. Note that only syslog-ng PE supports recursive directory
+                    handling and wildcards in the file and pathnames.</para>
+                    <synopsis>source s_file_subdirectories { file("/var/application/*.log"
+                    recursive(yes) 
+                    follow_freq(1) 
+                    log_fetch_limit(100)
+                    );};</synopsis>
+                </example>
             </simplesect>
             <simplesect>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_tags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
