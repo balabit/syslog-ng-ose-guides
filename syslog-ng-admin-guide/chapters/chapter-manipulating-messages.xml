@@ -110,7 +110,7 @@
             the date found in the log message, that is, when the message was sent by the original
             application. <parameter>R_DATE</parameter> is the date when syslog has received the
             message.</para>
-        <para>Starting with &abbrev; version 3.2, the <parameter>DATE</parameter> macro equals the <parameter>S_DATE</parameter> macro. In earlier versions the value of <parameter>DATE</parameter> depended on the <parameter>use_time_recvd()</parameter> global option, which was removed from &abbrev;.</para>
+        <para>Starting with &abbrev; version <phrase condition="pe">4.1</phrase>, the <parameter>DATE</parameter> macro equals the <parameter>S_DATE</parameter> macro. In earlier versions the value of <parameter>DATE</parameter> depended on the <parameter>use_time_recvd()</parameter> global option, which was removed from &abbrev;.</para>
         <warning>
             <para>The hostname-related macros (<parameter>FULLHOST</parameter>,
                     <parameter>FULLHOST_FROM</parameter>, <parameter>HOST</parameter>, and
@@ -174,6 +174,16 @@ destination d_file {
             <secondary>reference</secondary>
         </indexterm>
         <para>The following macros are available in &abbrev;.</para>
+        <simplesect id="macro_ampm" condition="pe">
+            <title>AMPM</title>
+                <indexterm type="parameter">
+                    <primary>AMPM</primary>
+                </indexterm>
+                <indexterm type="parameter">
+                    <primary>$AMPM</primary>
+                </indexterm>
+            <para><guilabel>Description:</guilabel> Typically used together with the <link linkend="macro_hour12"><parameter>$HOUR12</parameter></link> macro, <parameter>$AMPM</parameter> returns the period of the day: AM for hours before mid day and PM for hours after mid day. In reference to a 24-hour clock format, AM is between 00:00-12:00 and PM is between 12:00-24:00. 12AM is midnight. Available in &abbrev; 3.2 and later.</para>
+        </simplesect>
         <simplesect>
             <title>BSDTAG</title>
                 <indexterm type="parameter">
@@ -299,6 +309,16 @@ destination d_file {
                     <primary>$HOUR, $R_HOUR, $S_HOUR</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The hour of day the message was sent.</para>
+        </simplesect>
+        <simplesect id="macro_hour12" condition="pe">
+            <title>HOUR12, R_HOUR12, S_HOUR12</title>
+                <indexterm type="parameter">
+                    <primary>HOUR12, R_HOUR12, S_HOUR12</primary>
+                </indexterm>
+                <indexterm type="parameter">
+                    <primary>$HOUR12, $R_HOUR12, $S_HOUR12</primary>
+                </indexterm>
+            <para><guilabel>Description:</guilabel> The hour of day the message was sent in 12-hour clock format. See also the <link linkend="macro_ampm"><parameter>$AMPM</parameter></link> macro. 12AM is midnight. Available in &abbrev; 3.2 and later.</para>
         </simplesect>
         <simplesect id="macro_host">
             <title>HOST</title>
@@ -522,7 +542,7 @@ destination d_file {
                     <secondary>SDATA</secondary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The syslog-ng application automatically parses the STRUCTURED-DATA
-                part of IETF-syslog messages, which can be referenced in macros. The <parameter>$SDATA</parameter> macro references the entire STRUCTURED-DATA part of the message, while structured data elements can be referenced using the <parameter>$.SDATA.SDID.SDNAME</parameter> macro.</para>
+                part of IETF-syslog messages, which can be referenced in macros. The <parameter>$SDATA</parameter> macro references the entire STRUCTURED-DATA part of the message, while structured data elements can be referenced using the <parameter>$.SDATA.SDID.SDNAME</parameter> macro.<phrase condition="pe">Available only in &product; 4.0 and later.</phrase></para>
                 <note>
                     <para>When using STRUCTURED-DATA macros, consider the following:</para>
                     <itemizedlist>
@@ -568,6 +588,34 @@ destination d_file {
                 sequence number is a part of every message that uses the new IETF-syslog
                 protocol (<parameter>.SDATA.meta.sequenceId</parameter>), and can be
                 added to BSD-syslog messages using this macro.</para>
+            <indexterm>
+                <primary>sequence ID</primary>
+            </indexterm>
+            <para condition="pe">If &abbrev; receives a message via the IETF-syslog protocol that includes a sequence ID, this ID is automatically available in the <parameter>$SEQNUM</parameter> macro.</para>
+			<indexterm>
+				<primary>Cisco timestamp</primary>
+			</indexterm>
+			<indexterm>
+				<primary>Cisco sequence number</primary>
+			</indexterm>
+			<indexterm>
+				<primary>sequence number</primary>
+			</indexterm>
+			<indexterm>
+				<primary>sequence number</primary>
+				<secondary>Cisco</secondary>
+			</indexterm>
+			<indexterm>
+				<primary>message ID</primary>
+			</indexterm>
+			<indexterm>
+				<primary>extended timestamp format</primary>
+			</indexterm>
+			<para condition="pe">3.2 and later versions of &abbrev; store the sequence number from Cisco IOS log messages using the extended timestamp format in this macro. If this message is then forwarded using the IETF-syslog protocol, &abbrev; includes the sequence number received from the Cisco device in the <parameter>.SDATA.meta.sequenceId</parameter> part of the message.</para>
+			<note condition="pe">
+				<para>To enable sequence numbering of log messages on Cisco devices, use the following command on the device (available in IOS 10.0 and later): <command>service sequence-numbers</command>.</para>
+				<para>For details, see <ulink url="http://www.cisco.com/en/US/docs/ios/12_3/configfun/command/reference/cfr_1g07.html#wp1029551">Cisco IOS Configuration Fundamentals and Network Management Command Reference</ulink>.</para>
+			</note>
         </simplesect>
         
         <!-- FIXME kellene rola leiras/concept esetleg -->
@@ -623,7 +671,7 @@ destination d_file {
                     <primary>tags</primary>
                     <secondary>as macro</secondary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> A comma-separated list of the tags assigned to the message.</para>
+            <para><guilabel>Description:</guilabel> A comma-separated list of the tags assigned to the message.<phrase condition="pe"> Available only in &product; 3.2 and later.</phrase></para>
             <note>
                 <para>Note that the tags are not part of the log message and are not automatically transferred from a client to the server. For example, if a client uses a pattern database to tag the messages, the tags are not transferred to the server. A way of transferring the tags is to explicitly add them to the log messages using a template and the <parameter>$TAGS</parameter> macro, or to add them to the structured metadata part of messages when using the IETF-syslog message format.</para>
                 <para>When sent as structured metadata, it is possible to reference to the list of tags on the central server, and for example, to add them to a database column.</para>
