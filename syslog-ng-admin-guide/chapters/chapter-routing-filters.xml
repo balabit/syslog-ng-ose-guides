@@ -675,6 +675,39 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
             <para>For details, see also <xref linkend="parallel_connections"/>.</para>
         </section>
     </section>
+    <section id="concepts_failover" condition="pe">
+        <title>Client-side failover</title>
+        <indexterm>
+                <primary>secondary servers</primary>
+            </indexterm>
+            <indexterm>
+                <primary>failover servers</primary>
+            </indexterm>
+            <indexterm>
+                <primary>fail-over servers</primary>
+            </indexterm>
+            <indexterm>
+                <primary>tcp failover</primary>
+            </indexterm>
+            <indexterm>
+                <primary>fail-over</primary>
+            </indexterm>
+            <indexterm>
+                <primary>client-side failover</primary>
+            </indexterm>
+            <indexterm>
+                <primary>FailoverSyslogServer</primary>
+            </indexterm>
+            <para>Starting with &product; 3.2., &abbrev; can detect if the remote server of a network destination becomes unaccessible, and start sending messages to a secondary server. Multiple failover servers can be configured; so if the secondary server becomes unaccessible as well, &abbrev; will switch to the third server in the list, and so on. If there are no more failover servers left, &abbrev; returns to the beginning of a list and attempts to connect to the primary server.</para>
+            <para>When &abbrev; starts up, it will always try to connect to the primary server first, but once it fails over to a secondary server, it will not automatically attempt to return to the primary server even if it becomes available. However, if the configuration of &abbrev; is reloaded, it will attempt to connect the primary server.</para>
+            <para>If &abbrev; uses TLS-encryption to communicate with the remote server, &abbrev; checks the certificate of the failover server as well. The certificates of the failover servers should match their domain names or IP addresses &mdash; for details, see <xref linkend="tls_serverauth"/>. Note that when mutual authentication is used, the &abbrev; client sends the same certificate to every server.</para>
+            <para>The primary server and the failover servers must be accessible with the same communication method: it is not possible to use different destination drivers or options for the different servers.</para>
+            <note>
+                <para>Client-side failover works only for TCP-based connections, that is, the <parameter>tcp()</parameter> (including TLS-encrypted connections) and the <parameter>syslog()</parameter> destination driver (excluding UDP transport).</para>
+                <para>Client-side failover is not supported in the <parameter>sql()</parameter> driver, even though it may use a TCP connection to access a remote database.</para>
+            </note>
+            <para>For details on configuring failover servers, see <xref linkend="example-failover-server-tcp"/> and <xref linkend="example-failover-server-syslog"/>.</para>
+    </section>
     <section id="filters">
         <title>Filters</title>
         <indexterm significance="preferred">
