@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+[  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+  %entities;]> 
+<chapter id="chapter_ibm_configuration_audjrn">
+	<title>Configuring &agentabbrev; security audit journaling</title>
+	<para>You must create the System i security audit journal <command>QAUDJRN</command>, related journal receivers, and turn on security auditing before attempting to send security information to a log collection server or SIM solution. The full documentation is provided in the IBM publication “iSeries Security Reference”. Please refer to this document at the IBM Information Center. The following section provides a summary of the steps needed to activate security auditing.</para>
+	
+	<section>
+		<title>Create the security journal receiver</title>
+		<para>Create the first journal receiver in a user library that is backed up on a regular basis. You can use an existing library, or you can create a library to contain the journals. The library can have public authority, but the journal receivers should exclude public authority. Use a name with a 4 or 5 digit number at the end of the name, and start with sequence number 1. The operating system will automatically increment the sequence number by 1 when creating a new journal receiver.</para>
+		<synopsis>CRTJRNRCV
+      JRNRCV(MYLIB/AUDRCV0001)
+      THRESHOLD(100000)
+      AUT(*EXCLUDE)
+      TEXT(’Auditing Journal Receiver’)</synopsis>
+	</section>
+	
+	<section>
+		<title>Create the QAUDJRN journal</title>
+		<para>Create the <command>QAUDJRN</command> journal in the <command>QSYS</command> library. You must have authority to the <command>QSYS</command> library and <command>*AUDIT</command> special authority. Use the following parameters for this journal:</para>
+		<synopsis>CRTJRN
+      JRN(QSYS/QAUDJRN)
+      JRNRCV(JRNLIB/AUDRCV0001)
+      MNGRCV(*SYSTEM)
+      DLTRCV(*NO)
+      AUT(*EXCLUDE)
+      TEXT(’Auditing Journal’)</synopsis>
+	</section>
+	
+	<section>
+		<title>Change the system values for auditing</title>
+		<para>You specify which types of events are collected in the <command>QAUDJRN</command> journal by specifying the system values for <command>QAUDLVL</command> and QAUDLVL2. You can view a list of all of the auditing values by prompting the values when using the <command>WRKSYSVAL</command> command.</para> 
+		<note>
+			<para>In V5R4 of the operating system IBM introduced some group values to make specifying audit types easier. See the notes below.</para>
+		</note>
+		<para>To collect basic security information you can use the <parameter>*SECURITY</parameter> group value like this:</para>
+		<synopsis>CHGSYSVAL
+      SYSVAL(QAUDLVL)
+      VALUE(‘*SECURITY’)</synopsis>
+		<para>An alternative to using the <parameter>*SECURITY</parameter> group is to use the Change Security Audit (<command>CHGSECAUD</command>) command to set the basic security values and start auditing. Be careful, this command will create the journal and journal receiver, change the audit levels, and start audit collection. It is recommended that you specify the actual values with the Change System Value command rather than the Change Security Audit command.</para>
+		<para>If you want to collect more extensive security information you can add the values <parameter>PGMFAIL</parameter>, <parameter>AUTFAIL</parameter>, <parameter>PGMADP</parameter>, <parameter>SAVRST</parameter>, <parameter>OFCSVR</parameter>, and <parameter>SERVICE</parameter>:</para>
+		<synopsis>CHGSYSVAL
+      SYSVAL(QAUDLVL)
+      VALUE(‘*SECURITY’ ‘*PGMFAIL’ ‘*AUTFAIL’ ‘*PGMADP’ ‘*SAVRST’
+      ‘*OFCSRFV’ ‘*SERVICE’)</synopsis>
+		<para>Certain data security regulations require that you monitor for system changes. To collect events for system changes you can add the values <parameter>CREATE</parameter>, <parameter>DELETE</parameter>, <parameter>OBJAUD</parameter>, <parameter>OBJMGT</parameter>, <parameter>OPTICAL</parameter>, and <parameter>SAVRST</parameter>:</para>
+		<synopsis>CHGSYSVAL
+      SYSVAL(QAUDLVL)
+      VALUE(‘*SECURITY’ ‘*AUTFAIL’ ‘*NETCMN’ ‘*SAVRST’ ‘*OFCSRFV’
+      ‘*SERVICE’ ‘*CREATE’ ‘*DELETE’ ‘*OBJAUD’ ‘*OBJMGT’
+      ‘*OPTICAL’ ‘*SAVRST’)</synopsis>
+		<para>There is a limit to the number of values you can specify in the <parameter>QAUDLVL</parameter> system value. Use the <parameter>*AUDLVL2</parameter> special value to indicate that additional values are to be found in the <parameter>QAUDLVL</parameter> system value.</para>
+	</section>
+	
+	<section>
+		<title>Auditing privileged user profiles</title>
+		<para>You should consider auditing the activities of any user with security administrator, all object, or service authority. You can use the &agentabbrev; configuration option to review user auditing and make changes. Or, you can turn on user auditing with the Change User Audit (<command>CHGUSRAUD</command>) command. Use this command to enable the highest level of monitoring for any IBM provided profile and any profile that you create with special authorities such as <command>*SECADM</command>, <command>*SERVICE</command>, or <command>*ALLOBJ</command>:</para>
+		<synopsis>CHGUSRAUD
+      USRPRF(QSECOFR)
+      AUDLVL(*ALL)</synopsis>
+		<para>Repeat this process for all privileged users.</para>
+	</section>
+	
+	<section>
+		<title>Auditing database files access</title>
+		<para>To audit access to any file containing sensitive data such as credit card numbers, social security numbers, etc., use the Change Object Audit command (<command>CHGOBJAUD</command>). You may also want to audit access to files that contain configuration information. For IFS files use the Change Audit (<command>CHGAUD</command>) command. For QDLS files use the Change DLO Audit (<command>CHGDLOAUD</command>) command.</para>
+		<synopsis>CHGOBJAUD
+      OBJ(MYLIB/MYFILE)
+      OBJAUD(*ALL)
+CHGAUD
+      OBJ(‘/mydirectory/*’)
+      OBJAUD(*ALL)
+CHGDLOAUD
+      FOLDER(MYFOLDER)
+      OBJAUD(*all)</synopsis>
+		<note>
+			<para>You must specify the value <parameter>*OBJAUD</parameter> in the <parameter>QAUDLVL</parameter> or <parameter>QAUDLVL</parameter> system value to perform object auditing.</para>
+		</note>
+	</section>
+	
+	<section>
+		<title>Auditing program access</title>
+		<para>You may have programs that adopt special authority or which perform sensitive functions. A program that adopts the <command>QSECOFR</command> profile authority, or which maintains salary data are examples of this type of program. You can make a list of programs that adopt authority by using the Display Program Adopt (<command>DSPPGMADP</command>) command. Use the <command>CHGOBJAUD</command> command to start auditing:</para>
+		<synopsis>CHGOBJAUJD
+      OBJ(MYLIB/MYPROGRAM)
+      OBJAUD(*ALL)</synopsis>
+		<note>
+			<para>You must specify the value <parameter>*OBJAUD</parameter> in the <parameter>QAUDLVL</parameter> or <parameter>QAUDLVL</parameter> system value to perform object auditing.</para>
+		</note>
+	</section>
+	
+	<section>
+		<title>Establish the audit end action system value</title>
+		<para>Use the Work With System Values command to establish the action to take if the system cannot write to the security audit journal. It is unlikely that this will occur, but you should set a value for this event.</para>
+		<synopsis>CHGSYSVAL
+      SYSVAL(QAUDENDACN)
+      VALUE(‘*NOTIFY’)</synopsis>
+	</section>
+	
+	<section>
+		<title>Forcing journal entries to auxiliary storage</title>
+		<para>Use the <command>WRKSYSVAL</command> command to establish how often journal records are written to disk. The smaller the value the less the likely is the loss of journal entries, but the more impact journaling has on system performance. For most users the value of <parameter>*SYS</parameter> will provide a balance between performance and log collection reliability. For maximum security set the value to 1.</para>
+		<synopsis>CHGSYSVAL
+      SYSVAL(QAUDFRCLVL)
+      VALUE(*SYS)
+CHGSYSVAL
+      SYSVAL(QAUDFRCLVL)
+      VALUE(1)</synopsis>
+	</section>
+	
+	<section>
+		<title>Start security journal auditing</title>
+		<para>The system value <parameter>QAUDCTL</parameter> controls the actual collection of system events to the <command>QAUDJRN</command> security journal. You must change this system value to indicate that event collection should start. Use the <command>CHGSSVAL</command> command to enable security auditing:</para>
+		<synopsis>CHGSYSVAL
+      SYSVAL(QAUDCTL)
+      VALUE(‘*AUDLVL’)</synopsis>
+	</section>
+</chapter>

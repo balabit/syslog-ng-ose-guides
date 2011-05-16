@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+[  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+  %entities;]> 
+<chapter id="chapter_ibm_configuringservers">
+  <title>Configuring IBM System i Servers</title>
+  <section>
+    <title>Configuring Apache server logs</title>
+    <para>To enable logging in the Apache server, use the Work With Links (<command>WRKLNK</command>) command to edit the httpd_conf file in the <filename>/www/(server-name)/conf</filename> directory. You will need to add a “LogCycle” directive in order to force the Apache server to create one file. Without this directive the log files will have an appended time stamp and the syslog-ng application will not be able to process them. After updating the configuration file stop and re-start the Apache web server instance with the Start TCP Server (<command>STRTCPSVR</command>) command.</para>
+   <synopsis>LogCycle Off
+CustomLog logs/access_log combined</synopsis>
+    <para>You must now configure a source to read the file in syslog-ng. Apache logs will generally be placed in the <filename>/www/(server-name)/logs</filename> directory. Consult the syslog-ng documentation for instructions on how to configure syslog-ng to read the log file.</para>
+  </section>
+  <section>
+    <title>OpenSSH server logs</title>
+    <para>To enable logging in the OpenSSH server, use the Work With Links (<command>WRKLNK</command>) command to edit the sshd_conf file in the <filename>/QopenSys/QIBM/ /ProdData/SC1/OpenSSH/openssh-3.5p1/etc</filename> directory like this:</para>
+    <synopsis>SyslogFacility AUTH
+LogLevel INFO</synopsis>
+    <para>Consult the documentation on the OpenSSH web site (<ulink url="http://www.openssh.org">http://www.openssh.org</ulink>) for other syslog options.</para>
+    <para>After changing the sshd_config file you must create an empty log file. Sign on as QSECOFR, use the STRQSH shell, and use the following commands:</para>
+    <synopsis>mkdir /var/adm
+touch /var/adm/sshlog</synopsis>
+    <para>You must now configure a source to read the file in syslog-ng. Consult the syslog-ng documentation for instructions on how to configure syslog-ng to read the log file.</para>
+  </section>
+  <section>
+    <title>Other server logs</title>
+    <para>A number of other open systems and proprietary applications can be deployed on the &agentabbrev; including MySQL, PHP, Perl, and others. Most of these types of applications can be enabled to collect system logs. Please consult the documentation for these servers on the steps to take to start collecting logs. Once logging is active you can configure a “source” statement in Syslog-ng to capture the logs.</para>
+  </section>
+</chapter>
