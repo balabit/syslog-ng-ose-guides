@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  
+<!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]> 
+<chapter id="chapter-multithreading">
+    <title>Multithreading and scaling in &abbrev;</title>
+    <indexterm significance="preferred">
+        <primary>multithreading in &abbrev;</primary>
+    </indexterm>
+    <indexterm>
+        <primary>scaling to multiple CPUs</primary>
+    </indexterm>
+    <indexterm>
+        <primary>threading</primary>
+    </indexterm>
+    <indexterm>
+        <primary>performance</primary>
+        <secondary>using multithreading</secondary>
+    </indexterm>
+    <para>Starting with <phrase condition="pe">&product; 4.1</phrase>, &abbrev; can be run in multithreaded mode to scale to multiple CPUs or cores for increased performance.</para>
+    <note>
+        <para>By default, &abbrev; runs in single-thread mode. Multithreading must be explicitly enabled.</para>
+    </note>
+    <section>
+        <title>Multithreading concepts of &abbrev;</title>
+        <para>This section is a brief overview on how &abbrev; works in multithreaded mode. It is mainly for illustration purposes: the concept has been somewhat simplified and may not completely match reality.</para>
+        <para>&abbrev; has a main thread that is always running, and a number of worker threads that process the messages. The maximum number of threads &abbrev; uses is two times the CPUs or cores in the host running &abbrev; but can be limited using the <parameter>--worker-threads</parameter> command-line option.</para>
+        <note>
+            <para>The <parameter>--worker-threads</parameter> command-line option sets the maximum total number of threads &abbrev; can use, including the main &abbrev; thread.</para>
+        </note>
+        <para>When an event requiring a new thread occurs (for example, &abbrev; receives new messages, or a destination becomes available), &abbrev; tries to start a new thread. If there are no free threads, the task waits until a thread finishes its task and becomes available. There are two types of worker threads:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Reader threads read messages from a source (as many as possible, but limited by the <parameter>log_fetch_limit()</parameter> and <parameter>log_iw_size()</parameter> options. The thread then processes these messages, that is, performs filtering, rewriting and other tasks as necessary, and puts the log message into the queue of the destination. If the destination does not have a queue (for example, usertty), the reader thread sends the message to the destination, without the interaction of a separate writer thread.</para>
+            </listitem>
+            <listitem>
+                <para>Writer threads take the messages from the queue of the destination and send them to the destination, that is, write the messages into a file, or send them to the syslog server over the network. The writer thread starts to process messages from the queue only if the destination is writable, and there are enough messages in the queue, as set in the <parameter>flush_lines()</parameter> and the <parameter>flush_timeout()</parameter> options. Writer threads stop processing messages when the destination becomes unavailable, or there are no more messages in the queue.</para>
+            </listitem>
+        </itemizedlist>
+        <para>The following list describes which sources and destinations can use multiple threads.</para>
+    <!-- FIXME
+        <itemizedlist>
+            <listitem>
+                <para><parameter>tcp and syslog(tcp)</parameter> sources can process independent connections in separate threads. The number of independent connections is limited by the <parameter>max_connections()</parameter> option of the source. Separate sources are processed by separate thread, for example, if you have two separate <parameter>tcp</parameter> sources defined that receive messages on different IP addresses or port, &abbrev; will use separate threads for these sources even if they both have only a single active connection.</para>
+            </listitem>
+            <listitem>
+                <para><parameter>udp, file, and pipe</parameter> sources are </para>
+            </listitem>
+            <listitem>
+                <para></para>
+            </listitem>
+            <listitem>
+                <para></para>
+            </listitem>
+            <listitem>
+                <para></para>
+            </listitem>
+        </itemizedlist>
+    -->
+    </section>
+    <section>
+        <title>Configuring multithreading</title>
+        <para>Multithreading in &abbrev; can be enabled using the following methods:</para>
+        <itemizedlist>
+            <listitem>
+                 <para>Globally using the <parameter>threaded</parameter> option.</para>
+            </listitem>
+            <listitem>
+                 <para>Separately for selected sources or destinations using the <parameter>flags("threaded")</parameter> option.</para>
+            </listitem>
+        </itemizedlist>
+        <para>By default, &abbrev; uses at least two </para>
+    </section>
+    <!--    global optionok koze felvenni es meghivatkozni
+            threaded(yes|no) global option
+                If it is yes, syslog-ng will run in threaded mode
+                default value: no
+        flagek koze felvenni ahol kell, es idehivatkozni
+            If this flag is enabled, the specified source/destination will be multithreaded this only available for source/destinations that are capable of threading
+        ez command line opcio!!, man page-be
+            -worker-threads=<max>: Set the number of I/O worker threads default value: equals to the number of online CPUs on the system, at least 2, at most 64
+    -->
+    <section>
+        <title>Optimizing multithreaded performance</title>
+        <indexterm>
+            <primary>performance</primary>
+            <secondary>optimizing multithreading</secondary>
+        </indexterm>
+        <para>Destinations that have a queue process that queue in a single thread. Multiple sources can send messages to the same queue, so the queue can scale to multiple CPUs. However, when the writer thread writes the queue contents to the destination, it will be single-threaded.</para>
+        <para>Message parsing, rewrite rules, filters, and other types of message processing is performed by the reader thread in a sequential manner. This means that such operations can scale only if reading messages from the source can be multithreaded. For example, if a <parameter>tcp</parameter> source can process messages from different connections (clients) in separate threads. If the source cannot use multiple threads to process the messages, the operations will not scale.</para>
+        <para>To improve the processing power of &abbrev; and scale to more processors, use the following methods:</para>
+        <itemizedlist>
+            <listitem>
+                <para>To improve scaling on the source side, use more sources, for example, more source files, or receive the messages from more parallel connections. For network sources, you can also configure a parrt of your clients to send the messages to a different port of your syslog-ng server, and use separate source definitions for each port.</para>
+            </listitem>
+            <listitem>
+                <para>On the destination side, when writing the log messages to files, use macros in the filename to split the messages to separate files (for example, using the $HOST macro). Files with macros in their filenames are processed in separate writer threads.</para>
+            </listitem>
+            <listitem>
+                <para>On the destination side, when sending messages to a syslog-ng server, you can use multiple connections to the server if you configure the syslog-ng server to receive messages on multiple ports, and configure the clients to use both ports.</para>
+            </listitem>
+        </itemizedlist>
+    </section>
+
+</chapter>
