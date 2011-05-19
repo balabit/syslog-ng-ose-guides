@@ -358,7 +358,7 @@
             <primary>timezones</primary>
         </indexterm>
         <para>The syslog-ng application supports messages originating from different timezones. The
-            original syslog protocol does not include timezone information, but syslog-ng provides a
+            original syslog protocol (RFC3164) does not include timezone information, but syslog-ng provides a
             solution by extending the syslog protocol to include the timezone in the log messages.
             The syslog-ng application also enables administrators to supply timezone information for
             legacy devices which do not support the protocol extension. </para>
@@ -376,7 +376,10 @@
                     parameter for the source driver that reads the message. This timezone will be associated with the messages only if no timezone is specified within the message itself. Each source defaults to the
                     value of the <link linkend="recv_time_zone">
                         <parameter>recv_time_zone()</parameter>
-                    </link> global option. </para>
+                    </link> global option. It is not possible to override only the timezone information of the incoming message; but setting the <parameter>keep-timestamp()</parameter> option to <parameter>no</parameter> allows &abbrev; to replace the full timestamp (timezone included) with the time the message was received.</para>
+                <note>
+                    <para>When processing a message that does not contain timezone information, the &abbrev; application will use the timezone and daylight-saving that was effective when the timestamp was generated. For example, the current time is <parameter>2011-03-11</parameter> (March 11, 2011) in the <parameter>EU/Budapest</parameter> timezone. When daylight-saving is active (summertime), the offset is <parameter>+02:00</parameter>. When daylight-saving is inactive (wintertime) the timezone offset is <parameter>+01:00</parameter>. If the timestamp of an incoming message is <parameter>2011-01-01</parameter>, the timezone associated with the message will be <parameter>+01:00</parameter>, but the timestamp will be converted, because 2011-01-01 meant winter time when daylight saving is not active but the current timezone is <parameter>+02:00</parameter>.</para>
+                </note>
             </step>
             <step>
                 <para>Specify the timezone in the destination driver using the 
@@ -392,6 +395,9 @@
                         application converts the timezone information properly for every individual
                         destination zone.</para>
                 </note>
+                <warning>
+                    <para>If &abbrev; sends the message is to the destination using the legacy-syslog protocol (RFC3164) which does not support timezone information in its timestamps, the timezone information cannot be encapsulated into the sent timestamp, so &abbrev; will convert the hour:min values based on the explicitly specified timezone.</para>
+                </warning>
             </step>
             <step>
                 <para>If the timezone is not specified, the message is left unchanged.</para>
