@@ -453,9 +453,12 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
             successfully sends from the output buffer increases the window size by one. If the
             window is full (that is, its size decreases to zero), syslog-ng stops reading messages from
             the source. The initial size of the control window is by default
-            <parameter>100</parameter>: the <parameter>log_fifo_size()</parameter> must be larger
+            <parameter>1000</parameter>: the <parameter>log_fifo_size()</parameter> must be larger
             than this value in order for flow-control to have any effect. If a source accepts
             messages from multiple connections, all messages use the same control window.</para>
+        <note>
+            <para>Starting with &abbrev; version <phrase condition="pe">4.1</phrase>, if the source can handle multiple connections (for example, <parameter>tcp()</parameter>), the size of the control window is divided by the value of the <parameter>max_connections()</parameter> parameter and this smaller control window is applied to each connection of the source.</para>
+        </note>
         <para>When flow-control is used, every source has its own control window. As a worst-case
             situation, the output buffer of the destination must be set to accommodate all messages
             of every control window, that is, the <parameter>log_fifo_size()</parameter> of the
@@ -467,7 +470,7 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
             Otherwise, syslog-ng does not activate the flow-control, and messages may be lost.</para>
         <para>The syslog-ng application handles outgoing messages the following way:</para>
         <figure>
-            <title>Handling outgoing messages in syslog-ng PE</title>
+            <title>Handling outgoing messages in &abbrev;</title>
             <mediaobject>
                 <imageobject role="html">
                     <imagedata format="PNG" align="center" fileref="syslog-ng-message-output.png"/>
@@ -597,8 +600,7 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
                         control window.</para>
                 </listitem>
                 <listitem>
-                    <para>When a source accepts multiple connections, the messages of every
-                        connection use the same control window. </para>
+                    <para>When a source accepts multiple connections, the size of the control window is divided by the value of the <parameter>max_connections()</parameter> parameter and this smaller control window is applied to each connection of the source.</para>
                 </listitem>
                 <listitem>
                     <para>The output buffer must be larger than the control window of every source
@@ -609,7 +611,7 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
                         source until some messages are successfully sent to the destination.</para>
                 </listitem>
                 <listitem>
-                    <para>If the output buffer becomes full, and neither disk-buffering nor
+                    <para>If the output buffer becomes full, and <phrase condition="pe">neither disk-buffering nor</phrase> 
                         flow-control is used, messages may be lost.</para>
                 </listitem>
             </itemizedlist>
@@ -636,7 +638,7 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
                         <parameter>300</parameter>. However, the
                     <parameter>log_fetch_limit()</parameter> (default value: 10) parameter applies
                     to every connection of the source individually, while the
-                        <parameter>log_iw_size()</parameter> (default value: 100) parameter applies
+                        <parameter>log_iw_size()</parameter> (default value: 1000) parameter applies
                     to the source. In a worst-case scenario, the destination does not accept any
                     messages, while all 300 connections send at least
                     <parameter>log_fetch_limit()</parameter> number of messages to the source during
