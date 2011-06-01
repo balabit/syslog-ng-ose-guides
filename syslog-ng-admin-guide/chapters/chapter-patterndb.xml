@@ -424,8 +424,25 @@
             <primary>message triggers</primary>
         </indexterm>
         <para>Starting with version <phrase condition="pe">4.1</phrase><phrase condition="ose">3.2</phrase>, the &abbrev; application is able to generate (trigger) messages automatically if certain events occur, for example, a specific log message is received, or the correlation timeout of a message expires. Basically, you can define messages for every pattern database rule that are emitted when a message matching the rule is received. Triggering messages is often used together with message correlation, but can also be used separately.</para>
-        <note>
-            <para>Currently &abbrev; sends the generated messages to its <parameter>internal()</parameter> source, but this will change in future versions.</para>
+        <indexterm type="parameter">
+            <primary>inject-mode</primary>
+        </indexterm>
+        <para>The generated message is injected into the same place where the <parameter>db_parser</parameter> statement is referenced in the log path. To post the generated message into the <parameter>internal()</parameter> source instead, use the <parameter>inject-mode()</parameter> option in the definition of the parser.</para>
+        <example>
+            <title>Sending triggered messages to the <parameter>internal()</parameter> source</title>
+            <para>To send the generated messages to the <parameter>internal</parameter> source, use the <parameter>inject_mode(internal)</parameter> option:</para>
+            <synopsis>parser p_db {db_parser(
+    file("mypatterndbfile.xml")
+    inject_mode(internal)
+);}; </synopsis>
+            <para>To inject the generated messages where the pattern database is referenced, use the <parameter>inject_mode(pass-through)</parameter> option:</para>
+            <synopsis>parser p_db {db_parser(
+    file("mypatterndbfile.xml")
+    inject_mode(pass-through)
+);}; </synopsis>
+        </example>
+        <note condition="ose">
+            <para>Version 3.2 of &abbrev; was able to send the generated messages only to the <parameter>internal</parameter> source.</para>
         </note>
         <para>The generated message must be configured in the pattern database rule. It is possible to create an entire message, use macros and values extracted from the original message with pattern database, and so on.</para>
         <example id="example-patterndb-trigger">
