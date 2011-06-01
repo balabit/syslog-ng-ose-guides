@@ -18,14 +18,17 @@
         <primary>performance</primary>
         <secondary>using multithreading</secondary>
     </indexterm>
-    <para>Starting with <phrase condition="pe">&product; 4.1</phrase>, &abbrev; can be run in multithreaded mode to scale to multiple CPUs or cores for increased performance.</para>
+    <para>Starting with version <phrase condition="pe">4.1</phrase><phrase condition="ose">3.3</phrase>, &abbrev; can be run in multithreaded mode to scale to multiple CPUs or cores for increased performance.</para>
     <note>
         <para>By default, &abbrev; runs in single-thread mode. Multithreading must be explicitly enabled.</para>
     </note>
     <section>
         <title>Multithreading concepts of &abbrev;</title>
         <para>This section is a brief overview on how &abbrev; works in multithreaded mode. It is mainly for illustration purposes: the concept has been somewhat simplified and may not completely match reality.</para>
-        <para>&abbrev; has a main thread that is always running, and a number of worker threads that process the messages. The maximum number of threads &abbrev; uses is two times the CPUs or cores in the host running &abbrev; but can be limited using the <parameter>--worker-threads</parameter> command-line option.</para>
+        <note>
+            <para>The way &abbrev; uses multithreading may change in future releases. The current documentation applies to version <phrase condition="pe">4.1</phrase><phrase condition="ose">3.3</phrase>.</para>
+        </note>
+        <para>&abbrev; has a main thread that is always running, and a number of worker threads that process the messages. The maximum number of worker threads &abbrev; uses is two times the CPUs or cores in the host running &abbrev; but can be limited using the <parameter>--worker-threads</parameter> command-line option.</para>
         <note>
             <para>The <parameter>--worker-threads</parameter> command-line option sets the maximum total number of threads &abbrev; can use, including the main &abbrev; thread.</para>
         </note>
@@ -39,27 +42,28 @@
             </listitem>
         </itemizedlist>
         <para>The following list describes which sources and destinations can use multiple threads.</para>
-    <!-- FIXME
         <itemizedlist>
             <listitem>
-                <para><parameter>tcp and syslog(tcp)</parameter> sources can process independent connections in separate threads. The number of independent connections is limited by the <parameter>max_connections()</parameter> option of the source. Separate sources are processed by separate thread, for example, if you have two separate <parameter>tcp</parameter> sources defined that receive messages on different IP addresses or port, &abbrev; will use separate threads for these sources even if they both have only a single active connection.</para>
+                <para>The <parameter>tcp and syslog(tcp)</parameter> sources can process independent connections in separate threads. The number of independent connections is limited by the <parameter>max_connections()</parameter> option of the source. Separate sources are processed by separate thread, for example, if you have two separate <parameter>tcp</parameter> sources defined that receive messages on different IP addresses or port, &abbrev; will use separate threads for these sources even if they both have only a single active connection.</para>
             </listitem>
             <listitem>
-                <para><parameter>udp, file, and pipe</parameter> sources are </para>
+                <para>The <parameter>udp, file, and pipe</parameter> sources use a single thread for every source statement.</para>
             </listitem>
             <listitem>
-                <para></para>
+                <para>The <parameter>tcp, syslog, and pipe</parameter> destinations use a single thread for every destination.</para>
             </listitem>
             <listitem>
-                <para></para>
+                <para>The <parameter>file</parameter> destination uses a single thread for writing the destination file, but may use a separate thread for each destination file if the filename includes macros.</para>
             </listitem>
             <listitem>
-                <para></para>
+                <para>The <parameter>logstore</parameter> destination uses separate threads for writing the messages from the journal to the logstore files, and also for timestamping. These threads are independent from the setting of the <parameter>--worker-threads</parameter> command-line option.</para>
+            </listitem>
+            <listitem>
+                <para>Every <parameter>sql</parameter> destination uses its own thread. These threads are independent from the setting of the <parameter>--worker-threads</parameter> command-line option.</para>
             </listitem>
         </itemizedlist>
-    -->
     </section>
-    <section>
+    <section id="configuring-multithreading">
         <title>Configuring multithreading</title>
         <para>Multithreading in &abbrev; can be enabled using the following methods:</para>
         <itemizedlist>
@@ -70,17 +74,10 @@
                  <para>Separately for selected sources or destinations using the <parameter>flags("threaded")</parameter> option.</para>
             </listitem>
         </itemizedlist>
-        <para>By default, &abbrev; uses at least two </para>
+        <example>
+            <title>Enabling multithreading</title>
+        </example>
     </section>
-    <!--    global optionok koze felvenni es meghivatkozni
-            threaded(yes|no) global option
-                If it is yes, syslog-ng will run in threaded mode
-                default value: no
-        flagek koze felvenni ahol kell, es idehivatkozni
-            If this flag is enabled, the specified source/destination will be multithreaded this only available for source/destinations that are capable of threading
-        ez command line opcio!!, man page-be
-            -worker-threads=<max>: Set the number of I/O worker threads default value: equals to the number of online CPUs on the system, at least 2, at most 64
-    -->
     <section>
         <title>Optimizing multithreaded performance</title>
         <indexterm>
