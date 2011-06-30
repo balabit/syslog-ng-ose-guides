@@ -1256,9 +1256,15 @@
             <note>
                 <para>The <parameter>snmp()</parameter> driver is available in &abbrev; version <phrase condition="pe">4.1</phrase> and later.</para>
             </note>
+            <note>
+                <para>The <parameter>snmp</parameter> destination driver currently supports sending SNMP traps only using the UDP transport protocol.</para>
+            </note>
             <para>The <parameter>snmp()</parameter> driver requires the <parameter>host()</parameter>, <parameter>trap_obj()</parameter>, and <parameter>snmp_obj()</parameter> options to be set, as well as the <parameter>engine_id()</parameter> option in case the SNMPv3 protocol is used. For the list of available optional parameters, see <xref linkend="reference-destination-snmp"/>.</para>
             <synopsis>Declaration:
                 destination d_snmp {snmp(host() trap_obj() snmp_obj() ...);};</synopsis>
+            <warning>
+                <para>If &abbrev; cannot resolve the destination hostname during startup, it will try to resolve the hostname again when the next message to be sent as an SNMP trap is received. However, if this name resolution fails, the trap will be dropped.</para>
+            </warning>
             <note>
                 <para>The <parameter>snmp()</parameter> destination driver does not generate MARK signals itself, but can receive and forward MARK signals.</para>
             </note>
@@ -1304,21 +1310,45 @@
                 <indexterm>
                     <primary>receiving Cisco syslog messages</primary>
                 </indexterm>
-                <para>Starting with version <phrase condition="pe">4.1</phrase>, &abbrev; can convert the syslog messages sent by Cisco devices to Cisco-specific SNMP traps called clogMessageGenerated traps. That way, the incoming log messages can be forwarded to devices used to process and analyze Cisco-specific SNMP traps.</para>
+                <para>Starting with version <phrase condition="pe">4.1</phrase>, &abbrev; can convert the syslog messages sent by Cisco devices to Cisco-specific SNMP traps called clogMessageGenerated traps. That way, the incoming log messages can be forwarded to devices used to process and analyze Cisco-specific SNMP traps. For this to work correctly, the following requirements must be met:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>The snmp module of &abbrev; must be loaded, that is, the &abbrev; configuration file must include the following line:</para>
+                        <synopsis>@module snmp</synopsis>
+                    </listitem>
+                    <listitem>
+                        <para>The syslog-ng Source Configuration Library (SCL) must be included in the &abbrev; configuration file:</para>
+                        <synopsis>@include "scl.conf"</synopsis>
+                    </listitem>
+                    <listitem>
+                        <para>The pattern database described in <xref linkend="cisco-snmp-patterndb"/> must be used to parse the incoming log messages.</para>
+                    </listitem>
+                </itemizedlist>
                 <para>To accomplish this, &abbrev; has to use a special pattern database to parse the Cisco-specific syslog messages, because these messages do not comply with the standard syslog formats.</para>
-                <section>
+                <section id="cisco-snmp-patterndb">
                     <title>Parsing Cisco-specific message fields with patterndb</title>
                     <para>The <parameter>$PROGRAM</parameter> part of the syslog messages sent by Cisco devices contain not only the program name, but other important protocol information part as well. The <parameter>$PROGRAM</parameter> of these messages contains the Facility, Severity, and the Mnemonic (the Cisco name) of the message. The following pattern database parses these values and makes them available as the <parameter>.cisco.Facility, .cisco.Severity</parameter>, and <parameter>.cisco.MsgName</parameter>, respectively. The actual log message is available as <parameter>.cisco.MsgText</parameter>.</para>
                     <synopsis>&lt;patterndb version="4" pub_date="2011-05-03"&gt;
-  &lt;ruleset name="cisco snmp ruleset" id="480de478-d4a6-4a7f-bea4-0c0245d361e3"&gt;
-    &lt;description&gt;syslog-ng cisco snmp patterndb&lt;/description&gt;
+  &lt;ruleset name="cisco snmp ruleset1" id="480de478-d4a6-4a7f-bea4-0c0245d361e3"&gt;
+    &lt;description&gt;Pattern for Cisco messages having BSD timestamps, for example: Jul 01 2010 00:32:59: %SYS-5-CONFIG_I: Configured from console by console&lt;/description&gt;
     &lt;url&gt;http://balabit.com&lt;/url&gt;
       &lt;pattern&gt;%@ESTRING:.cisco.Facility:-@@ESTRING:.cisco.Severity:-@@ANYSTRING:.cisco.MsgName@&lt;/pattern&gt;
         &lt;rules&gt;
           &lt;rule id="09944c71-95eb-4bc0-8575-936931d85713" provider="balabit" class="system"&gt;
             &lt;patterns&gt;
-              &lt;pattern&gt;@ANYSTRING:.cisco.MsgText@&lt;/pattern&gt;
+              &lt;pattern&gt; @ANYSTRING:.cisco.MsgText@&lt;/pattern&gt;
               &lt;/patterns&gt;
+          &lt;/rule&gt;
+        &lt;/rules&gt;
+  &lt;/ruleset&gt;
+  &lt;ruleset name="cisco snmp ruleset2" id="480de478-d4a6-4a7f-bea4-0c0245d361e3"&gt;
+    &lt;description&gt;Pattern for Cisco messages having cisco-specific timestamps, for example: 18: Jan 22 10:45:44.543: %SYS-5-CONFIG_I: Configured from console by console&lt;/description&gt;
+    &lt;url&gt;http://balabit.com&lt;/url&gt;
+        &lt;rules&gt;
+          &lt;rule id="09944c71-95eb-4bc0-8575-936931d85714" provider="balabit" class="system"&gt;
+            &lt;patterns&gt;
+              &lt;pattern&gt;%@ESTRING:.cisco.Facility:-@@ESTRING:.cisco.Severity:-@@ESTRING:.cisco.MsgName::@ @ANYSTRING:.cisco.MsgText@&lt;/pattern&gt;
+             &lt;/patterns&gt;
           &lt;/rule&gt;
         &lt;/rules&gt;
   &lt;/ruleset&gt;
@@ -1377,12 +1407,13 @@ destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
                         <para>The following example defines an SNMP destination that sends out clogMessageGenerated messages using the SNMPv3 protocol.</para>
                         <synopsis>destination d_cisco_snmp {cisco_snmp(host("192.168.1.1")
     version("v3")
-    engine_id('0xdeadbeefde')
+    engine_id("'0xdeadbeefde'")
     auth_username('myusername')
     auth_password('password')
     enc_password('password'));};
 </synopsis>
                     </example>
+                    <!--
                     <para>The <parameter>cisco_snmp()</parameter> SCL is defined as follows:</para>
                     <synopsis>block destination cisco_snmp(
     host()
@@ -1421,7 +1452,7 @@ destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
             snmp_obj('1.3.6.1.4.1.9.9.41.1.2.3.1.3.0', 'Integer', 'clogHistMsgSeverity')
             snmp_obj('1.3.6.1.4.1.9.9.41.1.2.3.1.6.0', 'Timeticks', 'clogHistTimeStamp')
             );
-    };</synopsis>
+    };</synopsis>-->
                 </section>
             </section>
             <section id="reference-destination-snmp">
@@ -1445,17 +1476,17 @@ destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
                                 <row>
                                     <entry>Type:
                                         <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>MD5|SHA1</entry>
+                                    <entry>MD5|md5|SHA|sha</entry>
                                 </row>
                                 <row>
                                     <entry>Default:
                                         <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>SHA1</entry>
+                                    <entry>SHA</entry>
                                 </row>
                             </tbody>
                         </tgroup>
                     </informaltable>
-                    <para><guilabel>Description:</guilabel> The authentication method to use.</para>
+                    <para><guilabel>Description:</guilabel> The authentication method to use. Lowercase values (for example, <parameter>sha</parameter>) can be used as well.</para>
                     <para>This option is used with the SNMPv3 protocol.</para>
                 </simplesect>
                 <simplesect id="snmp-destination-option-auth-password">
@@ -1545,7 +1576,7 @@ destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
                                 <row>
                                     <entry>Type:
                                         <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>AES|DES</entry>
+                                    <entry>AES|aes|DES|des</entry>
                                 </row>
                                 <row>
                                     <entry>Default:
@@ -1555,7 +1586,7 @@ destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
                             </tbody>
                         </tgroup>
                     </informaltable>
-                    <para><guilabel>Description:</guilabel> The encryption method used to encrypt the SNMP traffic.</para>
+                    <para><guilabel>Description:</guilabel> The encryption method used to encrypt the SNMP traffic. Lowercase values (for example, <parameter>aes</parameter>) can be used as well.</para>
                     <para>This option is used with the SNMPv3 protocol.</para>
                 </simplesect>
                 <simplesect id="snmp-destination-option-enc_password">
@@ -1690,10 +1721,10 @@ destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
                             <para><parameter>&lt;oid_of_the_object&gt;</parameter>: The object id of the SNMP object, for example, <parameter>.1.3.6.1.4.1.18372.3.1.1.1.1.1</parameter>.</para>
                         </listitem>
                         <listitem>
-                            <para><parameter>&lt;type_of_the_object&gt;</parameter>: The type of the object specified as an ASN.1 primitive. One of: <parameter>Integer, Timeticks, Octetstring, Counter32, Ipaddress, Objectid</parameter>.</para>
+                            <para><parameter>&lt;type_of_the_object&gt;</parameter>: The type of the object specified as an ASN.1 primitive. One of: <parameter>Integer, Timeticks, Octetstring, Counter32, Ipaddress, Objectid</parameter>. The type names are not case sensitive.</para>
                         </listitem>
                         <listitem>
-                            <para><parameter>&lt;value_of_the_object&gt;</parameter>: The value of the object as a string. The macros of &abbrev; can be used to set these values, making it possible to transfer the content and other metadata from the the syslog message to the SNMP trap.</para>
+                            <para><parameter>&lt;value_of_the_object&gt;</parameter>: The value of the object as a string. The macros of &abbrev; can be used to set these values, making it possible to transfer the content and other metadata from the the syslog message to the SNMP trap.   Note that if the value of an <parameter>Integer, Counter32</parameter> or <parameter>Timeticks</parameter> object is not a number (for example, is an empty string or other not-number string), &abbrev; will automatically replace the value with 0. The values of other types of objects are not validated.</para>
                         </listitem>
                     </itemizedlist>
                     <example>
@@ -1706,7 +1737,7 @@ destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
                 <simplesect>
                     <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
-                <simplesect id="snmp-destination-option-transport">
+                <!--<simplesect id="snmp-destination-option-transport">
                     <title>transport()</title>
                         <indexterm type="parameter">
                             <primary>transport()</primary>
@@ -1730,7 +1761,7 @@ destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
                     </informaltable>
                     <para><guilabel>Description:</guilabel> The transport-layer protocol used to send the SNMP messages.</para>
                     <para>This option is used with the SNMPv3 protocol.</para>
-                </simplesect>
+                </simplesect>-->
                 <simplesect id="snmp-destination-option-trap-obj">
                     <title>trap_obj()</title>
                         <indexterm type="parameter">
