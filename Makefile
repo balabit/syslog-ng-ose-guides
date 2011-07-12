@@ -1,60 +1,45 @@
-PDF_OUTPUTS = syslog-ng-ose-v3.2-guide-admin-en.pdf
-HTML_OUTPUTS = syslog-ng-ose-v3.2-guide-admin-en.html
+# Generic toplevel makefile for BalaBit documetation trees.
+# Per-tree rules are generated into Makefile.conf file, which will be sourced
+# into this, after generation.
+#
 
-MANSOURCES=$(wildcard other/*.[0-9].xml)
-MANPAGES=$(subst other/,out/man/,$(subst .xml,,$(MANSOURCES)))
 GIT_BASE=git+ssh://git.balabit/var/scm/git
+HOSTNAME=$(shell hostname)
+ifneq (,$(findstring hapci,$(HOSTNAME)))
+GIT_BASE=/var/scm/git
+endif
 
-XSLTPROC_MANPAGES=xsltproc --xinclude --output $@  xml-stylesheet/pdf/docbook-xslt/manpages/docbook.xsl $<
+MAKEMAKER=xml-stylesheet/scripts/Makemaker.py
+MAKECONF=Makefile.conf
+MAKETARGETS=Maketargets.csv
+PYTHON=python
 
-all: setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
+# include the generated config file
+include $(MAKECONF)
 
-setup:
-	[ -d xml-stylesheet ] || git clone $(GIT_BASE)/docs/xml-stylesheet.git xml-stylesheet 
+all: xml-stylesheet setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
+
+setup: targetdbs olinkdbs
+	mkdir -p out
+
+setup: realsetup
+
+$(MAKECONF): $(MAKEMAKER) $(MAKETARGETS) xml-stylesheet/scripts/Makestubs.py 
+	$(PYTHON) $(MAKEMAKER) $@
+
+xml-stylesheet:
+	[ -d xml-stylesheet ] || git clone $(GIT_BASE)/docs/xml-stylesheet.git xml-stylesheet
 	[ -d xml-stylesheet ] && (cd xml-stylesheet; git pull)
-	mkdir -p out
-	[ -d xml-stylesheet ] && (cd xml-stylesheet)
-	mkdir -p out
+
+$(MAKEMAKER): xml-stylesheet
+
+targetdbs:
+	mkdir -p targetdbs
 	
-### entry points for the user
-
-html: $(addsuffix /index.html,$(addprefix out/,$(HTML_OUTPUTS)))
-
-pdf: $(addprefix out/,$(PDF_OUTPUTS))
-
-syslog-ng-ose-v3.2-guide-admin-en.pdf: out/syslog-ng-ose-v3.2-guide-admin-en.pdf
-
-syslog-ng-ose-v3.2-guide-admin-en.html: out/syslog-ng-ose-v3.2-guide-admin-en.html/index.html
-
-out/syslog-ng-ose-v3.2-guide-admin-en.pdf: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/chapters/*.xml
-	xml-stylesheet/pdf/process-profile $< $@ ose
-        
-out/syslog-ng-ose-v3.2-guide-admin-en.html/index.html: syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml syslog-ng-admin-guide/*.xml syslog-ng-admin-guide/chapters/*.xml
-	mkdir -p out/syslog-ng-ose-v3.1-guide-admin-en.html
-	xml-stylesheet/html/process-profile $< $@ ose
-	./copy-pngs.sh out/syslog-ng-ose-v3.1-guide-admin-en.html TRUE
-	            
-syslog-ng-admin-guide/syslog-ng-admin-guide_en.xml: setup
-
-manpages: setup $(MANPAGES)
-$(MANPAGES): $(MANSOURCES)
-
-# Other rules needed to be added, if we add manpages to other chapters (read:
-# different extensions), although it's highly unlikely... - Folti
-out/man/%.1: other/%.1.xml
-	$(XSLTPROC_MANPAGES)
-
-out/man/%.5: other/%.5.xml
-	$(XSLTPROC_MANPAGES)
-
-out/man/%.8: other/%.8.xml
-	$(XSLTPROC_MANPAGES)
-
-olinkdbs: $(OLINKDBS)
-$(OLINKDBS): $(OLINKDBS_IN)
-
 clean:
 	-rm -rf out/*
+	-rm -rf targetdbs $(MAKECONF)
+	
 
 # MANSOURCES and OLINKDBS_IN must be .PHONY otherwise they won't be regenerated everytime.
-.PHONY: clean setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) manpages $(MANSOURCES)
+.PHONY: targetdbs olinkdbs clean setup realsetup $(PDF_OUTPUTS) $(HTML_OUTPUTS) manpages $(MANSOURCES) $(OLINKDBS_IN) xml-stylesheet
