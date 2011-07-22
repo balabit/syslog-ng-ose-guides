@@ -519,21 +519,29 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
         <para>There are two types of flow-control: Hard flow-control and soft flow-control.</para>
         <itemizedlist>
             <listitem>
-                <para><emphasis>Soft flow control:</emphasis> In case of soft flow control there is no message lost if the destination can accept messages, that is, the disk is not full. Soft flow-control cannot be configured, it is automatically is available for file and logstore destinations.</para>
-                <example><para><literallayout>source s_file {file("/tmp/input_file.log");};
+                <indexterm>
+                    <primary>flow-control</primary>
+                    <secondary>soft</secondary>
+                </indexterm>
+                <para><emphasis>Soft flow-control:</emphasis> In case of soft flow-control there is no message lost if the destination can accept messages, but it is possible to lose messages if it cannot accept messages (for example non-writeable file destination, or the disk becomes full), and all buffers are full. Soft flow-control cannot be configured, it is automatically is available for file and logstore destinations.</para>
+                <example><para><synopsis>source s_file {file("/tmp/input_file.log");};
 destination d_file {file("/tmp/output_file.log");};
 destination d_tcp { tcp("127.0.0.1" port(2222) log_fifo_size(1000)); };
 log{ source(s_file); destination(d_file); destination(d_tcp);};
-</literallayout></para></example>
+</synopsis></para></example>
             <warning><para>Hazard of data loss! For destinations other than file and logstore, soft flow-control is not available. Thus, it is possible to lose log messages on those destinations. To avoid data loss on those destinations, use hard flow-control.</para></warning>
             </listitem>
             <listitem>
-                <para><emphasis>Hard flow control:</emphasis> In case of hard flow control there is no message lost. To use hard flow-control, enable the <parameter>flow_control</parameter> flag in the logpath. Hard flow-control is available for all destinations.</para>
-                <example><para><literallayout>source s_file {file("/tmp/input_file.log");};
+                <indexterm>
+                    <primary>flow-control</primary>
+                    <secondary>hard</secondary>
+                </indexterm>
+                <para><emphasis>Hard flow-control:</emphasis> In case of hard flow-control there is no message lost. To use hard flow-control, enable the <parameter>flow_control</parameter> flag in the logpath. Hard flow-control is available for all destinations.</para>
+                <example><para><synopsis>source s_file {file("/tmp/input_file.log");};
 destination d_file {file("/tmp/output_file.log");};
 destination d_tcp { tcp("127.0.0.1" port(2222) log_fifo_size(1000)); };
 log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow_control);};
-</literallayout></para></example>
+</synopsis></para></example>
             </listitem>
         </itemizedlist>
         
@@ -784,6 +792,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
                         linkend="concepts_flow_control"/>.</para>
             </listitem>
         </itemizedlist>
+        <note><para>Using disk buffer can significantly decrease performance.</para></note>
         <section id="configuring_diskbuffer">
 	        <title>Enabling disk-based buffering</title>
 	        <para>To enable disk-based buffering, use the <parameter>log_disk_fifo_size()</parameter>
