@@ -1138,213 +1138,239 @@
                     <para>Define new name-value pairs to include using the <parameter>pair()</parameter> parameter.</para>
                 </listitem>
             </itemizedlist>
-            <para>These parameters are detailed below.</para>
-            <example>
+            <para>These parameters are detailed in <xref linkend="options-value-pairs"/>.</para>
+            <simplesect id="options-value-pairs">
+                <title>value-pairs()</title>
                 <indexterm type="parameter">
                     <primary>value-pairs()</primary>
                 </indexterm>
-                <title>Using the <parameter>value-pairs()</parameter> option</title>
-                <para>The following example selects every available information about the log message, except for the date-related macros (<parameter>R_*</parameter> and <parameter>S_*</parameter>), selects the <parameter>.SDATA.meta.sequenceId</parameter> macro, and defines a new value-pair called <parameter>MSGHDR</parameter> that contains the program name and PID of the application that sent the log message.</para>
-                <synopsis>value-pairs(
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>parameter list of the <parameter>value-pairs()</parameter> option</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry><synopsis>empty string</synopsis></entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The <parameter>value-pairs()</parameter> option allows you to select specific information about a message easily using predefined macro groups. The selected information is represented as name-value pairs and can be used formatted to JSON format, or directly used in a <parameter>mongodb()</parameter> destination.</para>
+                <example>
+                    <indexterm type="parameter">
+                        <primary>value-pairs()</primary>
+                    </indexterm>
+                    <title>Using the <parameter>value-pairs()</parameter> option</title>
+                    <para>The following example selects every available information about the log message, except for the date-related macros (<parameter>R_*</parameter> and <parameter>S_*</parameter>), selects the <parameter>.SDATA.meta.sequenceId</parameter> macro, and defines a new value-pair called <parameter>MSGHDR</parameter> that contains the program name and PID of the application that sent the log message.</para>
+                    <synopsis>value-pairs(
     scope(nv_pairs core syslog all_macros selected_macros everything)
     exclude("R_*")
     exclude("S_*")
     key(".SDATA.meta.sequenceId")
     pair("MSGHDR" "$PROGRAM[$PID]: ")
 )</synopsis>
-            <para>The following example selects the same information as the previous example, but converts it into JSON format.</para>
-            <synopsis>$(format-json --scope nv_pairs,core,syslog,all_macros,selected_macros,everything \
+                    <para>The following example selects the same information as the previous example, but converts it into JSON format.</para>
+                    <synopsis>$(format-json --scope nv_pairs,core,syslog,all_macros,selected_macros,everything \
   --exclude R_* --exclude S_* --key .SDATA.meta.sequenceId \
   --pair MSGHDR="$PROGRAM[$PID]: ")</synopsis>
-            </example>
-            <note>
-                <para>Every macro is included in the selection only once.</para>
-            </note>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <indexterm type="parameter">
-                    <primary>exclude()</primary>
-                </indexterm>
-                <tgroup cols="3">
-                    <colspec colnum="1" colname="c1"/>
-                    <colspec colnum="2" colname="c2" colwidth="40pt"/>
-                    <colspec colnum="3" colname="c3"/>
-                    <tbody>
-                        <row>
-                            <entry><guimenu>exclude()</guimenu></entry>
-                            <entry/>
-                            <entry/>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>space-separated list of macros to remove from the selection</entry>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>empty string</entry>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry namest="c2" nameend="c3"><guimenu>Description:</guimenu> This option removes the specified macros from the selection. Use it to remove unneeded macros selected using the <parameter>scope()</parameter> parameter.
-                            <para>For example, the following example removes the SDATA macros from the selection.</para>
-                            <synopsis>value-pairs(
-    scope(rfc5424 selected_macros)
-    exclude(".SDATA*")
-)</synopsis>
-                            <para>The name of the macro to remove can include glob expressions and wildcards <parameter>(*, ?, [ab], {foo,bar})</parameter>, as described in <xref linkend="reference_regexp_glob"/>. Regular expressions are not supported.</para>
-                            </entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <indexterm type="parameter">
-                    <primary>key()</primary>
-                </indexterm>
-                <tgroup cols="3">
-                    <colspec colnum="1" colname="c1"/>
-                    <colspec colnum="2" colname="c2" colwidth="40pt"/>
-                    <colspec colnum="3" colname="c3"/>
-                    <tbody>
-                        <row>
-                            <entry><guimenu>key()</guimenu></entry>
-                            <entry/>
-                            <entry/>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>name of the macro to include in selection</entry>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>empty string</entry>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry namest="c2" nameend="c3"><guimenu>Description:</guimenu> This option selects the specified macros. The selected macros will be included as <parameter>MACRONAME = MACROVALUE</parameter>, that is using <parameter>key("HOST")</parameter> will result in <parameter>HOST = $HOST</parameter>.
-                            <note>
-                                <para>The name of the macro cannot contain wildcards.</para>
-                            </note>
-                            <para>For example:</para>
-                            <synopsis>value-pairs(
-    key("HOST"))</synopsis>
-                            </entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="3">
-                    <colspec colnum="1" colname="c1"/>
-                    <colspec colnum="2" colname="c2" colwidth="40pt"/>
-                    <colspec colnum="3" colname="c3"/>
-                    <tbody>
-                        <row>
-                            <entry><guimenu>pair()</guimenu>
-                                <indexterm type="parameter">
-                                    <primary>pair()</primary>
-                                </indexterm>
-                            </entry>
-                            <entry/>
-                            <entry/>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>name value pairs in <parameter>"&lt;NAME&gt;" "&lt;VALUE&gt;"</parameter></entry>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>empty string</entry>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry namest="c2" nameend="c3"><guimenu>Description:</guimenu> This option defines a name-value pair to include in the message. The value part can include macros, templates, and template functions as well.
-                            <para>For example:</para>
-                            <synopsis>value-pairs(
-    pair("MSGHDR" "$PROGRAM[$PID]: "))</synopsis>
-                            </entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="3">
-                    <colspec colnum="1" colname="c1"/>
-                    <colspec colnum="2" colname="c2" colwidth="40pt"/>
-                    <colspec colnum="3" colname="c3"/>
-                    <tbody>
-                        <row>
-                            <entry><guimenu>scope()</guimenu>
-                                <indexterm type="parameter">
-                                    <primary>scope()</primary>
-                                </indexterm>
-                            </entry>
-                            <entry/>
-                            <entry/>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>space-separated list of macro groups to include in selection</entry>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>empty string</entry>
-                        </row>
-                        <row>
-                            <entry/>
-                            <entry namest="c2" nameend="c3"><guimenu>Description:</guimenu> This option selects predefined groups of macros.  The following groups are available:
-                            <itemizedlist>
-                                <listitem>
-                                    <para><emphasis>nv-pairs</emphasis>: Every macro associated with the message, except the ones that start with a dot (.) character.</para>
-                                </listitem>
-                                <listitem>
-                                    <para><emphasis>dot-nv-pairs</emphasis>: Every macro associated with the message which starts with a dot (.) character. For example, <parameter>.classifier.rule_id</parameter> and <parameter>.sdata.*</parameter>.</para>
-                                </listitem>
-                                <listitem>
-                                    <para><emphasis>all-nv-pairs</emphasis>: Include every macro (equivalent to using both <parameter>nv-pairs</parameter> and <parameter>dot-nv-pairs</parameter>)</para>
-                                </listitem>
-                                <listitem>
-                                    <para><emphasis>rfc3164</emphasis>: The macros that correspond to the RFC3164 (legacy or BSD-syslog) message format: <parameter>$FACILITY</parameter>, <parameter>$PRIORITY</parameter>, <parameter>$HOST</parameter>, <parameter>$PROGRAM</parameter>, <parameter>$PID</parameter>, <parameter>$MESSAGE</parameter>, and <parameter>$R_DATE</parameter>. The <parameter>rfc3164</parameter> also has the following aliases: <parameter>core</parameter>, <parameter>base</parameter>. Note that the value of <parameter>$R_DATE</parameter> will be listed under the <parameter>DATE</parameter> key.</para>
-                                </listitem>
-                                <listitem>
-                                    <para><emphasis>rfc5424</emphasis>: The macros that correspond to the RFC5424 (IETF-syslog) message format: <parameter>$FACILITY</parameter>, <parameter>$PRIORITY</parameter>, <parameter>$HOST</parameter>, <parameter>$PROGRAM</parameter>, <parameter>$PID</parameter>, <parameter>$MESSAGE</parameter>, <parameter>$MSGID</parameter>, and <parameter>$R_DATE</parameter>. The <parameter>rfc5424</parameter> also has the following alias: <parameter>syslog-proto</parameter>. Note that the value of <parameter>$R_DATE</parameter> will be listed under the <parameter>DATE</parameter> key.</para>
-                                </listitem>
-                                <listitem>
-                                    <para><emphasis>all-macros</emphasis>: Every available macro.</para>
-                                </listitem>
-                                <listitem>
-                                    <para><emphasis>selected-macros</emphasis>: The <parameter>$TAGS</parameter>, <parameter>$SOURCEIP</parameter>, <parameter>$SEQNUM</parameter> macros.</para>
-                                </listitem>
-                                <listitem>
-                                    <para><emphasis>sdata</emphasis>: The metadata from the structured-data (SDATA) part of the RFC5424-formatted messages, that is, every macro that starts with <parameter>.SDATA.</parameter></para>
-                                </listitem>
-                                <listitem>
-                                    <para><emphasis>everything</emphasis>:</para>
-                                </listitem>
-                            </itemizedlist>
-                            <para>For example:</para>
-                            <synopsis>value-pairs(
-    scope(rfc3164 selected_macros))</synopsis>
-                            </entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
+                </example>
+                <note>
+                    <para>Every macro is included in the selection only once, but redundant information may appear if multiple macros include the same information (for example, including several date-related macros in the selection).</para>
+                </note>
+                <para>The <parameter>value-pairs()</parameter> option has the following parameters:</para>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <indexterm type="parameter">
+                        <primary>exclude()</primary>
+                    </indexterm>
+                    <tgroup cols="3">
+                        <colspec colnum="1" colname="c1"/>
+                        <colspec colnum="2" colname="c2" colwidth="40pt"/>
+                        <colspec colnum="3" colname="c3"/>
+                        <tbody>
+                            <row>
+                                <entry><guimenu>exclude()</guimenu></entry>
+                                <entry/>
+                                <entry/>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>space-separated list of macros to remove from the selection</entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>empty string</entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry namest="c2" nameend="c3"><guimenu>Description:</guimenu> This option removes the specified macros from the selection. Use it to remove unneeded macros selected using the <parameter>scope()</parameter> parameter.
+                                <para>For example, the following example removes the SDATA macros from the selection.</para>
+                                <synopsis>value-pairs(
+        scope(rfc5424 selected_macros)
+        exclude(".SDATA*")
+    )</synopsis>
+                                <para>The name of the macro to remove can include glob expressions and wildcards <parameter>(*, ?, [ab], {foo,bar})</parameter>, as described in <xref linkend="reference_regexp_glob"/>. Regular expressions are not supported.</para>
+                                </entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </informaltable>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <indexterm type="parameter">
+                        <primary>key()</primary>
+                    </indexterm>
+                    <tgroup cols="3">
+                        <colspec colnum="1" colname="c1"/>
+                        <colspec colnum="2" colname="c2" colwidth="40pt"/>
+                        <colspec colnum="3" colname="c3"/>
+                        <tbody>
+                            <row>
+                                <entry><guimenu>key()</guimenu></entry>
+                                <entry/>
+                                <entry/>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>name of the macro to include in selection</entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>empty string</entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry namest="c2" nameend="c3"><guimenu>Description:</guimenu> This option selects the specified macros. The selected macros will be included as <parameter>MACRONAME = MACROVALUE</parameter>, that is using <parameter>key("HOST")</parameter> will result in <parameter>HOST = $HOST</parameter>.
+                                <note>
+                                    <para>The name of the macro cannot contain wildcards.</para>
+                                </note>
+                                <para>For example:</para>
+                                <synopsis>value-pairs(
+        key("HOST"))</synopsis>
+                                </entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </informaltable>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="3">
+                        <colspec colnum="1" colname="c1"/>
+                        <colspec colnum="2" colname="c2" colwidth="40pt"/>
+                        <colspec colnum="3" colname="c3"/>
+                        <tbody>
+                            <row>
+                                <entry><guimenu>pair()</guimenu>
+                                    <indexterm type="parameter">
+                                        <primary>pair()</primary>
+                                    </indexterm>
+                                </entry>
+                                <entry/>
+                                <entry/>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>name value pairs in <parameter>"&lt;NAME&gt;" "&lt;VALUE&gt;"</parameter></entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>empty string</entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry namest="c2" nameend="c3"><guimenu>Description:</guimenu> This option defines a name-value pair to include in the message. The value part can include macros, templates, and template functions as well.
+                                <para>For example:</para>
+                                <synopsis>value-pairs(
+        pair("MSGHDR" "$PROGRAM[$PID]: "))</synopsis>
+                                </entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </informaltable>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="3">
+                        <colspec colnum="1" colname="c1"/>
+                        <colspec colnum="2" colname="c2" colwidth="40pt"/>
+                        <colspec colnum="3" colname="c3"/>
+                        <tbody>
+                            <row>
+                                <entry><guimenu>scope()</guimenu>
+                                    <indexterm type="parameter">
+                                        <primary>scope()</primary>
+                                    </indexterm>
+                                </entry>
+                                <entry/>
+                                <entry/>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>space-separated list of macro groups to include in selection</entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>empty string</entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry namest="c2" nameend="c3"><guimenu>Description:</guimenu> This option selects predefined groups of macros. The following groups are available:
+                                <itemizedlist>
+                                    <listitem>
+                                        <para><emphasis>nv-pairs</emphasis>: Every soft macro associated with the message, except the ones that start with a dot (.) character. Macros starting with a dot character are generated within &abbrev; and are not originally part of the message, therefore are not included in this group.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis>dot-nv-pairs</emphasis>: Every soft macro associated with the message which starts with a dot (.) character. For example, <parameter>.classifier.rule_id</parameter> and <parameter>.sdata.*</parameter>. Macros starting with a dot character are generated within &abbrev; and are not originally part of the message.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis>all-nv-pairs</emphasis>: Include every soft macro (equivalent to using both <parameter>nv-pairs</parameter> and <parameter>dot-nv-pairs</parameter>).</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis>rfc3164</emphasis>: The macros that correspond to the RFC3164 (legacy or BSD-syslog) message format: <parameter>$FACILITY</parameter>, <parameter>$PRIORITY</parameter>, <parameter>$HOST</parameter>, <parameter>$PROGRAM</parameter>, <parameter>$PID</parameter>, <parameter>$MESSAGE</parameter>, and <parameter>$R_DATE</parameter>. The <parameter>rfc3164</parameter> also has the following aliases: <parameter>core</parameter>, <parameter>base</parameter>. Note that the value of <parameter>$R_DATE</parameter> will be listed under the <parameter>DATE</parameter> key.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis>rfc5424</emphasis>: The macros that correspond to the RFC5424 (IETF-syslog) message format: <parameter>$FACILITY</parameter>, <parameter>$PRIORITY</parameter>, <parameter>$HOST</parameter>, <parameter>$PROGRAM</parameter>, <parameter>$PID</parameter>, <parameter>$MESSAGE</parameter>, <parameter>$MSGID</parameter>, and <parameter>$R_DATE</parameter>. The <parameter>rfc5424</parameter> group also has the following alias: <parameter>syslog-proto</parameter>. Note that the value of <parameter>$R_DATE</parameter> will be listed under the <parameter>DATE</parameter> key.</para>
+                                        <para>The <parameter>rfc5424</parameter> group does not contain any metadata about the message, only information that was present in the original message. To include the most commonly used metadata (for example, the <parameter>$SOURCEIP</parameter> macro), use the <parameter>rfc5424-and-metadata</parameter> group instead.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis>all-macros</emphasis>: Include every hard macro. This group is mainly useful for debugging, as it contains redundant information (for example, the date-related macros include the date-related information several times in various formats).</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis>rfc5424-and-metadata</emphasis>: Include the macros of the <parameter>rfc5424</parameter> group and the most commonly used metadata about the log message: the <parameter>$TAGS</parameter>, <parameter>$SOURCEIP</parameter>, and <parameter>$SEQNUM</parameter> macros. The <parameter>rfc5424-and-metadata</parameter> group also has the following alias: <parameter>selected-macros</parameter>.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis>sdata</emphasis>: The metadata from the structured-data (SDATA) part of RFC5424-formatted messages, that is, every macro that starts with <parameter>.SDATA.</parameter></para>
+                                    </listitem>
+                                    <listitem>
+                                        <para><emphasis>everything</emphasis>: Include every hard and soft macros. This group is mainly useful for debugging, as it contains redundant information (for example, the date-related macros include the date-related information several times in various formats).</para>
+                                    </listitem>
+                                </itemizedlist>
+                                <para>For example:</para>
+                                <synopsis>value-pairs(
+        scope(rfc3164 selected_macros))</synopsis>
+                                </entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </informaltable>
+            </simplesect>
         </section>
     </section>
 </chapter>
