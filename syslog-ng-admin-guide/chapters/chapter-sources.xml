@@ -199,6 +199,12 @@
                     </row>
                     <row>
                         <entry>
+                            <link linkend="configuring_sources_sql">sql()</link>
+                        </entry>
+                        <entry>Collects logs from tables of relational database</entry>
+                    </row>
+                    <row>
+                        <entry>
                             <link linkend="configuring_sources_sunstreams">sun-stream(), sun-streams()</link>
                         </entry>
                         <entry>Opens the specified <parameter>STREAMS</parameter> device on Solaris systems and reads incoming messages.</entry>
@@ -763,6 +769,485 @@ program(filename);</synopsis>
                 <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_time_zone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
         </section>
+    </section>
+    <section id="configuring_sources_sql">
+        <title>Collecting messages from tables or relational database</title>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>sql()</parameter> driver</secondary>
+        </indexterm>
+        <section id="reference_source_sunstreams">
+            <title>sql() source options</title>
+            <indexterm>
+                <primary>source drivers</primary>
+                <secondary><parameter>sql()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>sql()</parameter> driver has the following options.</para>
+            <simplesect>
+                <title>archive_query()</title>
+                <indexterm type="parameter">
+                    <primary>archive_query()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry></entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The SQL-like statement which is executed after &abbrev; has queried a bunch of records (limited in the <parameter>log_fetch_limit()</parameter> option.</para>
+            </simplesect>  
+            <simplesect>
+                <xi:include href="chapter-destinations.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_columns']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <title>connect_query()</title>
+                <indexterm type="parameter">
+                    <primary>connect_query()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry></entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The SQL-like statement which is executed after the successful connection to the database.</para>
+            </simplesect>         
+            <simplesect>
+                <xi:include href="chapter-destinations.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_database']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <title>date_column(col_name, [format])</title>
+                <indexterm type="parameter">
+                    <primary>date_column(col_name, [format])</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>date, string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry></entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The column containing the date of the logrecord. The format value has to be in <ulink url="http://linux.die.net/man/3/strptime">strptime format</ulink>.</para>
+                <note><para>If the type of the column is string, this is a required parameter.</para></note>
+            </simplesect>
+            <simplesect>
+                <title>datetime_column(col_name, [format])</title>
+                <indexterm type="parameter">
+                    <primary>datetime_column(col_name, [format])</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>MySQL: timestamp, datetime, int; PGSQL: timestamp, int; Oracle: timestamp, int; MSSQL: datetime, int</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The column containing the timestamp. If the type is int, it is considered to contain a unix timestamp. The format value is required if the type is string, and has to be in <ulink url="http://linux.die.net/man/3/strptime">strptime format</ulink>.</para>
+                <example>
+                    <title>SQL source option datetime_column(col_name, [format])</title>
+                    <para><parameter>datetime("timestampcol", "%Y-%m-%d")</parameter></para>
+                </example>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_default-facility']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_default-priority']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect> 
+            <simplesect>
+                <title>fast_follow_mode()</title>
+                <indexterm type="parameter">
+                    <primary>fast_follow_mode()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>yes|no</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>yes</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> If it is set to <parameter>yes</parameter>, &abbrev; reads the database table as fast as possible, until it reaches the last record. After this, it will execute only one query in <parameter>follow_freq()</parameter> time. if it is set to <parameter>no</parameter> &abbrev; executes only one query in <parameter>follow_freq()</parameter> time.</para>
+            </simplesect>             
+            <simplesect>
+                <title>fetch_query()</title>
+                <indexterm type="parameter">
+                    <primary>fetch_query()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default value is generated in running time of syslog-ng</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The SQL-like statement which collects the records from the database.</para>
+                <note><para>If this parameter is defined, &abbrev; does not check or validate it whether it is correct. Ensure that the customized statements are correct.</para></note>
+            </simplesect>            
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_follow_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="chapter-destinations.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_host']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <title>host-template()</title>
+                <indexterm type="parameter">
+                    <primary>host-template()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Empty. If not given, the value of the <parameter>host</parameter> parameter will be empty</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The template for defining the host part of the message.</para>
+            </simplesect>
+            <simplesect>
+                <title>log_fetch_limit()</title>
+                <indexterm type="parameter">
+                    <primary>log_fetch_limit()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry></entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>100</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><xi:include href="reference_common.xml" xpointer="xpointer(//para[@id = 'source_commonoption_log_fetch_limit_desc']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/></para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_log_iw_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="chapter-destinations.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_password']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="chapter-destinations.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_port']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <title>prefix()</title>
+                <indexterm type="parameter">
+                    <primary>prefix()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>".sql"</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The prefix for the name-value pairs.</para>
+                <example>
+                    <title>SQL source option prefix()</title>
+                    <para><parameter>prefix("customprefix")</parameter></para>
+                </example>
+            </simplesect>
+            <simplesect>
+                <title>program-template()</title>
+                <indexterm type="parameter">
+                    <primary>program-template()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Empty. If not given, the value of <parameter>$PROGRAM</parameter> will be empty</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The template for defining the program part of the message.</para>
+            </simplesect>
+            <simplesect>
+                <title>read_old_records()</title>
+                <indexterm type="parameter">
+                    <primary>read_old_records()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>yes|no</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>no</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> Determines whether &abbrev; the reading of records from the beginning of the table
+                    (<parameter>read_old_records(yes)</parameter>) or from the end of the table (only new records) if it cannot find persist information at start time (<parameter>read_old_records(no)</parameter>).</para>
+            </simplesect> 
+            <simplesect>
+                <title>table()</title>
+                <indexterm type="parameter">
+                    <primary>table()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry></entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The name of the monitored table. Only a single literal name is accepted. Monitoring rotated tables is not supported.</para>
+            </simplesect>
+            <simplesect>
+                <title>table_init_query()</title>
+                <indexterm type="parameter">
+                    <primary>table_init_query()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry></entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The SQL-like statement which is executed before the first fetching.</para>
+            </simplesect>  
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_tags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <title>template()</title>
+                <indexterm type="parameter">
+                    <primary>template()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry></entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The template of the message (<parameter>$MSG</parameter>)to be generated. If it is empty or not given, the following template will be used: <parameter>"$(format-welf --key %s*)")</parameter> where <parameter>%s</parameter> is determined by the value of the <parameter>prefix()</parameter> option.</para>
+                <note><para>The <parameter>format-welf</parameter> function does not keep the order of columns between queries.</para>
+                    <example><title>SQL source option template()</title>
+                        <para>the result of the first query is the following: <parameter>'.sql.id=12 .sql.message="test message"'</parameter>, whereas the result of the second query can be: <parameter>'.sql.message="test message" .sql.id=12 '</parameter></para></example>
+                </note>
+                
+            </simplesect>  
+            <simplesect>
+                <title>time_column(col_name, [format])</title>
+                <indexterm type="parameter">
+                    <primary>time_column(col_name, [format])</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>time, string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry></entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The column containing the time of the logrecord. The format value has to be in <ulink url="http://linux.die.net/man/3/strptime">strptime format</ulink>.</para>
+                <note><para>If the type of the column is string, this is a required parameter.</para></note>
+            </simplesect>
+            <simplesect>
+                <xi:include href="chapter-global-options.xml" xpointer="xpointer(//simplesect[@id = 'global_time_reopen']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_time_zone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect id="sql_option_type">
+                <title>type()</title>
+                <indexterm type="parameter">
+                    <primary>type()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>mssql, mysql, oracle, or pgsql</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>mysql</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><xi:include href="chapter-destinations.xml" xpointer="xpointer(//para[@id = 'sql_option_type_desc']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/></para>
+            </simplesect>
+            <simplesect>
+                <title>uid_column()</title>
+                <indexterm type="parameter">
+                    <primary>uid_column()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry></entry>
+                            </row>
+                        </tbody>
+                    </tgroup>  
+                </informaltable>
+                <para><guilabel>Description:</guilabel> The monotonically increasing unique ID of the monitored table (for example auto_increment). This column must be a type where the greater (>) operation is interpreted.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="chapter-destinations.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_username']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+    </section>
     </section>
     <section id="configuring_sources_sunstreams">
         <title>Collecting messages on Sun Solaris</title>
