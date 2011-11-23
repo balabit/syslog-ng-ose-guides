@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+ "/usr/share/xml/docbook/schema/dtd/4.4/docbookx.dtd"
+  [<!ENTITY logo "http://share.balabit/tt/images/logos">
+  <!ENTITY % entities SYSTEM "../syslog-ng-admin-guide/syslog-ng-entities.ent">
+  %entities;
+  ]
+ >
+<article id="syslog-ng-pe-guide-whatsnew-en">
+        <articleinfo>
+                <title>What is new in &product; &version;</title>
+                <corpname>&vendor;</corpname>
+                <keyword>syslog-ng, &product;, &abbrev;, logging, log collection, syslog-ng documentation, syslog-ng configuration, syslog-ng manual, system logging, eventlog collection, central log server, log management</keyword>
+                <subjectset>
+                        <subject>
+                                <subjectterm>&product; &version; features</subjectterm>
+                        </subject>
+                </subjectset>
+                <copyright>
+                        <xi:include href="../xml-stylesheet/common/common.xml"
+                                xmlns:xi="http://www.w3.org/2001/XInclude"
+                                xpointer="xpointer(//copyright[@id='common_copyright_bb']/*)"/>
+                </copyright>
+                <pubdate><?dbtimestamp?></pubdate>
+                <mediaobject>
+                        <xi:include href="../xml-stylesheet/common/common.xml"
+                                xmlns:xi="http://www.w3.org/2001/XInclude"
+                                xpointer="xpointer(//mediaobject[@id='common_logo_bb']/*)"/>
+                </mediaobject>
+        </articleinfo>
+        <section id="preface">
+                <title>Preface</title>
+                <para>Welcome to &product; (&abbrev;) version &version; and thank you
+                        for choosing our product. This document describes the new features and most
+                        important changes since the latest release of &abbrev;. The main aim of
+                        this paper is to aid system administrators in planning the migration to the
+                        new version of &abbrev;. The following sections describe the news and
+                        highlights of &abbrev; &version;.</para>
+                <para>This document covers the &version; feature release of the &product; product. </para>
+                <para>As of June 2011, the following release policy applies to &product;:</para>
+                <itemizedlist>
+                        <listitem>
+                                <para><emphasis>Long Term Supported or LTS releases</emphasis> (for example, &abbrev; 4 LTS) are supported for 3 years after their original publication date and for 1 year after the next LTS release is published (whichever date is later). The second digit of the revisions of such releases is 0 (for example, &abbrev; 4.0.1). Maintenance releases to LTS releases contain only bugfixes and security updates.</para>
+                        </listitem>
+                        <listitem>
+                                <para><emphasis>Feature releases</emphasis> (for example, &abbrev; 4 F1) are supported for 6 months after their original publication date and for 2 months after succeeding Feature or LTS Release is published (whichever date is later). Feature releases contain enhancements and new features, presumably 1-3 new feature per release. Only the last of the feature releases is supported (for example when a new feature release comes out, the last one becomes unsupported).</para>
+                        </listitem>
+                </itemizedlist>
+                <warning>
+                        <para>Downgrading from a feature release to an earlier (and thus unsupported) feature
+                                release, or to the previous LTS release is officially not supported, but usually works as long as your &abbrev; configuration file is appropriate for the old &abbrev; version. However, persistent data like the position of the last processed message in a file source will be probably lost.</para>
+                        <para>Logstore files created with a newer version of &abbrev; might not be readable with an older version of &abbrev;.</para>
+                </warning>
+        </section>
+        <section>
+            <title>New module architecture</title>
+            <para>&abbrev; became modular to increase its flexibility and also to simplify the development of additional modules. Most of the functionality of &abbrev; has been moved to separate modules. That way it becomes also possible to finetune the resource requirements of &abbrev; for example, by loading only the modules that are actually used in the configuration, or simply omitting modules that are not used but require large amount of memory.</para>
+            <para>For details on using modules, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="modules"/>.</para>
+        </section>
+        <section>
+            <title>Multithreading, scaling, and performance improvements</title>
+             <para>Starting with version <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.3</phrase>, &abbrev; can be run in multithreaded mode to scale to multiple CPUs or cores for increased performance.</para>
+             <para>Depending on the exact &abbrev; configuration, environment, and other parameters, &abbrev; is capable of processing:</para>
+             <itemizedlist>
+                <listitem>
+                    <para>over 150000 messages per second when receiving messages from a single connection and storing them in text files;</para>
+                </listitem>
+                <listitem>
+                    <para>over 150000 messages per second when receiving messages from a single connection and storing them in logstore files;</para>
+                </listitem>
+                <listitem>
+                    <para>over 500000 messages per second when receiving messages from multiple connections and storing them in text files;</para>
+                </listitem>
+                <listitem>
+                    <para>over 500000 messages per second when receiving messages from multiple connections and storing them in logstore files;</para>
+                </listitem>
+                <listitem>
+                    <para>over 100000 messages per second when receiving messages from secure (TLS-encrypted) connections and storing them in text files.</para>
+                </listitem>
+             </itemizedlist>
+            <note>
+                <para>By default, &abbrev; runs in single-thread mode. Multithreading must be explicitly enabled in the &abbrev; configuration file using the <parameter>threaded(yes)</parameter> option.</para>
+            </note>
+            <para>For details on using multithreading, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="chapter-multithreading"/>.</para>
+        </section>
+        <section>
+            <title>Sending SNMP traps</title>
+             <para>The &abbrev; application can send SNMP traps using the Simple Network Management Protocol version 2c or version 3. Incoming log messages can be converted to SNMP traps, and the fields (such as the trap OID) of the SNMP messages can be customized using &abbrev; macros. Converting the syslog messages sent by Cisco devices to Cisco-specific SNMP traps defined by the CISCO-SYSLOG-MIB (<parameter>enterprises.cisco.ciscoMgmt.ciscoCiscoMIB</parameter>) is also supported (such traps are also referred to as <parameter>clogMessageGenerated</parameter> notifications). That way, the incoming log messages can be forwarded to devices used to process and analyze Cisco-specific SNMP traps.</para>
+            <para>For details on using multithreading, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="configuring-destinations-snmp"/>. For details on the Cisco-specific SNMP trap format, see <ulink url="http://tools.cisco.com/Support/SNMP/do/BrowseMIB.do?local=en&amp;step=2&amp;mibName=CISCO-SYSLOG-MIB">CISCO-SYSLOG-MIB</ulink> on the Cisco website.</para>
+        </section>
+        <section>
+            <title>Managing complex configurations</title>
+            <para>Version <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.3</phrase> of &abbrev; offers several new features to simplify the maintenance of large configurations in heterogeneous environments.</para>
+            <itemizedlist>
+                <listitem>
+                    <para>The &abbrev; application can automatically collect the system-specific log messages of the host on a number of platforms using the <parameter>system()</parameter> driver. For details, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="configuring-source-system"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>In &abbrev; version <phrase condition="ose">3.2</phrase><phrase condition="pe">4 F1</phrase>, it is possible to define global variables in the configuration file. Global variables are actually <parameter>name-value</parameter> pairs; when syslog-ng processes the configuration file during startup, it automatically replaces <parameter>`name`</parameter> with <parameter>value</parameter>. The environmental variables of the host are automatically imported and can be used as global variables. For details, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="config-global-variables"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>Parts (blocks) of a configuration file can be easily reused, you have to define the block (for example, a source) once, and you can reference it later. Any syslog-ng object can be a block, it is also possible to create blocks that contain multiple objects. Configuration blocks can receive arguments as well. Blocks are similar to C++ macros. For details, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="config-blocks"/>.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section>
+            <title>Improved decision making logic</title>
+            <para>Version <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.3</phrase> of &abbrev; offers several new features that add new possibilities to processing messages and evaluating values only under certain conditions, improving the flexibility of &abbrev;.</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Macro values and templates can be compared as numerical and string values. String comparison is alphabetical: it determines if a string is alphabetically greater or equal to another string. You can also use boolean operators to combine comparison expressions. For details, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="filters-comparing"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>Template functions allow you to modify the way macros or name-value pairs are expanded. Template functions can be used in template definitions, or when macros are used in the configuration of &abbrev;. For example, the <parameter>if</parameter> template function can include a different value in the log message based on its condition, while numerical template functions perform simple operations (like addition or multiplication) on integer numbers or macros containing integer numbers (for example, <parameter>$LEVEL_NUM</parameter> or <parameter>$YEAR</parameter>). For details, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="template-functions"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>Starting with <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.2</phrase>, it is possible to apply a rewrite rule to a message only if certain conditions are met. The <parameter>condition()</parameter> option effectively embeds a filter expression into the rewrite rule: the message is modified only if the message passes the filter. For details, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="conditional-rewrite"/>.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section>
+            <title>Message correlation, triggers, and other pattern database improvements</title>
+            <itemizedlist>
+                <listitem>
+                    <para>Starting with version <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.2</phrase>, the &abbrev; application is able to correlate log messages identified using pattern databases.</para>
+                    <para>Log messages are supposed to describe events, but applications often separate information about a single event into different log messages. For example, the Postfix e-mail server logs the sender and recipient addresses into separate log messages, or in case of an unsuccessful login attempt, the OpenSSH server sends a log message about the authentication failure, and the reason of the failure in the next message.</para>
+                    <para>The &abbrev; application can correlate the identified messages and use all the information of the correlating messages, for example, to collect all important information about the event into a single log message. For details, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="patterndb-correlation"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>The &abbrev; application is able to generate (trigger) messages automatically if certain events occur, for example, a specific log message is received, or the correlation timeout of a message expires. Basically, you can define messages for every pattern database rule that are emitted when a message matching the rule is received. Triggering messages is often used together with message correlation, but can also be used separately. For details, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="patterndb-triggers-actions"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>It is now possible to specify multiple program patterns for a ruleset. For details, see the description of the <parameter>patterns</parameter> tag in <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="reference_patterndb_schemes"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>The &lt;value&gt; element of name-value pairs can include template functions. For details, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="template-functions"/>, for examples, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="template-function-if"/>.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        <section>
+            <title>Documentation reorganization and update</title>
+            <para>The structure of <olink targetdoc="syslog-ng-pe-guide-admin-en"/> has changed significantly; several important topics and feature descriptions were moved to their own chapters. These chapters contain most (if not all) the information related to the feature, including concepts, configuration, and reference. For details on the documentation changes, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="pe-changes"/>.</para>
+        </section>
+        <section>
+            <title>Other changes</title>
+            <itemizedlist>
+                <listitem>
+                    <para>The <parameter>log_fifo_size()</parameter> option can be set for logstore destinations as well. The default value of <parameter>log_fifo_size()</parameter> has been increased to 10000.</para>
+                </listitem>
+                <listitem>
+                    <para>The default value of <parameter>log_iw_size()</parameter> has been increased to 1000.</para>
+                </listitem>
+                <listitem>
+                    <para>New options called <parameter>ca-dir-layout()</parameter> and <parameter>cipher-suite()</parameter> options are available to specify the hash types and encryption parameters used in TLS connections. For details, see <olink targetdoc="syslog-ng-pe-guide-admin-en" targetptr="tlsoptions"/>.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+</article>
