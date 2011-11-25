@@ -796,6 +796,69 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
             </listitem>
         </itemizedlist>
         <note><para>Using disk buffer can significantly decrease performance.</para></note>
+        <section id="configuring_diskbuffer_reliable">
+            <title>Enabling reliable disk-based buffering</title>
+            <para>To enable disk-based buffering, use the <parameter>disk-buffer(reliable(yes))</parameter>
+                parameter in the destination to set the size of the disk buffer. Use reliable disk-based buffering if you do not want to lose logs in case of reload/restart, unreachable destination or &abbrev; crash. This solution provides a slower, but reliable disk-buffer option. It is created and initialized at startup and gradually grows as new messages arrive.</para>
+            <example>
+                <title>Example for using reliable disk-based buffering</title>
+                <synopsis>destination d_BSD {
+    tcp(
+            "127.0.0.1"
+            port(3333)
+            disk-buffer(
+                mem-buf-size(10000)
+                disk-buf-size(2000000)
+                reliable(yes)
+            )
+        );
+}; </synopsis>
+            </example>
+        </section>
+        <section id="configuring_diskbuffer_normal">
+            <title>Enabling normal disk-based buffering</title>
+            <para>To enable disk-based buffering, use the <parameter>disk-buffer(reliable(no))</parameter>
+                parameter in the destination to set the size of the disk buffer.Use normal disk-based buffering if you want a solution that is faster than the reliable disk-based buffering. In this case, disk buffering will be less reliable and it is possible to lose logs in case of &abbrev; crash.</para>
+            <example>
+                <title>Example for using normal disk-based buffering</title>
+                <para>When using the disk-buffer plugin</para>
+                <synopsis>destination d_BSD {
+    tcp(
+            "127.0.0.1"
+            port(3333)
+            disk-buffer(
+                mem-buf-length(10000)
+                disk-buf-size(2000000)
+                reliable(no)
+            )
+        );
+        }; </synopsis>
+                <para>Without disk-buffer plugin</para>
+                <synopsis>destination d_BSD {
+    tcp(
+            "127.0.0.1"
+            port(3333)
+            log_disk_fifo_size(2000000)
+            log_fifo_size(10000)
+        );
+}; </synopsis>
+            </example>
+        </section>
+        <section id="configuring_diskbuffer_memory">
+            <title>Enabling memory buffering</title>
+            <para>To enable disk-based buffering, use the <parameter>log_fifo_size()</parameter>
+                parameter in the destination to set the size of the disk buffer.Use memory buffering if you want the fastest solution, and if &abbrev; crash or network downtime is never expected. In the abovementioned cases, losing logs is possible. This solution does not use disk-based buffering, logs are stored only in the memory.</para>
+            <example>
+                <title>Example for using memory buffering</title>
+                <synopsis>destination d_BSD {
+    tcp(
+            "127.0.0.1"
+            port(3333)
+            log_fifo_size(10000)
+        );
+};</synopsis>
+            </example>
+        </section>
         <section id="configuring_diskbuffer">
 	        <title>Enabling disk-based buffering</title>
 	        <para>To enable disk-based buffering, use the <parameter>log_disk_fifo_size()</parameter>
@@ -818,7 +881,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
 	        <example>
 	                    <xi:include href="chapter-destinations.xml" xpointer="xpointer(//example[@id = 'example_diskbuffer']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 	        </example>
-	    </section>
+        </section>
     </section>
     <section id="concepts_failover" condition="pe">
         <title>Client-side failover</title>
