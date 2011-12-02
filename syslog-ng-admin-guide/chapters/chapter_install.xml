@@ -776,14 +776,20 @@ $ make install</synopsis>
         </procedure>
         <para>For information on configuring syslog-ng, see the <xref
                 linkend="chapter-quickstart"/>.</para>
-    <section condition="pe">
+    <section id="install_pkg" condition="pe">
         <title>Installing &abbrev; using .pkg installer</title>
         <para>The &abbrev; application can be installed with user-interaction or in silent mode.</para>
         <para>The generic syslog service of the operating system is stopped and deregistered automatically by the installer before installation.</para>
         <warning><para>Remove any other syslog service before starting the installation. Failing to do so might have unpredictable results.</para></warning>
         <para>The package supports both the old UNIX System V (SysV) init mechanism used by Solaris 8 and 9 and the new Service Management Facility (SMF) introduced in Solaris 10.</para>
         <para>The &abbrev; application is compatible with the standard Solaris logrotate mechanism by default.</para>
-        <procedure>
+        <itemizedlist>
+            <listitem><para>To install &abbrev; with user-interaction, complete <xref linkend="install_pkg_interactive"/>.</para></listitem>
+            <listitem><para>To install &abbrev; without any user-interaction, complete <xref linkend="install_pkg_silent"/>.</para></listitem>
+            <listitem><para>To install &abbrev; from a transformed PKG package, complete <xref linkend="install_pkg_trans"/>.</para></listitem>
+        </itemizedlist>
+        
+        <procedure id="install_pkg_interactive">
             <title>Installing &abbrev; with user-interaction</title>
         <indexterm>
             <primary>installing syslog-ng</primary>
@@ -793,7 +799,7 @@ $ make install</synopsis>
             <title>Purpose:</title>
             <para/>
         </formalpara>
-            <para>The &abbrev; application can be installed in an interactive way. Answer the questions</para>
+            <para>The &abbrev; application can be installed in an interactive way. Answer the questions of the installer with <parameter>y</parameter> or <parameter>n</parameter>.</para>
         <formalpara>
             <title>Steps:</title>
             <para/>
@@ -839,14 +845,44 @@ $ make install</synopsis>
             <synopsis>pkgask -r &lt;responsefile&gt; -d syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;architecture&gt;.pkg BBsyslng</synopsis>
             <para>For example:</para>
             <synopsis>pkgask -r response_file -d syslog-ng<phrase condition="pe">-premium-edition</phrase>-4.2.1-solaris10-amd64.pkg BBsyslng</synopsis>
-            <warning><para>The <parameter>pkgask</parameter> will fail if the response file; already exists.</para></warning>
+            <warning><para>The <parameter>pkgask</parameter> will fail if the response file already exists.</para></warning>
         </step>
         <step>
-            <para>Run the <parameter>pkgadd</parameter> command with the added response file.</para>
+            <para>Run the <parameter>pkgadd</parameter> command with the added response file answering <parameter>y</parameter> to all questions.</para>
             <synopsis>yes | pkgadd -r &lt;responsefile&gt; -d syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;architecture&gt;.pkg BBsyslng</synopsis>
             <warning><para><parameter>pkgask</parameter> runs the request script of the package under the current condition of the operating system. The installation might fail if something changes (another &abbrev; package has been installed, configuration file has been removed), because the response file's contents will be invalid.</para></warning>
         </step>
     </procedure>
+        <procedure id="install_pkg_trans">
+            <title>Installing &abbrev; from a transformed PKG package</title>
+            <indexterm>
+                <primary>installing syslog-ng</primary>
+                <secondary>from a transformed PKG package</secondary>
+            </indexterm>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>The &abbrev; application can be installed from a normal file structure. To perform this, transform the .pkg package.</para>
+            <formalpara>
+                <title>Steps:</title>
+                <para/>
+            </formalpara>
+            <step><para>To transform the .pkg package, execute the following command:</para>
+            <synopsis>pkgtrans syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;architecture&gt;.pkg &lt;outdirectory&gt;</synopsis>
+                <para>In this case, the .pkg package will be extracted to the &lt;outdirectory&gt; directory.</para>
+                <example>
+                    <title>Extracting &abbrev; from a transformed PKG package</title>
+                    <synopsis>pkgtrans syslog-ng-premium-edition-4.2.0-solaris-9-sparc.pkg /tmp/out</synopsis>
+                    <para>This will extract the files to the <filename>/tmp/out/BBsyslng</filename> directory.</para>
+                </example>
+            </step>
+            <step>
+                <para>To install &abbrev;, execute the following command:</para>
+                <synopsis>pkgadd &lt;options&gt; -d &lt;outdirectory&gt; BBsyslng</synopsis>
+                <para>In this case, &lt;options&gt; stand for the <parameter>pkgadd</parameter> options, for example <parameter>-r &lt;responsefile&gt;</parameter>.</para>
+            </step>
+        </procedure>
     </section>
     <section id="upgrading_syslog-ng" condition="pe">
         <title>Upgrading &abbrev;</title>
