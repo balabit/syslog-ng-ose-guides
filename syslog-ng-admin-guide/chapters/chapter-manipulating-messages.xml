@@ -50,7 +50,7 @@
             <indexterm>
                 <primary>macros</primary>
             </indexterm>
-            <para>The &abbrev; application can dynamically create filenames, directories, or names of database tables using macros that help you organize your log messages. Macros refer to a property or a part of the log message, for example, the <parameter>$HOST</parameter> macro refers to the name or IP address of the client that sent the log message, while <parameter>$DAY</parameter> is the day of the month when syslog-ng has received the message. Using these macros in the path of the destination log files allows you for example to collect the logs of every host into separate files for every day.</para>
+            <para>The &abbrev; application can dynamically create filenames, directories, or names of database tables using macros that help you organize your log messages. Macros refer to a property or a part of the log message, for example, the <parameter>${HOST}</parameter> macro refers to the name or IP address of the client that sent the log message, while <parameter>${DAY}</parameter> is the day of the month when syslog-ng has received the message. Using these macros in the path of the destination log files allows you for example to collect the logs of every host into separate files for every day.</para>
             <para>A set of macros can be defined as a template object and used in multiple destinations.</para>
             <para>Another use of macros and templates is to customize the format of the syslog message, for example to add elements of the message header to the message text. Note that if a message uses the IETF-syslog format, only the text of the message can be customized, the structure of the header is fixed.</para>
             <itemizedlist>
@@ -103,24 +103,24 @@
             application, see <olink targetdoc="syslog-ng-windows-agent-guide-admin-en" targetptr="windows_message_format"/>.</para>
         </note>
         <para id="date_macros">The macros related to the date of the message (for example:
-                <parameter>ISODATE</parameter>, <parameter>HOUR</parameter>, and so on) have two further
+                <parameter>${ISODATE}</parameter>, <parameter>${HOUR}</parameter>, and so on) have two further
             versions each: one with the <parameter>S_</parameter> and one with the
-            <parameter>R_</parameter> prefix (for example: <parameter>S_DATE</parameter> and
-                <parameter>R_DATE</parameter> ). The <parameter>S_DATE</parameter> macro represents
+            <parameter>R_</parameter> prefix (for example: <parameter>${S_DATE}</parameter> and
+                <parameter>${R_DATE}</parameter> ). The <parameter>${S_DATE}</parameter> macro represents
             the date found in the log message, that is, when the message was sent by the original
-            application. <parameter>R_DATE</parameter> is the date when syslog has received the
+            application. <parameter>${R_DATE}</parameter> is the date when syslog has received the
             message.</para>
-        <para>Starting with &abbrev; version <phrase condition="pe">4 F1</phrase>, the <parameter>DATE</parameter> macro equals the <parameter>S_DATE</parameter> macro. In earlier versions the value of <parameter>DATE</parameter> depended on the <parameter>use_time_recvd()</parameter> global option, which was removed from &abbrev;.</para>
+        <para>Starting with &abbrev; version <phrase condition="pe">4 F1</phrase>, the <parameter>${DATE}</parameter> macro equals the <parameter>${S_DATE}</parameter> macro. In earlier versions the value of <parameter>${DATE}</parameter> depended on the <parameter>use_time_recvd()</parameter> global option, which was removed from &abbrev;.</para>
         <warning>
-            <para>The hostname-related macros (<parameter>FULLHOST</parameter>,
-                    <parameter>FULLHOST_FROM</parameter>, <parameter>HOST</parameter>, and
-                    <parameter>HOST_FROM</parameter>) do not have any effect if the 
+            <para>The hostname-related macros (<parameter>${FULLHOST}</parameter>,
+                    <parameter>${FULLHOST_FROM}</parameter>, <parameter>${HOST}</parameter>, and
+                    <parameter>${HOST_FROM}</parameter>) do not have any effect if the 
                     <parameter>keep_hostname()</parameter>
                     option is disabled.</para>
         </warning>
-        <para>By default, syslog-ng sends messages using the following template: <parameter>$ISODATE
-                $HOST $MSGHDR$MSG\n</parameter>. (The <parameter>$MSGHDR$MSG</parameter> part is
-            written together because the <parameter>$MSGHDR</parameter> macro includes a trailing
+        <para>By default, syslog-ng sends messages using the following template: <parameter>${ISODATE}
+                ${HOST} ${MSGHDR}${MSG}\n</parameter>. (The <parameter>${MSGHDR}${MSG}</parameter> part is
+            written together because the <parameter>${MSGHDR}</parameter> macro includes a trailing
             whitespace.)</para>
         <note>
             <para>Earlier versions of syslog-ng used templates and scripts to send log messages into
@@ -144,14 +144,14 @@
                 destination (<parameter>d_file</parameter>) will use the message format defined in
                 the template. </para>
             <synopsis>template t_demo_filetemplate { 
-             template("$ISODATE $HOST $MSG\n"); template_escape(no); };          
+             template("${ISODATE} ${HOST} ${MSG}\n"); template_escape(no); };          
 destination d_file { 
              file("/var/log/messages" template(t_demo_filetemplate)); };</synopsis>
             <para>Templates can also be used inline, if they are used only at a single location. The
                 following destination is equivalent with the previous example: </para>
             <synopsis>destination d_file {
                 file ("/var/log/messages"
-                        template("$ISODATE $HOST $MSG\n") template_escape(no) ); 
+                        template("${ISODATE} ${HOST} ${MSG}\n") template_escape(no) ); 
                 };
             </synopsis>
             <indexterm>
@@ -160,7 +160,7 @@ destination d_file {
             </indexterm>
             <para>The following file destination uses macros to daily create separate logfiles for every client host.</para>
             <synopsis>destination d_file {
-        file("/var/log/$YEAR.$MONTH.$DAY/$HOST.log");
+        file("/var/log/${YEAR}.${MONTH}.${DAY}/${HOST}.log");
 };</synopsis>
         </example>
         <note>
@@ -197,9 +197,9 @@ destination d_file {
                     <primary>AMPM</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$AMPM</primary>
+                    <primary>${AMPM}</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> Typically used together with the <link linkend="macro_hour12"><parameter>$HOUR12</parameter></link> macro, <parameter>$AMPM</parameter> returns the period of the day: AM for hours before mid day and PM for hours after mid day. In reference to a 24-hour clock format, AM is between 00:00-12:00 and PM is between 12:00-24:00. 12AM is midnight. Available in &abbrev; 3.2 and later.</para>
+            <para><guilabel>Description:</guilabel> Typically used together with the <link linkend="macro_hour12"><parameter>${HOUR12}</parameter></link> macro, <parameter>${AMPM}</parameter> returns the period of the day: AM for hours before mid day and PM for hours after mid day. In reference to a 24-hour clock format, AM is between 00:00-12:00 and PM is between 12:00-24:00. 12AM is midnight. Available in &abbrev; 3.2 and later.</para>
         </simplesect>
         <simplesect>
             <title>BSDTAG</title>
@@ -207,7 +207,7 @@ destination d_file {
                     <primary>BSDTAG</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$BSDTAG</primary>
+                    <primary>${BSDTAG}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> Facility/priority information in the format used by the FreeBSD
                 syslogd: a priority number followed by a letter that indicates the
@@ -231,7 +231,7 @@ destination d_file {
                     <primary>DATE, R_DATE, S_DATE</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$DATE, $R_DATE, $S_DATE</primary>
+                    <primary>${DATE}, ${R_DATE}, ${S_DATE}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> Date of the message using the BSD-syslog style timestamp format
                 (month/day/hour/minute/second, each expressed in two digits). This is
@@ -244,7 +244,7 @@ destination d_file {
                     <primary>DAY, R_DAY, S_DAY</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$DAY, $R_DAY, $S_DAY</primary>
+                    <primary>${DAY}, ${R_DAY}, ${S_DAY}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The day the message was sent.</para>
         </simplesect>
@@ -254,7 +254,7 @@ destination d_file {
                     <primary>FACILITY</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$FACILITY</primary>
+                    <primary>${FACILITY}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The name of the facility (for example, <parameter>kern</parameter>) that sent the message.</para>
         </simplesect>
@@ -264,7 +264,7 @@ destination d_file {
                     <primary>FACILITY_NUM</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$FACILITY_NUM</primary>
+                    <primary>${FACILITY_NUM}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The numerical code of the facility (for example, <parameter>0</parameter>) that sent the message.</para>
         </simplesect>
@@ -274,10 +274,10 @@ destination d_file {
                     <primary>FULLDATE, R_FULLDATE, S_FULLDATE</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$FULLDATE, $R_FULLDATE, $S_FULLDATE</primary>
+                    <primary>${FULLDATE}, ${R_FULLDATE}, ${S_FULLDATE}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> A nonstandard format for the date of the message using the same
-                format as <parameter>DATE</parameter>, but including the year as well,
+                format as <parameter>${DATE}</parameter>, but including the year as well,
                 for example: <parameter>2006 Jun 13 15:58:00</parameter>.</para>
         </simplesect>
         <simplesect>
@@ -286,7 +286,7 @@ destination d_file {
                     <primary>FULLHOST</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$FULLHOST</primary>
+                    <primary>${FULLHOST}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The full FQDN of the host name chain (without trimming chained
                 hosts), including the domain name. To use this macro, make sure that the
@@ -298,22 +298,22 @@ destination d_file {
                     <primary>FULLHOST_FROM</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$FULLHOST_FROM</primary>
+                    <primary>${FULLHOST_FROM}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> FQDN of the host that sent the message to syslog-ng as resolved by
                 syslog-ng using DNS. If the message traverses several hosts, this is the
                 last host in the chain. To use this macro, make sure that the <parameter>keep_hostname()</parameter>
                 option is enabled.</para>
-                <para>The &abbrev; application uses the following procedure to determine the value of the <parameter>$FULLHOST_FROM</parameter> macro:</para>
+                <para>The &abbrev; application uses the following procedure to determine the value of the <parameter>${FULLHOST_FROM}</parameter> macro:</para>
                 <orderedlist>
                     <listitem>
                         <para>The &abbrev; application takes the IP address of the host sending the message.</para>
                     </listitem>
                     <listitem>
-                        <para>If the <parameter>use_dns()</parameter> option is enabled, &abbrev; attempts to resolve the IP address to a hostname. If it succeeds, the returned hostname will be the value of the <parameter>$FULLHOST_FROM</parameter> macro.</para>
+                        <para>If the <parameter>use_dns()</parameter> option is enabled, &abbrev; attempts to resolve the IP address to a hostname. If it succeeds, the returned hostname will be the value of the <parameter>${FULLHOST_FROM}</parameter> macro.</para>
                     </listitem>
                     <listitem>
-                        <para>If the <parameter>use_dns()</parameter> option is disabled, or the address resolution fails, the <parameter>$FULLHOST_FROM</parameter> macro will return the IP address of the sender host.</para>
+                        <para>If the <parameter>use_dns()</parameter> option is disabled, or the address resolution fails, the <parameter>${FULLHOST_FROM}</parameter> macro will return the IP address of the sender host.</para>
                     </listitem>
                 </orderedlist>
         </simplesect>
@@ -323,7 +323,7 @@ destination d_file {
                     <primary>HOUR, R_HOUR, S_HOUR</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$HOUR, $R_HOUR, $S_HOUR</primary>
+                    <primary>${HOUR}, ${R_HOUR}, ${S_HOUR}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The hour of day the message was sent.</para>
         </simplesect>
@@ -333,9 +333,9 @@ destination d_file {
                     <primary>HOUR12, R_HOUR12, S_HOUR12</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$HOUR12, $R_HOUR12, $S_HOUR12</primary>
+                    <primary>${HOUR12}, ${R_HOUR12}, ${S_HOUR12}</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> The hour of day the message was sent in 12-hour clock format. See also the <link linkend="macro_ampm"><parameter>$AMPM</parameter></link> macro. 12AM is midnight. Available in &abbrev; 3.2 and later.</para>
+            <para><guilabel>Description:</guilabel> The hour of day the message was sent in 12-hour clock format. See also the <link linkend="macro_ampm"><parameter>${AMPM}</parameter></link> macro. 12AM is midnight. Available in &abbrev; 3.2 and later.</para>
         </simplesect>
         <simplesect id="macro_host">
             <title>HOST</title>
@@ -343,7 +343,7 @@ destination d_file {
                     <primary>HOST</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$HOST</primary>
+                    <primary>${HOST}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The name of the source host where the message originates from. If the
                 message traverses several hosts and the <link linkend="option_chain_hostnames">
@@ -358,7 +358,7 @@ destination d_file {
                     <primary>HOST_FROM</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$HOST_FROM</primary>
+                    <primary>${HOST_FROM}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> Name of the host that sent the message to syslog-ng, as resolved by
                 syslog-ng using DNS. If the message traverses several hosts, this is the
@@ -371,12 +371,12 @@ destination d_file {
                     <primary>ISODATE, R_ISODATE, S_ISODATE</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$ISODATE, $R_ISODATE, $S_ISODATE</primary>
+                    <primary>${ISODATE}, ${R_ISODATE}, ${S_ISODATE}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> Date of the message in the ISO 8601 compatible standard timestamp
                 format (yyyy-mm-ddThh:mm:ss+-ZONE), for example:
                 <parameter>2006-06-13T15:58:00.123+01:00</parameter>. If possible,
-                it is recommended to use <parameter>ISODATE</parameter> for
+                it is recommended to use <parameter>${ISODATE}</parameter> for
                 timestamping. Note that syslog-ng can produce fractions of a second
                 (for example milliseconds) in the timestamp by using the
                 <parameter>frac_digits()</parameter> global or per-destination
@@ -388,9 +388,9 @@ destination d_file {
                     <primary>LEVEL_NUM</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$LEVEL_NUM</primary>
+                    <primary>${LEVEL_NUM}</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> The priority (also called severity) of the message, represented as a numeric value, for example, <parameter>3</parameter>. For the textual representation of this value, use the <parameter>$LEVEL</parameter> macro. See <xref linkend="macro_priority"/> for details.</para>
+            <para><guilabel>Description:</guilabel> The priority (also called severity) of the message, represented as a numeric value, for example, <parameter>3</parameter>. For the textual representation of this value, use the <parameter>${LEVEL}</parameter> macro. See <xref linkend="macro_priority"/> for details.</para>
         </simplesect>
         <simplesect id="macro_min">
             <title>MIN, R_MIN, S_MIN</title>
@@ -398,7 +398,7 @@ destination d_file {
                     <primary>MIN, R_MIN, S_MIN</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$MIN, $R_MIN, $S_MIN</primary>
+                    <primary>${MIN}, ${R_MIN}, ${S_MIN}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The minute the message was sent.</para>
         </simplesect>
@@ -408,7 +408,7 @@ destination d_file {
                     <primary>MONTH, R_MONTH, S_MONTH</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$MONTH, $R_MONTH, $S_MONTH</primary>
+                    <primary>${MONTH}, ${R_MONTH}, ${S_MONTH}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The month the message was sent as a decimal value, prefixed with a
                 zero if smaller than 10.</para>
@@ -419,7 +419,7 @@ destination d_file {
                     <primary>MONTH_ABBREV, R_MONTH_ABBREV, S_MONTH_ABBREV</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$MONTH_ABBREV, $R_MONTH_ABBREV, $S_MONTH_ABBREV</primary>
+                    <primary>${MONTH_ABBREV}, ${R_MONTH_ABBREV}, ${S_MONTH_ABBREV}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The English abbreviation of the month name (3 letters).</para>
         </simplesect>
@@ -429,7 +429,7 @@ destination d_file {
                     <primary>MONTH_NAME, R_MONTH_NAME, S_MONTH_NAME</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$MONTH_NAME, $R_MONTH_NAME, $S_MONTH_NAME</primary>
+                    <primary>${MONTH_NAME}, ${R_MONTH_NAME}, ${S_MONTH_NAME}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The English name of the month name.</para>
         </simplesect>
@@ -439,7 +439,7 @@ destination d_file {
                     <primary>MONTH_WEEK, R_MONTH_WEEK, S_MONTH_WEEK</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$MONTH_WEEK, $R_MONTH_WEEK, $S_MONTH_WEEK</primary>
+                    <primary>${ONTH_WEEK}, ${R_MONTH_WEEK}, ${S_MONTH_WEEK}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The number of the week in the given month (0-5). 
                 The week with numerical value 1 is the first week 
@@ -455,14 +455,14 @@ destination d_file {
                     <primary>MSG or MESSAGE</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$MSG or $MESSAGE</primary>
+                    <primary>${MSG} or ${MESSAGE}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> Text contents of the log message without the program name and pid.
                 Note that this has changed in syslog-ng version 3.0; in earlier versions
                 this macro included the program name and the pid. In syslog-ng 3.0, the
-                <parameter>MSG</parameter> macro became equivalent with the
-                <parameter>MSGONLY</parameter> macro. The program name and the pid
-                together are available in the <parameter>MSGHDR</parameter>
+                <parameter>${MSG}</parameter> macro became equivalent with the
+                <parameter>${MSGONLY}</parameter> macro. The program name and the pid
+                together are available in the <parameter>${MSGHDR}</parameter>
                 macro.</para>
         </simplesect>
         <simplesect>
@@ -471,7 +471,7 @@ destination d_file {
                     <primary>MSGHDR</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$MSGHDR</primary>
+                    <primary>${MSGHDR}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The name and the pid of the program that sent the log message in
                 <parameter>PROGRAM: PID </parameter> format. Includes a trailing
@@ -484,9 +484,9 @@ destination d_file {
                     <primary>MSGID</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$MSGID</primary>
+                    <primary>${MSGID}</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> A string specifying the type of the message in IETF-syslog (RFC5424-formatted) messages. For example, a firewall might use the MSGID "TCPIN" for incoming TCP traffic and the MSGID "TCPOUT" for outgoing TCP traffic. By default, &abbrev; does not specify this value, but uses a dash (-) character instead. If an incoming message includes the MSGID value, it is retained and relayed without modification.</para>
+            <para><guilabel>Description:</guilabel> A string specifying the type of the message in IETF-syslog (RFC5424-formatted) messages. For example, a firewall might use the ${MSGID} "TCPIN" for incoming TCP traffic and the ${MSGID} "TCPOUT" for outgoing TCP traffic. By default, &abbrev; does not specify this value, but uses a dash (-) character instead. If an incoming message includes the ${MSGID} value, it is retained and relayed without modification.</para>
         </simplesect>
         <simplesect>
             <title>MSGONLY</title>
@@ -494,7 +494,7 @@ destination d_file {
                     <primary>MSGONLY</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$MSGONLY</primary>
+                    <primary>${MSGONLY}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> Message contents without the program name or pid.</para>
         </simplesect>
@@ -504,7 +504,7 @@ destination d_file {
                     <primary>PID</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$PID</primary>
+                    <primary>${PID}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The PID of the program sending the message.</para>
         </simplesect>
@@ -514,7 +514,7 @@ destination d_file {
                     <primary>PRI</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$PRI</primary>
+                    <primary>${PRI}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The priority and facility encoded as a 2 or 3 digit decimal number as
                 it is present in syslog messages.</para>
@@ -528,12 +528,12 @@ destination d_file {
                     <primary>LEVEL</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$PRIORITY</primary>
+                    <primary>${PRIORITY}</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$LEVEL</primary>
+                    <primary>${LEVE}L</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> The priority (also called severity) of the message, for example, <parameter>error</parameter>. For the textual representation of this value, use the <parameter>$LEVEL</parameter> macro. See <xref linkend="macro_priority"/> for details.</para>
+            <para><guilabel>Description:</guilabel> The priority (also called severity) of the message, for example, <parameter>error</parameter>. For the textual representation of this value, use the <parameter>${LEVEL}</parameter> macro. See <xref linkend="macro_priority"/> for details.</para>
         </simplesect>
         <simplesect>
             <title>PROGRAM</title>
@@ -541,10 +541,10 @@ destination d_file {
                     <primary>PROGRAM</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$PROGRAM</primary>
+                    <primary>${PROGRAM}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The name of the program sending the message. Note that the content of
-                the $PROGRAM variable may not be completely trusted as it is provided by
+                the ${PROGRAM} variable may not be completely trusted as it is provided by
                 the client program that constructed the message.</para>
         </simplesect>
             <simplesect>
@@ -553,12 +553,12 @@ destination d_file {
                     <primary>RCPTID</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$RCPTID</primary>
+                    <primary>${RCPTID}</primary>
                 </indexterm>
                 <para><guimenu>Description:</guimenu> A unique ID for messages generated at reception time on the receiving host. It facilitates defining relationships between messages that are potentially distributed to different files on the same host, or different hosts.</para>
                 <example>
-                    <title>Using RCPTID macro</title>
-                    <para>Using the following template statement in the configuration: <parameter>template demo_template { template("$DATE $HOST $PROG: $MSG ID:$RCPTID\n"); };</parameter> the outgoing message will be the following: <parameter>&lt;133&gt;Feb 25 14:09:07 webserver syslogd: restart. ID:1</parameter>.</para>
+                    <title>Using ${RCPTID} macro</title>
+                    <para>Using the following template statement in the configuration: <parameter>template demo_template { template("${DATE} ${HOST} ${PROG}: ${MSG} ID:${RCPTID}\n"); };</parameter> the outgoing message will be the following: <parameter>&lt;133&gt;Feb 25 14:09:07 webserver syslogd: restart. ID:1</parameter>.</para>
                 </example>
                 
             </simplesect>
@@ -572,10 +572,10 @@ destination d_file {
                     <primary>SDATA</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$.SDATA.SDID.SDNAME</primary>
+                    <primary>${.SDATA.SDID.SDNAME}</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$SDATA</primary>
+                    <primary>${SDATA}</primary>
                 </indexterm>
                 <indexterm>
                     <primary>STRUCTURED-DATA</primary>
@@ -585,15 +585,15 @@ destination d_file {
                     <secondary>SDATA</secondary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The syslog-ng application automatically parses the STRUCTURED-DATA
-                part of IETF-syslog messages, which can be referenced in macros. The <parameter>$SDATA</parameter> macro references the entire STRUCTURED-DATA part of the message, while structured data elements can be referenced using the <parameter>$.SDATA.SDID.SDNAME</parameter> macro.<phrase condition="pe">Available only in &product; 4.0 and later.</phrase></para>
+                part of IETF-syslog messages, which can be referenced in macros. The <parameter>${SDATA}</parameter> macro references the entire STRUCTURED-DATA part of the message, while structured data elements can be referenced using the <parameter>${.SDATA.SDID.SDNAME}</parameter> macro.<phrase condition="pe">Available only in &product; 4.0 and later.</phrase></para>
                 <note>
                     <para>When using STRUCTURED-DATA macros, consider the following:</para>
                     <itemizedlist>
                         <listitem>
-                            <para>When referencing an element of the structured data, the macro must begin with the dot (.) character. For example, <parameter>$.SDATA.timeQuality.isSynced</parameter>.</para>
+                            <para>When referencing an element of the structured data, the macro must begin with the dot (.) character. For example, <parameter>${.SDATA.timeQuality.isSynced}</parameter>.</para>
                         </listitem>
                         <listitem>
-                            <para>The SDID and SDNAME parts of the macro names are case sensitive: <parameter>$.SDATA.timeQuality.isSynced</parameter> is not the same as <parameter>$.SDATA.TIMEQUALITY.ISSYNCED</parameter>.</para>
+                            <para>The SDID and SDNAME parts of the macro names are case sensitive: <parameter>${.SDATA.timeQuality.isSynced}</parameter> is not the same as <parameter>${.SDATA.TIMEQUALITY.ISSYNCED}</parameter>.</para>
                         </listitem>
                     </itemizedlist>
                 </note>
@@ -611,7 +611,7 @@ destination d_file {
                     <primary>SEC, R_SEC, S_SEC</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$SEC, $R_SEC, $S_SEC</primary>
+                    <primary>${SEC}, ${R_SEC}, ${S_SEC}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The second the message was sent.</para>
         </simplesect>
@@ -621,7 +621,7 @@ destination d_file {
                     <primary>SEQNUM</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$SEQNUM</primary>
+                    <primary>${SEQNUM}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The sequence number of the message is a unique identifier of the
                 message between the end-points. The syslog-ng client calculates this
@@ -629,7 +629,7 @@ destination d_file {
                 calculated for relayed messages. The sequence number increases for every
                 message, and is not lost even if syslog-ng is reloaded. The sequence number starts again from 0 when &abbrev; is restarted. The
                 sequence number is a part of every message that uses the new IETF-syslog
-                protocol (<parameter>.SDATA.meta.sequenceId</parameter>), and can be
+                protocol (<parameter>${.SDATA.meta.sequenceId}</parameter>), and can be
                 added to BSD-syslog messages using this macro.</para>
             <indexterm>
                 <primary>sequence ID</primary>
@@ -654,7 +654,7 @@ destination d_file {
 			<indexterm>
 				<primary>extended timestamp format</primary>
 			</indexterm>
-			<para condition="pe">3.2 and later versions of &abbrev; store the sequence number from Cisco IOS log messages using the extended timestamp format in this macro. If this message is then forwarded using the IETF-syslog protocol, &abbrev; includes the sequence number received from the Cisco device in the <parameter>.SDATA.meta.sequenceId</parameter> part of the message.</para>
+			<para condition="pe">3.2 and later versions of &abbrev; store the sequence number from Cisco IOS log messages using the extended timestamp format in this macro. If this message is then forwarded using the IETF-syslog protocol, &abbrev; includes the sequence number received from the Cisco device in the <parameter>${.SDATA.meta.sequenceId}</parameter> part of the message.</para>
 			<note condition="pe">
 				<para>To enable sequence numbering of log messages on Cisco devices, use the following command on the device (available in IOS 10.0 and later): <command>service sequence-numbers</command>.</para>
 				<para>For details, see <ulink url="http://www.cisco.com/en/US/docs/ios/12_3/configfun/command/reference/cfr_1g07.html#wp1029551">Cisco IOS Configuration Fundamentals and Network Management Command Reference</ulink>.</para>
@@ -669,10 +669,10 @@ destination d_file {
                     <primary>SOURCEIP</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$SOURCEIP</primary>
+                    <primary>${SOURCEIP}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> IP address of the host that sent the message to syslog-ng. (That is, the
-                IP address of the host in the <parameter>FULLHOST_FROM</parameter>
+                IP address of the host in the <parameter>${FULLHOST_FROM}</parameter>
                 macro.) Please note that when a message traverses several relays, this
                 macro contains the IP of the last relay.</para>
         </simplesect>
@@ -682,7 +682,7 @@ destination d_file {
                     <primary>STAMP, R_STAMP, S_STAMP</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$STAMP, $R_STAMP, $S_STAMP</primary>
+                    <primary>${STAMP}, ${R_STAMP}, ${S_STAMP}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> A timestamp formatted according to the <link linkend="reference_options">
                 <parameter>ts_format()</parameter>
@@ -694,7 +694,7 @@ destination d_file {
                     <primary>SYSUPTIME</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>SYSUPTIME</primary>
+                    <primary>${SYSUPTIME}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The time elapsed since the computer running &abbrev; has booted. If this data is not available, the macro contains the time elapsed since &abbrev; was started. The value of this macro is an integer containing the time in 1/100th of the second.</para>
             <para>Available in &abbrev; version <phrase condition="pe">4 F1</phrase> and later.</para>
@@ -705,7 +705,7 @@ destination d_file {
                     <primary>TAG</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$TAG</primary>
+                    <primary>${TAG}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The priority and facility encoded as a 2 digit hexadecimal number.</para>
         </simplesect>
@@ -715,7 +715,7 @@ destination d_file {
                     <primary>TAGS</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$TAGS</primary>
+                    <primary>${TAGS}</primary>
                 </indexterm>
                 <indexterm>
                     <primary>macros</primary>
@@ -727,7 +727,7 @@ destination d_file {
                 </indexterm>
             <para><guilabel>Description:</guilabel> A comma-separated list of the tags assigned to the message.<phrase condition="pe"> Available only in &product; 3.2 and later.</phrase></para>
             <note>
-                <para>Note that the tags are not part of the log message and are not automatically transferred from a client to the server. For example, if a client uses a pattern database to tag the messages, the tags are not transferred to the server. A way of transferring the tags is to explicitly add them to the log messages using a template and the <parameter>$TAGS</parameter> macro, or to add them to the structured metadata part of messages when using the IETF-syslog message format.</para>
+                <para>Note that the tags are not part of the log message and are not automatically transferred from a client to the server. For example, if a client uses a pattern database to tag the messages, the tags are not transferred to the server. A way of transferring the tags is to explicitly add them to the log messages using a template and the <parameter>${TAGS}</parameter> macro, or to add them to the structured metadata part of messages when using the IETF-syslog message format.</para>
                 <para>When sent as structured metadata, it is possible to reference to the list of tags on the central server, and for example, to add them to a database column.</para>
             </note>
         </simplesect>
@@ -737,9 +737,9 @@ destination d_file {
                     <primary>TZ, R_TZ, S_TZ</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$TZ, $R_TZ, $S_TZ</primary>
+                    <primary>${TZ}, ${R_TZ}, ${S_TZ}</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> Equivalent to TZOFFSET, used to mean the time zone name abbreviation
+            <para><guilabel>Description:</guilabel> Equivalent to ${TZOFFSET}, used to mean the time zone name abbreviation
                 in syslog-ng 1.6.x.</para>
         </simplesect>
         <simplesect id="macro_tzoffset">
@@ -748,12 +748,12 @@ destination d_file {
                     <primary>TZOFFSET, R_TZOFFSET, S_TZOFFSET</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$TZOFFSET, $R_TZOFFSET, $S_TZOFFSET</primary>
+                    <primary>${TZOFFSET}, ${R_TZOFFSET}, ${S_TZOFFSET}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The time-zone as hour offset from GMT; for example:
                 <parameter>-07:00</parameter>. In syslog-ng 1.6.x this used to be
-                <parameter>-0700</parameter> but as <parameter>ISODATE</parameter>
-                requires the colon it was added to <parameter>TZOFFSET</parameter> as
+                <parameter>-0700</parameter> but as <parameter>${ISODATE}</parameter>
+                requires the colon it was added to <parameter>${TZOFFSET}</parameter> as
                 well.</para>
         </simplesect>
         <simplesect id="macro_unixtime">
@@ -762,7 +762,7 @@ destination d_file {
                     <primary>UNIXTIME, R_UNIXTIME, S_UNIXTIME</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$UNIXTIME, $R_UNIXTIME, $S_UNIXTIME</primary>
+                    <primary>${UNIXTIME}, ${R_UNIXTIME}, ${S_UNIXTIME}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> Standard unix timestamp, represented as the number of seconds since
                 <parameter>1970-01-01T00:00:00</parameter>.</para>
@@ -773,7 +773,7 @@ destination d_file {
                     <primary>YEAR, R_YEAR, S_YEAR</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$YEAR, $R_YEAR, $S_YEAR</primary>
+                    <primary>${YEAR}, ${R_YEAR}, ${S_YEAR}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The year the message was sent.</para>
         </simplesect>
@@ -783,7 +783,7 @@ destination d_file {
                     <primary>WEEK, R_WEEK, S_WEEK</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$WEEK, $R_WEEK, $S_WEEK</primary>
+                    <primary>${WEEK}, ${R_WEEK}, ${S_WEEK}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The week number of the year, prefixed with a zero for the first nine
                 week of the year. (The first Monday in the year marks the first
@@ -795,7 +795,7 @@ destination d_file {
                     <primary>WEEK_ABBREV, R_WEEK_ABBREV, S_WEEK_ABBREV</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$WEEK_ABBREV, $R_WEEK_ABBREV, $S_WEEK_ABBREV</primary>
+                    <primary>${WEEK_ABBREV}, ${R_WEEK_ABBREV}, ${S_WEEK_ABBREV}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The 3-letter English abbreviation of the name of the day the message was sent, for example <parameter>Thu</parameter>.</para>
         </simplesect>
@@ -805,7 +805,7 @@ destination d_file {
                     <primary>WEEK_DAY, R_WEEK_DAY, S_WEEK_DAY</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$WEEK_DAY, $R_WEEK_DAY, $S_WEEK_DAY</primary>
+                    <primary>${WEEK_DAY}, ${R_WEEK_DAY}, ${S_WEEK_DAY}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The day of the week as a numerical value (1-7).</para>
         </simplesect>
@@ -815,9 +815,9 @@ destination d_file {
                     <primary>WEEKDAY, R_WEEKDAY, S_WEEKDAY</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$WEEKDAY, $R_WEEKDAY, $S_WEEKDAY</primary>
+                    <primary>${WEEKDAY}, ${R_WEEKDAY}, ${S_WEEKDAY}</primary>
                 </indexterm>
-            <para><guilabel>Description:</guilabel> These macros are deprecated, use <link linkend="macro_week_abbrev">WEEK_ABBREV, R_WEEK_ABBREV, S_WEEK_ABBREV</link> instead. The 3-letter name of the day of week the message was sent, for example
+            <para><guilabel>Description:</guilabel> These macros are deprecated, use <link linkend="macro_week_abbrev">${WEEK_ABBREV}, ${R_WEEK_ABBREV}, ${S_WEEK_ABBREV}</link> instead. The 3-letter name of the day of week the message was sent, for example
                 <parameter>Thu</parameter>.</para>
         </simplesect>
         <simplesect id="macro_week_day_name">
@@ -826,7 +826,7 @@ destination d_file {
                     <primary>WEEK_DAY_NAME, R_WEEK_DAY_NAME, S_WEEK_DAY_NAME</primary>
                 </indexterm>
                 <indexterm type="parameter">
-                    <primary>$WEEK_DAY_NAME, $R_WEEK_DAY_NAME, $S_WEEK_DAY_NAME</primary>
+                    <primary>${WEEK_DAY_NAME}, ${R_WEEK_DAY_NAME}, ${S_WEEK_DAY_NAME}</primary>
                 </indexterm>
             <para><guilabel>Description:</guilabel> The English name of the day.</para>
         </simplesect>
@@ -842,11 +842,11 @@ destination d_file {
             </indexterm>
             <para>A template function is a transformation: it modifies the way macros or name-value pairs are expanded. Template functions can be used in template definitions, or when macros are used in the configuration of &abbrev;. Template functions use the following syntax:</para>
             <synopsis>$(function-name parameter1 parameter2 parameter3 ...)</synopsis>
-            <para>For example, the <parameter>$(echo)</parameter> template function simply returns the value of the macro it receives as a parameter, thus <parameter>$(echo $HOST)</parameter> is equivalent to <parameter>$HOST</parameter>.</para>
+            <para>For example, the <parameter>$(echo)</parameter> template function simply returns the value of the macro it receives as a parameter, thus <parameter>$(echo ${HOST})</parameter> is equivalent to <parameter>${HOST}</parameter>.</para>
             <para>The parameters of template functions are separated by a whitespace character. If you want to use a longer string or multiple macros as a single parameter, enclose the parameter in double-quotes or apostrophes. For example:</para>
-            <synopsis>$(echo "$HOST $PROGRAM $PID")</synopsis>
+            <synopsis>$(echo "${HOST} ${PROGRAM} ${PID}")</synopsis>
             <para>Template functions can be nested into each other, so the parameter of a template function can be another template function, like:</para>
-            <synopsis>$(echo $(echo $HOST))</synopsis>
+            <synopsis>$(echo $(echo ${HOST}))</synopsis>
             <para>For details on using template functions, see the descriptions of the individual template functions in <xref linkend="reference-template-functions"/>.</para>
         </section>
         <section id="reference-template-functions">
@@ -858,7 +858,7 @@ destination d_file {
                         <primary>echo</primary>
                     </indexterm>
                 <para><guilabel>Syntax:</guilabel> <synopsis>$(echo argument)</synopsis></para>
-                <para><guilabel>Description:</guilabel> Returns the value of its argument. using <parameter>$(echo $HOST)</parameter> is equivalent to <parameter>$HOST</parameter>.</para>
+                <para><guilabel>Description:</guilabel> Returns the value of its argument. using <parameter>$(echo ${HOST})</parameter> is equivalent to <parameter>${HOST}</parameter>.</para>
             </simplesect>
             <simplesect id="template-function-format-welf" condition="pe">
                 <title>format-welf</title>
@@ -954,7 +954,7 @@ destination d_file {
                 </indexterm>
                 <para><guilabel>Syntax:</guilabel> <synopsis>$(&lt;operator&gt; &lt;first_operand&gt; &lt;second_operand&gt;)</synopsis></para>
                 <para><guilabel>Description:</guilabel> </para>
-                <para>This template function performs simple numerical operations (like addition or multiplication) on integer numbers or macros containing integer numbers (for example, <parameter>$LEVEL_NUM</parameter> or <parameter>$YEAR</parameter>), and returns the result of the operation. The values used in the operation are not modified, that is, macros retain their original values. If one of the operands is not an integer, &abbrev; will not execute the template function, and return the <parameter>NaN</parameter> (Not-a-Number) value.</para>
+                <para>This template function performs simple numerical operations (like addition or multiplication) on integer numbers or macros containing integer numbers (for example, <parameter>${LEVEL_NUM}</parameter> or <parameter>${YEAR}</parameter>), and returns the result of the operation. The values used in the operation are not modified, that is, macros retain their original values. If one of the operands is not an integer, &abbrev; will not execute the template function, and return the <parameter>NaN</parameter> (Not-a-Number) value.</para>
                 <para>Available only in &abbrev; <phrase condition="pe">4 F1</phrase> and later.</para>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -995,9 +995,9 @@ destination d_file {
                 <example>
                     <title>Using numerical template functions</title>
                     <para>The following template function returns the facility of the log message multiplied by 8:</para>
-                    <synopsis>$(* $FACILITY_NUM 8)</synopsis>
+                    <synopsis>$(* ${FACILITY_NUM} 8)</synopsis>
                     <para>Template functions can be nested into each other: the following template function returns the facility of the log message multiplied by 8, then adds this value to the severity of the message (the result is actually the priority of the message):</para>
-                    <synopsis>$(+ $LEVEL_NUM $(* $FACILITY_NUM 8))</synopsis>
+                    <synopsis>$(+ ${LEVEL_NUM} $(* ${FACILITY_NUM} 8))</synopsis>
                 </example>
             </simplesect>
         </section>
@@ -1038,9 +1038,9 @@ destination d_file {
         <para>To create replace a part of the log message, define the string or regular expression
             to replace, the string to replace the original text (macros can be used as well), and
             the field of the message that the rewrite rule should process. Substitution rules can
-            operate on any value available via macros, for example HOST, MESSAGE, PROGRAM, or any
+            operate on any value available via macros, for example ${HOST}, ${MESSAG}E, ${PROGRAM}, or any
             user-defined macros created using parsers (for details, see <xref linkend="chapter-csv-parser"/> and 
-    <xref linkend="chapter-patterndb"/>). The only exceptions are the FACILITY, SEVERITY, TAGS, and the date-related fields, which cannot be rewritten. As of syslog-ng 3.1, it is also possible to rewrite the structured-data fields of
+    <xref linkend="chapter-patterndb"/>). The only exceptions are the ${FACILITY}, ${SEVERITY}, ${TAGS}, and the date-related fields, which cannot be rewritten. As of syslog-ng 3.1, it is also possible to rewrite the structured-data fields of
             messages complying to the RFC5424 (IETF-syslog) message format. Substitution rules use the following syntax:</para>
         <synopsis>Declaration:
     rewrite &lt;name_of_the_rule&gt; 
@@ -1086,8 +1086,8 @@ destination d_file {
         </indexterm>
         <para>To set a field of the message to a specific value, define the string to include in the
             message, and the field where it should be included. Setting a field can operate on any
-            value available via macros, for example HOST, MESSAGE, PROGRAM, or any user-defined macros
-            created using parsers (for details, see <xref linkend="chapter-csv-parser"/> and <xref linkend="chapter-patterndb"/>). The only exceptions are the FACILITY, SEVERITY, TAGS, and the date-related fields, which cannot be rewritten. Note that
+            value available via macros, for example ${HOST}, ${MESSAGE}, ${PROGRAM}, or any user-defined macros
+            created using parsers (for details, see <xref linkend="chapter-csv-parser"/> and <xref linkend="chapter-patterndb"/>). The only exceptions are the ${FACILITY}, ${SEVERITY}, ${TAGS}, and the date-related fields, which cannot be rewritten. Note that
             the rewrite operation completely replaces any previous value of that field. Use the following
             syntax:</para>
         <synopsis>Declaration:
@@ -1104,7 +1104,7 @@ destination d_file {
             <para>The following example sets the sequence ID field of the RFC5424-formatted
                 (IETF-syslog) messages to a fixed value.</para>
             <synopsis>rewrite r_sd { set("55555" value(".SDATA.meta.sequenceId")); };</synopsis>
-            <para>It is also possible to set the value of a field that does not exist yet, and create a new name-value pair that is associated with the message. The following example created the <parameter>MODIFIED</parameter> field and sets its value to <parameter>yes</parameter>. If you use the <parameter>$MODIFIED</parameter> macro in a template or SQL table, its value will be <parameter>yes</parameter> for every message that was processed with this rewrite rule, and empty for every other message.</para>
+            <para>It is also possible to set the value of a field that does not exist yet, and create a new name-value pair that is associated with the message. The following example created the <parameter>MODIFIED</parameter> field and sets its value to <parameter>yes</parameter>. If you use the <parameter>${MODIFIED}</parameter> macro in a template or SQL table, its value will be <parameter>yes</parameter> for every message that was processed with this rewrite rule, and empty for every other message.</para>
             <synopsis>rewrite r_rewrite_set{set("yes", value("MODIFIED"));};</synopsis>
         </example>
         <section id="conditional-rewrite">
