@@ -359,7 +359,7 @@
         <para>Log messages are supposed to describe events, but applications often separate information about a single event into different log messages. For example, the Postfix e-mail server logs the sender and recipient addresses into separate log messages, or in case of an unsuccessful login attempt, the OpenSSH server sends a log message about the authentication failure, and the reason of the failure in the next message.</para>
         <para>Of course, messages that are not so directly related can be correlated as well, for example, login-logout messages, and so on.</para>
         <para>To correlate log messages, &abbrev; uses the pattern database to add messages into message-groups called contexts. A context consists of a series of log messages that are related to each other in some way, for example, the log messages of an SSH session can belong to the same context. As new messages come in, they may be added to a context. Also, when an incoming message is identified it can trigger actions to be performed, for example, generate a new message that contains all the important information that was stored previously in the context. (For details on triggering actions and generating messages, see <xref linkend="patterndb-triggers-actions"/>.)</para>
-        <para>There are two attributes for pattern database rules that determine if a message matching the rule is added to a context: <parameter>context-scope</parameter> and <parameter>context-id</parameter>. The <parameter>context-scope</parameter> attribute acts as an early filter, selecting messages sent by the same process ($HOST$PROGRAM$PID is identical), application ($HOST$PROGRAM is identical), or host, while the <parameter>context-id</parameter> actually adds the message to the context specified in the id. The <parameter>context-id</parameter> can be a simple string, or can contain macros or values extracted from the log messages for further filtering.</para>
+        <para>There are two attributes for pattern database rules that determine if a message matching the rule is added to a context: <parameter>context-scope</parameter> and <parameter>context-id</parameter>. The <parameter>context-scope</parameter> attribute acts as an early filter, selecting messages sent by the same process (${HOST}${PROGRAM}${PID} is identical), application (${HOST}${PROGRAM} is identical), or host, while the <parameter>context-id</parameter> actually adds the message to the context specified in the id. The <parameter>context-id</parameter> can be a simple string, or can contain macros or values extracted from the log messages for further filtering.</para>
         <note>
 			<para>Message contexts are persistent and are not lost even if &abbrev; is restarted (SIGHUP).</para>
         </note>
@@ -397,7 +397,7 @@
             <indexterm type="parameter">
                 <primary>@distance</primary>
             </indexterm>
-            <para>When using the <parameter>&lt;value&gt;</parameter> element in pattern database rules together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <parameter>@&lt;distance-of-referenced-message-from-the-current&gt;</parameter> suffix to the macro. For example, if there are three log messages in a context, and you are creating a generated message for the third log message, the <parameter>${HOST}@1</parameter> expression refers to the host field of the current (third) message in the context, the <parameter>${HOST}@2</parameter> expression refers to the host field of the previous (second) message in the context, <parameter>${PID}@3</parameter> to the PID of the first message, and so on. For example, the following message can be created from SSH login/logout messages (for details on generating new messages, see <xref linkend="patterndb-triggers-actions"/>): <parameter>An SSH session for ${SSH_USERNAME}@1 from ${SSH_CLIENT_ADDRESS}@2 closed. Session lasted from ${DATE}@2 to $DATE</parameter>.</para>
+            <para>When using the <parameter>&lt;value&gt;</parameter> element in pattern database rules together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <parameter>@&lt;distance-of-referenced-message-from-the-current&gt;</parameter> suffix to the macro. For example, if there are three log messages in a context, and you are creating a generated message for the third log message, the <parameter>${HOST}@1</parameter> expression refers to the host field of the current (third) message in the context, the <parameter>${HOST}@2</parameter> expression refers to the host field of the previous (second) message in the context, <parameter>${PID}@3</parameter> to the PID of the first message, and so on. For example, the following message can be created from SSH login/logout messages (for details on generating new messages, see <xref linkend="patterndb-triggers-actions"/>): <parameter>An SSH session for ${SSH_USERNAME}@1 from ${SSH_CLIENT_ADDRESS}@2 closed. Session lasted from ${DATE}@2 to ${DATE}</parameter>.</para>
         </section>
     </section>
     <section id="patterndb-triggers-actions">
@@ -452,7 +452,7 @@
     &lt;action&gt;
         &lt;message&gt;
             &lt;values&gt;
-                &lt;value name="MESSAGE"&gt;A log message from $HOST matched rule number $.classifier.rule_id&lt;/value&gt;
+                &lt;value name="MESSAGE"&gt;A log message from ${HOST} matched rule number $.classifier.rule_id&lt;/value&gt;
             &lt;/values&gt;
         &lt;/message&gt;
     &lt;/action&gt;
@@ -464,7 +464,7 @@
     &lt;action&gt;
         &lt;message&gt;
             &lt;values&gt;
-                &lt;value name="MESSAGE"&gt;An SSH session for ${SSH_USERNAME}@1 from ${SSH_CLIENT_ADDRESS}@2 closed. Session lasted from ${DATE}@2 $DATE &lt;/value&gt;
+                &lt;value name="MESSAGE"&gt;An SSH session for ${SSH_USERNAME}@1 from ${SSH_CLIENT_ADDRESS}@2 closed. Session lasted from ${DATE}@2 ${DATE} &lt;/value&gt;
             &lt;/values&gt;
         &lt;/message&gt;
     &lt;/action&gt;
@@ -479,7 +479,7 @@
                 <listitem>
                     <para>Set a field in the triggered message that is easy to identify and filter. For example:</para>
                     <synopsis>&lt;values&gt;
-    &lt;value name="MESSAGE"&gt;A log message from $HOST matched rule number $.classifier.rule_id&lt;/value&gt;
+    &lt;value name="MESSAGE"&gt;A log message from ${HOST} matched rule number $.classifier.rule_id&lt;/value&gt;
     &lt;value name="TRIGGER"&gt;yes&lt;/value&gt;
 &lt;/values&gt;</synopsis>
                 </listitem>
@@ -652,13 +652,13 @@ while (&lt;&gt;) {
                                     <indexterm type="parameter">
                                         <primary>pattern &mdash; ruleset</primary>
                                     </indexterm>
-                                    <para><guimenu>pattern</guimenu>: The name of the application &mdash; syslog-ng matches this value to the $PROGRAM header of the syslog message to find the rulesets applicable to the syslog message.</para>
-                                    <para>Specifying multiple patterns is useful if two or more applications have different names (that is, different $PROGRAM fields), but otherwise send identical log messages.</para>
+                                    <para><guimenu>pattern</guimenu>: The name of the application &mdash; syslog-ng matches this value to the ${PROGRAM} header of the syslog message to find the rulesets applicable to the syslog message.</para>
+                                    <para>Specifying multiple patterns is useful if two or more applications have different names (that is, different ${PROGRAM} fields), but otherwise send identical log messages.</para>
                                     <synopsis>&lt;patterns&gt;
     &lt;pattern&gt;firstapplication&lt;/pattern&gt;
     &lt;pattern&gt;otherapplication&lt;/pattern&gt;
 &lt;patterns&gt;</synopsis>
-                                    <para>It is not necessary to use multiple patterns if only the end of the $PROGRAM fields is different, use only the beginning of the $PROGRAM field as the <parameter>pattern</parameter>. For example, the Postfix e-mail server sends messages using different process names, but all of them begin with the <parameter>postfix</parameter> string.</para>
+                                    <para>It is not necessary to use multiple patterns if only the end of the ${PROGRAM} fields is different, use only the beginning of the ${PROGRAM} field as the <parameter>pattern</parameter>. For example, the Postfix e-mail server sends messages using different process names, but all of them begin with the <parameter>postfix</parameter> string.</para>
                                 </listitem>
                             </itemizedlist>
                             <note>
@@ -761,19 +761,19 @@ while (&lt;&gt;) {
                                             <indexterm type="parameter">
                                                 <primary>process &mdash; context-scope</primary>
                                             </indexterm>
-                                            <para><emphasis>process</emphasis>: Only messages that are generated by the same process of a client belong to the same context, that is, messages that have identical $HOST, $PROGRAM and $PID values. This is the default behavior of &abbrev; if <parameter>context-scope</parameter> is not specified.</para>
+                                            <para><emphasis>process</emphasis>: Only messages that are generated by the same process of a client belong to the same context, that is, messages that have identical ${HOST}, ${PROGRAM} and ${PID} values. This is the default behavior of &abbrev; if <parameter>context-scope</parameter> is not specified.</para>
                                         </listitem>
                                         <listitem>
                                             <indexterm type="parameter">
                                                 <primary>program &mdash; context-scope</primary>
                                             </indexterm>
-                                            <para><emphasis>program</emphasis>: Messages that are generated by the same application of a client belong to the same context, that is, messages that have identical $HOST and $PROGRAM values.</para>
+                                            <para><emphasis>program</emphasis>: Messages that are generated by the same application of a client belong to the same context, that is, messages that have identical ${HOST} and ${PROGRAM} values.</para>
                                         </listitem>
                                         <listitem>
                                             <indexterm type="parameter">
                                                 <primary>host &mdash; context-scope</primary>
                                             </indexterm>
-                                            <para><emphasis>host</emphasis>: Every message generated by a client belongs to the same context, only the $HOST value of the messages must be identical. </para>
+                                            <para><emphasis>host</emphasis>: Every message generated by a client belongs to the same context, only the ${HOST} value of the messages must be identical. </para>
                                         </listitem>
                                         <listitem>
                                             <indexterm type="parameter">
@@ -1042,7 +1042,7 @@ while (&lt;&gt;) {
                                           specific events (for example user logons). It is
                                           also possible to filter on these tags later
                                           (for
-                                          details, see <xref linkend="tagging_messages"/>). Starting with &product; 3.2, the list of tags assigned to a message can be referenced with the <parameter>$TAGS</parameter> macro.</para>
+                                          details, see <xref linkend="tagging_messages"/>). Starting with &product; 3.2, the list of tags assigned to a message can be referenced with the <parameter>${TAGS}</parameter> macro.</para>
                                           <itemizedlist>
                                           <listitem>
                                           <indexterm type="parameter">
@@ -1086,7 +1086,7 @@ while (&lt;&gt;) {
     &lt;/ruleset&gt;
 &lt;/patterndb&gt;</synopsis>
                 <para>Note that the rule uses macros that refer to parts of the message, for
-                    example, you can use the <parameter>$SSH_USERNAME</parameter> macro
+                    example, you can use the <parameter>${SSH_USERNAME}</parameter> macro
                     refer to the username used in the connection.</para>
                 <para>The following is the same example, but with a test message and test
                     values for the parsers.</para>
