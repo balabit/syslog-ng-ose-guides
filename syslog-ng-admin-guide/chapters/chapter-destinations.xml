@@ -153,8 +153,8 @@
                 <title>Using the file() driver with macros in the file name and a template for the
                         message</title>
                 <synopsis>destination d_file {
-        file("/var/log/$YEAR.$MONTH.$DAY/messages"
-             template("$HOUR:$MIN:$SEC $TZ $HOST [$LEVEL] $MSG $MSG\n")
+        file("/var/log/${YEAR}.${MONTH}.${DAY}/messages"
+             template("${HOUR}:${MIN}:${SEC} ${TZ} ${HOST} [${LEVEL}] ${MSG} ${MSG}\n")
              template_escape(no));
 };</synopsis>
             </example>
@@ -171,9 +171,9 @@
                 <para>Exploiting this, a DoS attack can be mounted against the system. If the number
                     of possible destination files and its needed memory is more than the amount
                     available on the syslog-ng server. </para>
-                <para>The most suspicious macro is <parameter>$PROGRAM</parameter>, where the number
+                <para>The most suspicious macro is <parameter>${PROGRAM}</parameter>, where the number
                     of possible variations is rather high. Do not use the
-                    <parameter>$PROGRAM</parameter> macro in insecure environments.</para>
+                    <parameter>${PROGRAM}</parameter> macro in insecure environments.</para>
             </warning>
             <section id="reference_destination_file">
                 <title>file() destination options</title>
@@ -306,7 +306,7 @@
                                     file is older than the specified amount of time (in seconds), then
                                     syslog-ng removes the existing file and opens a new file with the
                                     same name. In combination with for example the
-                                    <parameter>$WEEKDAY</parameter> macro, this can be used for simple
+                                    <parameter>${WEEKDAY}</parameter> macro, this can be used for simple
                                     log rotation, in case not all history has to be kept. (Note that in
                                     this weekly log rotation example if its Monday 00:01, then the file
                                     from last Monday is not seven days old, because it was probably last
@@ -472,7 +472,7 @@
             <warning>
                 <para>Since the state of each created file must be tracked by syslog-ng, it consumes some memory for each file. If no new messages are written to a file within 60 seconds (controlled by the <parameter>time_reap()</parameter> global option), it is closed, and its state is freed. </para>
                 <para>Exploiting this, a DoS attack can be mounted against the system. If the number of possible destination files and its needed memory is more than the amount available on the syslog-ng server.</para>
-                <para>The most suspicious macro is <parameter>$PROGRAM</parameter>, where the number of possible variations is rather high. Do not use the <parameter>$PROGRAM</parameter> macro in insecure environments.</para>
+                <para>The most suspicious macro is <parameter>${PROGRAM}</parameter>, where the number of possible variations is rather high. Do not use the <parameter>${PROGRAM}</parameter> macro in insecure environments.</para>
             </warning>
             <section id="logstore-display-contents">
 				<title>Displaying the contents of logstore files</title>
@@ -525,7 +525,7 @@
 	                    <xi:include href="reference_common.xml" xpointer="xpointer(//para[@id = 'logstore_journal_shmem_threshold_description']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 	            </para>
 	            <warning>
-	                <para>If you have a large amount of open logstore files in parrallel (for example, you are using the <parameter>$HOST</parameter> or <parameter>$PROGRAM</parameter> macros in your filenames) consider lowering the <parameter>journal_block_size()</parameter> to avoid &abbrev; consuming the entire memory of the system.</para>
+	                <para>If you have a large amount of open logstore files in parrallel (for example, you are using the <parameter>${HOST}</parameter> or <parameter>${PROGRAM}</parameter> macros in your filenames) consider lowering the <parameter>journal_block_size()</parameter> to avoid &abbrev; consuming the entire memory of the system.</para>
 	            </warning>
 	            <example>
 	                    <xi:include href="reference_common.xml" xpointer="xpointer(//example[@id = 'example-logstore-memory-threshold']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -1198,7 +1198,7 @@
                 shown in the following example.</para>
             <example id="example_destination_program">
                 <title>Using the program() destination driver</title>
-                <synopsis>destination d_prog { program("/bin/script" template("&lt;$PRI&gt;$DATE $HOST $MSG\n"); ); };</synopsis>
+                <synopsis>destination d_prog { program("/bin/script" template("&lt;${PRI}&gt;${DATE} ${HOST} ${MSG}\n"); ); };</synopsis>
             </example>
             <section id="reference_destination_program">
                 <title>program() destination options</title>
@@ -1319,9 +1319,9 @@
         enc_algorithm('AES')
         enc_password('password')
         trap_obj('.1.3.6.1.6.3.1.1.4.1.0', 'Objectid', '.1.3.6.1.4.1.18372.3.1.1.1.2.1')
-        snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.1', 'Octetstring', '$MESSAGE')
+        snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.1', 'Octetstring', '${MESSAGE}')
         snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.2', 'Octetstring', 'admin')
-        snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.3', 'Ipaddress', '$SOURCEIP')
+        snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.3', 'Ipaddress', '${SOURCEIP}')
         );
 };</synopsis>
             </example>
@@ -1354,7 +1354,7 @@
                 <para>For details on the Cisco-specific SNMP trap format, see <ulink url="http://tools.cisco.com/Support/SNMP/do/BrowseMIB.do?local=en&amp;step=2&amp;mibName=CISCO-SYSLOG-MIB">CISCO-SYSLOG-MIB</ulink> on the Cisco website.</para>
                 <section id="cisco-snmp-patterndb">
                     <title>Parsing Cisco-specific message fields with patterndb</title>
-                    <para>The <parameter>$PROGRAM</parameter> part of the syslog messages sent by Cisco devices contain not only the program name, but other important protocol information part as well. The <parameter>$PROGRAM</parameter> of these messages contains the Facility, Severity, and the Mnemonic (the Cisco name) of the message. The following pattern database parses these values and makes them available as the <parameter>.cisco.Facility, .cisco.Severity</parameter>, and <parameter>.cisco.MsgName</parameter>, respectively. The actual log message is available as <parameter>.cisco.MsgText</parameter>.</para>
+                    <para>The <parameter>${PROGRAM}</parameter> part of the syslog messages sent by Cisco devices contain not only the program name, but other important protocol information part as well. The <parameter>${PROGRAM}</parameter> of these messages contains the Facility, Severity, and the Mnemonic (the Cisco name) of the message. The following pattern database parses these values and makes them available as the <parameter>.cisco.Facility, .cisco.Severity</parameter>, and <parameter>.cisco.MsgName</parameter>, respectively. The actual log message is available as <parameter>.cisco.MsgText</parameter>.</para>
                     <synopsis>&lt;patterndb version="4" pub_date="2011-05-03"&gt;
   &lt;ruleset name="cisco snmp ruleset1" id="480de478-d4a6-4a7f-bea4-0c0245d361e3"&gt;
     &lt;description&gt;Pattern for Cisco messages having BSD timestamps, for example: Jul 01 2010 00:32:59: %SYS-5-CONFIG_I: Configured from console by console&lt;/description&gt;
@@ -1728,7 +1728,7 @@ destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
                         <title>Defining SNMP objects</title>
                         <para>The following are SNMP object definitions:</para>
                         <synopsis>snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.3', 'Ipaddress', '192.168.1.1')</synopsis>
-                        <synopsis>snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.2', 'Octetstring', '$MESSAGE')</synopsis>
+                        <synopsis>snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.2', 'Octetstring', '${MESSAGE}')</synopsis>
                     </example>
                 </simplesect>
                 <simplesect>
@@ -1894,7 +1894,7 @@ destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
   database("logs")
   table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
   columns("datetime", "host", "program", "pid", "message")
-  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  values("{$R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
   indexes("datetime", "host", "program", "pid", "message"));
   };</synopsis>
                 <para>The following example specifies the type of the database columns as well:</para>
@@ -1904,7 +1904,7 @@ destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
   database("logs")
   table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
   columns("datetime varchar(16)", "host varchar(32)", "program  varchar(20)", "pid varchar(8)", "message  varchar(200)")
-  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
   indexes("datetime", "host", "program", "pid", "message"));
 };</synopsis>
             </example>
@@ -2710,8 +2710,8 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                                 <row>
                                     <entry>Default:
                                         <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>"${R_YEAR}-${R_MONTH}-${R_DAY} ${R_HOUR}:${R_MIN}:${R_SEC}",
-                                    "$FACILITY", "$LEVEL", "$HOST", "$PROGRAM", "$PID", "$MSGONLY"</entry>
+                                    <entry>"${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}",
+                                    "${FACILITY}", "${LEVEL}", "${HOST}", "$PROGRAM", "$PID", "$MSGONLY"</entry>
                                 </row>
                             </tbody>
                         </tgroup>  
