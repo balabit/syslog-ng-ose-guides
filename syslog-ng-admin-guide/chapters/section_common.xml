@@ -133,4 +133,51 @@
             <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_commonoption_use_fqdn']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>  
     </section>
+    <simplesect id="tcp_udp_sourcedriver_intro">
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>tcp()</parameter> driver</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>tcp6()</parameter> driver</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>udp()</parameter> driver</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>source drivers</primary>
+            <secondary><parameter>udp6()</parameter> driver</secondary>
+        </indexterm>
+        <note>
+            <para>Starting with &abbrev; version 3.2, the <parameter>syslog()</parameter> source driver can handle both BSD-syslog (RFC 3164) and IETF-syslog (RFC 5424-28) messages. It is recommended to use the <parameter>syslog()</parameter> driver for both types of traffic, as the <parameter>tcp()</parameter>, <parameter>tcp6()</parameter>, <parameter>udp()</parameter>, <parameter>udp6()</parameter> source drivers will be deprecated in later versions.</para>
+        </note>
+        <para>The <parameter>tcp()</parameter>, <parameter>tcp6()</parameter>,
+            <parameter>udp()</parameter>, <parameter>udp6()</parameter> drivers can receive
+            syslog messages conforming to RFC3164 from the network using the TCP and UDP networking protocols. The
+            <parameter>tcp6()</parameter> and <parameter>udp6()</parameter> drivers use the
+            IPv6 network protocol, while <parameter>tcp()</parameter> and
+            <parameter>udp()</parameter> use IPv4.</para>
+        <para>UDP is a simple datagram oriented protocol, which provides "best effort service"
+            to transfer messages between hosts. It may lose messages, and no attempt is made at
+            the protocol level to retransmit such lost messages. The <emphasis>
+                <link linkend="concepts_message_bsdsyslog">BSD-syslog</link>
+            </emphasis> protocol traditionally uses UDP.</para>
+        <para>TCP provides connection-oriented service, which basically means that the path of
+            the messages is flow-controlled. Along this path, each message is acknowledged, and
+            retransmission is done for lost packets. Generally it is safer to use TCP, because
+            lost connections can be detected, and no messages get lost, assuming that the TCP
+            connection does not break. When a TCP connection is broken the 'in-transit' messages
+            that were sent by syslog-ng but not yet received on the other side are lost.
+            (Basically these messages are still sitting in the socket buffer of the sending host
+            and syslog-ng has no information about the fate of these messages). </para>
+        <para>The <parameter>tcp()</parameter> and <parameter>udp()</parameter> drivers do not
+            have any required parameters. By default they bind to the
+            <parameter>0.0.0.0:514</parameter> address, which means that syslog-ng will listen
+            on all available interfaces, port 514. To limit accepted connections to only one
+            interface, use the <parameter>localip()</parameter> parameter as described below.
+            For the list of available optional parameters, see <xref
+                linkend="reference_source_tcpudp"/>.</para>
+    </simplesect>
 </chapter>
