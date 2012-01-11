@@ -11,9 +11,12 @@ endif
 
 MAKEMAKER=xml-stylesheet/scripts/Makemaker.py
 MAKECONF=Makefile.conf
+MAKEVARS=Makefile.vars
 MAKETARGETS=Maketargets.csv
 PYTHON=python
 
+# include the file containing the local variables(if exists)
+-include $(MAKEVARS)
 # include the generated config file
 include $(MAKECONF)
 
