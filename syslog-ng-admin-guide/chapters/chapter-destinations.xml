@@ -1017,7 +1017,46 @@
 	                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 	            </simplesect>  
 	        </section>
-	    </section>
+		</section>
+    <section id="configuring_destinations_network">
+        <title>Sending messages to a remote logserver using the RFC3164 protocol</title>
+        <para>The network() destination driver can send syslog messages conforming to RFC3164 from the network using the TCP and UDP networking protocols as well as the RLTP protocol. It is only possible to use the RLTP protocol by using the new format of the network() destination driver when setting up a TCP source.</para>
+        <para>The old format is still in use, however, it is advised to use the new format if you intend to use the RLTP protocol. In the following examples the old and the new format is described.</para>
+        <example id="example_destination_network">
+            <title>Using the network() driver</title>
+            <para>TCP source listening on the localhost on port 2222 without using the network() driver.</para>
+            <synopsis>destination d_tcp6 {
+        tcp6(
+            ip("::1")
+            port(2222)
+        );
+        };</synopsis>
+            <para>TCP source listening on the localhost on port 2222 using the network() driver.</para>
+            <synopsis>destination d_network6 {
+        network(
+            ip("::1")
+            port(2222)
+            transport(tcp)
+            ip-protocol(6)
+        );
+};</synopsis>
+        </example>
+        <note>For details on the <parameter>tcp()</parameter>, <parameter>tcp6()</parameter>, <parameter>udp()</parameter>, <parameter>udp6()</parameter> drivers, see <xref linkend="configuring_sources_tcpudp"/>.</note>
+        
+        <section id="reference_destination_network_chapter">
+            <title>network() destination options</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>network()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>network()</parameter> driver sends messages from a remote host (for example
+                a syslog-ng server or relay) on the local intranet or internet using the RFC3164 syslog protocol developed by BSD (for details about the protocol, see <xref linkend="concepts_message_bsdsyslog"/>). The
+                protocol supports sending messages using the UDP, TCP, RLTP or the encrypted TLS
+                networking protocols.</para>
+            <para id="table_destination_network_options">These destinations have the following options:</para> 
+            <xi:include href="section_common.xml" xpointer="xpointer(//section[@id = 'reference_destination_syslog']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </section>
+    </section>
         <section id="configuring_destinations_pipe">
             <title>Sending messages to named pipes</title>
             <indexterm>
@@ -2742,7 +2781,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             <para>The required arguments of the driver are the address of the destination host
                 (where messages should be sent). The transport method (networking protocol) is
                 optional, syslog-ng uses the TCP protocol by default. For the list of available
-                optional parameters, see <xref linkend="reference_destination_syslog"/>.</para>
+                optional parameters, see <xref linkend="reference_destination_syslog_chapter"/>.</para>
             <synopsis>Declaration:
                 syslog(host transport [options]);</synopsis>
             <note>
@@ -2778,171 +2817,18 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                 cert_file('/opt/syslog-ng/etc/syslog-ng/keys/client_certificate.pem'))
                 );};</synopsis>
             </example>
-            <section id="reference_destination_syslog">
+            <section id="reference_destination_syslog_chapter">
                 <title>syslog() destination options</title>
                 <indexterm>
                     <primary>destination drivers</primary>
                     <secondary><parameter>syslog()</parameter> driver</secondary>
                 </indexterm>
                 <para>The <parameter>syslog()</parameter> driver sends messages to a remote host (for example
-                    a syslog-ng server or relay) on the local intranet or internet using the RFC5424 syslog protocol developed by IETF (for details about the protocol, see <xref
-                        linkend="concepts_message_ietfsyslog"/>). The
+                    a syslog-ng server or relay) on the local intranet or internet using the RFC5424 syslog protocol developed by IETF (for details about the protocol, see <xref linkend="concepts_message_ietfsyslog"/>). The
                     protocol supports sending messages using the UDP, TCP, or the encrypted TLS
                     networking protocols.</para>
                 <para id="table_destination_syslog_options">These destinations have the following options:</para> 
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_diskbuffer']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect condition="pe">
-	                <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination-failover']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-	                <example id="example-failover-server-syslog">
-	                <title>Specifying failover servers for syslog() destinations</title>
-	                <para>The following example specifies two failover servers for a simple syslog() destination.</para>
-	                <synopsis>destination d_syslog_tcp{
-                syslog("10.100.20.40"
-                transport("tcp")
-                port(6514)
-                failover_servers("10.2.3.4", "myfailoverserver")
-                );};</synopsis>
-	                <para>The following example specifies a failover server for a TLS destination.</para>
-	                <synopsis>destination d_syslog_tls{
-	            syslog("10.100.20.40"
-                transport("tls")
-                port(6514)
-                failover_servers("10.2.3.4", "myfailoverserver")
-                tls(peer-verify(required-trusted)
-                ca_dir('/opt/syslog-ng/etc/syslog-ng/keys/ca.d/')
-                key_file('/opt/syslog-ng/etc/syslog-ng/keys/client_key.pem')
-                cert_file('/opt/syslog-ng/etc/syslog-ng/keys/client_certificate.pem'))
-                );};</synopsis>
-	            </example>
-	            </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>  
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>  
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>  
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>  
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_ip_tos']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>  
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_ip_ttl']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>  
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_keep_alive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>  
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_localip']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>  
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_localport']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect condition="pe">
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'diskbuffer_option_log_disk_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect condition="pe">
-	                <xi:include href="chapter-global-options.xml" xpointer="xpointer(//simplesect[@id = 'global_options_mark_freq']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-	            </simplesect>
-	            <simplesect condition="pe">
-	                <xi:include href="chapter-global-options.xml" xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-	            </simplesect>
-                <simplesect id="destination_option_port">
-                    <title>port() or destport()</title>
-                    <indexterm type="parameter">
-                        <primary>port() or destport()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>number</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>601</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>  
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> The port number to connect to. Note that the default port numbers
-                        used by syslog-ng do not comply with the latest RFC which was
-                        published after the release of syslog-ng 3.0.2, therefore the
-                        default port numbers will change in the future releases.</para>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_broadcast']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_rcvbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_sndbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_spoof_source']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_tls']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <title>transport</title>
-                    <indexterm type="parameter">
-                        <primary>transport</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>udp, tcp, or tls</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>tcp</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>  
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> Specifies the protocol used to receive messages from the source.</para>
-                    <simplesect>
-                        <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                    </simplesect>
-                </simplesect>
+                <xi:include href="section_common.xml" xpointer="xpointer(//section[@id = 'reference_destination_syslog']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </section>
         </section>
         <section id="configuring_destinations_tcpudp">
@@ -2988,7 +2874,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                 <synopsis>destination d_tcp { tcp("target_host" port(1999) localport(999)); };</synopsis>
                 <para>To send messages using the IETF-syslog message format without using the IETF-syslog protocol, enable the <parameter>syslog-protocol</parameter> flag:</para>
                 <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999) flags(syslog-protocol) ); };</synopsis>
-                <para>(For details on how to use the IETF-syslog protocol, see <xref linkend="reference_destination_syslog"/>.)</para>
+                <para>(For details on how to use the IETF-syslog protocol, see <xref linkend="reference_destination_syslog_chapter"/>.)</para>
                 <para>Using an IPv6 address:</para>
                 <synopsis>tcp6("fd00:abcd:4321:2:20c:29ff:fea8:9671" port(514));</synopsis>
             </example>
