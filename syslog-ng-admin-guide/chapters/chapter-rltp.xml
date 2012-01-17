@@ -18,7 +18,104 @@
             <primary>transport</primary>
             <secondary>TCP</secondary>
         </indexterm>
-        <para>The syslog-ng application can send and receive log messages in a reliable way over the TCP transport layer using the Reliable Log Transfer Protocol (RLTP). RLTP is a new transport protocol that prevents message loss during connection breaks. It detects the last received message on the receiving end and then starts resending messages from that point. Therefore, messages are not duplicated at the receiving end in case of a connection break. This protocol allows a message rate of at least 200k message/second. It also allows the negotiation of using TLS with a single source driver (for example negotiation at the beginning of the connection).</para>
-        <para>The transport is used between syslog-ng and syslog-ng and it interoperates with the flow control mechanism. It is used on top of TCP, and uses TLS for encryption. RLTP supports IPv4 and IPv6 addresses. Inside the RLTP message, the format can be RFC3164 (BSD syslog) or RFC5424 (IETF syslog).</para>
+        <para>The syslog-ng application can send and receive log messages in a reliable way over the TCP transport layer using the Reliable Log Transfer Protocol (RLTP). RLTP is a new transport protocol that prevents message loss during connection breaks. It detects the last received message on the receiving end and then starts resending messages from that point. Therefore, messages are not duplicated at the receiving end in case of a connection break (however, in failover mode this is not completely ensured). This protocol allows a message rate of at least 200k message/second. It also allows the negotiation of using TLS with a single source driver (for example negotiation at the beginning of the connection).</para>
+        <para>The transport is used between syslog-ng and syslog-ng and it interoperates with the flow control mechanism. It is used on top of TCP, and uses TLS for encryption. RLTP supports IPv4 and IPv6 addresses. Inside the RLTP message, the format can be RFC3164 (BSD syslog) or RFC5424 (IETF syslog). RLTP uses the STARTTLS mechanism used by various Internet protocols (FTP, POP3, SMTP and so on) to encrypt and decrypt the communication between the hosts. The default port of RLTP is <parameter>35514</parameter>.</para>
+        <para>RLTP can be added to the configuration like a transport protocol within the <parameter>syslog()</parameter> driver and the <parameter>network()</parameter> driver.</para>
     </section>
+    <section>
+        <title>RLTP options</title>
+        <simplesect>
+            <title>client_response_timeout()</title>
+            <indexterm type="parameter">
+                <primary>client_response_timeout()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>number (seconds)</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>60</entry>
+                        </row>
+                    </tbody>
+                </tgroup>  
+            </informaltable>
+            <para><guilabel>Description:</guilabel> After not receiving any messages in the given timeframe, syslog-ng terminates the connection with the other side.</para>
+        </simplesect>
+        <simplesect>
+            <title>message_acknowledgement_timeout()</title>
+            <indexterm type="parameter">
+                <primary>message_acknowledgement_timeout()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>number (seconds)</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>900</entry>
+                        </row>
+                    </tbody>
+                </tgroup>  
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The client sends "<parameter>.</parameter>" to the server, waiting for an answer. After not receiving any messages in the given timeframe, syslog-ng terminates the connection with the other side</para>
+        </simplesect>
+        <simplesect>
+            <title>server_response_timeout()</title>
+            <indexterm type="parameter">
+                <primary>server_response_timeout()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>number (seconds)</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>60</entry>
+                        </row>
+                    </tbody>
+                </tgroup>  
+            </informaltable>
+            <para><guilabel>Description:</guilabel>  After not receiving any messages in the given timeframe, syslog-ng terminates the connection with the other side</para>
+        </simplesect>
+        <simplesect>
+            <title>tls_required()</title>
+            <indexterm type="parameter">
+                <primary>tls_required()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>yes, optional, no</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>optional</entry>
+                        </row>
+                    </tbody>
+                </tgroup>  
+            </informaltable>
+            <para><guilabel>Description:</guilabel> Determines whether STARTTLS is to be used during communication. This option can be used both on client and server side, however, server side is the decisive one. For example, if on server side <parameter>tls_required(yes)</parameter> and on client side <parameter>tls_required(no)</parameter>, the connection is dropped. If the option is set to <parameter>yes</parameter> or <parameter>optional</parameter>, setting up <parameter>tls()</parameter> context is required.</para>
+        </simplesect>
+    </section>
+    
 </chapter>
