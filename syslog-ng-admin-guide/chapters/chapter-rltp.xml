@@ -91,7 +91,7 @@
                     </tbody>
                 </tgroup>  
             </informaltable>
-            <para><guilabel>Description:</guilabel>  After not receiving any message in the given timeframe, syslog-ng terminates the connection with the other side</para>
+            <para><guilabel>Description:</guilabel> After not receiving any message in the given timeframe, syslog-ng terminates the connection with the other side</para>
         </simplesect>
         <simplesect>
             <title>tls_required()</title>
@@ -114,8 +114,73 @@
                     </tbody>
                 </tgroup>  
             </informaltable>
-            <para><guilabel>Description:</guilabel> Determines whether STARTTLS is to be used during communication. If the option is set to <parameter>yes</parameter> or <parameter>optional</parameter>, setting up <parameter>tls()</parameter> context is required. This option can be used both on client and server side, however, server side is the decisive one. For example, if on server side <parameter>tls_required(yes)</parameter> and on client side <parameter>tls_required(no)</parameter>, the connection is dropped.</para>
+            <para><guilabel>Description:</guilabel> Determines whether STARTTLS is to be used during communication. If the option is set to <parameter>yes</parameter> or <parameter>optional</parameter>, setting up <parameter>tls()</parameter> context is required. This option can be used both on client and server side, however, server side is the decisive one (except if one of them is set to <parameter>optional</parameter> in which case the other side is the decisive one). For example, if on server side <parameter>tls_required(yes)</parameter> and on client side <parameter>tls_required(no)</parameter>, the connection is dropped.</para>
         </simplesect>
     </section>
-    
+    <section>
+        <title>Examples for using <trademark>RLTP</trademark></title>
+        <example>
+            <title></title>
+            <para>For both source and destination sides, <parameter>tls_required</parameter> is set to optional, therefore they will communicate through TLS. For the server (source side) the <parameter>server_response_timeout</parameter> and <parameter>message_acknowledgement_timeout</parameter> settings ensure that the connection is terminated if no messages are received in the set timeframes. For the client (destination side), the reliable disk-buffer is set to yes, to prevent data loss.</para>
+            <para><emphasis>source</emphasis></para>
+            <synopsis>source s_syslog_rltp {
+        syslog(
+            ip("127.0.0.1")
+            port("4444")
+            transport(rltp(tls_required(optional) server_response_timeout(20) message_acknowledgement_timeout(10) ))
+            ip-protocol(4)
+            tls(
+                peer-verify(required-trusted)
+                ca_dir("/var/tmp/client/")
+                key_file("/var/tmp/server/server_priv.key")
+                cert_file("/var/tmp/server/server.crt")
+            )
+        );
+};</synopsis>
+            <para><emphasis>destination</emphasis></para>
+            <synopsis>destination d_syslog_rltp {
+        syslog(
+            "127.0.0.1"
+            port("4444")
+            transport(rltp(tls_required(optional)))
+            ip-protocol(4)
+            disk-buffer( mem-buf-size(200000) disk-buf-size(2000000) reliable(yes) )
+            tls(
+                peer-verify(required-trusted)
+                ca_dir("/var/tmp/server/")
+                key_file("/var/tmp/client/client_priv.key")
+                cert_file("/var/tmp/client/client.crt")
+            )
+        );
+};</synopsis>
+        </example>
+        <example>
+            <title>RLTP with tls_required()</title>
+            <para>The source and the destination would communicate through the network protocol, but since <parameter>tls_required</parameter> is set to <parameter>yes</parameter> on the server side and <parameter>no</parameter> on the client side, the connection is terminated by the server.</para>
+            <para><emphasis>source</emphasis></para>
+            <synopsis>source s_network_rltp {
+        network(
+            ip("127.0.0.1")
+            port("5555")
+            transport(rltp(tls_required(yes) ))
+            ip-protocol(4)
+            tls(
+                peer-verify(required-trusted)
+                ca_dir("/var/tmp/client/")
+                key_file("/var/tmp/server/server_priv.key")
+                cert_file("/var/tmp/server/server.crt")
+            )
+        );
+};</synopsis>
+            <para><emphasis>destination</emphasis></para>
+            <synopsis>destination d_network_rltp {
+        network(
+            "127.0.0.1"
+            port("5555")
+            transport(rltp(tls_required(no) client_response_timeout(20)))
+            ip-protocol(4)
+        );
+};</synopsis>
+        </example>
+    </section>
 </chapter>
