@@ -18,35 +18,12 @@
             <primary>transport</primary>
             <secondary>TCP</secondary>
         </indexterm>
-        <para>The syslog-ng application can send and receive log messages in a reliable way over the TCP transport layer using the <trademark>Reliable Log Transfer Protocol</trademark> (<trademark>RLTP</trademark>). <trademark>RLTP</trademark> is a new transport protocol that prevents message loss during connection breaks. It detects the last received message on the receiving end and then starts resending messages from that point. Therefore, messages are not duplicated at the receiving end in case of a connection break (however, in failover mode this is not completely ensured). <!-- This protocol allows a message rate of at least 200k message/second. --> It also allows the negotiation of using TLS with a single source driver (for example negotiation at the beginning of the connection).</para>
-        <para>The transport is used between syslog-ng and syslog-ng and it interoperates with the flow control mechanism. It is used on top of TCP, and can use STARTTLS for encryption. <trademark>RLTP</trademark> supports IPv4 and IPv6 addresses. Inside the <trademark>RLTP</trademark> message, the format can be RFC3164 (BSD syslog) or RFC5424 (IETF syslog). The default port of <trademark>RLTP</trademark> is <parameter>35514</parameter>.</para>
+        <para>The syslog-ng application can send and receive log messages in a reliable way over the TCP transport layer using the <trademark>Reliable Log Transfer Protocol</trademark> (<trademark>RLTP</trademark>). <trademark>RLTP</trademark> is a new transport protocol that prevents message loss during connection breaks. The transport is used between syslog-ng and syslog-ng and it interoperates with the flow control and reliable disk-buffer mechanisms, thus providing the best loss-less environment. It detects the last received message on the receiving end and then starts resending messages from that point. Therefore, messages are not duplicated at the receiving end in case of a connection break (however, in failover mode this is not completely ensured). <!-- This protocol allows a message rate of at least 200k message/second. --> It also allows the negotiation of using TLS with a single source driver (for example negotiation at the beginning of the connection).</para>
+        <para>It is used on top of TCP, and can use STARTTLS for encryption. <trademark>RLTP</trademark> supports IPv4 and IPv6 addresses. Inside the <trademark>RLTP</trademark> message, the format can be RFC3164 (BSD syslog) or RFC5424 (IETF syslog). The default port of <trademark>RLTP</trademark> is <parameter>35514</parameter>.</para>
         <para><trademark>RLTP</trademark> can be added to the configuration like a transport protocol within the <parameter>syslog()</parameter> driver and the <parameter>network()</parameter> driver.</para>
     </section>
     <section>
         <title><trademark>RLTP</trademark> options</title>
-        <simplesect>
-            <title>client_response_timeout()</title>
-            <indexterm type="parameter">
-                <primary>client_response_timeout()</primary>
-            </indexterm>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="2">
-                    <tbody>
-                        <row>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>number (seconds)</entry>
-                        </row>
-                        <row>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>60</entry>
-                        </row>
-                    </tbody>
-                </tgroup>  
-            </informaltable>
-            <para><guilabel>Description:</guilabel> After not receiving any message in the given timeframe, syslog-ng terminates the connection with the other side.</para>
-        </simplesect>
         <simplesect>
             <title>message_acknowledgement_timeout()</title>
             <indexterm type="parameter">
@@ -71,9 +48,9 @@
             <para><guilabel>Description:</guilabel> After not receiving any reply to the messages in the given timeframe, syslog-ng terminates the connection with the other side</para>
         </simplesect>
         <simplesect>
-            <title>server_response_timeout()</title>
+            <title>response_timeout()</title>
             <indexterm type="parameter">
-                <primary>server_response_timeout()</primary>
+                <primary>response_timeout()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -121,13 +98,13 @@
         <title>Examples for using <trademark>RLTP</trademark></title>
         <example>
             <title></title>
-            <para>For both source and destination sides, <parameter>tls_required</parameter> is set to optional, therefore they will communicate through TLS. For the server (source side) the <parameter>server_response_timeout</parameter> and <parameter>message_acknowledgement_timeout</parameter> settings ensure that the connection is terminated if no messages are received in the set timeframes. For the client (destination side), the reliable disk-buffer is set to yes, to prevent data loss.</para>
+            <para>For both source and destination sides, <parameter>tls_required</parameter> is set to optional, therefore they will communicate through TLS. For the server (source side) the <parameter>response_timeout</parameter> and <parameter>message_acknowledgement_timeout</parameter> settings ensure that the connection is terminated if no messages are received in the set timeframes. For the client (destination side), the reliable disk-buffer is set to yes, to prevent data loss.</para>
             <para><emphasis>source</emphasis></para>
             <synopsis>source s_syslog_rltp {
         syslog(
             ip("127.0.0.1")
             port("4444")
-            transport(rltp(tls_required(optional) server_response_timeout(20) message_acknowledgement_timeout(10) ))
+            transport(rltp(tls_required(optional) response_timeout(20) message_acknowledgement_timeout(10) ))
             ip-protocol(4)
             tls(
                 peer-verify(required-trusted)
@@ -177,7 +154,7 @@
         network(
             "127.0.0.1"
             port("5555")
-            transport(rltp(tls_required(no) client_response_timeout(20)))
+            transport(rltp(tls_required(no) response_timeout(20)))
             ip-protocol(4)
         );
 };</synopsis>
