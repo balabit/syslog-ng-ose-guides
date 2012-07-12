@@ -921,6 +921,35 @@ destination d_file {
                     <!-- FIXME link a modulokrol szolo leirasra-->
                 </note>
             </simplesect>
+            <simplesect id="template-function-uuid" condition="ose">
+                <title>uuid</title>
+                    <indexterm type="parameter">
+                        <primary>uuid</primary>
+                    </indexterm>
+                <para><guilabel>Syntax:</guilabel> <synopsis>$(uuid)</synopsis></para>
+                <para><guilabel>Description:</guilabel> Generates a Universally Unique IDentifier (UUID). That way, an UUID can be added to the message as soon as received, so messages stored in multiple destinations can be identified. For example, when storing messages in a database and also in files, the UUID can be used to find a particular message both in the database and the files.</para>
+                <para>To generate a UUID, you can use a rewrite rule to create a new value-pair for the message.</para>
+                <example>
+                    <title>Using Universally Unique Identifiers</title>
+                    <para>The following example adds a value-pair called <parameter>MESSAGE_UUID</parameter> to the message using a rewrite rule and a template.</para>
+                </example>
+                <synopsis>rewrite r_add_uuid { set("$(uuid)" value("MESSAGE_UUID")); };
+destination d_file {
+    file ("/var/log/messages"
+          template("$MESSAGE_UUID $ISODATE $HOST $MSG\n")
+          template_escape(no)
+         );
+};
+
+log { source(s_network);
+      rewrite(r_add_uuid);
+      destination(d_file);
+};</synopsis>
+                <note>
+                    <para>This template function is available only if the <filename>tfuuid</filename> module has been loaded. By default, &abbrev; loads every available module.</para>
+                    <!-- FIXME link a modulokrol szolo leirasra-->
+                </note>
+            </simplesect>
         </section>
     </section>
     <section id="modifying-messages">
