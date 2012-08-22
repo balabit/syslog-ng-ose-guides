@@ -12,7 +12,7 @@ endif
 MAKEMAKER=xml-stylesheet/scripts/Makemaker.py
 MAKECONF=Makefile.conf
 MAKEVARS=Makefile.vars
-MAKETARGETS=Maketargets.csv
+MAKETARGETS=Maketargets.json
 PYTHON=python
 
 # include the file containing the local variables(if exists)
@@ -27,7 +27,7 @@ setup: targetdbs olinkdbs
 
 setup: realsetup
 
-$(MAKECONF): $(MAKEMAKER) $(MAKETARGETS) xml-stylesheet/scripts/Makestubs.py 
+$(MAKECONF): $(MAKEMAKER) $(MAKETARGETS) xml-stylesheet/scripts/Makestubs.py
 	$(PYTHON) $(MAKEMAKER) $@
 
 xml-stylesheet:
@@ -38,11 +38,10 @@ $(MAKEMAKER): xml-stylesheet
 
 targetdbs:
 	mkdir -p targetdbs
-	
+
 clean:
 	-rm -rf out/*
 	-rm -rf targetdbs $(MAKECONF)
-	
 
 # MANSOURCES and OLINKDBS_IN must be .PHONY otherwise they won't be regenerated everytime.
 .PHONY: targetdbs olinkdbs clean setup realsetup $(PDF_OUTPUTS) $(HTML_OUTPUTS) manpages $(MANSOURCES) $(OLINKDBS_IN) xml-stylesheet
