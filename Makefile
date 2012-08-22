@@ -23,11 +23,11 @@ include $(MAKECONF)
 all: xml-stylesheet setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
 
 setup: targetdbs olinkdbs
+
+out:
 	mkdir -p out
 
-setup: realsetup
-
-$(MAKECONF): $(MAKEMAKER) $(MAKETARGETS) xml-stylesheet/scripts/Makestubs.py
+$(MAKECONF): out $(MAKEMAKER) $(MAKETARGETS) xml-stylesheet/scripts/Makestubs.py
 	$(PYTHON) $(MAKEMAKER) $@
 
 xml-stylesheet:
