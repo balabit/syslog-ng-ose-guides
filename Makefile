@@ -10,6 +10,7 @@ GIT_BASE=/var/scm/git
 endif
 
 MAKEMAKER=xml-stylesheet/scripts/Makemaker.py
+MASTER_MAKEFILE=xml-stylesheet/scripts/Makefile
 MAKECONF=Makefile.conf
 MAKEVARS=Makefile.vars
 MAKETARGETS=Maketargets.json
@@ -22,7 +23,15 @@ include $(MAKECONF)
 
 all: xml-stylesheet setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
 
-setup: targetdbs olinkdbs
+selfcheck: xml-stylesheet Makefile $(MASTER_MAKEFILE)
+	@if ! diff Makefile $(MASTER_MAKEFILE) 2>&1 >/dev/null; then \
+		echo ==============================================; \
+		echo "Master Makefile '$(MASTER_MAKEFILE)' differs from the repository's Makefile."; \
+		echo "Please update your repository's Makefile."; \
+		echo ==============================================; \
+	fi
+
+setup: selfcheck xml-stylesheet targetdbs olinkdbs
 
 out:
 	mkdir -p out
