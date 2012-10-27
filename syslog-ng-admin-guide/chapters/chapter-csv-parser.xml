@@ -327,5 +327,88 @@ log { source(s_local);
                                 the log path. By default, this is empty and the parser processes the
                                 entire message. For examples, see <xref linkend="example_parser"/> and <xref linkend="example_parser_multiple"/>.</para>
             </simplesect>
-        </section>
+    </section>
+	<section>
+		<title>The JSON parser</title>
+		<indexterm>
+			<primary>segmenting messages</primary>
+		</indexterm>
+		<indexterm>
+			<primary>JSON parsers</primary>
+		</indexterm>
+		<indexterm>
+			<primary>splitting messages</primary>
+		</indexterm>
+		<para>The syslog-ng application can separate parts of JSON encoded log messages to name-value pairs, using json-c.</para>
+		<para>To create a parser, define the parser name, the parser itself. Defining the prefix and the marker are optional.</para>
+		<synopsis>Declaration:
+    parser parser_name {
+        json-parser(
+        marker()
+        prefix()
+    ); 
+};</synopsis>
+		<simplesect id="jdon-parser-marker">
+			<title>marker</title>
+			<indexterm type="parameter">
+				<primary>marker</primary>
+			</indexterm>
+			<informaltable frame="topbot" colsep="0" rowsep="0">
+				<tgroup cols="2">
+					<colspec colnum="1" colwidth="50pt"/>
+					<tbody>
+						<row>
+							<entry>Synopsis:
+								<?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+							<entry>marker()</entry>
+						</row>
+					</tbody>
+				</tgroup>  
+			</informaltable>
+			<para><guilabel>Description:</guilabel> Use a marker in case of mixed log messages, to identify JSON encoded messages for the parser.</para>
+		</simplesect>
+		<simplesect id="jdon-parser-prefix">
+			<title>prefix</title>
+			<indexterm type="parameter">
+				<primary>prefix</primary>
+			</indexterm>
+			<informaltable frame="topbot" colsep="0" rowsep="0">
+				<tgroup cols="2">
+					<colspec colnum="1" colwidth="50pt"/>
+					<tbody>
+						<row>
+							<entry>Synopsis:
+								<?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+							<entry>prefix()</entry>
+						</row>
+					</tbody>
+				</tgroup>  
+			</informaltable>
+			<para><guilabel>Description:</guilabel> The prefix inserts a prefix before the name-value pairs to facilitate further processing.</para>
+		</simplesect>
+		<example>
+			<title>Using a JSON parser</title>
+			<para>In the following example, the source is a JSON encoded log message. The syslog parser is disabled, so that the syslog-ng does not parse the message: <parameter>flags(no-parse)</parameter>. The json-parser inserts "<parameter>.json.</parameter>" before all extracted name-value pairs. The destination is a file, that uses the JSON template function. Here, the dot-nv-pairs are written, that include name-value pairs beginning with a dot ("<parameter>.</parameter>"). The log line connects the source, the destination and the parser.</para>
+			<synopsis>source s_json { 
+    tcp(port(21514) flags(no-parse)); 
+};
+			
+destination d_json {
+    file("/tmp/test.json"
+        template("$(format-json --scope dot-nv-pairs)\n"));
+};
+
+parser p_json {
+    json-parser (prefix(".json.")); 
+};
+
+log {
+    source(s_json); 
+    parser(p_json); 
+    destination(d_json); 
+};</synopsis>
+		</example>
+		
+		
+	</section>
 </chapter>
