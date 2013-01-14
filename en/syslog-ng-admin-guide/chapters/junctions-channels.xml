@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section SYSTEM "../../xml-stylesheet/pdf/dtd/docbookx.dtd"
+ [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]>
+<section id="junctions">
+    <title>Junctions and channels</title>
+    <para>Embedded log statements are like branches: they split the flow of messages into separate paths, and the different paths do not meet again, and messages processed on different embedded log statements cannot be combined together for further processing.</para>
+    <para>Junctions make it possible to split the messages to different channels, process the messages differently on each channel, and to join every channel together again.</para>
+<!--
+    FIXME abra
+-->
+    <para>A junction includes one or more channels. A channel usually includes at least one filter, though that is not enforced. Otherwise, channels are identical to log statements, and can include any kind of objects, for example, parsers, rewrite rules, destinations, and so on.</para>
+    <synopsis>junction {
+    channel { &lt;other-syslog-ng-objects&gt; &lt;log-path-flags&gt;}
+    channel { &lt;other-syslog-ng-objects&gt; &lt;log-path-flags&gt;}
+    ...
+    }</synopsis>
+    <para>For example:</para>
+    <!--FIXME kellene egy egyszeru, de ertelmes pelda, ez nem jo-->
+    <synopsis>log {
+    source(s_apache_files);
+    source(s_syslog);
+    junction {
+        channel { filter(f_apache_files); rewrite(r_apache_remove_file_header); parser(p_apache); flags(final); };
+        channel { filter(f_apache_syslog); parser(p_apache); flags(final); };
+    };
+    destination(d_files);
+};</synopsis>
+</section>
