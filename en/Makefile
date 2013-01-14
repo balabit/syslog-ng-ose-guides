@@ -21,7 +21,7 @@ PYTHON=python
 # include the generated config file
 include $(MAKECONF)
 
-all: xml-stylesheet setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
+all: xml-stylesheet setup $(HTML_OUTPUTS) $(PDF_OUTPUTS) $(MANPAGES)
 
 selfcheck: xml-stylesheet Makefile $(MASTER_MAKEFILE)
 	@if ! diff Makefile $(MASTER_MAKEFILE) 2>&1 >/dev/null; then \
