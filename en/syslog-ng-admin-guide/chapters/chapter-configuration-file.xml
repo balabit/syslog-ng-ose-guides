@@ -105,7 +105,10 @@ source s_demo_stream2 {
                 <listitem>
                     <para>Objects can be used before definition.</para>
                 </listitem>
-               <listitem>
+                <listitem>
+                    <para>Objects can be defined inline as well. This is useful if you use the object only once (for example, a filter). For details, see <xref linkend="inline-objects"/>.</para>
+                </listitem>
+                <listitem>
                     <para>To add comments to the configuration file, start a line with <parameter>#</parameter> and write your comments. These lines are ignored by syslog-ng.</para>
                     <synopsis># Comment: This is a stream source
 source s_demo_stream {
@@ -156,6 +159,36 @@ source s_demo_stream {
                     <para>For notes on using regular expressions, see <xref linkend="regular-expressions"/>.</para>
                 </listitem>
             </itemizedlist>
+        </section>
+        <section id="inline-objects" condition="ose">
+            <title>Defining configuration objects inline</title>
+            <para>Starting with &abbrev; <phrase condition="ose">3.4</phrase>, you can define configuration objects inline, where they are actually used, without having to define them in a separate placement. This is useful if you need an object only once, for example, a filter or a rewrite rule. Every object can be defined inline: sources, destinations, filters, parsers, rewrite rules, and so on.</para>
+            <para>To define an object inline, use braces instead of parentheses. That is, instead of <parameter>&lt;object-type&gt; (&lt;object-id&gt;);</parameter>, you use <parameter>&lt;object-type&gt; {&lt;object-definition&gt;};</parameter></para>
+            <example>
+                <title>Using inline definitions</title>
+                <para>The following two configuration examples are equivalent. The first one uses traditional statements, while the second uses inline definitions.</para>
+                <synopsis>source s_local {
+    system();
+    internal();
+};
+destination d_local {
+    file("/var/log/messages");
+};
+log {
+    source(s_local);
+    destination(d_local);
+};
+</synopsis>
+            <synopsis>log {
+    source {
+        system();
+        internal();
+    };
+    destination {
+        file("/var/log/messages");s
+    };
+};</synopsis>
+            </example>
         </section>
         <xi:include href="embedded-objects.xml" xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="xpointer(//section[@id='embedded-objects'])"/>
     <section id="config-global-variables">
