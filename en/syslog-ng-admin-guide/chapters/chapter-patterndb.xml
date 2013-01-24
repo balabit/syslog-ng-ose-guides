@@ -453,6 +453,14 @@
         &lt;/message&gt;
     &lt;/action&gt;
 &lt;/actions&gt;</synopsis>
+        </example>
+        <para>For details on configuring actions, see the description of the <link linkend="patterndb-schema-actions">pattern database format</link>.</para>
+        <section id="patterndb-actions-conditional">
+            <title>Conditional actions</title>
+            <indexterm>
+                <primary>actions</primary>
+                <secondary>conditional actions</secondary>
+            </indexterm>
             <para>To limit when a message is triggered, use the <parameter>condition</parameter> attribute and specify a filter expression: the action will be executed only if the condition is met. For example, the following action is executed only if the message was sent by the host called <parameter>myhost</parameter>.</para>
             <synopsis>&lt;action condition="'${HOST}' == 'example'"&gt;</synopsis>
             <para>The following action can be used to log the length of an SSH session (the time difference between a login and a logout message in the context):</para>
@@ -465,56 +473,69 @@
         &lt;/message&gt;
     &lt;/action&gt;
 &lt;/actions&gt;</synopsis>
-        </example>
-        <para>For details on configuring actions, see the description of the <link linkend="patterndb-schema-actions">pattern database format</link>.</para>
-        <para>To perform an external action when a message is triggered, for example, to send the message in an e-mail, you have to route the generated messages to an external application using the <parameter>program()</parameter> destination.</para>
-        <example id="example-trigger-email">
-            <title>Sending triggered messages to external applications</title>
-            <para>The following sample configuration selects the triggered messages and sends them to an external script.</para>
-            <orderedlist>
-                <listitem>
-                    <para>Set a field in the triggered message that is easy to identify and filter. For example:</para>
-                    <synopsis>&lt;values&gt;
+        </section>
+        <section id="patterndb-actions-external">
+            <title>External actions</title>
+            <indexterm>
+                <primary>actions</primary>
+                <secondary>external actions</secondary>
+            </indexterm>
+            <para>To perform an external action when a message is triggered, for example, to send the message in an e-mail, you have to route the generated messages to an external application using the <parameter>program()</parameter> destination.</para>
+            <example id="example-trigger-email">
+                <title>Sending triggered messages to external applications</title>
+                <para>The following sample configuration selects the triggered messages and sends them to an external script.</para>
+                <orderedlist>
+                    <listitem>
+                        <para>Set a field in the triggered message that is easy to identify and filter. For example:</para>
+                        <synopsis>&lt;values&gt;
     &lt;value name="MESSAGE"&gt;A log message from $HOST matched rule number $.classifier.rule_id&lt;/value&gt;
     &lt;value name="TRIGGER"&gt;yes&lt;/value&gt;
 &lt;/values&gt;</synopsis>
-                </listitem>
-                <listitem>
-                    <para>Create a destination that will process the triggered messages.</para>
-                    <synopsis>destination d_triggers { program("/bin/myscript"; ); };</synopsis>
-                </listitem>
-                <listitem>
-                    <para>Create a filter that selects the triggered messages from the internal source.</para>
-                    <synopsis>filter f_triggers {match("yes" value ("TRIGGER") type(string));};</synopsis>
-                </listitem>
-                <listitem>
-                    <para>Create a logpath that selects the triggered messages from the internal source and sends them to the script:</para>
-                    <synopsis>log { source(s_local); filter(f_triggers); destination(d_triggers); };</synopsis>
-                </listitem>
-                <listitem>
-                    <para>Create a script that will actually process the generated messages, for example:</para>
-                    <synopsis>#!/usr/bin/perl
+                    </listitem>
+                    <listitem>
+                        <para>Create a destination that will process the triggered messages.</para>
+                        <synopsis>destination d_triggers { program("/bin/myscript"; ); };</synopsis>
+                    </listitem>
+                    <listitem>
+                        <para>Create a filter that selects the triggered messages from the internal source.</para>
+                        <synopsis>filter f_triggers {match("yes" value ("TRIGGER") type(string));};</synopsis>
+                    </listitem>
+                    <listitem>
+                        <para>Create a logpath that selects the triggered messages from the internal source and sends them to the script:</para>
+                        <synopsis>log { source(s_local); filter(f_triggers); destination(d_triggers); };</synopsis>
+                    </listitem>
+                    <listitem>
+                        <para>Create a script that will actually process the generated messages, for example:</para>
+                        <synopsis>#!/usr/bin/perl
 while (&lt;&gt;) {
         # body of the script to send emails, snmp traps, and so on
 }</synopsis>
+                    </listitem>
+                </orderedlist>
+            </example>
+        </section>
+        <section id="patterndb-actions-correlation">
+            <title>Actions and message correlation</title>
+            <indexterm>
+                <primary>actions</primary>
+                <secondary>message correlation</secondary>
+            </indexterm>
+            <para>Certain features of generating messages can be used only if message correlation is used as well.</para>
+            <itemizedlist>
+                <listitem>
+                    <para>The &abbrev; application automatically fills the fields for the generated message based on the scope of the context, for example, the HOST and PROGRAM fields if the <parameter>context-scope</parameter> is <parameter>program</parameter>.</para>
                 </listitem>
-            </orderedlist>
-        </example>
-        <para>Certain features of generating messages can be used only if message correlation is used as well.</para>
-        <itemizedlist>
-            <listitem>
-                <para>The &abbrev; application automatically fills the fields for the generated message based on the scope of the context, for example, the HOST and PROGRAM fields if the <parameter>context-scope</parameter> is <parameter>program</parameter>.</para>
-            </listitem>
-            <listitem>
-                <!-- FIXME most of this para is copied to the colleration section -->
-                <para>When used together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <parameter>@&lt;distance-of-referenced-message-from-the-current&gt;</parameter> suffix to the macro. For details, see <xref linkend="referencing-previous-messages"/>.</para>
-            </listitem>
-            <listitem>
-                <para>It is possible to generate a message when the <parameter>context-timeout</parameter> of the original message expires and no new message is added to the context during this time. To accomplish this, include the <parameter>trigger="timeout"</parameter> attribute in the action element:</para>
-                <synopsis>&lt;action trigger="timeout"&gt;</synopsis>
-            </listitem>
-        </itemizedlist>
-        <para>For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
+                <listitem>
+                    <!-- FIXME most of this para is copied to the colleration section -->
+                    <para>When used together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <parameter>@&lt;distance-of-referenced-message-from-the-current&gt;</parameter> suffix to the macro. For details, see <xref linkend="referencing-previous-messages"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>It is possible to generate a message when the <parameter>context-timeout</parameter> of the original message expires and no new message is added to the context during this time. To accomplish this, include the <parameter>trigger="timeout"</parameter> attribute in the action element:</para>
+                    <synopsis>&lt;action trigger="timeout"&gt;</synopsis>
+                </listitem>
+            </itemizedlist>
+            <para>For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
+        </section>
     </section>
     <section id="reference_parsers_pattern_databases">
         <title>Creating pattern databases</title>
