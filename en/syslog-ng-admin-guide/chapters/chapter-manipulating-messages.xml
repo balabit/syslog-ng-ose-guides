@@ -1041,6 +1041,57 @@ destination d_file {
                 <para><guilabel>Description:</guilabel> These template functions allow you to manipulate numbers, that is, to perform addition (+), substraction (-), multiplication (*), division (/), and modulus (%). All of them require two numeric arguments. The result is <parameter>NaN</parameter> (Not-a-Number) if the parameters are not numbers, cannot be parsed, or if a division by zero would occur. For example, to add the value of two macros, use the following template function:</para>
                 <synopsis>$(+ "${&lt;MACRO1&gt;}" "${&lt;MACRO2&gt;}");</synopsis>
             </simplesect>
+            <simplesect id="template-function-sanitize" condition="ose">
+                <title>sanitize</title>
+                    <indexterm type="parameter">
+                        <primary>sanitize</primary>
+                    </indexterm>
+                <para><guilabel>Syntax:</guilabel> <synopsis>$(sanitize &lt;options&gt; "&lt;macro1&gt;" "&lt;macro2&gt; ...")</synopsis></para>
+                <para><guilabel>Description:</guilabel> This file replaces the special characters in macro values, for example, it can replace the slash (/) characters in a filename with the underscore (_) character. If you specify multiple arguments, they will be concatenated using the <parameter>/</parameter> character, so they can be used as separate directory levels when used in filenames.</para>
+                <para>The function has the following options:</para>
+                <variablelist>
+                    <varlistentry>
+                        <term>
+                            <parameter>--ctrl-chars or -c</parameter>
+                        </term>
+                        <listitem>
+                            <para>Filter control characters (characters that have an ASCII code of 32 or lower). This option is used by default.</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>
+                            <parameter>--invalid-chars &lt;characterlist&gt; or -i &lt;characterlist&gt;</parameter>
+                        </term>
+                        <listitem>
+                            <para>The list of characters to be replaced with underscores (_). The default list contains the <parameter>/</parameter> character. The following example replaces the \ and @ characters, so for example, fo\o@bar becomes foobar:</para>
+                            <synopsis>$(sanitize -i \@ $PROGRAM)</synopsis>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>
+                            <parameter>--no-ctrl-chars or -C</parameter>
+                        </term>
+                        <listitem>
+                            <para>Do not filter the control characters (characters that have an ASCII code of 32 or lower).</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>
+                            <parameter>--replacement &lt;replacement-character&gt; or -r &lt;replacement-character&gt;</parameter>
+                        </term>
+                        <listitem>
+                            <para>The character used to replace invalid characters. By default, this is the underscore (_). The following example replaces invalid characters with colons instead of underscores, so for example, foo/bar becomes foo;bar:</para>
+                            <synopsis>$(sanitize -r ; $PROGRAM)</synopsis>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+                <example>
+                    <title>Using the sanitize template function</title>
+                    <para>The following example uses the sanitize function on two macros, and the results are used as directory names in a file destination.</para>
+                    <synopsis>file("/var/log/$(sanitize $HOST $PROGRAM)/messages");</synopsis>
+                    <para>This is equivalent to <parameter>file("/var/log/$HOST/$PROGRAM/messages");</parameter>, but any slashes in the values of the $HOST and $PROGRAM macros are replaced with underscores.</para>
+                </example>
+            </simplesect>
             <simplesect id="template-function-strip" condition="ose">
                 <title>strip</title>
                     <indexterm type="parameter">
