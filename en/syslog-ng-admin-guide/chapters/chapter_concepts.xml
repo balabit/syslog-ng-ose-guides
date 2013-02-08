@@ -1258,7 +1258,7 @@
                                 <entry/>
                                 <entry>Type:
                                     <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                <entry>Name of a single macro to be included in selection</entry>
+                                <entry>A glob expression specifying the macros to be included in selection</entry>
                             </row>
                             <row>
                                 <entry/>
@@ -1268,11 +1268,7 @@
                             </row>
                             <row>
                                 <entry/>
-                                <entry namest="c2" nameend="c3"><guimenu>Description:</guimenu> This option selects the specified macros. The selected macros will be included as <parameter>MACRONAME = MACROVALUE</parameter>, that is using <parameter>key("HOST")</parameter> will result in <parameter>HOST = $HOST</parameter>.
-                                <note>
-                                    <para>The name of the macro cannot contain wildcards.</para>
-                                </note>
-                                <para>For example:</para>
+                                <entry namest="c2" nameend="c3"><guimenu>Description:</guimenu> This option selects the specified macros. The The selected macros will be included as <parameter>MACRONAME = MACROVALUE</parameter>, that is using <parameter>key("HOST")</parameter> will result in <parameter>HOST = $HOST</parameter>. Multiple macros can be selected using glob expressions. For details on globs, see <xref linkend="reference_regexp_glob"/>. For example:
                                 <synopsis>value-pairs(
         scope(rfc3164)
         key("HOST"))</synopsis>
@@ -1316,6 +1312,110 @@
         scope(rfc3164)
         pair("TIME" "$HOUR:$MIN")
         pair("MSGHDR" "$PROGRAM[$PID]: "))</synopsis>
+                                </entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </informaltable>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="3">
+                        <colspec colnum="1" colname="c1"/>
+                        <colspec colnum="2" colname="c2" colwidth="40pt"/>
+                        <colspec colnum="3" colname="c3"/>
+                        <tbody>
+                            <row>
+                                <entry><guimenu>rekey()</guimenu>
+                                    <indexterm type="parameter">
+                                        <primary>rekey()</primary>
+                                    </indexterm>
+                                </entry>
+                                <entry/>
+                                <entry/>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>Type:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>List of transformations</entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry>Default:
+                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>empty string</entry>
+                            </row>
+                            <row>
+                                <entry/>
+                                <entry namest="c2" nameend="c3"><guimenu>Description:</guimenu> This option allows you to manipulate and modify the name of the value-pairs. You can define transformations, which are are applied to the name-value pairs.
+                                    <itemizedlist>
+                                        <listitem>
+                                            <para>If <parameter>rekey()</parameter> is used within a <parameter>key()</parameter> option, the name-value pairs specified in the glob of the <parameter>key()</parameter> option are transformed.</para>
+                                        </listitem>
+                                        <listitem>
+                                            <para>If <parameter>rekey()</parameter> is used outside the <parameter>key()</parameter> option, every name-value pair of the <parameter>scope()</parameter> is transformed.</para>
+                                        </listitem>
+                                    </itemizedlist>
+                                    <para>The following transformations are available:</para>
+                                    <variablelist>
+                                        <varlistentry>
+                                            <term>
+                                                <command>add-prefix("&lt;my-prefix&gt;")</command>
+                                                <indexterm type="parameter">
+                                                    <primary>add-prefix()</primary>
+                                                </indexterm>
+                                            </term>
+                                            <listitem>
+                                                <para>Adds the specified prefix to every name. For example, <parameter>rekey( add-prefix("my-prefix."))</parameter></para>
+                                            </listitem>
+                                        </varlistentry>
+                                        <varlistentry>
+                                            <term>
+                                                <command>pattern("&lt;glob&gt;")</command>
+                                                <indexterm type="parameter">
+                                                    <primary>pattern()</primary>
+                                                </indexterm>
+                                            </term>
+                                            <listitem>
+                                                <para>Renames the name using the specified glob. For details on globs, see <xref linkend="reference_regexp_glob"/>.</para>
+                                            </listitem>
+                                        </varlistentry>
+                                        <varlistentry>
+                                            <term>
+                                                <command>replace("&lt;prefix-to-replace&gt;", "&lt;new-prefix&gt;")</command>
+                                                <indexterm type="parameter">
+                                                    <primary>replace()</primary>
+                                                </indexterm>
+                                            </term>
+                                            <listitem>
+                                                <para>Replaces a substring at the beginning of the key with another string. Only prefixes can be replaced. For example, <parameter>replace(".class", ",patterndb")</parameter> changes the beginning tag <parameter>.class</parameter> to <parameter>.patterndb</parameter></para>
+                                            </listitem>
+                                        </varlistentry>
+                                        <varlistentry>
+                                            <term>
+                                                <command>shift("&lt;number&gt;")</command>
+                                                <indexterm type="parameter">
+                                                    <primary>shift()</primary>
+                                                </indexterm>
+                                            </term>
+                                            <listitem>
+                                                <para>Cuts the specified number of characters from the beginning of the name.</para>
+                                            </listitem>
+                                        </varlistentry>
+                                    </variablelist>
+                                    <example id="example-value-pairs-rekey">
+                                        <title>Using the rekey() option</title>
+                                        <para>The following sample selects every value-pair that begins with <parameter>.cee.</parameter>, deletes this prefix by cutting 4 characters from the names, and adds a new prefix (<parameter>events.</parameter>).</para>
+                                        <synopsis>value-pairs(
+    key(".cee.*"
+        rekey(
+            shift(4)
+            add-prefix("events.")
+        )
+    )
+)</synopsis>
+                                        <para>The <parameter>rekey()</parameter> option can be used with the <parameter>format-json</parameter> template-function as well, using the following syntax:</para>
+                                        <synopsis>$(format-json --key .cee.* --rekey --shift 4 --add-prefix events.)</synopsis>
+                                    </example>
                                 </entry>
                             </row>
                         </tbody>
