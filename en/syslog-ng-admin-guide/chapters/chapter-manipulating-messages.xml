@@ -1311,14 +1311,30 @@ rewrite &lt;name_of_the_rule&gt; {
                 <para>The following example sets the HOST field of the message to
                     <parameter>myhost</parameter>. </para>
                 <synopsis>rewrite r_rewrite_set{set("myhost", value("HOST"));};</synopsis>
-                <para>The following example sets the sequence ID field of the RFC5424-formatted
-                    (IETF-syslog) messages to a fixed value.</para>
+                <para>For details on rewriting SDATA fields, see <xref linkend="custom-sdata-fields"/>.</para>
+            </example>
+        </section>
+        <section id="custom-sdata-fields">
+            <title>Creating custom SDATA fields</title>
+            <indexterm>
+                <primary>setting message fields</primary>
+            </indexterm>
+            <indexterm>
+                <primary>creating SDATA fields</primary>
+            </indexterm>
+            <indexterm>
+                <primary>modifying SDATA</primary>
+            </indexterm>
+            <para>If you use RFC5424-formatted (IETF-syslog) messages, you can also create custom fields in the SDATA part of the message (For details on the SDATA message part, see <xref linkend="ietfsyslog_structureddata"/>). According to RFC5424, the name of the field (its SD-ID) must not contain the <parameter>@</parameter> character for reserved SD-IDs. Custom SDATA fields must be in the following format: <parameter>name@&lt;private enterprise number&gt;</parameter>, for example, <parameter>mySDATA-field@18372.4</parameter>. (18372.4 is the private enterprise number of BalaBit IT Security, the developer of &abbrev;.)</para>
+            <example>
+                <title>Rewriting custom SDATA fields</title>
+                <para>The following example sets the sequence ID field of the RFC5424-formatted (IETF-syslog) messages to a fixed value. This field is a predefined SDATA field with a reserved SD-ID, therefore its name does not contain the <parameter>@</parameter> character.</para>
                 <synopsis>rewrite r_sd {
     set("55555" value(".SDATA.meta.sequenceId"));
 };</synopsis>
-                <para>It is also possible to set the value of a field that does not exist yet, and create a new name-value pair that is associated with the message. The following example created the <parameter>MODIFIED</parameter> field and sets its value to <parameter>yes</parameter>. If you use the <parameter>$MODIFIED</parameter> macro in a template or SQL table, its value will be <parameter>yes</parameter> for every message that was processed with this rewrite rule, and empty for every other message.</para>
+                <para>It is also possible to set the value of a field that does not exist yet, and create a new, custom name-value pair that is associated with the message. The following example creates the <parameter>MODIFIED@18372.4</parameter> field and sets its value to <parameter>yes</parameter>. If you use the <parameter>${MODIFIED@18372.4}</parameter> macro in a template or SQL table, its value will be <parameter>yes</parameter> for every message that was processed with this rewrite rule, and empty for every other message.</para>
                 <synopsis>rewrite r_rewrite_set {
-    set("yes", value("MODIFIED"));
+    set("yes", value("MODIFIED@18372.4"));
 };</synopsis>
             </example>
         </section>
