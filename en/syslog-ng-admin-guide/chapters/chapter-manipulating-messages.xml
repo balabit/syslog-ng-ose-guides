@@ -1080,78 +1080,79 @@ destination d_file {
                 <!-- FIXME bovebben, peldaval, filterekhez/rewrite sectionbe is -->
             </para>
         </note>
-        <para>To replace a part of the log message, define the string or regular expression
-            to replace, the string to replace the original text (macros can be used as well), and
-            the field of the message that the rewrite rule should process. Substitution rules can
-            operate on any value available via macros, for example ${HOST}, ${MESSAG}E, ${PROGRAM}, or any
-            user-defined macros created using parsers (for details, see <xref linkend="chapter-csv-parser"/> and
-    <xref linkend="chapter-patterndb"/>). The only exceptions are the ${FACILITY}, ${SEVERITY}, ${TAGS}, and the date-related fields, which cannot be rewritten. As of syslog-ng 3.1, it is also possible to rewrite the structured-data fields of
-            messages complying to the RFC5424 (IETF-syslog) message format. Substitution rules use the following syntax:</para>
-        <synopsis>Declaration:
-    rewrite &lt;name_of_the_rule&gt;
-            {
-            subst("&lt;string or regular expression to find&gt;",
-                "&lt;replacement string&gt;", value(&lt;field name&gt;), flags()
-                );
-            };</synopsis>
+        <section id="rewrite-replace">
+            <title>Replacing message parts</title>
             <indexterm type="parameter">
                 <primary>rewrite()</primary>
             </indexterm>
             <indexterm type="parameter">
                 <primary>subst()</primary>
             </indexterm>
-        <para>The <parameter>type()</parameter> and <parameter>flags()</parameter> options are
-            optional. The <parameter>type()</parameter> specifies the type of regular expression to
-            use; while the <parameter>flags()</parameter> are the flags of the regular expressions.
-            For details on regular expressions, see <xref linkend="regular-expressions"/>.</para>
-        <para>A single substitution rule can include multiple substitutions that are applied
-            sequentially to the message. Note that rewriting rules must be included in the log
-            statement to have any effect.</para>
-        <tip>
-            <!-- FIXME ez le van irva valahol mashol is, ill. le kellene legyen -->
-            <para>For case-insensitive searches, add the <parameter>flags(ignore-case)</parameter>
-                option; to replace every occurrence of the string, add
-                <parameter>flags(global)</parameter> option.</para>
-        </tip>
-        <example id="example_rewrite_subst">
-            <title>Using substitution rules</title>
-            <para>The following example replaces the first occurrence of the string
-                <parameter>IP</parameter> in the text of the message with the string
-                <parameter>IP-Address</parameter>.</para>
-            <synopsis>rewrite r_rewrite_subst{subst("IP", "IP-Address", value("MESSAGE"));};</synopsis>
-            <para>To replace every occurrence, use:</para>
-            <synopsis>rewrite r_rewrite_subst{subst("IP", "IP-Address", value("MESSAGE"), flags("global"));};</synopsis>
-            <para>Multiple substitution rules are applied sequentially; the following rules replace
-                the first occurrence of the string <parameter>IP</parameter> with the string
-                <parameter>IP-Addresses</parameter>. </para>
-            <synopsis>rewrite r_rewrite_subst{subst("IP", "IP-Address", value("MESSAGE")); subst("Address", "Addresses", value("MESSAGE"));};</synopsis>
-        </example>
-        <indexterm>
-            <primary>setting message fields</primary>
-        </indexterm>
-        <para>To set a field of the message to a specific value, define the string to include in the
-            message, and the field where it should be included. Setting a field can operate on any
-            value available via macros, for example ${HOST}, ${MESSAGE}, ${PROGRAM}, or any user-defined macros
-            created using parsers (for details, see <xref linkend="chapter-csv-parser"/> and <xref linkend="chapter-patterndb"/>). The only exceptions are the ${FACILITY}, ${SEVERITY}, ${TAGS}, and the date-related fields, which cannot be rewritten. Note that
-            the rewrite operation completely replaces any previous value of that field. Use the following
-            syntax:</para>
-        <synopsis>Declaration:
+            <para>To replace a part of the log message, you have to:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>define a string or regular expression to find the text to replace</para>
+                </listitem>
+                <listitem>
+                    <para>define a string to replace the original text (macros can be used as well)</para>
+                </listitem>
+                <listitem>
+                    <para>select the field of the message that the rewrite rule should process</para>
+                </listitem>
+            </itemizedlist>
+            <para>Substitution rules can operate on any value available via macros, for example HOST, MESSAGE, PROGRAM, or any user-defined macros created using parsers (for details, see <xref linkend="chapter-csv-parser"/> and <xref linkend="chapter-patterndb"/>). The only exceptions are the FACILITY, SEVERITY, TAGS, and the date-related fields, which cannot be rewritten. You can also rewrite the structured-data fields of messages complying to the RFC5424 (IETF-syslog) message format. Substitution rules use the following syntax:</para>
+            <synopsis>Declaration:
+    rewrite &lt;name_of_the_rule&gt;
+            {
+            subst("&lt;string or regular expression to find&gt;",
+                "&lt;replacement string&gt;", value(&lt;field name&gt;), flags()
+                );
+            };</synopsis>
+            <para>The <parameter>type()</parameter> and <parameter>flags()</parameter> options are optional. The <parameter>type()</parameter> specifies the type of regular expression to use; while the <parameter>flags()</parameter> are the flags of the regular expressions. For details on regular expressions, see <xref linkend="regular-expressions"/>.</para>
+            <para>A single substitution rule can include multiple substitutions that are applied sequentially to the message. Note that rewriting rules must be included in the log statement to have any effect.</para>
+            <tip>
+                <para>For case-insensitive searches, add the <parameter>flags(ignore-case)</parameter> option; to replace every occurrence of the string, add <parameter>flags(global)</parameter> option.</para>
+            </tip>
+            <example id="example_rewrite_subst">
+                <title>Using substitution rules</title>
+                <para>The following example replaces th <parameter>IP</parameter> in the text of the message with the string <parameter>IP-Address</parameter>.</para>
+                <synopsis>rewrite r_rewrite_subst{subst("IP", "IP-Address", value("MESSAGE"));};</synopsis>
+                <para>To replace every occurrence, use:</para>
+                <synopsis>rewrite r_rewrite_subst{subst("IP", "IP-Address", value("MESSAGE"), flags("global"));};</synopsis>
+                <para>Multiple substitution rules are applied sequentially; the following rules replace the first occurrence of the string <parameter>IP</parameter> with the string <parameter>IP-Addresses</parameter>.</para>
+                <synopsis>rewrite r_rewrite_subst{subst("IP", "IP-Address", value("MESSAGE")); subst("Address", "Addresses", value("MESSAGE"));};</synopsis>
+            </example>
+        </section>
+        <section id="rewrite-set">
+            <title>Setting message fields to specific values</title>
+            <indexterm>
+                <primary>setting message fields</primary>
+            </indexterm>
+            <para>To set a field of the message to a specific value, you have to:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>define the string to include in the message, and</para>
+                </listitem>
+                <listitem>
+                    <para>select the field where it should be included.</para>
+                </listitem>
+            </itemizedlist>
+            <para>You can set the any value available via macros, for example HOST, MESSAGE, PROGRAM, or any user-defined macros created using parsers (for details, see <xref linkend="chapter-csv-parser"/> and <xref linkend="chapter-patterndb"/>). The only exceptions are the FACILITY, SEVERITY, TAGS, and the date-related fields, which cannot be rewritten. Note that the rewrite operation completely replaces any previous value of that field. Use the following syntax:</para>
+            <synopsis>Declaration:
             rewrite &lt;name_of_the_rule&gt;
                 {set("&lt;string to include&gt;", value(&lt;field name&gt;));};</synopsis>
-        <indexterm type="parameter">
-            <primary>set()</primary>
-        </indexterm>
-        <example id="example_rewrite_set">
-            <title>Setting message fields to a particular value</title>
-            <para>The following example sets the HOST field of the message to
-                <parameter>myhost</parameter>. </para>
-            <synopsis>rewrite r_rewrite_set{set("myhost", value("HOST"));};</synopsis>
-            <para>The following example sets the sequence ID field of the RFC5424-formatted
-                (IETF-syslog) messages to a fixed value.</para>
-            <synopsis>rewrite r_sd { set("55555" value(".SDATA.meta.sequenceId")); };</synopsis>
-            <para>It is also possible to set the value of a field that does not exist yet, and create a new name-value pair that is associated with the message. The following example created the <parameter>MODIFIED</parameter> field and sets its value to <parameter>yes</parameter>. If you use the <parameter>${MODIFIED}</parameter> macro in a template or SQL table, its value will be <parameter>yes</parameter> for every message that was processed with this rewrite rule, and empty for every other message.</para>
-            <synopsis>rewrite r_rewrite_set{set("yes", value("MODIFIED"));};</synopsis>
-        </example>
+            <example id="example_rewrite_set">
+                <title>Setting message fields to a particular value</title>
+                <para>The following example sets the HOST field of the message to
+                    <parameter>myhost</parameter>. </para>
+                <synopsis>rewrite r_rewrite_set{set("myhost", value("HOST"));};</synopsis>
+                <para>The following example sets the sequence ID field of the RFC5424-formatted
+                    (IETF-syslog) messages to a fixed value.</para>
+                <synopsis>rewrite r_sd { set("55555" value(".SDATA.meta.sequenceId")); };</synopsis>
+                <para>It is also possible to set the value of a field that does not exist yet, and create a new name-value pair that is associated with the message. The following example created the <parameter>MODIFIED</parameter> field and sets its value to <parameter>yes</parameter>. If you use the <parameter>$MODIFIED</parameter> macro in a template or SQL table, its value will be <parameter>yes</parameter> for every message that was processed with this rewrite rule, and empty for every other message.</para>
+                <synopsis>rewrite r_rewrite_set{set("yes", value("MODIFIED"));};</synopsis>
+            </example>
+        </section>
         <section id="conditional-rewrite">
             <title>Conditional rewrites</title>
             <indexterm type="parameter">
