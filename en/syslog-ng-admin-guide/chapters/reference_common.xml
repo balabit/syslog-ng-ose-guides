@@ -1777,72 +1777,8 @@ INFO: Stopping service Catalina</synopsis>
         </simplesect>
     </section>
     <section xml:id="destination-logstore-options-examples">
-        <simplesect xml:id="logstore_journal_shmem_threshold">
-            <title>logstore_journal_shmem_threshold()</title>
-            <indexterm type="parameter">
-                <primary>logstore_journal_shmem_threshold()</primary>
-            </indexterm>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
-                    <tbody>
-                        <row>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>number</entry>
-                        </row>
-                        <row>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>536870912</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
-            <para><guilabel>Description:</guilabel> If the size of memory (in bytes) required by
-                journal files increases above this value, &abbrev; maps only a single block of every
-                logstore journal into the memory. Default value: <parameter>536870912</parameter>
-                (512 MB).</para>
-            <para xml:id="logstore_journal_shmem_threshold_description">If the memory required for the
-                journal files exceeds the <parameter>logstore_journal_shmem_threshold()</parameter>
-                limit, &abbrev; will store only a single journal block of every journal file in the
-                memory, and &mdash; if more blocks are needed for a journal &mdash; store the
-                additional blocks on the hard disk. Opening new logstore files means allocating
-                memory for one new journal block for every new file. In extreme situations involving
-                large traffic, this can lead to &abbrev; consuming the entire memory of the system.
-                Adjust the <parameter>journal_block_size()</parameter> and your file-naming
-                conventions as needed to avoid such situations. For details on logstore journals,
-                see <xref linkend="concepts_logstore_journal"/>.</para>
-            <example xml:id="example-logstore-memory-threshold">
-                <title>Calculating memory usage of logstore journals</title>
-                <para>If you are using the default settings (4 journal blocks for every logstore
-                    journal, one block is 1MB,
-                        <parameter>logstore_journal_shmem_threshold()</parameter> is 512MB), this
-                    means that &abbrev; will allocate 4MB memory for every open logstore file, up to
-                    512MB if you have 128 open logstore files. Opening a new logstore file would
-                    require 4 more megabytes of memory for journaling, bringing the total required
-                    memory to 516MB, which is above the
-                        <parameter>logstore_journal_shmem_threshold()</parameter>. In this case,
-                    &abbrev; switches to storing only a single journal block in the memory, lowering
-                    the memory requirements of journaling to 129MB. However, opening more and more
-                    logstore files wil require more and more memory, and this is not limited, except
-                    when &abbrev; reaches the maximum number of files that can be open (as set in
-                    the <parameter>--fd-limit</parameter> command-line option).</para>
-            </example>
-            <example xml:id="example-logstore-memory">
-                <title>Limiting the memory use of journal files</title>
-                <para>The following example causes &abbrev; to map only a single journal block into
-                    the host's memory if the total memory range used by logstore journals would be
-                    higher than 32 MB. </para>
-                <synopsis>options {
-    logstore_journal_shmem_threshold(33554432);
-};
-destination d_messages { logstore("/var/log/messages_logstore.lgs"
-                         journal_block_size(19660800)
-                         journal_block_count(5)
-                         );
-};</synopsis>
-            </example>
+        <simplesect>
+            <xi:include href="chunks/option-logstore-journal-shmem-threshold.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
         <example xml:id="example-logstore-journal">
             <title>Setting journal block number and size</title>
