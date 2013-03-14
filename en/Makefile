@@ -9,21 +9,27 @@ ifneq (,$(findstring hapci,$(HOSTNAME)))
 GIT_BASE=/var/scm/git
 endif
 
-MAKEMAKER=xml-stylesheet/scripts/Makemaker.py
-MASTER_MAKEFILE=xml-stylesheet/scripts/Makefile
+BUILDERREPO=xml-stylesheet
+BUILDERPATH=$(PWD)/$(BUILDERREPO)
+SCRIPTDIR=$(BUILDERPATH)/build-scripts
+MAKEMAKER=$(SCRIPTDIR)/Makemaker.py
+MASTER_MAKEFILE=$(SCRIPTDIR)/Makefile
+MAKESTUBS=$(SCRIPTDIR)/Makestubs.py
 MAKECONF=Makefile.conf
 MAKEVARS=Makefile.vars
 MAKETARGETS=Maketargets.json
 PYTHON=python
+
+export SCRIPTDIR
 
 # include the file containing the local variables(if exists)
 -include $(MAKEVARS)
 # include the generated config file
 include $(MAKECONF)
 
-all: xml-stylesheet setup $(HTML_OUTPUTS) $(PDF_OUTPUTS) $(MANPAGES)
+all: $(BUILDERREPO) setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
 
-selfcheck: xml-stylesheet Makefile $(MASTER_MAKEFILE)
+selfcheck: $(BUILDERREPO) Makefile $(MASTER_MAKEFILE)
 	@if ! diff Makefile $(MASTER_MAKEFILE) 2>&1 >/dev/null; then \
 		echo ==============================================; \
 		echo "Master Makefile '$(MASTER_MAKEFILE)' differs from the repository's Makefile."; \
@@ -31,19 +37,19 @@ selfcheck: xml-stylesheet Makefile $(MASTER_MAKEFILE)
 		echo ==============================================; \
 	fi
 
-setup: selfcheck xml-stylesheet targetdbs olinkdbs
+setup: selfcheck $(BUILDERREPO) targetdbs olinkdbs
 
 out:
 	mkdir -p out
 
-$(MAKECONF): out $(MAKEMAKER) $(MAKETARGETS) xml-stylesheet/scripts/Makestubs.py
+$(MAKECONF): out $(MAKEMAKER) $(MAKETARGETS) $(MAKESTUBS)
 	$(PYTHON) $(MAKEMAKER) $@
 
-xml-stylesheet:
-	[ -d xml-stylesheet ] || git clone $(GIT_BASE)/docs/xml-stylesheet.git xml-stylesheet
-	[ -d xml-stylesheet ] && (cd xml-stylesheet; git pull)
+$(BUILDERREPO):
+	[ -d $@ ] || git clone $(GIT_BASE)/docs/$(BUILDERREPO)-5.git $@
+	[ -d $@ ] && (cd $@ && git pull)
 
-$(MAKEMAKER): xml-stylesheet
+$(MAKEMAKER): $(BUILDERREPO)
 
 targetdbs:
 	mkdir -p targetdbs
@@ -53,4 +59,4 @@ clean:
 	-rm -rf targetdbs $(MAKECONF)
 
 # MANSOURCES and OLINKDBS_IN must be .PHONY otherwise they won't be regenerated everytime.
-.PHONY: targetdbs olinkdbs clean setup realsetup $(PDF_OUTPUTS) $(HTML_OUTPUTS) manpages $(MANSOURCES) $(OLINKDBS_IN) xml-stylesheet
+.PHONY: targetdbs olinkdbs clean setup realsetup $(PDF_OUTPUTS) $(HTML_OUTPUTS) manpages $(MANSOURCES) $(OLINKDBS_IN) $(BUILDERREPO)
