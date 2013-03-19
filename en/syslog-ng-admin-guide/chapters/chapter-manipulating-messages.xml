@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter 
+<!DOCTYPE chapter
  [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
  %entities;]>
 <chapter xml:id="chapter-manipulating-messages" xmlns="http://docbook.org/ns/docbook" version="5.0">
@@ -50,7 +50,7 @@
             <indexterm>
                 <primary>macros</primary>
             </indexterm>
-            <para>The &abbrev; application can dynamically create filenames, directories, or names of database tables using macros that help you organize your log messages. Macros refer to a property or a part of the log message, for example, the <parameter>$HOST</parameter> macro refers to the name or IP address of the client that sent the log message, while <parameter>$DAY</parameter> is the day of the month when syslog-ng has received the message. Using these macros in the path of the destination log files allows you for example to collect the logs of every host into separate files for every day.</para>
+            <para>The &abbrev; application can dynamically create filenames, directories, or names of database tables using macros that help you organize your log messages. Macros refer to a property or a part of the log message, for example, the <parameter>${HOST}</parameter> macro refers to the name or IP address of the client that sent the log message, while <parameter>${DAY}</parameter> is the day of the month when syslog-ng has received the message. Using these macros in the path of the destination log files allows you for example to collect the logs of every host into separate files for every day.</para>
             <para>A set of macros can be defined as a template object and used in multiple destinations.</para>
             <para>Another use of macros and templates is to customize the format of the syslog message, for example to add elements of the message header to the message text. Note that if a message uses the IETF-syslog format, only the text of the message can be customized, the structure of the header is fixed.</para>
             <itemizedlist>
@@ -77,7 +77,7 @@
             from every object that can use a template. Templates can be used for example to create standard
             message formats or filenames. Templates can reference one or more macros (for example date,
             the hostname, and so on). For a list of macros
-            available in &product;, see <xref linkend="reference_macros"/>. Fields from the structured data (SD) part of messages using the new
+            available in &product;, see <xref linkend="reference_macros"/>.<phrase condition="pe"> For the macros of the syslog-ng Agent for Windows application, see <olink targetdoc="syslog-ng-windows-agent-guide-admin-en" targetptr="windows_message_format"/>.</phrase> Fields from the structured data (SD) part of messages using the new
             IETF-syslog standard can also be used as macros.</para>
         <para>Template objects have a single option called <parameter>template_escape</parameter>,
             which is disabled by default (<parameter>template_escape(no)</parameter>). This behavior
@@ -97,16 +97,20 @@
         <para>Default values for macros can also be specified by appending the
             <parameter>:-</parameter> characters and the default value of the macro. If a message does not contain the field referred to by the macro, or it is empty, the default value will be used when expanding the macro. For example, if a message does not contain a hostname, the following macro can specify a default hostname.</para>
         <synopsis>${HOST:-default_hostname}</synopsis>
+        <note condition="pe">
+            <para>For the macros of the &agent;
+            application, see <olink targetdoc="syslog-ng-windows-agent-guide-admin-en" targetptr="windows_message_format"/>.</para>
+        </note>
         <warning>
-            <para>The hostname-related macros (<parameter>FULLHOST</parameter>,
-                    <parameter>FULLHOST_FROM</parameter>, <parameter>HOST</parameter>, and
-                    <parameter>HOST_FROM</parameter>) do not have any effect if the
+            <para>The hostname-related macros (<parameter>${FULLHOST}</parameter>,
+                    <parameter>${FULLHOST_FROM}</parameter>, <parameter>${HOST}</parameter>, and
+                    <parameter>${HOST_FROM}</parameter>) do not have any effect if the
                     <parameter>keep_hostname()</parameter>
                     option is disabled.</para>
         </warning>
-        <para>By default, syslog-ng sends messages using the following template: <parameter>$ISODATE
-                $HOST $MSGHDR$MSG\n</parameter>. (The <parameter>$MSGHDR$MSG</parameter> part is
-            written together because the <parameter>$MSGHDR</parameter> macro includes a trailing
+        <para>By default, syslog-ng sends messages using the following template: <parameter>${ISODATE}
+                ${HOST} ${MSGHDR}${MSG}\n</parameter>. (The <parameter>${MSGHDR}${MSG}</parameter> part is
+            written together because the <parameter>${MSGHDR}</parameter> macro includes a trailing
             whitespace.)</para>
         <note>
             <para>Earlier versions of syslog-ng used templates and scripts to send log messages into
@@ -130,14 +134,14 @@
                 destination (<parameter>d_file</parameter>) will use the message format defined in
                 the template. </para>
             <synopsis>template t_demo_filetemplate {
-             template("$ISODATE $HOST $MSG\n"); template_escape(no); };
+             template("${ISODATE} ${HOST} ${MSG}\n"); template_escape(no); };
 destination d_file {
              file("/var/log/messages" template(t_demo_filetemplate)); };</synopsis>
             <para>Templates can also be used inline, if they are used only at a single location. The
                 following destination is equivalent with the previous example: </para>
             <synopsis>destination d_file {
                 file ("/var/log/messages"
-                        template("$ISODATE $HOST $MSG\n") template_escape(no) );
+                        template("${ISODATE} ${HOST} ${MSG}\n") template_escape(no) );
                 };
             </synopsis>
             <indexterm>
@@ -146,7 +150,7 @@ destination d_file {
             </indexterm>
             <para>The following file destination uses macros to daily create separate logfiles for every client host.</para>
             <synopsis>destination d_file {
-        file("/var/log/$YEAR.$MONTH.$DAY/$HOST.log");
+        file("/var/log/${YEAR}.${MONTH}.${DAY}/${HOST}.log");
 };</synopsis>
         </example>
         <note>
@@ -159,19 +163,19 @@ destination d_file {
                 <primary>macros</primary>
                 <secondary>date-related</secondary>
             </indexterm>
-            <para>The macros related to the date of the message (for example: <parameter>ISODATE</parameter>, <parameter>HOUR</parameter>, and so on) have three further variants each:</para>
+            <para>The macros related to the date of the message (for example: <parameter>${ISODATE}</parameter>, <parameter>${HOUR}</parameter>, and so on) have three further variants each:</para>
             <itemizedlist>
                 <listitem>
-                    <para><parameter>S_</parameter> prefix, for example, <parameter>S_DATE</parameter>: The <parameter>S_DATE</parameter> macro represents the date found in the log message, that is, when the message was sent by the original application.</para>
+                    <para><parameter>S_</parameter> prefix, for example, <parameter>${S_DATE}</parameter>: The <parameter>${S_DATE}</parameter> macro represents the date found in the log message, that is, when the message was sent by the original application.</para>
                 </listitem>
                 <listitem>
-                    <para><parameter>R_</parameter> prefix, for example, <parameter>R_DATE</parameter>: <parameter>R_DATE</parameter> is the date when &abbrev; has received the message.</para>
+                    <para><parameter>R_</parameter> prefix, for example, <parameter>${R_DATE}</parameter>: <parameter>${R_DATE}</parameter> is the date when &abbrev; has received the message.</para>
                 </listitem>
                 <listitem>
                     <para><parameter>C_</parameter> prefix, for example, <parameter>C_DATE</parameter>: <parameter>C_DATE</parameter> is the current date, that is when &abbrev; processes the message and resolves the macro.</para>
                 </listitem>
             </itemizedlist>
-            <para>Starting with &abbrev; version <phrase condition="ose">3.2</phrase><phrase condition="pe">4.1</phrase>, the <parameter>DATE</parameter> macro equals the <parameter>S_DATE</parameter> macro. In earlier versions the value of <parameter>DATE</parameter> depended on the <parameter>use_time_recvd()</parameter> global option, which was removed from &abbrev;.</para>
+            <para>Starting with &abbrev; version <phrase condition="ose">3.2</phrase><phrase condition="pe">4.1</phrase>, the <parameter>${DATE}</parameter> macro equals the <parameter>${S_DATE}</parameter> macro. In earlier versions the value of <parameter>${DATE}</parameter> depended on the <parameter>use_time_recvd()</parameter> global option, which was removed from &abbrev;.</para>
         </section>
         <section xml:id="macros-hard-vs-soft">
             <title>Hard vs. soft macros</title>
@@ -185,675 +189,12 @@ destination d_file {
             <indexterm>
                 <primary>soft macros</primary>
             </indexterm>
-            <para>Hard macros contain data that is directly derived from the log message, for example, the $MONTH macro derives its value from the timestamp. Hard macros are read-only. Soft macros (sometimes also called name-value pairs) are either built-in macros automatically generated from the log message (for example, $HOST), or custom user-created macros generated by using the syslog-ng pattern database or a CSV-parser. In contrast to hard macros, soft macros are writable and can be modified within &abbrev;, for example, using rewrite rules.</para>
+            <para>Hard macros contain data that is directly derived from the log message, for example, the ${MONTH} macro derives its value from the timestamp. Hard macros are read-only. Soft macros (sometimes also called name-value pairs) are either built-in macros automatically generated from the log message (for example, ${HOST}), or custom user-created macros generated by using the syslog-ng pattern database or a CSV-parser. In contrast to hard macros, soft macros are writable and can be modified within &abbrev;, for example, using rewrite rules.</para>
             <para>Hard and soft macros are rather similar and often treated as equivalent. Macros are most commonly used in filters and templates, which does not modify the value of the macro, so both soft and hard macros can be used. However, it is not possible to change the values of hard macros in rewrite rules or via any other means.</para>
             <para>The following macros in &abbrev; are hard macros and cannot be modified: <parameter>BSDTAG</parameter>, <parameter>CONTEXT_ID</parameter>, <parameter>DATE</parameter>, <parameter>DAY</parameter>, <parameter>FACILITY_NUM</parameter>, <parameter>FACILITY</parameter>, <parameter>FULLDATE</parameter>, <parameter>HOUR</parameter>, <parameter>ISODATE</parameter>, <parameter>LEVEL_NUM</parameter>, <parameter>LEVEL</parameter>, <parameter>MIN</parameter>, <parameter>MONTH_ABBREV</parameter>, <parameter>MONTH_NAME</parameter>, <parameter>MONTH</parameter>, <parameter>MONTH_WEEK</parameter>, <parameter></parameter>, <parameter>PRIORITY</parameter>, <parameter>PRI</parameter>, <parameter>SDATA</parameter>, <parameter>SEC</parameter>, <parameter>SEQNUM</parameter>, <parameter>SOURCEIP</parameter>, <parameter>STAMP</parameter>, <parameter>TAG</parameter>, <parameter>TAGS</parameter>, <parameter>TZOFFSET</parameter>, <parameter>TZ</parameter>, <parameter>UNIXTIME</parameter>, <parameter>WEEK_DAY_ABBREV</parameter>, <parameter>WEEK_DAY_NAME</parameter>, <parameter>WEEK_DAY</parameter>, <parameter>WEEK</parameter>, <parameter>YEAR_DAY</parameter>, <parameter>YEAR</parameter>.</para>
             <para>The following macros can be modified:<parameter>FULLHOST_FROM</parameter>, <parameter>FULLHOST</parameter>, <parameter>HOST_FROM</parameter>, <parameter>HOST</parameter>, <parameter>LEGACY_MSGHDR</parameter>, <parameter>MESSAGE</parameter>, <parameter>MSG</parameter>,<parameter>MSGID</parameter>, <parameter>MSGONLY</parameter>, <parameter>PID</parameter>, <parameter>PROGRAM</parameter>, <parameter>SOURCE</parameter>. Custom values created using rewrite rules or parsers can be modified as well, just like stored matches of regular expressions ($0 ... $255).</para>
         </section>
-        <section xml:id="reference_macros">
-        <title>Macros of &abbrev;</title>
-        <indexterm>
-            <primary>macros</primary>
-            <secondary>reference</secondary>
-        </indexterm>
-        <para>The following macros are available in &abbrev;.</para>
-        <simplesect xml:id="macro_ampm">
-            <title>AMPM</title>
-                <indexterm type="parameter">
-                    <primary>AMPM</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>${AMPM}</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Typically used together with the <link linkend="macro_hour12"><parameter>${HOUR12}</parameter></link> macro, <parameter>${AMPM}</parameter> returns the period of the day: AM for hours before mid day and PM for hours after mid day. In reference to a 24-hour clock format, AM is between 00:00-12:00 and PM is between 12:00-24:00. 12AM is midnight. Available in <phrase condition="pe">&abbrev; 3.2</phrase><phrase condition="ose">&abbrev; 3.4</phrase> and later.</para>
-        </simplesect>
-        <simplesect>
-            <title>BSDTAG</title>
-                <indexterm type="parameter">
-                    <primary>BSDTAG</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$BSDTAG</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Facility/priority information in the format used by the FreeBSD
-                syslogd: a priority number followed by a letter that indicates the
-                facility. The priority number can range from <parameter>0</parameter> to
-                <parameter>7</parameter>. The facility letter can range from
-                <parameter>A</parameter> to <parameter>Y</parameter>, where
-                <parameter>A</parameter> corresponds to facility number zero
-                (LOG_KERN), <parameter>B</parameter> corresponds to facility 1
-                (LOG_USER), and so on.</para>
-        </simplesect>
-        <simplesect xml:id="macro_custom">
-            <title>Custom macros</title>
-                <indexterm type="parameter">
-                    <primary>Custom macros</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> CSV parsers and pattern databases can also define macros from the content of the messages, for example, a pattern database rule can extract the username from a login message and create a macro that references the username. For details on using custom macros created with CSV parsers and pattern databases, see <xref linkend="chapter-parsers"/> and <xref linkend="patterndb-filters"/>, respectively.</para>
-        </simplesect>
-        <simplesect xml:id="macro_date">
-            <title>DATE, C_DATE, R_DATE, S_DATE</title>
-                <indexterm type="parameter">
-                    <primary>C_DATE, R_DATE, S_DATE</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$DATE, $C_DATE, $R_DATE, $S_DATE</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Date of the message using the BSD-syslog style timestamp format
-                (month/day/hour/minute/second, each expressed in two digits). This is
-                the original syslog time stamp without year information, for example:
-                <parameter>Jun 13 15:58:00</parameter>.</para>
-        </simplesect>
-        <simplesect xml:id="macro_day">
-            <title>DAY, C_DAY, R_DAY, S_DAY</title>
-                <indexterm type="parameter">
-                    <primary>DAY, C_DAY, R_DAY, S_DAY</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$DAY, $C_DAY, $R_DAY, $S_DAY</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The day the message was sent.</para>
-        </simplesect>
-        <simplesect xml:id="macro_facility">
-            <title>FACILITY</title>
-                <indexterm type="parameter">
-                    <primary>FACILITY</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$FACILITY</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The name of the facility (for example, <parameter>kern</parameter>) that sent the message.</para>
-        </simplesect>
-        <simplesect xml:id="macro_facility_num">
-            <title>FACILITY_NUM</title>
-                <indexterm type="parameter">
-                    <primary>FACILITY_NUM</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$FACILITY_NUM</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The numerical code of the facility (for example, <parameter>0</parameter>) that sent the message.</para>
-        </simplesect>
-        <simplesect xml:id="macro_fulldate">
-            <title>FULLDATE, C_FULLDATE, R_FULLDATE, S_FULLDATE</title>
-                <indexterm type="parameter">
-                    <primary>FULLDATE, C_FULLDATE, R_FULLDATE, S_FULLDATE</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$FULLDATE, $C_FULLDATE, $R_FULLDATE, $S_FULLDATE</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> A nonstandard format for the date of the message using the same
-                format as <parameter>DATE</parameter>, but including the year as well,
-                for example: <parameter>2006 Jun 13 15:58:00</parameter>.</para>
-        </simplesect>
-        <simplesect>
-            <title>FULLHOST</title>
-                <indexterm type="parameter">
-                    <primary>FULLHOST</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$FULLHOST</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The full FQDN of the host name chain (without trimming chained
-                hosts), including the domain name.</para>
-        </simplesect>
-        <simplesect>
-            <title>FULLHOST_FROM</title>
-                <indexterm type="parameter">
-                    <primary>FULLHOST_FROM</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$FULLHOST_FROM</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> FQDN of the host that sent the message to syslog-ng as resolved by
-                syslog-ng using DNS. If the message traverses several hosts, this is the
-                last host in the chain.</para>
-                <para>The &abbrev; application uses the following procedure to determine the value of the <parameter>$FULLHOST_FROM</parameter> macro:</para>
-                <orderedlist>
-                    <listitem>
-                        <para>The &abbrev; application takes the IP address of the host sending the message.</para>
-                    </listitem>
-                    <listitem>
-                        <para>If the <parameter>use_dns()</parameter> option is enabled, &abbrev; attempts to resolve the IP address to a hostname. If it succeeds, the returned hostname will be the value of the <parameter>$FULLHOST_FROM</parameter> macro. This value will be the FQDN of the host if the <parameter>use_fqdn()</parameter> option is enabled, but only the hostname if <parameter>use_fqdn()</parameter> is disabled.</para>
-                    </listitem>
-                    <listitem>
-                        <para>If the <parameter>use_dns()</parameter> option is disabled, or the address resolution fails, the <parameter>$FULLHOST_FROM</parameter> macro will return the IP address of the sender host.</para>
-                    </listitem>
-                </orderedlist>
-        </simplesect>
-        <simplesect xml:id="macro_hour">
-            <title>HOUR, C_HOUR, R_HOUR, S_HOUR</title>
-                <indexterm type="parameter">
-                    <primary>HOUR, C_HOUR, R_HOUR, S_HOUR</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$HOUR, $C_HOUR, $R_HOUR, $S_HOUR</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The hour of day the message was sent.</para>
-        </simplesect>
-        <simplesect xml:id="macro_hour12">
-            <title>HOUR12, C_HOUR12, R_HOUR12, S_HOUR12</title>
-                <indexterm type="parameter">
-                    <primary>HOUR12, C_HOUR12, R_HOUR12, S_HOUR12</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>${HOUR12}, ${C_HOUR12}, ${R_HOUR12}, ${S_HOUR12}</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The hour of day the message was sent in 12-hour clock format. See also the <link linkend="macro_ampm"><parameter>${AMPM}</parameter></link> macro. 12AM is midnight. Available in <phrase condition="pe">&abbrev; 3.2</phrase><phrase condition="ose">&abbrev; 3.4</phrase> and later.</para>
-        </simplesect>
-        <simplesect xml:id="macro_host">
-            <title>HOST</title>
-                <indexterm type="parameter">
-                    <primary>HOST</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$HOST</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The name of the source host where the message originates from.</para>
-            <itemizedlist>
-                <listitem>
-                    <para>If the message traverses several hosts and the <link linkend="option_chain_hostnames"> <parameter>chain_hostnames()</parameter></link> option is on, the first host in the chain is used.</para>
-                </listitem>
-                <listitem>
-                    <para>If the <parameter>keep_hostname()</parameter> option is disabled (<parameter>keep_hostname(no)</parameter>), the value of the $HOST macro will be the DNS hostname of the host that sent the message to &abbrev; (that is, the DNS hostname of the last hop). In this case the $HOST and $HOST_FROM macros will have the same value.</para>
-                </listitem>
-                <listitem>
-                    <para>If the <parameter>keep_hostname()</parameter> option is enabled (<parameter>keep_hostname(yes)</parameter>), the value of the $HOST macro will be the hostname retrieved from the log message. That way the name of the original sender host can be used, even if there are log relays between the sender and the server.</para>
-                </listitem>
-            </itemizedlist>
-        </simplesect>
-        <simplesect xml:id="macro_host_from">
-            <title>HOST_FROM</title>
-                <indexterm type="parameter">
-                    <primary>HOST_FROM</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$HOST_FROM</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Name of the host that sent the message to syslog-ng, as resolved by
-                syslog-ng using DNS. If the message traverses several hosts, this is the
-                last host in the chain.</para>
-        </simplesect>
-        <simplesect xml:id="macro_isodate">
-            <title>ISODATE, C_ISODATE, R_ISODATE, S_ISODATE</title>
-                <indexterm type="parameter">
-                    <primary>ISODATE, C_ISODATE, R_ISODATE, S_ISODATE</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$ISODATE, $C_ISODATE, $R_ISODATE, $S_ISODATE</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Date of the message in the ISO 8601 compatible standard timestamp
-                format (yyyy-mm-ddThh:mm:ss+-ZONE), for example:
-                <parameter>2006-06-13T15:58:00.123+01:00</parameter>. If possible,
-                it is recommended to use <parameter>ISODATE</parameter> for
-                timestamping. Note that syslog-ng can produce fractions of a second
-                (for example milliseconds) in the timestamp by using the
-                <parameter>frac_digits()</parameter> global or per-destination
-                option.</para>
-        </simplesect>
-        <simplesect>
-            <title>LEVEL_NUM</title>
-                <indexterm type="parameter">
-                    <primary>LEVEL_NUM</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$LEVEL_NUM</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The priority (also called severity) of the message, represented as a numeric value, for example, <parameter>3</parameter>. For the textual representation of this value, use the <parameter>$LEVEL</parameter> macro. See <xref linkend="macro_priority"/> for details.</para>
-        </simplesect>
-        <simplesect xml:id="macro-loghost" condition="ose">
-            <title>LOGHOST</title>
-                <indexterm type="parameter">
-                    <primary>LOGHOST</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$LOGHOST</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The hostname of the computer running &abbrev; &mdash; it returns the same result as the <command>hostname</command> command.</para>
-        </simplesect>
-        <simplesect xml:id="macro_min">
-            <title>MIN, C_MIN, R_MIN, S_MIN</title>
-                <indexterm type="parameter">
-                    <primary>MIN, C_MIN, R_MIN, S_MIN</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$MIN, $C_MIN, $R_MIN, $S_MIN</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The minute the message was sent.</para>
-        </simplesect>
-        <simplesect xml:id="macro_month">
-            <title>MONTH, C_MONTH, R_MONTH, S_MONTH</title>
-                <indexterm type="parameter">
-                    <primary>MONTH, C_MONTH, R_MONTH, S_MONTH</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$MONTH, $C_MONTH, $R_MONTH, $S_MONTH</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The month the message was sent as a decimal value, prefixed with a
-                zero if smaller than 10.</para>
-        </simplesect>
-        <simplesect xml:id="macro_month_abbrev">
-            <title>MONTH_ABBREV, C_MONTH_ABBREV, R_MONTH_ABBREV, S_MONTH_ABBREV</title>
-                <indexterm type="parameter">
-                    <primary>MONTH_ABBREV, C_MONTH_ABBREV, R_MONTH_ABBREV, S_MONTH_ABBREV</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$MONTH_ABBREV, $C_MONTH_ABBREV, $R_MONTH_ABBREV, $S_MONTH_ABBREV</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The English abbreviation of the month name (3 letters).</para>
-        </simplesect>
-        <simplesect xml:id="macro_month_name">
-            <title>MONTH_NAME, C_MONTH_NAME, R_MONTH_NAME, S_MONTH_NAME</title>
-                <indexterm type="parameter">
-                    <primary>MONTH_NAME, C_MONTH_NAME, R_MONTH_NAME, S_MONTH_NAME</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$MONTH_NAME, $C_MONTH_NAME, $R_MONTH_NAME, $S_MONTH_NAME</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The English name of the month name.</para>
-        </simplesect>
-        <simplesect xml:id="macro_month_week">
-            <title>MONTH_WEEK, C_MONTH_WEEK, R_MONTH_WEEK, S_MONTH_WEEK</title>
-                <indexterm type="parameter">
-                    <primary>MONTH_WEEK, R_MONTH_WEEK, R_MONTH_WEEK, S_MONTH_WEEK</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$MONTH_WEEK, $C_MONTH_WEEK, $R_MONTH_WEEK, $S_MONTH_WEEK</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The number of the week in the given month (0-5).
-                The week with numerical value 1 is the first week
-                containing a Monday. The days of month before the first
-                Monday are considered week 0. For example, if a 31-day
-                month begins on a Sunday, then the 1st of the month is
-                week 0, and the end of the month (the 30th and 31st) is
-                week 5.</para>
-        </simplesect>
-        <simplesect xml:id="macro_msec">
-            <title>MSEC, C_MSEC, R_MSEC, S_MSEC</title>
-                <indexterm type="parameter">
-                    <primary>MSEC, C_MSEC, R_MSEC, S_MSEC</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>${MSEC}, ${C_MSEC}, ${R_MSEC}, ${S_MSEC}</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The millisecond the message was sent.</para>
-            <para>Available in &abbrev; version <phrase condition="pe">4 F2</phrase><phrase condition="ose">3.4</phrase> and later.</para>
-        </simplesect>
-        <simplesect xml:id="macro_msg">
-            <title>MSG or MESSAGE</title>
-                <indexterm type="parameter">
-                    <primary>MSG or MESSAGE</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$MSG or $MESSAGE</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Text contents of the log message without the program name and pid.
-                Note that this has changed in syslog-ng version 3.0; in earlier versions
-                this macro included the program name and the pid. In syslog-ng 3.0, the
-                <parameter>MSG</parameter> macro became equivalent with the
-                <parameter>MSGONLY</parameter> macro. The program name and the pid
-                together are available in the <parameter>MSGHDR</parameter>
-                macro.</para>
-        </simplesect>
-        <simplesect>
-            <title>MSGHDR</title>
-                <indexterm type="parameter">
-                    <primary>MSGHDR</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$MSGHDR</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The name and the pid of the program that sent the log message in
-            	<parameter>PROGRAM[PID]:</parameter> format. Includes a trailing
-                whitespace. Note that the macro returns an empty value if both the
-                program and pid fields of the message are empty.</para>
-        </simplesect>
-        <simplesect xml:id="macro_msgid">
-            <title>MSGID</title>
-                <indexterm type="parameter">
-                    <primary>MSGID</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$MSGID</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> A string specifying the type of the message in IETF-syslog (RFC5424-formatted) messages. For example, a firewall might use the MSGID "TCPIN" for incoming TCP traffic and the MSGID "TCPOUT" for outgoing TCP traffic. By default, &abbrev; does not specify this value, but uses a dash (-) character instead. If an incoming message includes the MSGID value, it is retained and relayed without modification.</para>
-        </simplesect>
-        <simplesect>
-            <title>MSGONLY</title>
-                <indexterm type="parameter">
-                    <primary>MSGONLY</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$MSGONLY</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Message contents without the program name or pid.</para>
-        </simplesect>
-        <simplesect>
-            <title>PID</title>
-                <indexterm type="parameter">
-                    <primary>PID</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$PID</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The PID of the program sending the message.</para>
-        </simplesect>
-        <simplesect xml:id="macro_pri">
-            <title>PRI</title>
-                <indexterm type="parameter">
-                    <primary>PRI</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$PRI</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The priority and facility encoded as a 2 or 3 digit decimal number as
-                it is present in syslog messages.</para>
-        </simplesect>
-        <simplesect xml:id="macro_priority">
-            <title>PRIORITY or LEVEL</title>
-                <indexterm type="parameter">
-                    <primary>PRIORITY</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>LEVEL</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$PRIORITY</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$LEVEL</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The priority (also called severity) of the message, for example, <parameter>error</parameter>. For the textual representation of this value, use the <parameter>$LEVEL</parameter> macro. See <xref linkend="macro_priority"/> for details.</para>
-        </simplesect>
-        <simplesect>
-            <title>PROGRAM</title>
-                <indexterm type="parameter">
-                    <primary>PROGRAM</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$PROGRAM</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The name of the program sending the message. Note that the content of
-                the $PROGRAM variable may not be completely trusted as it is provided by
-                the client program that constructed the message.</para>
-        </simplesect>
-        <simplesect xml:id="macro_sdata">
-            <title>SDATA, .SDATA.SDID.SDNAME</title>
-                <indexterm type="parameter">
-                    <primary>.SDATA.SDID.SDNAME</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>SDATA</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$.SDATA.SDID.SDNAME</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$SDATA</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>STRUCTURED-DATA</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>macros</primary>
-                    <secondary>SDATA</secondary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The syslog-ng application automatically parses the STRUCTURED-DATA
-                part of IETF-syslog messages, which can be referenced in macros. The <parameter>$SDATA</parameter> macro references the entire STRUCTURED-DATA part of the message, while structured data elements can be referenced using the <parameter>$.SDATA.SDID.SDNAME</parameter> macro.</para>
-                <note>
-                    <para>When using STRUCTURED-DATA macros, consider the following:</para>
-                    <itemizedlist>
-                        <listitem>
-                            <para>When referencing an element of the structured data, the macro must begin with the dot (.) character. For example, <parameter>$.SDATA.timeQuality.isSynced</parameter>.</para>
-                        </listitem>
-                        <listitem>
-                            <para>The SDID and SDNAME parts of the macro names are case sensitive: <parameter>$.SDATA.timeQuality.isSynced</parameter> is not the same as <parameter>$.SDATA.TIMEQUALITY.ISSYNCED</parameter>.</para>
-                        </listitem>
-                    </itemizedlist>
-                </note>
-                <example>
-                    <title>Using SDATA macros</title>
-                    <para>For example, if a log message contains the following structured data:
-                <parameter>[exampleSDID@0 iut="3" eventSource="Application"
-                    eventID="1011"][examplePriority@0 class="high"]</parameter> you can
-                use macros like: <parameter>${.SDATA.exampleSDID@0.eventSource}</parameter> &mdash; this would return the <parameter>Application</parameter> string in this case.</para>
-                </example>
-        </simplesect>
-        <simplesect xml:id="macro_sec">
-            <title>SEC, C_SEC, R_SEC, S_SEC</title>
-                <indexterm type="parameter">
-                    <primary>SEC, C_SEC, R_SEC, S_SEC</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$SEC, $C_SEC, $R_SEC, $S_SEC</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The second the message was sent.</para>
-        </simplesect>
-        <simplesect xml:id="macro_seqnum">
-            <title>SEQNUM</title>
-                <indexterm type="parameter">
-                    <primary>SEQNUM</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>${SEQNUM}</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The sequence number of the message is a unique identifier of the
-                message between the end-points. The syslog-ng client calculates this
-                number when processing a new message from a local source; it is not
-                calculated for relayed messages. The sequence number increases for every
-                message, and is not lost even if syslog-ng is reloaded. The sequence number starts again from 0 when &abbrev; is restarted. The
-                sequence number is a part of every message that uses the new IETF-syslog
-                protocol (<parameter>${.SDATA.meta.sequenceId}</parameter>), and can be
-                added to BSD-syslog messages using this macro.</para>
-            <indexterm>
-                <primary>sequence ID</primary>
-            </indexterm>
-            <para condition="pe">If &abbrev; receives a message via the IETF-syslog protocol that includes a sequence ID, this ID is automatically available in the <parameter>${SEQNUM}</parameter> macro.</para>
-			<indexterm>
-				<primary>Cisco timestamp</primary>
-			</indexterm>
-			<indexterm>
-				<primary>Cisco sequence number</primary>
-			</indexterm>
-			<indexterm>
-				<primary>sequence number</primary>
-			</indexterm>
-			<indexterm>
-				<primary>sequence number</primary>
-				<secondary>Cisco</secondary>
-			</indexterm>
-			<indexterm>
-				<primary>message</primary>
-			    <secondary>ID</secondary>
-			</indexterm>
-			<indexterm>
-				<primary>extended timestamp format</primary>
-			</indexterm>
-			<para>&abbrev; versions <phrase condition="pe">3.2</phrase><phrase condition="ose">3.4</phrase> and later versions store the sequence number from Cisco IOS log messages using the extended timestamp format in this macro. If this message is then forwarded using the IETF-syslog protocol, &abbrev; includes the sequence number received from the Cisco device in the <parameter>${.SDATA.meta.sequenceId}</parameter> part of the message.</para>
-			<note>
-				<para>To enable sequence numbering of log messages on Cisco devices, use the following command on the device (available in IOS 10.0 and later): <command>service sequence-numbers</command>.</para>
-				<para>For details, see <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.cisco.com/en/US/docs/ios/12_3/configfun/command/reference/cfr_1g07.html#wp1029551">Cisco IOS Configuration Fundamentals and Network Management Command Reference</link>.</para>
-			</note>
-        </simplesect>
-        <simplesect>
-            <title>SOURCEIP</title>
-                <indexterm type="parameter">
-                    <primary>SOURCEIP</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$SOURCEIP</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> IP address of the host that sent the message to syslog-ng. (That is, the
-                IP address of the host in the <parameter>FULLHOST_FROM</parameter>
-                macro.) Please note that when a message traverses several relays, this
-                macro contains the IP of the last relay.</para>
-        </simplesect>
-        <simplesect xml:id="macro_stamp">
-            <title>STAMP, R_STAMP, S_STAMP</title>
-                <indexterm type="parameter">
-                    <primary>STAMP, C_STAMP, R_STAMP, S_STAMP</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$STAMP, $C_STAMP, $R_STAMP, $S_STAMP</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> A timestamp formatted according to the <link linkend="reference_options">
-                <parameter>ts_format()</parameter>
-            </link> global or per-destination option.</para>
-        </simplesect>
-        <simplesect xml:id="macro_sysuptime">
-            <title>SYSUPTIME</title>
-                <indexterm type="parameter">
-                    <primary>SYSUPTIME</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>${SYSUPTIME}</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The time elapsed since the computer running &abbrev; has booted. If this data is not available, the macro contains the time elapsed since &abbrev; was started. The value of this macro is an integer containing the time in 1/100th of the second.</para>
-            <para>Available in &abbrev; version <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.4</phrase> and later.</para>
-        </simplesect>
-        <simplesect xml:id="macro_tag">
-            <title>TAG</title>
-                <indexterm type="parameter">
-                    <primary>TAG</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$TAG</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The priority and facility encoded as a 2 digit hexadecimal number.</para>
-        </simplesect>
-        <simplesect xml:id="macro_tags">
-            <title>TAGS</title>
-                <indexterm type="parameter">
-                    <primary>TAGS</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$TAGS</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>macros</primary>
-                    <secondary>patterndb tags</secondary>
-                </indexterm>
-                <indexterm>
-                    <primary>tags</primary>
-                    <secondary>as macro</secondary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> A comma-separated list of the tags assigned to the message.</para>
-            <note>
-                <para>Note that the tags are not part of the log message and are not automatically transferred from a client to the server. For example, if a client uses a pattern database to tag the messages, the tags are not transferred to the server. A way of transferring the tags is to explicitly add them to the log messages using a template and the <parameter>$TAGS</parameter> macro, or to add them to the structured metadata part of messages when using the IETF-syslog message format.</para>
-                <para>When sent as structured metadata, it is possible to reference to the list of tags on the central server, and for example, to add them to a database column.</para>
-            </note>
-        </simplesect>
-        <simplesect xml:id="macro_tz">
-            <title>TZ, C_TZ, R_TZ, S_TZ</title>
-                <indexterm type="parameter">
-                    <primary>TZ, C_TZ, R_TZ, S_TZ</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$TZ, $C_TZ, $R_TZ, $S_TZ</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Equivalent to TZOFFSET, used to mean the time zone name abbreviation
-                in syslog-ng 1.6.x.</para>
-        </simplesect>
-        <simplesect xml:id="macro_tzoffset">
-            <title>TZOFFSET, C_TZOFFSET, R_TZOFFSET, S_TZOFFSET</title>
-                <indexterm type="parameter">
-                    <primary>TZOFFSET, C_TZOFFSET, R_TZOFFSET, S_TZOFFSET</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$TZOFFSET, $C_TZOFFSET, $R_TZOFFSET, $S_TZOFFSET</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The time-zone as hour offset from GMT; for example:
-                <parameter>-07:00</parameter>. In syslog-ng 1.6.x this used to be
-                <parameter>-0700</parameter> but as <parameter>ISODATE</parameter>
-                requires the colon it was added to <parameter>TZOFFSET</parameter> as
-                well.</para>
-        </simplesect>
-        <simplesect xml:id="macro_unixtime">
-            <title>UNIXTIME, C_UNIXTIME, R_UNIXTIME, S_UNIXTIME</title>
-                <indexterm type="parameter">
-                    <primary>UNIXTIME, C_UNIXTIME, R_UNIXTIME, S_UNIXTIME</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$UNIXTIME, $C_UNIXTIME, $R_UNIXTIME, $S_UNIXTIME</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> Standard unix timestamp, represented as the number of seconds since
-                <parameter>1970-01-01T00:00:00</parameter>.</para>
-        </simplesect>
-        <simplesect xml:id="macro_usec">
-            <title>USEC, C_USEC, R_USEC, S_USEC</title>
-                <indexterm type="parameter">
-                    <primary>USEC, C_USEC, R_USEC, S_USEC</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>${USEC}, ${C_USEC}, ${R_USEC}, ${S_USEC}</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The microsecond the message was sent.</para>
-            <para>Available in &abbrev; version <phrase condition="pe">4 F2</phrase><phrase condition="ose">3.4</phrase> and later.</para>
-        </simplesect>
-        <simplesect xml:id="macro_year">
-            <title>YEAR, C_YEAR, R_YEAR, S_YEAR</title>
-                <indexterm type="parameter">
-                    <primary>YEAR, C_YEAR, R_YEAR, S_YEAR</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$YEAR, $C_YEAR, $R_YEAR, $S_YEAR</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The year the message was sent.</para>
-        </simplesect>
-        <simplesect xml:id="macro_week">
-            <title>WEEK, C_WEEK, R_WEEK, S_WEEK</title>
-                <indexterm type="parameter">
-                    <primary>WEEK, C_WEEK, R_WEEK, S_WEEK</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$WEEK, $C_WEEK, $R_WEEK, $S_WEEK</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The week number of the year, prefixed with a zero for the first nine
-                week of the year. (The first Monday in the year marks the first
-                week.)</para>
-        </simplesect>
-        <simplesect xml:id="macro_week_abbrev">
-            <title>WEEK_ABBREV, C_WEEK_ABBREV, R_WEEK_ABBREV, S_WEEK_ABBREV</title>
-                <indexterm type="parameter">
-                    <primary>WEEK_ABBREV, C_WEEK_ABBREV, R_WEEK_ABBREV, S_WEEK_ABBREV</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$WEEK_ABBREV, $C_WEEK_ABBREV, $R_WEEK_ABBREV, $S_WEEK_ABBREV</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The 3-letter English abbreviation of the name of the day the message was sent, for example <parameter>Thu</parameter>.</para>
-        </simplesect>
-        <simplesect xml:id="macro_week_day">
-            <title>WEEK_DAY, C_WEEK_DAY, R_WEEK_DAY, S_WEEK_DAY</title>
-                <indexterm type="parameter">
-                    <primary>WEEK_DAY, C_WEEK_DAY, R_WEEK_DAY, S_WEEK_DAY</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$WEEK_DAY, $C_WEEK_DAY, $R_WEEK_DAY, $S_WEEK_DAY</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The day of the week as a numerical value (1-7).</para>
-        </simplesect>
-        <simplesect xml:id="macro_weekday">
-            <title>WEEKDAY, C_WEEKDAY, R_WEEKDAY, S_WEEKDAY</title>
-                <indexterm type="parameter">
-                    <primary>WEEKDAY, C_WEEKDAY, R_WEEKDAY, S_WEEKDAY</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$WEEKDAY, $C_WEEKDAY, $R_WEEKDAY, $S_WEEKDAY</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> These macros are deprecated, use <link linkend="macro_week_abbrev">WEEK_ABBREV, R_WEEK_ABBREV, S_WEEK_ABBREV</link> instead. The 3-letter name of the day of week the message was sent, for example
-                <parameter>Thu</parameter>.</para>
-        </simplesect>
-        <simplesect xml:id="macro_week_day_name">
-            <title>WEEK_DAY_NAME, C_WEEK_DAY_NAME, R_WEEK_DAY_NAME, S_WEEK_DAY_NAME</title>
-                <indexterm type="parameter">
-                    <primary>WEEK_DAY_NAME, C_WEEK_DAY_NAME, R_WEEK_DAY_NAME, S_WEEK_DAY_NAME</primary>
-                </indexterm>
-                <indexterm type="parameter">
-                    <primary>$WEEK_DAY_NAME, $C_WEEK_DAY_NAME, $R_WEEK_DAY_NAME, $S_WEEK_DAY_NAME</primary>
-                </indexterm>
-            <para><guilabel>Description:</guilabel> The English name of the day.</para>
-        </simplesect>
-    </section>
+        <xi:include href="reference-macros.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <section xml:id="template-functions">
             <title>Using template functions</title>
             <indexterm>
@@ -865,345 +206,14 @@ destination d_file {
             </indexterm>
             <para>A template function is a transformation: it modifies the way macros or name-value pairs are expanded. Template functions can be used in template definitions, or when macros are used in the configuration of &abbrev;. Template functions use the following syntax:</para>
             <synopsis>$(function-name parameter1 parameter2 parameter3 ...)</synopsis>
-            <para>For example, the <parameter>$(echo)</parameter> template function simply returns the value of the macro it receives as a parameter, thus <parameter>$(echo $HOST)</parameter> is equivalent to <parameter>$HOST</parameter>.</para>
+            <para>For example, the <parameter>$(echo)</parameter> template function simply returns the value of the macro it receives as a parameter, thus <parameter>$(echo ${HOST})</parameter> is equivalent to <parameter>${HOST}</parameter>.</para>
             <para>The parameters of template functions are separated by a whitespace character. If you want to use a longer string or multiple macros as a single parameter, enclose the parameter in double-quotes or apostrophes. For example:</para>
-            <synopsis>$(echo "$HOST $PROGRAM $PID")</synopsis>
+            <synopsis>$(echo "${HOST} ${PROGRAM} ${PID}")</synopsis>
             <para>Template functions can be nested into each other, so the parameter of a template function can be another template function, like:</para>
-            <synopsis>$(echo $(echo $HOST))</synopsis>
+            <synopsis>$(echo $(echo ${HOST}))</synopsis>
             <para>For details on using template functions, see the descriptions of the individual template functions in <xref linkend="reference-template-functions"/>.</para>
         </section>
-        <section xml:id="reference-template-functions">
-            <title>Template functions of &abbrev;</title>
-            <para>The following template functions are available in &abbrev;.</para>
-            <simplesect xml:id="template-function-echo">
-                <title>echo</title>
-                    <indexterm type="parameter">
-                        <primary>echo</primary>
-                    </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(echo argument)</synopsis></para>
-                <para><guilabel>Description:</guilabel> Returns the value of its argument. using <parameter>$(echo $HOST)</parameter> is equivalent to <parameter>$HOST</parameter>.</para>
-            </simplesect>
-            <simplesect xml:id="template-function-format-json" condition="ose">
-                <title>format-json</title>
-                    <indexterm type="parameter">
-                        <primary>format-json</primary>
-                    </indexterm>
-            	<indexterm>
-            		<primary>JSON</primary>
-            	</indexterm>
-            	<indexterm>
-            		<primary>JavaScript Object Notation</primary>
-            	</indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(format-json parameters)</synopsis></para>
-                <para><guilabel>Description:</guilabel> The <parameter>format-json</parameter> template function receives value-pairs as parameters and converts them into JavaScript Object Notation (JSON) format. Including the template function in a message template allows you to store selected information about a log message (that is, its content, macros, or other metadata) in JSON format.</para>
-                <para>For details on selecting value-pairs in &abbrev; and for possibilities to specify which information to convert to JSON format, see <xref linkend="concepts-value-pairs"/>. Note that the syntax of <parameter>format-json</parameter> is different from the syntax of <parameter>value-pairs()</parameter>: <parameter>format-json</parameter> uses a syntax similar to command lines.</para>
-                <example>
-                    <title>Using the format-json template function</title>
-                    <para>The following example selects every available information about the log message, except for the date-related macros (<parameter>R_*</parameter> and <parameter>S_*</parameter>), selects the <parameter>.SDATA.meta.sequenceId</parameter> macro, and defines a new value-pair called <parameter>MSGHDR</parameter> that contains the program name and PID of the application that sent the log message.</para>
-                    <synopsis>$(format-json --scope syslog,all_macros,selected_macros \
-  --exclude R_* --exclude S_* --key .SDATA.meta.sequenceId \
-  --pair MSGHDR="$PROGRAM[$PID]: ")</synopsis>
-                    <para>The following example shows how to use this template function to store log messages in JSON format:</para>
-                    <synopsis>destination d_json {
-  file("/var/log/messages.json" template("$(format_json --scope selected_macros --scope nv_pairs)"));
-};</synopsis>
-                </example>
-            	<note>
-            		<para>In case of syslog-ng macros starting with a dot (for example "<parameter>.SDATA.meta.sequenceID</parameter>") an empty key name is added at the top level of the JSON structure. You can work around this by adding <parameter>--shift 1</parameter> as a parameter to the template function. For example in case of "<parameter>.SDATA.meta.sequenceID</parameter>", an empty key name is added at the top level of the JSON structure:</para>
-            		<synopsis>{"":
-    {"SDATA" :
-        {"meta" :
-            {"sequenceID": "123"}
-        }
-    }
-}</synopsis>
-            	</note>
-            </simplesect>
-            <simplesect xml:id="template-function-geoip" condition="ose">
-                <title>geoip</title>
-                    <indexterm type="parameter">
-                        <primary>geoip</primary>
-                    </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(geoip &lt;IP-address&gt;)</synopsis></para>
-                <para><guilabel>Description:</guilabel> This template function returns the 2-letter country code of any IPv4 address or host. Currently only the 2-letter codes are supported, and only from the default database. For example, <parameter>$(geoip $HOST)</parameter></para>
-                <note condition="ose">
-                    <para>This template function is available only if &abbrev; has been compiled with the <parameter>--enable-geoip</parameter> compiling option.</para>
-                </note>
-            </simplesect>
-            <simplesect xml:id="template-function-grep">
-                <title>grep</title>
-                    <indexterm type="parameter">
-                        <primary>grep</primary>
-                    </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(grep condition value-to-select)</synopsis><!-- FIXME pontositani --></para>
-                <para><guilabel>Description:</guilabel> The <parameter>grep</parameter> template function is useful when using a pattern database to correlate related log messages. The <parameter>grep</parameter> template function can be used to filter the messages of the same context when the index of the particular message is not known.</para>
-                <example>
-                    <title>Using the grep template function</title>
-                    <para>The following example selects the message of the context that has a <parameter>username</parameter> name-value pair with the <parameter>root</parameter> value, and returns the value of the <parameter>auth_method</parameter> name-value pair.</para>
-                    <synopsis>$(grep ("${username}" == "root") ${auth_method})</synopsis>
-                </example>
-                <para>It is possible to specify multiple name-value pairs as parameters, separated with commas. If multiple messages match the condition of <parameter>grep</parameter>, these will be returned also separated by commas. This can be used for example to collect the e-mail recipients from postfix messages.</para>
-                <!-- FIXME konkret peldat! -->
-            </simplesect>
-        	<simplesect xml:id="template-function-hash" condition="ose">
-        		<title>tfhash</title>
-        		<indexterm type="parameter">
-        			<primary>tfhash</primary>
-        		</indexterm>
-                <indexterm type="parameter">
-        			<primary>$(hash)</primary>
-        		</indexterm>
-                <indexterm type="parameter">
-        			<primary>$(md5), $(md4)</primary>
-        		</indexterm>
-                <indexterm type="parameter">
-        			<primary>$(sha1), $(sha256), $(sha512)</primary>
-        		</indexterm>
-                <indexterm type="parameter">
-        			<primary>tfhash</primary>
-        		</indexterm>
-        		<para><guilabel>Syntax:</guilabel> <synopsis>$(&lt;method&gt; [opts] $arg1 $arg2 $arg3...)</synopsis></para>
-        		<para><guilabel>Options:</guilabel> <synopsis>--length N, -l N</synopsis> Truncate the hash to the first N characters.</para>
-        		<para><guilabel>Description:</guilabel> <parameter>&lt;method&gt;</parameter> can be one of md5, md4, sha1, sha256, sha512 and "hash", which is equivalent to md5. Macros are expected as arguments, and they are concatenated without the use of additional characters.</para>
-        		<para>This template function can be used for anonymizing sensitive parts of the log message (for example username) that were parsed out using PatternDB before storing or forwarding the message. This way, the ability of correlating messages along this value is retained.</para>
-        		<para>Also, using this template, quasi-unique IDs can be generated for data, using the <parameter>--length</parameter> option. This way, IDs will be shorter than a regular hash, but there is a very small possibility of them not being as unique as a non-truncated hash.</para>
-                <note>
-                    <para>These template functions are available only if <phrase condition="ose">&abbrev; has been compiled with the <parameter>--enable-ssl</parameter> compile option and </phrase>the <filename>tfhash</filename> module has been loaded. By default, &abbrev; loads every available module.</para>
-                    <!-- FIXME link a modulokrol szolo leirasra-->
-                </note>
-                <example xml:id="template-function-hash-example">
-                    <title>Using the $(hash) template function</title>
-                    <para>The following example calculates the SHA1 hash of the hostname of the message:</para>
-                    <synopsis>$(sha1 $HOST)</synopsis>
-                    <para>To use shorter hashes, set the <parameter>--length</parameter>:</para>
-                    <synopsis>$(sha1 --length 6 $HOST)</synopsis>
-                    <para>To replace the hostname with its hash, use a rewrite rule:</para>
-                    <synopsis>rewrite r_rewrite_hoistname{set("$(sha1 $HOST)", value("HOST"));};</synopsis>
-                </example>
-        	</simplesect>
-
-            <simplesect xml:id="template-function-if">
-                <title>if</title>
-                    <indexterm type="parameter">
-                        <primary>if</primary>
-                    </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(if (&lt;condition&gt;) &lt;true template&gt; &lt;false template&gt;)</synopsis></para>
-                <para><guilabel>Description:</guilabel> Returns the value of the <parameter>&lt;true template&gt;</parameter> parameter if the <parameter>&lt;condition&gt;</parameter> is true. If the <parameter>&lt;condition&gt;</parameter> is false, the value of <parameter>&lt;false template&gt;</parameter> is returned.</para>
-                <example>
-                    <title>Using pattern databases and the if template function</title>
-                    <para>The following example returns <parameter>violation</parameter> if the <parameter>username</parameter> name-value pair of a message processed with pattern database is <parameter>root</parameter>, and <parameter>system</parameter> otherwise.</para>
-                    <synopsis>$(if ("${username}" == "root") "violation" "system")</synopsis>
-                    <para>This can be used to set the class of a message in pattern database rules based on the condition.</para>
-                    <synopsis>&lt;value name="username"&gt;$(if ("${username}" == "root") "violation" "system")&lt;/value&gt;</synopsis>
-                    <indexterm>
-                        <primary>template functions</primary>
-                        <secondary>embedding</secondary>
-                    </indexterm>
-                    <para>Since template functions can be embedded into each other, it is possible to use another template function as the template of the first one. For example, the following expression returns <parameter>root</parameter> if the username is <parameter>root</parameter>, <parameter>admin</parameter> if the username is <parameter>joe</parameter>, and <parameter>normal user</parameter> otherwise.</para>
-                    <synopsis>&lt;value name="username"&gt;
-        $(if ("${username}" == "root")
-            "root"
-            $(if ("${username}" == "joe") "admin" "normal user")
-            "normal user")&lt;/value&gt;</synopsis>
-                </example>
-            </simplesect>
-            <simplesect xml:id="template-function-indent-multi-line">
-                <title>indent-multi-line</title>
-                    <indexterm type="parameter">
-                        <primary>indent-multi-line</primary>
-                    </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(indent-multi-line parameter)</synopsis></para>
-                <para><guilabel>Description:</guilabel> This template function makes it possible to write multi-line log messages into a file. The first line is written like a regular message, subsequent lines are indented with a tab, in compliance with RFC822.</para>
-                <example>
-                    <title>Using the indent-multi-line template function</title>
-                    <para>The following example writes multi-line messages into a text file.</para>
-                    <synopsis>destination d_file {
-                file ("/var/log/messages"
-                        template("${ISODATE} ${HOST} $(indent-multi-line ${MESSAGE})\n") );
-};</synopsis>
-                </example>
-            </simplesect>
-            <simplesect xml:id="template-function-ipv4-to-int">
-                <title>ipv4-to-int</title>
-                    <indexterm type="parameter">
-                        <primary>ipv4-to-int</primary>
-                    </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(ipv4-to-int parameter)</synopsis></para>
-                <para><guilabel>Description:</guilabel> Converts the specified IPv4 address to its numeric representation. The numerical value of an IPv4 address is calculated by treating the IP address as a 4-byte hexadecimal value. For example, the 192.168.1.1 address equals to: 192=C0, 168=A8, 1=01, 1=01, or C0A80101, which is 3232235777 in decimal representation.</para>
-                <note>
-                    <para>This template function is available only if the <filename>convertfuncs</filename> module has been loaded. By default, &abbrev; loads every available module.</para>
-                    <!-- FIXME link a modulokrol szolo leirasra-->
-                </note>
-            </simplesect>
-            <simplesect xml:id="template-function-length" condition="ose">
-                <title>length</title>
-                    <indexterm type="parameter">
-                        <primary>length</primary>
-                    </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(length "&lt;macro&gt;")</synopsis></para>
-                <para><guilabel>Description:</guilabel> Returns the length of the macro in characters, for example, the length of the message. For example, the following filter selects messages that are shorter than 16 characters:</para>
-                <synopsis>f_short {
-    match ('-', value ("$(if ($(length "${MSG}") &lt;= 16) "-" "+")"));
-};</synopsis>
-            </simplesect>
-            <simplesect xml:id="template-function-numerical" condition="ose">
-                <title>Numerical operations</title>
-                    <indexterm type="parameter">
-                        <primary>numerical operations</primary>
-                    </indexterm>
-                    <indexterm type="parameter">
-                        <primary>addition</primary>
-                    </indexterm>
-                    <indexterm type="parameter">
-                        <primary>substraction</primary>
-                    </indexterm>
-                    <indexterm type="parameter">
-                        <primary>multiplication</primary>
-                    </indexterm>
-                    <indexterm type="parameter">
-                        <primary>division</primary>
-                    </indexterm>
-                    <indexterm type="parameter">
-                        <primary>modulus</primary>
-                    </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(&lt;operation&gt; "&lt;value1&gt;" "&lt;value2&gt;")</synopsis></para>
-                <para><guilabel>Description:</guilabel> These template functions allow you to manipulate numbers, that is, to perform addition (+), substraction (-), multiplication (*), division (/), and modulus (%). All of them require two numeric arguments. The result is <parameter>NaN</parameter> (Not-a-Number) if the parameters are not numbers, cannot be parsed, or if a division by zero would occur. For example, to add the value of two macros, use the following template function:</para>
-                <synopsis>$(+ "${&lt;MACRO1&gt;}" "${&lt;MACRO2&gt;}");</synopsis>
-            </simplesect>
-            <simplesect xml:id="template-function-sanitize" condition="ose">
-                <title>sanitize</title>
-                    <indexterm type="parameter">
-                        <primary>sanitize</primary>
-                    </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(sanitize &lt;options&gt; "&lt;macro1&gt;" "&lt;macro2&gt; ...")</synopsis></para>
-                <para><guilabel>Description:</guilabel> This file replaces the special characters in macro values, for example, it can replace the slash (/) characters in a filename with the underscore (_) character. If you specify multiple arguments, they will be concatenated using the <parameter>/</parameter> character, so they can be used as separate directory levels when used in filenames.</para>
-                <para>The function has the following options:</para>
-                <variablelist>
-                    <varlistentry>
-                        <term>
-                            <parameter>--ctrl-chars or -c</parameter>
-                        </term>
-                        <listitem>
-                            <para>Filter control characters (characters that have an ASCII code of 32 or lower). This option is used by default.</para>
-                        </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term>
-                            <parameter>--invalid-chars &lt;characterlist&gt; or -i &lt;characterlist&gt;</parameter>
-                        </term>
-                        <listitem>
-                            <para>The list of characters to be replaced with underscores (_). The default list contains the <parameter>/</parameter> character. The following example replaces the \ and @ characters, so for example, fo\o@bar becomes foobar:</para>
-                            <synopsis>$(sanitize -i \@ $PROGRAM)</synopsis>
-                        </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term>
-                            <parameter>--no-ctrl-chars or -C</parameter>
-                        </term>
-                        <listitem>
-                            <para>Do not filter the control characters (characters that have an ASCII code of 32 or lower).</para>
-                        </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term>
-                            <parameter>--replacement &lt;replacement-character&gt; or -r &lt;replacement-character&gt;</parameter>
-                        </term>
-                        <listitem>
-                            <para>The character used to replace invalid characters. By default, this is the underscore (_). The following example replaces invalid characters with colons instead of underscores, so for example, foo/bar becomes foo;bar:</para>
-                            <synopsis>$(sanitize -r ; $PROGRAM)</synopsis>
-                        </listitem>
-                    </varlistentry>
-                </variablelist>
-                <example>
-                    <title>Using the sanitize template function</title>
-                    <para>The following example uses the sanitize function on two macros, and the results are used as directory names in a file destination.</para>
-                    <synopsis>file("/var/log/$(sanitize $HOST $PROGRAM)/messages");</synopsis>
-                    <para>This is equivalent to <parameter>file("/var/log/$HOST/$PROGRAM/messages");</parameter>, but any slashes in the values of the $HOST and $PROGRAM macros are replaced with underscores.</para>
-                </example>
-            </simplesect>
-            <simplesect xml:id="template-function-strip" condition="ose">
-                <title>strip</title>
-                    <indexterm type="parameter">
-                        <primary>strip</primary>
-                    </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(strip "&lt;macro&gt;")</synopsis></para>
-                <para><guilabel>Description:</guilabel> Deletes whitespaces from the beginning and the end of a macro. You can specify multiple macros separated with whitespace in a single template function, for example:</para>
-                <synopsis>$(strip "${MSG}" "${PROGRAM}");
-};</synopsis>
-            </simplesect>
-            <simplesect xml:id="template-function-substr" condition="ose">
-                <title>substr</title>
-                <indexterm type="parameter">
-                    <primary>substr</primary>
-                </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(substr "&lt;argument&gt;" "&lt;offset&gt;" "&lt;length&gt;")</synopsis></para>
-                <para><guilabel>Description:</guilabel> This function extracts a substring of a string.</para>
-                <variablelist>
-                    <varlistentry>
-                        <term>
-                            <command>argument</command>
-                        </term>
-                        <listitem>
-                            <para>The string to extract the substring from, for example, <parameter>"${MSG}"</parameter></para>
-                        </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term>
-                            <command>offset</command>
-                        </term>
-                        <listitem>
-                            <para>Specifies where the substring begins (in characters). <parameter>0</parameter> means to start from the beginning of the string, <parameter>5</parameter> means to skip the first 5 characters of the string, and so on. Use negative numbers to specify where to start from the end of the string, for example, <parameter>-1</parameter> means the last character, <parameter>-5</parameter> means to start five characters before the end of the string.</para>
-                        </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term>
-                            <command>length</command>
-                        </term>
-                        <listitem>
-                            <para><emphasis>Optional parameter</emphasis>: The number of characters to extract. If not specified, the substring will be extracted from the offset to the end of the string. Use negative numbers to stop the substring before the end of the string, for example, <parameter>-5</parameter> means the substring ends five characters before the end of the string.</para>
-                        </listitem>
-                    </varlistentry>
-                </variablelist>
-                <example>
-                    <title>Using the substr template function</title>
-                    <para>Skip the first 15 characters of the message, and select the rest:</para>
-                    <synopsis>$(substr "${MSG}" "15");</synopsis>
-                    <para>Select characters 16-30 of the message:</para>
-                    <synopsis>$(substr "${MSG}" "15" "30");</synopsis>
-                    <para>Select the last 15 characters of the message:</para>
-                    <synopsis>$(substr "${MSG}" "-15");</synopsis>
-                </example>
-            </simplesect>
-        	<simplesect xml:id="template-function-uuid" condition="ose">
-                <title>uuid</title>
-                    <indexterm type="parameter">
-                        <primary>uuid</primary>
-                    </indexterm>
-                <para><guilabel>Syntax:</guilabel> <synopsis>$(uuid)</synopsis></para>
-                <para><guilabel>Description:</guilabel> Generates a Universally Unique IDentifier (UUID) that complies with <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.ietf.org/rfc/rfc4122.txt">RFC4122</link>. That way, an UUID can be added to the message soon after it is received, so messages stored in multiple destinations can be identified. For example, when storing messages in a database and also in files, the UUID can be used to find a particular message both in the database and the files.</para>
-                <para>To generate a UUID, you can use a rewrite rule to create a new value-pair for the message.</para>
-                <example>
-                    <title>Using Universally Unique Identifiers</title>
-                    <para>The following example adds a value-pair called <parameter>MESSAGE_UUID</parameter> to the message using a rewrite rule and a template.</para>
-                </example>
-                <synopsis>rewrite r_add_uuid { set("$(uuid)" value("MESSAGE_UUID")); };
-destination d_file {
-    file ("/var/log/messages"
-          template("$MESSAGE_UUID $ISODATE $HOST $MSG\n")
-          template_escape(no)
-         );
-};
-
-log { source(s_network);
-      rewrite(r_add_uuid);
-      destination(d_file);
-};</synopsis>
-                <note>
-                    <para>This template function is available only if the <filename>tfuuid</filename> module has been loaded. By default, &abbrev; loads every available module.</para>
-                    <!-- FIXME link a modulokrol szolo leirasra-->
-                </note>
-            </simplesect>
-        </section>
+        <xi:include href="reference-template-functions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     </section>
     <section xml:id="modifying-messages">
         <title>Modifying messages</title>
@@ -1356,7 +366,7 @@ rewrite &lt;name_of_the_rule&gt; {
             <indexterm>
                 <primary>filtering rewrites</primary>
             </indexterm>
-            <para>Starting with <phrase condition="pe">4.1</phrase><phrase condition="ose">3.2</phrase>, it is possible to apply a rewrite rule to a message only if certain conditions are met. The <parameter>condition()</parameter> option effectively embeds a filter expression into the rewrite rule: the message is modified only if the message passes the filter. If the condition is not met, the message is passed to the next element of the log path (that is, the element following the rewrite rule in the log statement, for example, the destination). Any filter expression normally used in filters can be used as a rewrite condition. Existing filter statements can be referenced using the <parameter>filter()</parameter> function within the condition.</para>
+            <para>Starting with <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.2</phrase>, it is possible to apply a rewrite rule to a message only if certain conditions are met. The <parameter>condition()</parameter> option effectively embeds a filter expression into the rewrite rule: the message is modified only if the message passes the filter. If the condition is not met, the message is passed to the next element of the log path (that is, the element following the rewrite rule in the log statement, for example, the destination). Any filter expression normally used in filters can be used as a rewrite condition. Existing filter statements can be referenced using the <parameter>filter()</parameter> function within the condition.</para>
             <tip>
                 <para>Using conditions in rewrite rules can simplify your &abbrev; configuration file, as you do not need to create separate log paths to modify certain messages.</para>
             </tip>
