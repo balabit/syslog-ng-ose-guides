@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter 
+<!DOCTYPE chapter
  [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
  %entities;]>
 <chapter xml:id="chapter-routing-filters" xmlns="http://docbook.org/ns/docbook" version="5.0">
-    <title>Routing messages: log paths and filters</title>
+    <title>Routing messages: log paths<phrase condition="pe">, reliability,</phrase> and filters</title>
 <!-- FIXME jumplist -->
         <section xml:id="logpath">
         <title>Log paths</title>
@@ -19,13 +19,7 @@
             <primary>log paths</primary>
             <secondary>defining</secondary>
         </indexterm>
-        <synopsis xml:id="log_path_synopsis">log {
-    source(s1); source(s2); ...
-    optional_element(filter1|parser1|rewrite1);...
-    optional_element(filter2|parser2|rewrite2);...
-    destination(d1); destination(d2); ...
-    flags(flag1[, flag2...]);
-    };</synopsis>
+        <xi:include href="chunks/synopsis-log-path.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <warning>
             <para>Log statements are processed in the order they appear in the configuration file,
                 thus the order of log paths may influence what happens to a message, especially when
@@ -72,12 +66,6 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
                 />.</para>
             </listitem>
         </itemizedlist>
-<!--        <warning>
-                <xi:include href="chapter-routing-messages.xml" xpointer="xpointer(//warning[@id = 'warning_embedded_log_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        </warning>
-        <example>
-                <xi:include href="chapter-routing-messages.xml" xpointer="xpointer(//example[@id = 'example_logpath_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        </example>-->
         <para>For details on the individual flags, see <xref linkend="reference_logflags"/>. The
             effect and use of the <parameter>flow-control</parameter> flag is detailed in <xref
                 linkend="concepts_flow_control"/>.</para>
@@ -192,10 +180,6 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
     #set flags after the embedded log statements
     flags(flag1[, flag2...]);
         };</synopsis>
-<!--            <warning>
-                <xi:include href="chapter-routing-messages.xml" xpointer="xpointer(//warning[@id = 'warning_embedded_log_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </warning>
--->
             <example xml:id="example_logpath_embedded">
                 <title>Using embedded log paths</title>
                 <para>The following log path sends every message to the configured destinations: both the <parameter>d_file1</parameter> and the <parameter>d_file2</parameter> destinations receive every message of the source. </para>
@@ -226,7 +210,7 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
             </example>
         </section>
         </section>
-        <xi:include href="junctions-channels.xml" xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="xpointer(//section[@id='junctions'])"/>
+        <xi:include href="junctions-channels.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <section xml:id="reference_logflags">
             <title>Log path flags</title>
             <para>Flags influence the behavior of syslog-ng, and the way it processes messages. The
@@ -463,7 +447,7 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
             than this value in order for flow-control to have any effect. If a source accepts
             messages from multiple connections, all messages use the same control window.</para>
         <note>
-            <para>Starting with &abbrev; version <phrase condition="pe">4.1</phrase><phrase condition="ose">3.3</phrase>, if the source can handle multiple connections (for example, <parameter>tcp()</parameter>), the size of the control window is divided by the value of the <parameter>max_connections()</parameter> parameter and this smaller control window is applied to each connection of the source.</para>
+            <para>Starting with &abbrev; version <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.3</phrase>, if the source can handle multiple connections (for example, <parameter>tcp()</parameter>), the size of the control window is divided by the value of the <parameter>max_connections()</parameter> parameter and this smaller control window is applied to each connection of the source.</para>
         </note>
         <para>When flow-control is used, every source has its own control window. As a worst-case
             situation, the output buffer of the destination must be set to accommodate all messages
@@ -520,6 +504,36 @@ log { source(s_localhost); destination(d_tcp); };</synopsis>
                     messages stored in the overflow queue. For details on sizing the
                         <parameter>log_fifo_size()</parameter> parameter, see <xref
                         linkend="concepts_flow_control"/>.</para>
+            </listitem>
+        </itemizedlist>
+        <para>There are two types of flow-control: Hard flow-control and soft flow-control.</para>
+        <itemizedlist>
+            <listitem>
+                <indexterm>
+                    <primary>flow-control</primary>
+                    <secondary>soft</secondary>
+                </indexterm>
+                <para><emphasis>Soft flow-control:</emphasis> In case of soft flow-control there is no message lost if the destination can accept messages, but it is possible to lose messages if it cannot accept messages (for example non-writeable file destination, or the disk becomes full), and all buffers are full. Soft flow-control cannot be configured, it is automatically available for file and logstore destinations.</para>
+                <example><title>Soft flow-control</title>
+                    <para><synopsis>source s_file {file("/tmp/input_file.log");};
+destination d_file {file("/tmp/output_file.log");};
+destination d_tcp { tcp("127.0.0.1" port(2222) log_fifo_size(1000)); };
+log{ source(s_file); destination(d_file); destination(d_tcp);};
+</synopsis></para></example>
+            <warning><para>Hazard of data loss! For destinations other than file and logstore, soft flow-control is not available. Thus, it is possible to lose log messages on those destinations. To avoid data loss on those destinations, use hard flow-control.</para></warning>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>flow-control</primary>
+                    <secondary>hard</secondary>
+                </indexterm>
+                <para><emphasis>Hard flow-control:</emphasis> In case of hard flow-control there is no message lost. To use hard flow-control, enable the <parameter>flow_control</parameter> flag in the logpath. Hard flow-control is available for all destinations.</para>
+                <example><title>Hard flow-control</title>
+                    <para><synopsis>source s_file {file("/tmp/input_file.log");};
+destination d_file {file("/tmp/output_file.log");};
+destination d_tcp { tcp("127.0.0.1" port(2222) log_fifo_size(1000)); };
+log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow_control);};
+</synopsis></para></example>
             </listitem>
         </itemizedlist>
         <section>
@@ -797,7 +811,7 @@ log demo_filteredlog {
                     linkend="reference_filters"/>. </para>
             <para>The following filter statement selects the messages that contain the word <parameter>deny</parameter> and come from the host <parameter>example</parameter>.</para>
             <synopsis>filter demo_filter { host("example") and match("deny" value("MESSAGE")); };</synopsis>
-            <para>The <parameter>value()</parameter> parameter of the <parameter>match</parameter> function limits the scope of the function to the text part of the message (that is, the part returned by the <parameter>$MESSAGE</parameter> macro). For details on using the <parameter>match()</parameter> filter function, see <xref linkend="reference-filters-match"/>.</para>
+            <para>The <parameter>value()</parameter> parameter of the <parameter>match</parameter> function limits the scope of the function to the text part of the message (that is, the part returned by the <parameter>${MESSAGE}</parameter> macro). For details on using the <parameter>match()</parameter> filter function, see <xref linkend="reference-filters-match"/>.</para>
             <tip>
                 <para>Filters are often used together with log path flags. For details, see <xref linkend="reference_logflags"/>.</para>
             </tip>
@@ -839,17 +853,17 @@ log demo_filteredlog {
                 <primary>filters</primary>
                 <secondary>comparing values</secondary>
             </indexterm>
-            <para>Starting with &abbrev; version <phrase condition="ose">3.2</phrase><phrase condition="pe">4.1</phrase>, it is also possible to compare macro values and templates as numerical and string values. String comparison is alphabetical: it determines if a string is alphabetically greater or equal to another string. Use the following syntax to compare macro values or templates. For details on macros and templates, see <xref linkend="customizing-message-format"/>.</para>
+            <para>Starting with &abbrev; version <phrase condition="ose">3.2</phrase><phrase condition="pe">4 F1</phrase>, it is also possible to compare macro values and templates as numerical and string values. String comparison is alphabetical: it determines if a string is alphabetically greater or equal to another string. Use the following syntax to compare macro values or templates. For details on macros and templates, see <xref linkend="customizing-message-format"/>.</para>
             <synopsis>filter &lt;filter-id&gt;
         {"&lt;macro-or-template&gt;" operator "&lt;value-or-macro-or-template&gt;"};</synopsis>
             <example xml:id="example-comparison">
                 <title>Comparing macro values in filters</title>
-                <para>The following expression selects log messages containing a PID (that is, <parameter>$PID</parameter> macro is not empty):</para>
-                <synopsis>filter f_pid {"$PID" !=""};</synopsis>
+                <para>The following expression selects log messages containing a PID (that is, <parameter>${PID}</parameter> macro is not empty):</para>
+                <synopsis>filter f_pid {"${PID}" !=""};</synopsis>
                 <para>The following expression accomplishes the same, but uses a template as the left argument of the operator and compares the values as strings:</para>
-                <synopsis>filter f_pid {"$HOST$PID" eq "$HOST"};</synopsis>
+                <synopsis>filter f_pid {"${HOST}${PID}" eq "${HOST}"};</synopsis>
                 <para>The following example selects messages with priority level 4 or higher.</para>
-                <synopsis>filter f_level {"$LEVEL_NUM" &gt; "5"};</synopsis>
+                <synopsis>filter f_level {"${LEVEL_NUM}" &gt; "5"};</synopsis>
             </example>
             <para>Note that:</para>
             <itemizedlist>
@@ -860,7 +874,7 @@ log demo_filteredlog {
                     <para>The <parameter>$</parameter> character must be used before macros.</para>
                 </listitem>
                 <listitem>
-                    <para>Using comparator operators can be equivalent to using filter functions, but is somewhat slower. For example, using <parameter>"$HOST" eq "myhost"</parameter> is equivalent to using <parameter>host("myhost" type(string))</parameter>.</para>
+                    <para>Using comparator operators can be equivalent to using filter functions, but is somewhat slower. For example, using <parameter>"${HOST}" eq "myhost"</parameter> is equivalent to using <parameter>host("myhost" type(string))</parameter>.</para>
                 </listitem>
                 <listitem>
                     <para>You can use any macro in the expression, including user-defined macros from parsers and results of pattern database classifications.</para>
@@ -1002,7 +1016,7 @@ log demo_filteredlog {
                         <para>Tags are available locally, that is, if you add tags to a message on the client, these tags will not be available on the server.</para>
                     </listitem>
                     <listitem>
-                        <para>To include the tags in the message, use the <parameter>$TAGS</parameter> macro in a template. Alternatively, if you are using the IETF-syslog message format, you can include the <parameter>$TAGS</parameter> macro in the <parameter>.SDATA.meta</parameter> part of the message. Note that the <parameter>$TAGS</parameter> macro is available only in &abbrev; 3.1.1 and later.</para>
+                        <para>To include the tags in the message, use the <parameter>${TAGS}</parameter> macro in a template. Alternatively, if you are using the IETF-syslog message format, you can include the <parameter>${TAGS}</parameter> macro in the <parameter>.SDATA.meta</parameter> part of the message. Note that the <parameter>${TAGS}</parameter> macro is available only in &abbrev; 3.1.1 and later.</para>
                     </listitem>
                 </itemizedlist>
             </note>
@@ -1015,83 +1029,7 @@ log demo_filteredlog {
                 <secondary>reference</secondary>
             </indexterm>
             <para>The following functions may be used in the filter statement, as described in <xref linkend="filters"/>.</para>
-            <table xml:id="table_filter_functions">
-                <title>Filter functions available in &abbrev;</title>
-                <indexterm>
-                    <primary>filter functions</primary>
-                    <secondary>list of</secondary>
-                </indexterm>
-                <tgroup cols="2">
-                    <thead>
-                        <row>
-                            <entry>Name</entry>
-                            <entry>Description</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>
-                                <link linkend="filter-facility">facility()</link>
-                            </entry>
-                            <entry>Filter messages based on the sending facility.</entry>
-                        </row>
-                        <row>
-                            <entry>
-                                <link linkend="filter-filter">filter()</link>
-                            </entry>
-                            <entry>Call another filter function.</entry>
-                        </row>
-                        <row>
-                            <entry>
-                                <link linkend="filter-host">host()</link>
-                            </entry>
-                            <entry>Filter messages based on the sending host.</entry>
-                        </row>
-                        <row>
-                            <entry>
-                                <link linkend="filter-priority">level() or priority()</link>
-                            </entry>
-                            <entry>Filter messages based on their priority.</entry>
-                        </row>
-                        <row>
-                            <entry>
-                                <link linkend="reference-filters-match">match()</link>
-                            </entry>
-                            <entry>Use a regular expression to filter messages based on a specified header or content field.</entry>
-                        </row>
-                        <row>
-                            <entry>
-                                <link linkend="filter-message">message()</link>
-                            </entry>
-                            <entry>Use a regular expression to filter messages based their content.</entry>
-                        </row>
-                        <row>
-                            <entry>
-                                <link linkend="filter-netmask">netmask()</link>
-                            </entry>
-                            <entry>Filter messages based on the IP address of the sending host.</entry>
-                        </row>
-                        <row>
-                            <entry>
-                                <link linkend="filter-program">program()</link>
-                            </entry>
-                            <entry>Filter messages based on the sending application.</entry>
-                        </row>
-                        <row>
-                            <entry>
-                                <link linkend="filter-source">source()</link>
-                            </entry>
-                            <entry>Select messages of the specified &abbrev; source statement.</entry>
-                        </row>
-                        <row>
-                            <entry>
-                                <link linkend="filter-tags">tags()</link>
-                            </entry>
-                            <entry>Select messages having the specified tag.</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
+            <xi:include href="chunks/table-filter-functions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <simplesect xml:id="filter-facility">
                 <title>facility()</title>
                     <indexterm type="parameter">
@@ -1486,7 +1424,7 @@ log demo_filteredlog {
        tags("router");
     };</synopsis>
                 </example>
-                <xi:include href="chapter-patterndb.xml" xpointer="xpointer(//note[@id = 'example-tag-class']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                <xi:include href="chunks/note-patterndb-class-tag.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
         </section>
     </section>
