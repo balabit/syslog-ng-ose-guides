@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="configuring-destinations-snmp" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>Sending SNMP traps</title>
+    <indexterm>
+        <primary>destination drivers</primary>
+        <secondary><parameter>snmp()</parameter> driver</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>SNMP traps</primary>
+    </indexterm>
+    <para>The <parameter>snmp()</parameter> driver sends SNMP traps using the Simple Network Management Protocol version 2c or version 3. Incoming log messages can be converted to SNMP traps, as the fields of the SNMP messages can be customized using &abbrev; macros.</para>
+    <note>
+        <para>The <parameter>snmp()</parameter> driver is available in &abbrev; version <phrase condition="pe">4 F1</phrase> and later.</para>
+    </note>
+    <note>
+        <para>The <parameter>snmp</parameter> destination driver currently supports sending SNMP traps only using the UDP transport protocol.</para>
+    </note>
+    <para>The <parameter>snmp()</parameter> driver requires the <parameter>host()</parameter>, <parameter>trap_obj()</parameter>, and <parameter>snmp_obj()</parameter> options to be set, as well as the <parameter>engine_id()</parameter> option in case the SNMPv3 protocol is used. For the list of available optional parameters, see <xref linkend="reference-destination-snmp"/>.</para>
+    <synopsis>Declaration:
+        @module snmp
+        destination d_snmp {snmp(host() trap_obj() snmp_obj() ...);};</synopsis>
+    <indexterm>
+        <primary>@module</primary>
+    </indexterm>
+    <indexterm>
+        <primary>@module snmp</primary>
+    </indexterm>
+    <indexterm>
+        <primary>loading modules</primary>
+    </indexterm>
+    <indexterm>
+        <primary>destination drivers</primary>
+        <secondary>loading the snmp module</secondary>
+    </indexterm>
+    <para>By default, &abbrev; does not load the <parameter>snmp()</parameter> module because most configurations do not use it and it requires significant resources. If you want to use the <parameter>snmp()</parameter> destination, include the following line in your &abbrev; configuration file before defining the destination to load the <parameter>snmp()</parameter> module. This line is needed only once, even if you use multiple SNMP destinations. For details on modules, see <xref linkend="modules-loading"/>.</para>
+    <synopsis>@module snmp</synopsis>
+    <warning>
+        <para>If &abbrev; cannot resolve the destination hostname during startup, it will try to resolve the hostname again when the next message to be sent as an SNMP trap is received. However, if this name resolution fails, the trap will be dropped.</para>
+    </warning>
+    <note>
+        <para>The <parameter>snmp()</parameter> destination driver does not generate MARK signals itself, but can receive and forward MARK signals.</para>
+    </note>
+    <example xml:id="example-destination-snmp">
+        <title>Using the snmp() destination driver</title>
+        <para>The following example defines an SNMP destination that uses the SNMPv2c protocol.</para>
+        <synopsis>destination d_snmpv2c{
+    snmp(
+        version('v2c')
+        host('192.168.1.1')
+        trap_obj('.1.3.6.1.6.3.1.1.4.1.0', 'Objectid', '.1.3.6.1.4.1.18372.3.1.1.1.2.1')
+        snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.1.0', 'Octetstring', 'Test SNMP trap')
+        snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.2.0', 'Octetstring', 'admin')
+        snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.3.0', 'Ipaddress', '192.168.1.1')
+        );
+};</synopsis>
+                <para>The following example defines an SNMP destination that uses the SNMPv3 protocol and uses macros to fill the values of the SNMP objects.</para>
+                <synopsis>destination d_snmpv3{
+    snmp(
+        version('v3')
+        host('192.168.1.1')
+        port(162)
+        engine_id('0xdeadbeefde')
+        auth_username('myusername')
+        auth_password('password')
+        enc_algorithm('AES')
+        enc_password('password')
+        trap_obj('.1.3.6.1.6.3.1.1.4.1.0', 'Objectid', '.1.3.6.1.4.1.18372.3.1.1.1.2.1')
+        snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.1', 'Octetstring', '${MESSAGE}')
+        snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.2', 'Octetstring', 'admin')
+        snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.3', 'Ipaddress', '${SOURCEIP}')
+        );
+};</synopsis>
+    </example>
+    <section xml:id="cisco-syslog-snmp">
+        <title>Converting Cisco syslog messages to "clogMessageGenerated" SNMP traps</title>
+        <indexterm>
+            <primary>clogMessageGenerated</primary>
+        </indexterm>
+        <indexterm>
+            <primary>Cisco SNMP trap</primary>
+        </indexterm>
+        <indexterm>
+            <primary>receiving Cisco syslog messages</primary>
+        </indexterm>
+        <para>Starting with version <phrase condition="pe">4 F1</phrase>, &abbrev; can convert the syslog messages sent by Cisco devices to Cisco-specific SNMP traps defined by the CISCO-SYSLOG-MIB (<parameter>enterprises.cisco.ciscoMgmt.ciscoCiscoMIB</parameter>) is also supported (such traps are also referred to as <parameter>clogMessageGenerated</parameter> notifications). That way, the incoming log messages can be forwarded to devices used to process and analyze Cisco-specific SNMP traps. For this to work correctly, the following requirements must be met:</para>
+        <itemizedlist>
+            <listitem>
+                <para>The snmp module of &abbrev; must be loaded, that is, the &abbrev; configuration file must include the following line:</para>
+                <synopsis>@module snmp</synopsis>
+            </listitem>
+            <listitem>
+                <para>The syslog-ng Source Configuration Library (SCL) must be included in the &abbrev; configuration file:</para>
+                <synopsis>@include "scl.conf"</synopsis>
+            </listitem>
+            <listitem>
+                <para>The pattern database described in <xref linkend="cisco-snmp-patterndb"/> must be used to parse the incoming log messages.</para>
+            </listitem>
+        </itemizedlist>
+        <para>To accomplish this, &abbrev; has to use a special pattern database to parse the Cisco-specific syslog messages, because these messages do not comply with the standard syslog formats.</para>
+        <para>For details on the Cisco-specific SNMP trap format, see <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://tools.cisco.com/Support/SNMP/do/BrowseMIB.do?local=en&amp;step=2&amp;mibName=CISCO-SYSLOG-MIB">CISCO-SYSLOG-MIB</link> on the Cisco website.</para>
+        <section xml:id="cisco-snmp-patterndb">
+            <title>Parsing Cisco-specific message fields with patterndb</title>
+            <para>The <parameter>${PROGRAM}</parameter> part of the syslog messages sent by Cisco devices contain not only the program name, but other important protocol information part as well. The <parameter>${PROGRAM}</parameter> of these messages contains the Facility, Severity, and the Mnemonic (the Cisco name) of the message. The following pattern database parses these values and makes them available as the <parameter>.cisco.Facility, .cisco.Severity</parameter>, and <parameter>.cisco.MsgName</parameter>, respectively. The actual log message is available as <parameter>.cisco.MsgText</parameter>.</para>
+            <synopsis>&lt;patterndb version="4" pub_date="2011-05-03"&gt;
+  &lt;ruleset name="cisco snmp ruleset1" xml:id="480de478-d4a6-4a7f-bea4-0c0245d361e3"&gt;
+    &lt;description&gt;Pattern for Cisco messages having BSD timestamps, for example: Jul 01 2010 00:32:59: %SYS-5-CONFIG_I: Configured from console by console&lt;/description&gt;
+    &lt;url&gt;http://balabit.com&lt;/url&gt;
+      &lt;pattern&gt;%@ESTRING:.cisco.Facility:-@@ESTRING:.cisco.Severity:-@@ANYSTRING:.cisco.MsgName@&lt;/pattern&gt;
+        &lt;rules&gt;
+          &lt;rule xml:id="09944c71-95eb-4bc0-8575-936931d85713" provider="balabit" class="system"&gt;
+            &lt;patterns&gt;
+              &lt;pattern&gt; @ANYSTRING:.cisco.MsgText@&lt;/pattern&gt;
+              &lt;/patterns&gt;
+          &lt;/rule&gt;
+        &lt;/rules&gt;
+  &lt;/ruleset&gt;
+  &lt;ruleset name="cisco snmp ruleset2" xml:id="480de478-d4a6-4a7f-bea4-0c0245d361e3"&gt;
+    &lt;description&gt;Pattern for Cisco messages having cisco-specific timestamps, for example: 18: Jan 22 10:45:44.543: %SYS-5-CONFIG_I: Configured from console by console&lt;/description&gt;
+    &lt;url&gt;http://balabit.com&lt;/url&gt;
+        &lt;rules&gt;
+          &lt;rule xml:id="09944c71-95eb-4bc0-8575-936931d85714" provider="balabit" class="system"&gt;
+            &lt;patterns&gt;
+              &lt;pattern&gt;%@ESTRING:.cisco.Facility:-@@ESTRING:.cisco.Severity:-@@ESTRING:.cisco.MsgName::@ @ANYSTRING:.cisco.MsgText@&lt;/pattern&gt;
+             &lt;/patterns&gt;
+          &lt;/rule&gt;
+        &lt;/rules&gt;
+  &lt;/ruleset&gt;
+&lt;/patterndb&gt;</synopsis>
+        </section>
+        <section xml:id="cisco-clogMessageGenerated-snmp">
+            <title>Sending clogMessageGenerated SNMP traps</title>
+            <para>To send out clogMessageGenerated SNMP traps, use the <parameter>cisco_snmp()</parameter> destination driver. The <parameter>cisco_snmp()</parameter> destination is actually a modified version of the <parameter>snmp()</parameter> destination driver.</para>
+            <indexterm>
+                <primary>clogMessageGenerated</primary>
+            </indexterm>
+            <indexterm>
+                <primary>CISCO-SYSLOG-MIB</primary>
+            </indexterm>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>cisco_snmp()</parameter> driver</secondary>
+            </indexterm>
+            <note>
+                <para>The <parameter>cisco_snmp()</parameter> driver is actually an element of the syslog-ng <link linkend="config-blocks">Source Configuration Library (SCL)</link>, a reusable configuration snippet tailored to handle process accounting logs. For details on using or writing SCLs, see <xref linkend="config-blocks"/>.</para>
+            </note>
+            <para>The <parameter>cisco_snmp()</parameter> driver has the same requirements and options as the <parameter>snmp()</parameter> destination driver, but automatically fills the clogMessageGenerated-specific fields with the data received from parsing the Cisco-specific syslog messages using the pattern database. For details on the , see the <filename>&lt;INSTALLDIR&gt;/ share/include/scl/snmp/plugin.conf</filename> file.</para>
+            <synopsis>Declaration:
+destination d_cisco_snmp {cisco_snmp(host(&lt;hostname&gt;));};</synopsis>
+            <example>
+                <title>Defining a Cisco-specific SNMP destination</title>
+                <para>The following example defines an SNMP destination that sends out clogMessageGenerated messages using the SNMPv3 protocol.</para>
+                <synopsis>destination d_cisco_snmp {cisco_snmp(host("192.168.1.1")
+version("v3")
+engine_id("'0xdeadbeefde'")
+auth_username('myusername')
+auth_password('password')
+enc_password('password'));};
+</synopsis>
+            </example>
+            <!--
+            <para>The <parameter>cisco_snmp()</parameter> SCL is defined as follows:</para>
+            <synopsis>block destination cisco_snmp(
+host()
+port(162)
+version("v2c")
+community("public")
+auth_username()
+auth_algorithm("SHA1")
+auth_password()
+enc_algorithm("DES")
+enc_password()
+engine_id()
+transport("UDP")
+clogHistMsgName('${.cisco.MsgName}')
+clogHistMsgText('$(if ("${.cisco.MsgText}" == "") $MESSAGE ${.cisco.MsgText})')
+clogHistMsgFacility('$(if ("${.cisco.Facility}" == "") $FACILITY ${.cisco.Facility})')
+clogHistMsgSeverity('$(if ("${.cisco.Severity}" == "") $(+ $LEVEL_NUM 1) ${.cisco.Severity}) ')
+clogHistTimeStamp('$SYSUPTIME'))
+{
+snmp(
+    host(`host`)
+    port(`port`)
+    version(`version`)
+    community(`community`)
+    auth_username(`auth_username`)
+    auth_algorithm(`auth_algorithm`)
+    auth_password(`auth_password`)
+    enc_algorithm(`auth_password`)
+    enc_password(`enc_password`)
+    engine_id(`engine_id`)
+    transport(`transport`)
+    trap_obj('1.3.6.1.6.3.1.1.4.1.0', 'Objectid', '1.3.6.1.4.1.9.9.41.2.0.1')
+    snmp_obj('1.3.6.1.4.1.9.9.41.1.2.3.1.4.0', 'Octetstring', 'clogHistMsgName')
+    snmp_obj('1.3.6.1.4.1.9.9.41.1.2.3.1.5.0', 'Octetstring', 'clogHistMsgText')
+    snmp_obj('1.3.6.1.4.1.9.9.41.1.2.3.1.2.0', 'Octetstring', 'clogHistMsgFacility')
+    snmp_obj('1.3.6.1.4.1.9.9.41.1.2.3.1.3.0', 'Integer', 'clogHistMsgSeverity')
+    snmp_obj('1.3.6.1.4.1.9.9.41.1.2.3.1.6.0', 'Timeticks', 'clogHistTimeStamp')
+    );
+};</synopsis>-->
+        </section>
+    </section>
+    <section xml:id="reference-destination-snmp">
+        <title>snmp() destination options</title>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary><parameter>snmp()</parameter> driver</secondary>
+        </indexterm>
+        <para>This driver sends SNMP traps using the SNMP v2c or v3 protocol.</para>
+        <para>The <parameter>snmp()</parameter> destination has the following options:</para>
+        <simplesect xml:id="snmp-destination-option-auth-algorithm">
+            <title>auth_algorithm()</title>
+                <indexterm type="parameter">
+                    <primary>auth_algorithm()</primary>
+                </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>MD5|md5|SHA|sha</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>SHA</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The authentication method to use. Lowercase values (for example, <parameter>sha</parameter>) can be used as well.</para>
+            <para>This option is used with the SNMPv3 protocol.</para>
+        </simplesect>
+        <simplesect xml:id="snmp-destination-option-auth-password">
+            <title>auth_password()</title>
+                <indexterm type="parameter">
+                    <primary>auth_password()</primary>
+                </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>empty string</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The password used for authentication. If the <parameter>auth_username()</parameter> option is set but the <parameter>auth_password()</parameter> is empty, &abbrev; will try to authenticate with an empty password.</para>
+            <para>This option is used with the SNMPv3 protocol.</para>
+        </simplesect>
+        <simplesect xml:id="snmp-destination-option-auth-username">
+            <title>auth_username()</title>
+                <indexterm type="parameter">
+                    <primary>auth_username()</primary>
+                </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The username used to authenticate on the SNMP server. If this parameter is set, &abbrev; will try to authenticate on the SNMP server.</para>
+            <para>This option is used with the SNMPv3 protocol.</para>
+        </simplesect>
+        <simplesect xml:id="snmp-destination-option-community">
+            <title>community()</title>
+                <indexterm type="parameter">
+                    <primary>community()</primary>
+                </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>public</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The community string used for SNMPv2c authentication.</para>
+            <para>This option is used with the SNMPv2c protocol.</para>
+        </simplesect>
+        <simplesect xml:id="snmp-destination-option-enc-algorithm">
+            <title>enc_algorithm()</title>
+                <indexterm type="parameter">
+                    <primary>enc_algorithm()</primary>
+                </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>AES|aes|DES|des</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>DES</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The encryption method used to encrypt the SNMP traffic. Lowercase values (for example, <parameter>aes</parameter>) can be used as well.</para>
+            <para>This option is used with the SNMPv3 protocol.</para>
+        </simplesect>
+        <simplesect xml:id="snmp-destination-option-enc-password">
+            <title>enc_password()</title>
+                <indexterm type="parameter">
+                    <primary>enc_password()</primary>
+                </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The password used for the encryption. Encryption is used only if the <parameter>enc_password()</parameter> is not empty.</para>
+            <para>This option is used with the SNMPv3 protocol.</para>
+        </simplesect>
+        <simplesect xml:id="snmp-destination-option-engine-id">
+            <title>engine_id()</title>
+                <indexterm type="parameter">
+                    <primary>engine_id()</primary>
+                </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>hexadecimal number</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The engine ID is a hexadecimal number at least 10 digits long, starting with <parameter>0x</parameter>. For example <parameter>0xABABABABAB</parameter>.</para>
+            <para>This option is a required parameter when using the SNMPv3 protocol.</para>
+        </simplesect>
+        <simplesect xml:id="snmp-destination-option-host">
+            <title>host()</title>
+            <indexterm type="parameter">
+                <primary>host()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>hostname or IP address</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>n/a</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> Hostname of the SNMP server.</para>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect condition="pe">
+            <xi:include href="../../common/chunk/option-destination-log-disk-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect xml:id="snmp-destination-option-port">
+            <title>port()</title>
+            <indexterm type="parameter">
+                <primary>port()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>number</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>162</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The port number to connect to.</para>
+        </simplesect>
+        <simplesect xml:id="snmp-destination-option-snmp-obj">
+            <title>snmp_obj()</title>
+                <indexterm type="parameter">
+                    <primary>snmp_obj()</primary>
+                </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>&lt;oid_of_the_object&gt;, &lt;type_of_the_object&gt;, &lt;value_of_the_object&gt;</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The <parameter>snmp_obj()</parameter> option can be used to create custom SNMP trap elements. To create a trap element, specify the OID, type, and value of the element in the <parameter>snmp_obj()</parameter> option. To send SNMP traps, at least one <parameter>snmp_obj()</parameter> option must be defined. The <parameter>snmp_obj()</parameter> option requires the following parameters. Note that &abbrev; does not validate the values of these elements.</para>
+            <itemizedlist>
+                <listitem>
+                    <para><parameter>&lt;oid_of_the_object&gt;</parameter>: The object id of the SNMP object, for example, <parameter>.1.3.6.1.4.1.18372.3.1.1.1.1.1</parameter>.</para>
+                </listitem>
+                <listitem>
+                    <para><parameter>&lt;type_of_the_object&gt;</parameter>: The type of the object specified as an ASN.1 primitive. One of: <parameter>Integer, Timeticks, Octetstring, Counter32, Ipaddress, Objectid</parameter>. The type names are not case sensitive.</para>
+                </listitem>
+                <listitem>
+                    <para><parameter>&lt;value_of_the_object&gt;</parameter>: The value of the object as a string. The macros of &abbrev; can be used to set these values, making it possible to transfer the content and other metadata from the the syslog message to the SNMP trap.   Note that if the value of an <parameter>Integer, Counter32</parameter> or <parameter>Timeticks</parameter> object is not a number (for example, is an empty string or other not-number string), &abbrev; will automatically replace the value with 0. The values of other types of objects are not validated.</para>
+                </listitem>
+            </itemizedlist>
+            <example>
+                <title>Defining SNMP objects</title>
+                <para>The following are SNMP object definitions:</para>
+                <synopsis>snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.3', 'Ipaddress', '192.168.1.1')</synopsis>
+                <synopsis>snmp_obj('.1.3.6.1.4.1.18372.3.1.1.1.1.2', 'Octetstring', '${MESSAGE}')</synopsis>
+            </example>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <!--<simplesect xml:id="snmp-destination-option-transport">
+            <title>transport()</title>
+                <indexterm type="parameter">
+                    <primary>transport()</primary>
+                </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>UDP|TCP</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>UDP</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The transport-layer protocol used to send the SNMP messages.</para>
+            <para>This option is used with the SNMPv3 protocol.</para>
+        </simplesect>-->
+        <simplesect xml:id="snmp-destination-option-trap-obj">
+            <title>trap_obj()</title>
+                <indexterm type="parameter">
+                    <primary>trap_obj()</primary>
+                </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>&lt;oid_of_the_object&gt;, "Objectid", &lt;value_of_the_object&gt;</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> The <parameter>trap_obj()</parameter> is a specialized version of the <parameter>snmp_obj()</parameter> option that is used to identify the SNMP trap object. The type of the trap object is always <parameter>Objectid</parameter>. The <parameter>&lt;oid_of_the_object&gt;</parameter> and the <parameter>&lt;value_of_the_object&gt;</parameter> parameters are identical to the respective parameters of the <parameter>snmp_obj()</parameter> option. For details on these parameters, see <xref linkend="snmp-destination-option-snmp-obj"/>.</para>
+            <note>
+                <para>Using the <parameter>trap_obj()</parameter> object is equivalent to using the <parameter>snmp_obj()</parameter> with the <parameter>Objectid</parameter> type.</para>
+            </note>
+        </simplesect>
+        <simplesect xml:id="snmp-destination-option-version">
+            <title>version()</title>
+                <indexterm type="parameter">
+                    <primary>version()</primary>
+                </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>v2c|v3</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>v2c</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><guilabel>Description:</guilabel> Specifies which version of the SNMP protocol to use.</para>
+            <note>
+                <para>The &abbrev; application will accept any valid option for the <parameter>snmp()</parameter> destination, but will only use the ones relevant to the selected protocol version, any other option will be ignored. For example, if the <parameter>version("v2c") engine_id("0xABABABABAB") community("mycommunity")</parameter> options are set, &abbrev; will accept every option, but process only the <parameter>community()</parameter> option, because <parameter>engine_id()</parameter> applies only to SNMPv3.</para>
+            </note>
+        </simplesect>
+    </section>
+</section>
