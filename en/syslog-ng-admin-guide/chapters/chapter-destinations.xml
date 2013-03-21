@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter 
+<!DOCTYPE chapter
  [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
  %entities;]>
 <chapter xml:id="chapter-destinations" xmlns="http://docbook.org/ns/docbook" version="5.0">
@@ -39,96 +39,8 @@
             <para>Sources and destinations are initialized only when they are used in a log statement. For example, &abbrev; connects a remote destination only if the destination is used in a log statement. For details on creating log statements, see <xref linkend="chapter-routing-filters"/>.</para>
         </note>
         <para>The following table lists the destination drivers available in syslog-ng.</para>
-        <table xml:id="table_destination_drivers">
-            <title>Destination drivers available in syslog-ng</title>
-            <indexterm>
-                <primary>destination drivers</primary>
-                <secondary>list of</secondary>
-            </indexterm>
-            <tgroup cols="2">
-                <thead>
-                    <row>
-                        <entry>Name</entry>
-                        <entry>Description</entry>
-                    </row>
-                </thead>
-                <tbody>
-                    <row>
-                        <entry>
-                            <link linkend="configuring-destinations-amqp">amqp()</link>
-                        </entry>
-                        <entry>Publishes messages using the AMQP (Advanced Message Queuing Protocol).</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <link linkend="configuring_destinations_file">file()</link>
-                        </entry>
-                        <entry>Writes messages to the specified file.</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <link linkend="configuring_destinations_pipe">pipe()</link>
-                        </entry>
-                        <entry>Writes messages to the specified named pipe.</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <link linkend="configuring_destinations_program">program()</link>
-                        </entry>
-                        <entry>Forks and launches the specified program, and sends messages to its standard input.</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <link linkend="configuring-destinations-smtp">smtp()</link>
-                        </entry>
-                        <entry>Sends e-mail messages to the specified recipients.</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <link linkend="configuring_destinations_sql">sql()</link>
-                        </entry>
-                        <entry>Sends messages into an SQL database. In addition to the standard syslog-ng packages, the <parameter>sql()</parameter> destination requires database-specific packages to be installed. Refer to the section appropriate for your platform in <xref linkend="chapter_install"/>.</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <link linkend="configuring_destinations_syslog">syslog()</link>
-                        </entry>
-                        <entry>Sends messages to the specified remote host using the <link linkend="concepts_message_ietfsyslog">IETF-syslog protocol</link>. The IETF standard supports message transport using the UDP, TCP, and TLS networking protocols.</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <link linkend="configuring_destinations_tcpudp">tcp() and tcp6()</link>
-                        </entry>
-                        <entry>Sends messages to the specified TCP port of a remote host using the <link linkend="concepts_message_bsdsyslog">BSD-syslog protocol</link> over IPv4 and IPv6, respectively.</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <link linkend="configuring_destinations_tcpudp">udp() and udp6()</link>
-                        </entry>
-                        <entry>Sends messages to the specified UDP port of a remote host using the <link linkend="concepts_message_bsdsyslog">BSD-syslog protocol</link> over IPv4 and IPv6, respectively.</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <link linkend="configuring_destinations_unixstream">unix-dgram()</link>
-                        </entry>
-                        <entry>Sends messages to the specified unix socket in <parameter>SOCK_DGRAM</parameter> style (BSD).</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <link linkend="configuring_destinations_unixstream">unix-stream()</link>
-                        </entry>
-                        <entry>Sends messages to the specified unix socket in <parameter>SOCK_STREAM</parameter> style (Linux).</entry>
-                    </row>
-                    <row>
-                        <entry>
-                            <link linkend="reference_destination_usertty">usertty()</link>
-                        </entry>
-                        <entry>Sends messages to the terminal of the specified user, if the user is logged in.</entry>
-                    </row>
-                </tbody>
-            </tgroup>
-        </table>
-        <xi:include href="destination-amqp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="chunks/table-destination-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+	    <xi:include href="destination-amqp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <section xml:id="configuring_destinations_file">
             <title>Storing messages in plain-text files</title>
             <indexterm>
@@ -157,8 +69,8 @@
                 <title>Using the file() driver with macros in the file name and a template for the
                         message</title>
                 <synopsis>destination d_file {
-        file("/var/log/$YEAR.$MONTH.$DAY/messages"
-             template("$HOUR:$MIN:$SEC $TZ $HOST [$LEVEL] $MSG $MSG\n")
+        file("/var/log/${YEAR}.${MONTH}.${DAY}/messages"
+             template("${HOUR}:${MIN}:${SEC} ${TZ} ${HOST} [${LEVEL}] ${MSG} ${MSG}\n")
              template_escape(no));
 };</synopsis>
             </example>
@@ -171,9 +83,9 @@
                 <para>Exploiting this, a DoS attack can be mounted against the system. If the number
                     of possible destination files and its needed memory is more than the amount
                     available on the syslog-ng server. </para>
-                <para>The most suspicious macro is <parameter>$PROGRAM</parameter>, where the number
+                <para>The most suspicious macro is <parameter>${PROGRAM}</parameter>, where the number
                     of possible variations is rather high. Do not use the
-                    <parameter>$PROGRAM</parameter> macro in insecure environments.</para>
+                    <parameter>${PROGRAM}</parameter> macro in insecure environments.</para>
             </warning>
             <section xml:id="reference_destination_file">
                 <title>file() destination options</title>
@@ -182,105 +94,22 @@
                     <secondary><parameter>file()</parameter> driver</secondary>
                 </indexterm>
                 <para>The <parameter>file()</parameter> driver outputs messages to the specified text file, or to a set of files. The <parameter>file()</parameter> destination has the following options:</para>
-                <warning>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//warning[@id = 'warning-fd-ulimit']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </warning>
+                <xi:include href="chunks/warning-fd-ulimit.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 <!-- FIXME required parameters?? -->
                 <simplesect>
-                    <title>create_dirs()</title>
-                    <indexterm type="parameter">
-                        <primary>create_dirs()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>yes or no</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>no</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> Enable creating non-existing directories.</para>
+                    <xi:include href="chunks/option-destination-create-dirs.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <title>dir_group()</title>
-                    <indexterm type="parameter">
-                        <primary>dir_group()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>string</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>root</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> The group of directories created by syslog-ng.</para>
+                    <xi:include href="chunks/option-destination-dir-group.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <title>dir_owner()</title>
-                    <indexterm type="parameter">
-                        <primary>dir_owner()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>string</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>root</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> The owner of directories created by syslog-ng.</para>
+                    <xi:include href="chunks/option-destination-dir-owner.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <title>dir_perm()</title>
-                    <indexterm type="parameter">
-                        <primary>dir_perm()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>number</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>Use the global settings</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//section[@id = 'destination-file-dir-perm-description']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-dir-perm.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                     <itemizedlist>
                         <listitem>
                             <indexterm type="parameter">
@@ -294,48 +123,28 @@
                     </itemizedlist>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-lines.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-timeout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-frac-digits.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_fsync']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-fsync.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <title>group()</title>
-                    <indexterm type="parameter">
-                        <primary>group()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>string</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>root</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> Set the group of the created file to the one specified.</para>
+                    <xi:include href="chunks/option-destination-group.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_local_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-local-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="chapter-global-options.xml" xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+	                <xi:include href="chunks/option-destination-mark-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
                     <title>overwrite_if_older()</title>
@@ -364,7 +173,7 @@
                                     file is older than the specified amount of time (in seconds), then
                                     syslog-ng removes the existing file and opens a new file with the
                                     same name. In combination with for example the
-                                    <parameter>$WEEKDAY</parameter> macro, this can be used for simple
+                                    <parameter>${WEEKDAY}</parameter> macro, this can be used for simple
                                     log rotation, in case not all history has to be kept. (Note that in
                                     this weekly log rotation example if its Monday 00:01, then the file
                                     from last Monday is not seven days old, because it was probably last
@@ -375,71 +184,28 @@
                                     <parameter>518000</parameter> seconds.</para>
                 </simplesect>
                 <simplesect>
-                    <title>owner()</title>
-                    <indexterm type="parameter">
-                        <primary>owner()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>string</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>root</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> Set the owner of the created file to the one specified.</para>
+                    <xi:include href="chunks/option-destination-owner.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-					<xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_pad_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+					<xi:include href="chunks/option-destination-pad-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 				</simplesect>
                 <simplesect>
-                    <title>perm()</title>
-                    <indexterm type="parameter">
-                        <primary>perm()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>number</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>0600</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> The permission mask of the file if it is created by syslog-ng.
-                                    For octal numbers prefix the number with <parameter>0</parameter>,
-                                    for example use <parameter>0755</parameter> for
-                                    <parameter>rwxr-xr-x</parameter>.</para>
+                    <xi:include href="chunks/option-destination-perm.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-suppress.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-template-escape.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                  <simplesect>
 		            <title>time_reap()</title>
@@ -463,15 +229,18 @@
 		                    </tbody>
 		                </tgroup>
 		            </informaltable>
-		            <xi:include href="reference_common.xml" xpointer="xpointer(//section[@id = 'destination-file-time-reap-description']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+		            <xi:include href="chunks/option-description-destination-file-time-reap.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 		        </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-ts-format.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
             </section>
         </section>
+
         <xi:include href="destination-mongodb.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
         <xi:include href="destination-network.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
         <section xml:id="configuring_destinations_pipe">
             <title>Sending messages to named pipes</title>
             <indexterm>
@@ -504,73 +273,31 @@
                     <filename>/dev/xconsole</filename>. </para>
                 <para>The <parameter>pipe()</parameter> destination has the following options:</para>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-lines.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-timeout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-frac-digits.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <title>group()</title>
-                    <indexterm type="parameter">
-                        <primary>group()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>string</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>root</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> Set the group of the pipe to the one specified.</para>
+                    <xi:include href="chunks/option-destination-group.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="chapter-global-options.xml" xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+	                <xi:include href="chunks/option-destination-mark-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <title>owner()</title>
-                    <indexterm type="parameter">
-                        <primary>owner()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>string</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>root</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> Set the owner of the pipe to the one specified.</para>
+                    <xi:include href="chunks/option-destination-owner.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-					<xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_pad_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+					<xi:include href="chunks/option-destination-pad-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 				</simplesect>
                 <simplesect>
                     <title>perm()</title>
@@ -594,26 +321,25 @@
                             </tbody>
                         </tgroup>
                     </informaltable>
-                    <para><guilabel>Description:</guilabel>The permission mask of the pipe. For octal numbers prefix the
-                                    number with '0', for example: use 0755 for rwxr-xr-x.</para>
+                    <para><guilabel>Description:</guilabel>The permission mask of the pipe. For octal numbers prefix the number with '0', for example: use 0755 for rwxr-xr-x.</para>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-suppress.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-template-escape.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-ts-format.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
             </section>
         </section>
@@ -633,6 +359,7 @@
                     linkend="reference_destination_program"/>.</para>
             <synopsis>Declaration:
                 program(command_to_run);</synopsis>
+            <note><para>The &abbrev; application executes program destinations through the standard system shell. If the system shell is not bash and you experience problems with the program destination, try changing the <filename>/bin/sh</filename> link to <filename>/bin/bash</filename>.</para></note>
             <note>
                 <itemizedlist>
                     <listitem>
@@ -651,7 +378,7 @@
                 shown in the following example.</para>
             <example xml:id="example_destination_program">
                 <title>Using the program() destination driver</title>
-                <synopsis>destination d_prog { program("/bin/script" template("&lt;$PRI&gt;$DATE $HOST $MSG\n"); ); };</synopsis>
+                <synopsis>destination d_prog { program("/bin/script" template("&lt;${PRI}&gt;${DATE} ${HOST} ${MSG}\n"); ); };</synopsis>
             </example>
             <section xml:id="reference_destination_program">
                 <title>program() destination options</title>
@@ -663,40 +390,40 @@
                     its standard input (<parameter>stdin</parameter>). </para>
                 <para>The <parameter>program()</parameter> destination has the following options:</para>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-lines.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-timeout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-frac-digits.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="chapter-global-options.xml" xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+	                <xi:include href="chunks/option-destination-mark-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-suppress.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-template-escape.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-ts-format.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
             </section>
         </section>
@@ -710,6 +437,9 @@
             <indexterm>
                 <primary>destination drivers</primary>
                 <secondary>database driver</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>sql destinations</primary>
             </indexterm>
             <para>The <parameter>sql()</parameter> driver sends messages into an SQL database.
                 Currently the Microsoft SQL (MSSQL), MySQL, Oracle, PostgreSQL, and SQLite databases
@@ -735,7 +465,7 @@
                     linkend="reference_destination_sql"/>.</para> -->
             <synopsis>Declaration:
     sql(database_type host_parameters database_parameters [options]);</synopsis>
-			<para>The <parameter>sql()</parameter> driver has the following required parameters: <link linkend="sql_option_type"><parameter>type()</parameter></link>, <link linkend="sql_option_database"><parameter>database()</parameter></link>, <link linkend="sql_option_table"><parameter>table</parameter></link>, <link linkend="sql_option_columns">columns()<parameter></parameter></link>, and <link linkend="sql_option_values"><parameter>values</parameter></link>.</para>
+			<para>The <parameter>sql()</parameter> driver has the following required parameters: <link linkend="sql_option_type"><parameter>type()</parameter></link>, <link linkend="sql_option_database"><parameter>database()</parameter></link>, <link linkend="sql_option_table"><parameter>table</parameter></link>, <link linkend="sql_option_columns"><parameter>columns()</parameter></link>, and <link linkend="sql_option_values"><parameter>values</parameter></link>.</para>
             <warning>
                 <para>The syslog-ng application requires read and write access to the SQL table,
                     otherwise it cannot verify that the destination table exists.</para>
@@ -745,15 +475,14 @@
                     will be deprecated and specifying the exact database schema will be required in
                     later versions of syslog-ng. </para>
             </warning>
-            <note>
+            <note condition="pe">
                 <para>In addition to the standard syslog-ng packages, the
                     <parameter>sql()</parameter> destination requires database-specific packages to
                     be installed. These packages are automatically installed by the binary syslog-ng
                     installer.</para>
                 <para>The <parameter>sql()</parameter> driver is currently not available for every
                     platform that is supported by syslog-ng. For a list of platforms that support
-                    the <parameter>sql()</parameter> driver, <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/network-security/syslog-ng/central-syslog-server/"
-                        >visit this link</link>.</para>
+                    the <parameter>sql()</parameter> driver, <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/network-security/syslog-ng/central-syslog-server/specifications">visit this link</link>.</para>
             </note>
             <para>The <parameter>table</parameter> and <parameter>value</parameter> parameters can
                 include macros to create tables and columns dynamically (for details, see <xref
@@ -788,7 +517,7 @@
   database("logs")
   table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
   columns("datetime", "host", "program", "pid", "message")
-  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  values("{$R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
   indexes("datetime", "host", "program", "pid", "message"));
   };</synopsis>
                 <para>The following example specifies the type of the database columns as well:</para>
@@ -798,7 +527,7 @@
   database("logs")
   table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
   columns("datetime varchar(16)", "host varchar(32)", "program  varchar(20)", "pid varchar(8)", "message  varchar(200)")
-  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
   indexes("datetime", "host", "program", "pid", "message"));
 };</synopsis>
             </example>
@@ -872,7 +601,7 @@
   database("LOGS")
   table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")
   columns("datetime varchar(16)", "host varchar(32)", "program varchar(32)", "pid varchar(8)", "message varchar2")
-  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
   indexes("datetime", "host", "program", "pid", "message"));
   };</synopsis>
                     <para>The Oracle Instant Client retrieves the address of the database server from
@@ -917,9 +646,7 @@
                     <listitem>
                         <para>In the current version of &abbrev;, the types of database columns
                             must be explicitly set for the MSSQL destination.</para>
-                        <warning>
-                            <xi:include href="reference_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="xpointer(//warning[@id='destination-sql-mssql-columntype']/*)"/>
-                        </warning>
+                            <xi:include href="chunks/warning-destination-mssql-columntypes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                     </listitem>
                     <listitem>
                         <para>The column used to
@@ -956,7 +683,7 @@ sql(type(mssql) host("logserver") port("1433")
   username("syslogng") password("syslogng") database("syslogng")
   table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")columns("datetime varchar(16)", "host varchar(32)",
   "program varchar(32)", "pid varchar(8)", "message varchar(4096)")
-  values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+  values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
   indexes("datetime", "host", "program", "pid"));
   };</synopsis>
                     <para>The date format used by the MSSQL database must be explicitly set in the
@@ -1022,7 +749,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                     <title>Macros:</title>
                     <para/>
                 </formalpara>
-                <para>The value of $SEQNUM macro will be overrided by sql driver regardless of local or relayed incoming message.</para>
+                <para>The value of ${SEQNUM} macro will be overrided by sql driver regardless of local or relayed incoming message.</para>
                 <para>It will be grown continously.</para>
                 <section>
 	                <title>MySQL-specific interaction methods</title>
@@ -1073,35 +800,12 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                                     parameter is optional, and specifies the type of the field. By
                                     default, syslog-ng creates <parameter>text</parameter> columns. Note
                                     that not every database engine can index text fields.</para>
-                    <warning>
-                        <xi:include href="reference_common.xml" xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="xpointer(//warning[@id='destination-sql-mssql-columntype']/*)"/>
-                    </warning>
+                    <xi:include href="chunks/warning-destination-mssql-columntypes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect xml:id="sql_option_database">
-                    <title>database()</title>
-                    <indexterm type="parameter">
-                        <primary>database()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>string</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>logs</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> Name of the database that stores the logs. Macros cannot be used in database name. Also, when using an Oracle database, you cannot use the same <parameter>database()</parameter> settings in more than one destination.</para>
+                    <xi:include href="chunks/option-sql-database.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
-                <simplesect xml:id="sql_option_dbd-option">
+                <simplesect xml:id="sql_option_dbd-option" condition="ose">
                     <title>dbd-option()</title>
                     <indexterm type="parameter">
                         <primary>dbd-option()</primary>
@@ -1174,49 +878,16 @@ dbd-option("null.sleep.query" 5)</synopsis>
                     </example>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-lines.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-timeout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-frac-digits.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
-                <simplesect>
-                    <title>host()</title>
-                    <indexterm type="parameter">
-                        <primary>host()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>hostname or IP address</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>n/a</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> Hostname of the database server. Note that Oracle destinations do
-                                    not use this parameter, but retrieve the hostname from the
-                                    <filename>/etc/tnsnames.ora</filename> file.</para>
-                    <note>
-                        <para>If you specify <parameter>host="localhost"</parameter>, syslog-ng will use a
-                            socket to connect to the local database server. Use
-                            <parameter>host="127.0.0.1"</parameter> to force TCP communication between
-                            syslog-ng and the local database server.</para>
-                        <para>To specify the socket to use, set and export the
-                            <parameter>MYSQL_UNIX_PORT</parameter> environment variable, for example
-                            <command>MYSQL_UNIX_PORT=/var/lib/mysql/mysql.sock; export
-                                MYSQL_UNIX_PORT</command>.</para>
-                    </note>
+                <simplesect xml:id="sql_option_host">
+                    <xi:include href="chunks/option-sql-host.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect xml:id="sql_option_indexes">
                     <title>indexes()</title>
@@ -1252,10 +923,10 @@ dbd-option("null.sleep.query" 5)</synopsis>
 					</itemizedlist>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_local_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-local-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect xml:id="sql_option_null">
                     <title>null()</title>
@@ -1303,7 +974,7 @@ dbd-option("null.sleep.query" 5)</synopsis>
                         database("logs")
                         table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
                         columns("datetime", "host", "program", "pid", "message")
-                        values("$R_DATE", "$HOST", "$PROGRAM", "$PID", "$MSGONLY")
+                        values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
                         indexes("datetime", "host", "program", "pid", "message")
                         null(""));
                         };</synopsis>
@@ -1316,7 +987,7 @@ dbd-option("null.sleep.query" 5)</synopsis>
                         database("logs")
                         table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
                         columns("datetime", "host", "program", "pid", "message")
-                        values("$R_DATE", "$HOST", "$PROGRAM", "${PID:-@@NULL@@}", "$MSGONLY")
+                        values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID:-@@NULL@@}", "${MSGONLY}")
                         indexes("datetime", "host", "program", "pid", "message")
                         null("@@NULL@@"));
                         };</synopsis>
@@ -1325,53 +996,11 @@ dbd-option("null.sleep.query" 5)</synopsis>
                             well.</para>
                     </example>
                 </simplesect>
-                <simplesect>
-                    <title>password()</title>
-                    <indexterm type="parameter">
-                        <primary>password()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>string</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>n/a</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> Password of the database user.</para>
+                <simplesect xml:id="sql_option_password">
+                    <xi:include href="chunks/option-sql-password.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
 				<simplesect xml:id="sql_option_port">
-	                <title>port()</title>
-	                <indexterm type="parameter">
-	                    <primary>port()</primary>
-	                </indexterm>
-	                <informaltable frame="topbot" colsep="0" rowsep="0">
-	                    <tgroup cols="2">
-	                    <colspec colnum="1" colwidth="40pt"/>
-	                        <tbody>
-	                            <row>
-	                                <entry>Type:
-	                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-	                                <entry>number</entry>
-	                            </row>
-	                            <row>
-	                                <entry>Default:
-	                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-	                                <entry>1433 TCP for MSSQL, 3306 TCP for MySQL, 1521 for Oracle, and 5432 TCP for PostgreSQL</entry>
-	                            </row>
-	                        </tbody>
-	                    </tgroup>
-	                </informaltable>
-	                <para><guilabel>Description:</guilabel> The port number to connect to.</para>
+                    <xi:include href="chunks/option-sql-port.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 	            </simplesect>
                 <simplesect xml:id="sql_option_retry_sql_inserts">
 	                <title>retry_sql_inserts</title>
@@ -1452,7 +1081,7 @@ dbd-option("null.sleep.query" 5)</synopsis>
                                     names.</para>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect xml:id="sql_option_type">
                     <title>type()</title>
@@ -1476,34 +1105,10 @@ dbd-option("null.sleep.query" 5)</synopsis>
                             </tbody>
                         </tgroup>
                     </informaltable>
-                    <para><guilabel>Description:</guilabel> Specifies the type of the database, that is, the DBI database driver
-                                    to use. Use the <parameter>mssql</parameter> option to send logs to
-                        an MSSQL database. For details, see the examples of the databases on the
-                                    following sections.</para>
+                    <xi:include href="chunks/option-description-sql-type.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <title>username()</title>
-                    <indexterm type="parameter">
-                        <primary>username()</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>string</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>n/a</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> Name of the database user.</para>
+                    <xi:include href="chunks/option-sql-username.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect xml:id="sql_option_values">
                     <title>values()</title>
@@ -1522,8 +1127,8 @@ dbd-option("null.sleep.query" 5)</synopsis>
                                 <row>
                                     <entry>Default:
                                         <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>"${R_YEAR}-${R_MONTH}-${R_DAY} ${R_HOUR}:${R_MIN}:${R_SEC}",
-                                    "$FACILITY", "$LEVEL", "$HOST", "$PROGRAM", "$PID", "$MSGONLY"</entry>
+                                    <entry>"${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}",
+                                    "${FACILITY}", "${LEVEL}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}"</entry>
                                 </row>
                             </tbody>
                         </tgroup>
@@ -1534,7 +1139,7 @@ dbd-option("null.sleep.query" 5)</synopsis>
 					<example>
 						<title>Value: default</title>
 						<synopsis>columns("date datetime", "host varchar(32)", "row_id serial")
-	values("$R_DATE", "$HOST", default)</synopsis>
+	values("${R_DATE}", "${HOST}", default)</synopsis>
 					</example>
                 </simplesect>
             </section>
@@ -1597,107 +1202,11 @@ dbd-option("null.sleep.query" 5)</synopsis>
                     <secondary><parameter>syslog()</parameter> driver</secondary>
                 </indexterm>
                 <para>The <parameter>syslog()</parameter> driver sends messages to a remote host (for example
-                    a syslog-ng server or relay) on the local intranet or internet using the RFC5424 syslog protocol developed by IETF (for details about the protocol, see <xref
-                        linkend="concepts_message_ietfsyslog"/>). The
-                    protocol supports sending messages using the UDP, TCP, or the encrypted TLS
+                    a syslog-ng server or relay) on the local intranet or internet using the RFC5424 syslog protocol developed by IETF (for details about the protocol, see <xref linkend="concepts_message_ietfsyslog"/>). The
+                    protocol supports sending messages using the <phrase condition="pe"><trademark>RLTP</trademark>, </phrase>UDP, TCP, or the encrypted TLS
                     networking protocols.</para>
                 <para xml:id="table_destination_syslog_options">These destinations have the following options:</para>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_ip_tos']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_ip_ttl']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_keep_alive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_localip']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_localport']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="section_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_syslog_port']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_broadcast']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_rcvbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_sndbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_spoof_source']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <xi:include href="chunks/option-tcp-keepalive-intvl.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                <xi:include href="chunks/option-tcp-keepalive-probes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                <xi:include href="chunks/option-tcp-keepalive-time.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_tls']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
-                <simplesect>
-                    <title>transport</title>
-                    <indexterm type="parameter">
-                        <primary>transport</primary>
-                    </indexterm>
-                    <informaltable frame="topbot" colsep="0" rowsep="0">
-                        <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                            <tbody>
-                                <row>
-                                    <entry>Type:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>udp, tcp, or tls</entry>
-                                </row>
-                                <row>
-                                    <entry>Default:
-                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                                    <entry>tcp</entry>
-                                </row>
-                            </tbody>
-                        </tgroup>
-                    </informaltable>
-                    <para><guilabel>Description:</guilabel> Specifies the protocol used to receive messages from the source.</para>
-                </simplesect>
-                <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
+                <xi:include href="destination-syslog-options.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </section>
         </section>
         <section xml:id="configuring_destinations_tcpudp">
@@ -1775,76 +1284,76 @@ dbd-option("null.sleep.query" 5)</synopsis>
                 </note>
                 <para xml:id="table_destination_tcp_options">These destinations have the following options:</para>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-lines.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-timeout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-frac-digits.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_ip_tos']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-ip-tos.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_ip_ttl']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-ip-ttl.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_keep_alive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-keep-alive.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_localip']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-localip.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_localport']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-localport.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="chapter-global-options.xml" xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+	                <xi:include href="chunks/option-destination-mark-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_port']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-port.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_broadcast']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-so-broadcast.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-source-so-keepalive.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_rcvbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-so-rcvbuf.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_sndbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-so-sndbuf.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_spoof_source']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-spoof-source.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-suppress.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <xi:include href="chunks/option-tcp-keepalive-intvl.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 <xi:include href="chunks/option-tcp-keepalive-probes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 <xi:include href="chunks/option-tcp-keepalive-time.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-template-escape.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_tls']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-tls.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-ts-format.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
             </section>
         </section>
@@ -1885,55 +1394,55 @@ dbd-option("null.sleep.query" 5)</synopsis>
                     <parameter>SOCK_STREAM</parameter> or <parameter>SOCK_DGRAM</parameter> mode. The <parameter>unix-stream()</parameter> and <parameter>unix-dgram()</parameter>
                 destinations have the following options:</para>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flags']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_lines']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-lines.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_flush_timeout']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-flush-timeout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_frac_digits']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-frac-digits.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_log_fifo_size']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_keep_alive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-keep-alive.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_broadcast']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-so-broadcast.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'source_option_so_keepalive']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-source-so-keepalive.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="chapter-global-options.xml" xpointer="xpointer(//simplesect[@id = 'global_options_mark_mode']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+	                <xi:include href="chunks/option-destination-mark-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_rcvbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-so-rcvbuf.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_option_so_sndbuf']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-so-sndbuf.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_suppress']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-suppress.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_template_escape']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-template-escape.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_timezone']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
                 <simplesect>
-                    <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_ts_format']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                    <xi:include href="chunks/option-destination-ts-format.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
             </section>
          </section>
