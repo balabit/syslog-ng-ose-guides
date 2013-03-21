@@ -1,0 +1,823 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter
+ [
+ <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<chapter xml:id="chapter-install" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>Installing syslog-ng</title>
+    <indexterm>
+        <primary>installing syslog-ng</primary>
+    </indexterm>
+    <para>This chapter explains how to install &product; on the supported platforms using the precompiled binary files.</para>
+    <para>The &abbrev; application features a unified installer package with identical look on every supported platform (excluding Microsoft Windows and IBM System i &mdash; for details on installing syslog-ng on Microsoft Windows and IBM System i see <olink targetdoc="syslog-ng-windows-agent-guide-admin" targetptr="chapter-install"/> and <olink targetdoc="syslog-ng-ibm-agent-guide-admin"/>, respectively.</para>
+    <para>The syslog-ng binaries include all required libraries and dependencies of syslog-ng. The components are installed into the <filename>/opt/syslog-ng</filename> directory. It can automatically re-use existing configuration <phrase condition="pe">and license </phrase>files, and also generate a simple configuration automatically into the <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename> file. </para>
+    <note>
+        <para>There are two versions of every binary release. The one with the <parameter>client</parameter> suffix does not include the libraries required to log into SQL databases. If you are installing syslog-ng in client or relay mode, or you do not use the <parameter>sql()</parameter> destination, use these binaries. That way no unnecessary components are installed to your system. </para>
+    </note>
+    <indexterm>
+        <primary>syslog-ng binaries</primary>
+        <secondary>location of</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>installation path</primary>
+    </indexterm>
+    <para>The syslog-ng application can be installed interactively following the on-screen instructions as described in <xref linkend="install-run"/>, and also without user interaction using the silent installation option &mdash; see <xref linkend="install-run-silent"/>.</para>
+    <!-- FIXME leirni, melyik platformon mit csinal - regi syslog leallit, apparmor, stb. -->
+    
+    <section xml:id="install-prerequisites" condition="pe">
+        <title>Prerequisites to installing &abbrev;</title>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>prerequisites</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>prerequisites</primary>
+        </indexterm>
+        <para>The binary installer packages of &product; include every required dependency for most platforms. However, the following platforms require the following patches for &abbrev;:</para>
+        <simplesect>
+            <title>HP-UX</title>
+            <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../common/wnt/note-hpux-prerequisites.xml"/>
+        </simplesect>
+        <simplesect>
+            <title>IBM AIX</title>
+            <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../common/wnt/note-aix-prerequisites.xml"/>
+        </simplesect>
+        <simplesect>
+            <title>Solaris</title>
+            <table>
+                <title>Supported platforms and generated packages</title>
+                <tgroup cols="3">
+                    <thead>
+                        <row>
+                            <entry>OS</entry>
+                            <entry>Architecture</entry>
+                            <entry>Generated .pkg packages</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>Solaris 8</entry>
+                            <entry>SPARC</entry>
+                            <entry>client, setup</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 8</entry>
+                            <entry>SPARC64</entry>
+                            <entry>client, setup</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 9 </entry>
+                            <entry>SPARC</entry>
+                            <entry>client, setup</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 9 </entry>
+                            <entry>SPARC64</entry>
+                            <entry>client, setup</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 9 </entry>
+                            <entry>i386</entry>
+                            <entry>client</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 10</entry>
+                            <entry>SPARC</entry>
+                            <entry>client, setup</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 10</entry>
+                            <entry>SPARC64</entry>
+                            <entry>client, setup</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 10</entry>
+                            <entry>amd64</entry>
+                            <entry>client, setup</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <table>
+                <title>Supported SQL servers</title>
+                <tgroup cols="3">
+                    <thead>
+                        <row>
+                            <entry>OS</entry>
+                            <entry>Architecture</entry>
+                            <entry>Supported SQL server </entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>Solaris 8</entry>
+                            <entry>SPARC</entry>
+                            <entry>MsSQL, PostgreSQL, MySQL, Sqlite</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 8</entry>
+                            <entry>SPARC64</entry>
+                            <entry>MsSQL, PostgreSQL, MySQL, Sqlite</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 9 </entry>
+                            <entry>SPARC</entry>
+                            <entry>MsSQL, MySQL, Sqlite, Oracle</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 9 </entry>
+                            <entry>SPARC64</entry>
+                            <entry>MsSQL, PostgreSQL, MySQL, Sqlite, Oracle</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 9 </entry>
+                            <entry>i386</entry>
+                            <entry>no SQL support</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 10</entry>
+                            <entry>SPARC</entry>
+                            <entry>MsSQL, PostgreSQL, MySQL, Sqlite, Oracle</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 10</entry>
+                            <entry>SPARC64</entry>
+                            <entry>MsSQL, PostgreSQL, MySQL, Sqlite, Oracle</entry>
+                        </row>
+                        <row>
+                            <entry>Solaris 10</entry>
+                            <entry>amd64</entry>
+                            <entry>MsSQL, MySQL, Sqlite, Oracle</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </simplesect>
+    </section>
+    
+    <section xml:id="install-run">
+        <title>Installing syslog-ng using the .run installer</title>
+        <indexterm significance="preferred">
+            <primary>installing syslog-ng</primary>
+        </indexterm>
+        <para>This section describes how to install the syslog-ng application interactively using the binary installer. The installer has a simple interface: use the TAB or the arrow keys of your keyboard to navigate between the options, and Enter to select an option.</para>
+        <itemizedlist>
+            <listitem>
+                <para>To install syslog-ng on clients or relays, complete <xref linkend="install-run-client"/>.</para>
+            </listitem>
+            <listitem>
+                <para>To install syslog-ng on your central logserver, complete <xref linkend="install-run-server"/>.</para>
+            </listitem>
+            <listitem>
+                <para>To install syslog-ng without any user-interaction, complete <xref linkend="install-run-silent"/>.</para>
+            </listitem>
+        </itemizedlist>
+        <note>
+            <para>The installer stops the running syslogd application if it is running, but its components are not removed. The <filename>/etc/init.d/sysklogd</filename> init script is automatically renamed to <filename>/etc/init.d/sysklogd.backup</filename>. Rename this file to its original name if you want to remove syslog-ng or restart the syslogd package.</para>
+        </note>
+
+        <procedure xml:id="install-run-client">
+            <title>Installing syslog-ng in client or relay mode</title>
+            <indexterm>
+                <primary>installing syslog-ng</primary>
+                <secondary>on clients and relays</secondary>
+            </indexterm>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>Complete the following steps to install &product; on clients or relays. For details on the different operation modes of syslog-ng, see <xref linkend="concepts-modes-of-operation"/>.</para>
+            <formalpara>
+                <title>Steps:</title>
+                <para/>
+            </formalpara>
+            <step condition="pe">
+                <para>Login to <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/mybalabit/">your MyBalabit account</link> and download the syslog-ng installer package.</para>
+            </step>
+            <xi:include href="../../common/chunk/step-installer-welcome.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-eula.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-platform.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-alternativepath.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-register.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <step>
+                <para><emphasis>Locating the license</emphasis>: Since you are installing &abbrev; in client or relay mode, simply select <guibutton>OK</guibutton>. For details on the different operation modes of syslog-ng, see <xref linkend="concepts-modes-of-operation"/>.</para>
+            </step>
+            <xi:include href="../../common/chunk/step-installer-upgrade.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-config.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-path.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/wnt/note-initscript-logrotate.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </procedure>
+
+        <procedure xml:id="install-run-server">
+            <title>Installing syslog-ng in server mode</title>
+            <indexterm>
+                <primary>installing syslog-ng</primary>
+                <secondary>on logservers</secondary>
+            </indexterm>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>Complete the following steps to install syslog-ng on logservers. For details on the different operation modes of syslog-ng, see <xref linkend="concepts-modes-of-operation"/>.</para>
+            <formalpara>
+                <title>Steps:</title>
+                <para/>
+            </formalpara>
+            <step condition="pe">
+                <para>Login to <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/mybalabit">your MyBalabit account</link> and download the syslog-ng installer package and your syslog-ng Premium Edition license. The license will be required to run syslog-ng in server mode (see <xref linkend="concepts-server-mode"/>) and is needed when you are installing syslog-ng on your central logserver.</para>
+            </step>
+            <xi:include href="../../common/chunk/step-installer-welcome.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-eula.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-platform.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-alternativepath.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-register.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <step condition="pe">
+                <para><emphasis>Locating the license</emphasis>: Enter the path to your license file and select <guibutton>OK</guibutton>. Typically this is required only for your central logserver.</para>
+                <para>If you are upgrading an existing configuration that already has a license file, the installer automatically detects it.</para>
+                <figure>
+                    <title>Platform detection</title>
+                    <mediaobject>
+                        <imageobject role="html">
+                            <imagedata format="PNG" align="center" fileref="installer_license.png"/>
+                        </imageobject>
+                        <imageobject role="fo">
+                            <imagedata format="PNG" scale="50" fileref="&imgroot;/installer_license.png"/>
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+            </step>
+            <xi:include href="../../common/chunk/step-installer-upgrade.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-config.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/step-installer-path.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/wnt/note-initscript-logrotate.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </procedure>
+        
+        <section xml:id="install-run-silent">
+            <title>Installing syslog-ng without user-interaction</title>
+            <indexterm>
+                <primary>installing syslog-ng</primary>
+                <secondary>in silent mode</secondary>
+            </indexterm>
+            <para>The syslog-ng application can be installed in silent mode without any user-interaction by specifying the required parameters from the command line. Answers to every question of the installer can be set in advance using command-line parameters.</para>
+            <synopsis>./syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;.run -- --silent [options]</synopsis>
+            <warning>
+                <para>The <parameter>--</parameter> characters between the executable and the parameters are mandatory, like in the following example: <command>./syslog-ng<phrase condition="pe">-premium-edition</phrase>-3.0.1b-solaris-10-sparc-client.run -- --silent --accept-eula -l /var/tmp/license.txt </command></para>
+            </warning>
+            <para>To display the list of parameters, execute the <command>./syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;.run -- --h</command> command. Currently the following options are available:</para>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis>--accept-eula or -a</emphasis>: Accept the EULA.</para>
+                </listitem>
+                <listitem condition="pe">
+                    <para><parameter>--license-file &lt;file&gt; or -l &lt;file&gt;</parameter>: Path to the license file.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--upgrade | -u</emphasis>: Perform automatic upgrade &mdash; use the configuration file from an existing installation.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--remote &lt;destination host&gt;</emphasis>: Send logs to the specified remote server. Not available when performing an upgrade.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--network</emphasis>: Accept messages from the network. Not available when performing an upgrade.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--configuration &lt;file&gt;</emphasis>: Use the specified configuration file.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--list-installed</emphasis>: List information about all installed syslog-ngs.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--path &lt;path&gt;</emphasis>: Set installation path.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--register</emphasis>: Force service registration.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--no-register</emphasis>: Prevent service registration.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+    </section>
+
+    <procedure xml:id="install-rpm">
+        <title>Installing syslog-ng on RPM-based platforms (Red Hat, SUSE, AIX)</title>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>from RPM package</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>on Red Hat Enterprise Server</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>Red Hat Enterprise Server</primary>
+            <secondary>installing syslog-ng</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>on CentOS</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>CentOS</primary>
+            <secondary>installing syslog-ng</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>on AIX</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>AIX</primary>
+            <secondary>installing syslog-ng</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>on SUSE Linux Enterprise Server</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>SUSE Linux Enterprise Server</primary>
+            <secondary>installing syslog-ng</secondary>
+        </indexterm>
+        <formalpara>
+            <title>Purpose:</title>
+            <para/>
+        </formalpara>
+        <para>To install syslog-ng on operating systems that use the Red Hat Package Manager (RPM), complete the following steps. Installing syslog-ng automatically replaces the original syslog service. The following supported operating systems use RPM: </para>
+        <itemizedlist condition="pe">
+            <listitem>
+                <para>AIX 5.2, 5.3 and 6.1</para>
+                <xi:include href="../../common/wnt/note-aix-prerequisites.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </listitem>
+            <listitem>
+                <para>CentOS 4 and 5</para>
+            </listitem>
+            <listitem>
+                <para>openSUSE Linux Enterprise Server 10.0 and 10.1</para>
+            </listitem>
+            <listitem>
+                <para>Red Hat Enterprise Linux 2, 3 and 6</para>
+            </listitem>
+            <listitem>
+                <para>Red Hat Enterprise Server 4 and 5</para>
+            </listitem>
+            <listitem>
+                <para>SUSE Linux Enterprise Server 10, 10 SP1, 11.0 and 11.1</para>
+            </listitem>
+        </itemizedlist>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <step condition="pe">
+            <para>Login to <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/mybalabit">your MyBalabit account</link> and download the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/network-security/syslog-ng/central-syslog-server/upgrades/">syslog-ng RPM package for your system</link>.</para>
+        </step>
+        <step>
+            <itemizedlist>
+                <listitem>
+                    <para>If the host already uses syslog-ng for logging, execute the following command as root. Otherwise, skip this step. </para>
+                    <synopsis>rpm -U syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;arch&gt;.rpm</synopsis>
+                    <para>The &product; application and all its dependencies will be installed, and the configuration of the existing syslog-ng installation will be used.</para>
+                    <note>
+                        <para>If you are upgrading from syslog-ng version 2.1, note that the location of the configuration file has been moved to <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename></para>
+                    </note>
+                </listitem>
+                <listitem>
+                    <para>Execute the following command as root:</para>
+                    <synopsis>rpm -i syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;arch&gt;.rpm</synopsis>
+                    <para>The syslog-ng application and all its dependencies will be installed.</para>
+                </listitem>
+            </itemizedlist>
+        </step>
+        <step>
+            <warning>
+                <para>When performing an upgrade, the package manager might automatically execute the post-uninstall script of the upgraded package, stopping syslog-ng and starting syslogd. If this happens, stop syslogd and start syslog-ng by issuing the following commands:</para>
+                <synopsis>/etc/init.d/syslogd stop
+/etc/init.d/syslog-ng start</synopsis>
+                <para>This behavior has been detected on CentOS 4 systems, but may occur on other rpm-based platforms as well.</para>
+            </warning>
+        </step>
+        <!--<step>
+                <indexterm>
+                    <primary>Novell AppArmor</primary>
+                </indexterm>
+                <para><emphasis>Optional step</emphasis>: If Novell AppArmor is used on the
+                    computer, copy the <filename>/usr/share/doc/syslog-ng/sbin.syslog-ng</filename>
+                    file into the <filename>/etc/apparmor.d/</filename> directory and restart
+                    AppArmor.</para>
+            </step>-->
+        <step>
+            <para>Edit the &abbrev; configuration file as needed. If you want to run &abbrev; in server mode, copy the license file to the <filename>/opt/syslog-ng/etc/</filename> directory.</para>
+            <para>For information on configuring &abbrev;, see the <xref linkend="chapter-quickstart"/>.</para>
+        </step>
+        <step>
+            <para>
+                <indexterm>
+                    <primary>AIX</primary>
+                    <secondary>redirecting errorlog to syslog-ng</secondary>
+                </indexterm>
+                <emphasis>Optional step for AIX systems</emphasis>: To redirect the messages of the AIX Error log into syslog, create a file (for example <filename>/tmp/syslog-ng.add</filename>) with the following contents:</para>
+            <synopsis>errnotify:
+en_name = "syslog1"
+en_persistenceflg = 1
+en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTAMP'`"</synopsis>
+            <para>Then execute the following command as root: <command>odmadd /tmp/syslog-ng.add</command>.</para>
+        </step>
+    </procedure>
+
+    <procedure xml:id="install-deb">
+        <title>Installing syslog-ng on Debian-based platforms</title>
+        <indexterm>
+            <primary>installing syslog-ng</primary>
+            <secondary>from DEB package</secondary>
+        </indexterm>
+        <formalpara>
+            <title>Purpose:</title>
+            <para/>
+        </formalpara>
+        <para>To install syslog-ng on operating systems that use the Debian Software Package (deb) format, complete the following steps. The following supported operating systems use this format: </para>
+        <itemizedlist>
+            <listitem>
+                <para>Debian etch</para>
+            </listitem>
+            <listitem>
+                <para>Debian lenny</para>
+            </listitem>
+            <listitem>
+                <para>Debian sarge</para>
+            </listitem>
+        </itemizedlist>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <step condition="pe">
+            <para>Login to <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/mybalabit">your MyBalabit account</link> and download the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/network-security/syslog-ng/central-syslog-server/upgrades/">syslog-ng DEB package for your system</link>.</para>
+        </step>
+        <!--<step>
+                <para>Remove the existing system logging package from the host. Issue the following
+                    command as root if the host is running syslog: <command>dpkg -r
+                    sysklogd</command>, or <command>dpkg -r syslog-ng</command> if the host is
+                    running the open source version of syslog-ng.</para>
+            </step>-->
+        <step>
+            <para>Issue the following command as root: </para>
+            <para>
+                <command>dpkg -i syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;arch&gt;.deb</command>
+            </para>
+        </step>
+        <step>
+            <para>Answer the configuration questions of syslog-ng. These are described in detail in <xref linkend="install-run"/>.</para>
+            <para>For information on configuring &abbrev;, see the <xref linkend="chapter-quickstart"/>.</para>
+        </step>
+
+        <!--<step>
+                <indexterm>
+                    <primary>Novell AppArmor</primary>
+                </indexterm>
+                <para><emphasis>Optional step</emphasis>: If Novell AppArmor is used on the
+                    computer, copy the <filename>/usr/share/doc/syslog-ng/sbin.syslog-ng</filename>
+                    file into the <filename>/etc/apparmor.d/</filename> directory and restart
+                    AppArmor.</para>
+            </step>-->
+    </procedure>
+
+    <procedure xml:id="install-from-source" condition="ose">
+        <title>Compiling syslog-ng from source</title>
+        <indexterm>
+            <primary>compiling syslog-ng OSE</primary>
+        </indexterm>
+        <indexterm>
+            <primary>installing syslog-ng OSE from source</primary>
+        </indexterm>
+        <formalpara>
+            <title>Purpose:</title>
+            <para/>
+        </formalpara>
+        <para>To compile syslog-ng Open Source Edition (OSE) from the source code, complete the following steps. Alternatively, you can use the precompiled binary packages. Precompiled binary packages are available for free for the supported Linux and BSD platforms <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/network-security/syslog-ng/opensource-logging-system/upgrades/">here</link>. </para>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <step>
+            <para>Download the latest version of syslog-ng OSE <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.balabit.com/downloads/files/syslog-ng/sources/stable/">here</link>. The source code is available as a tar.gz archive file.</para>
+        </step>
+        <step>
+            <para>Download the latest version of the EventLog library <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.balabit.com/downloads/files/eventlog/0.2/">here</link>.</para>
+        </step>
+        <step>
+            <para>Install the following packages that are required to compile syslog-ng. These packages are available for most UNIX/Linux systems. Alternatively, you can also download the sources and compile them.</para>
+            <itemizedlist>
+                <listitem>
+                    <para>the <emphasis>gcc</emphasis> C compiler (at least version 2.7.2),</para>
+                </listitem>
+                <listitem>
+                    <para>the <emphasis>GNU flex</emphasis> lexical analyser generator, <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://flex.sourceforge.net/">available here</link>;</para>
+                </listitem>
+                <listitem>
+                    <para>the <emphasis>bison</emphasis> parser generator, <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://ftp.gnu.org/gnu/bison/">available here</link>;</para>
+                </listitem>
+                <listitem>
+                    <para>and the development files of the <emphasis>glib</emphasis> library, <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://freshmeat.net/projects/glib/">available here</link>.</para>
+                </listitem>
+            </itemizedlist>
+        </step>
+        <step>
+            <para>If you want to use the spoof-source function of syslog-ng, install the development files of the <emphasis>libnet</emphasis> library, <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://libnet.sourceforge.net">available here</link>.</para>
+        </step>
+        <step>
+            <para>If you want to use the <emphasis>/etc/hosts.deny</emphasis> and <emphasis>/etc/hosts.allow</emphasis> for TCP access, install the development files of the <emphasis>libwrap</emphasis> (also called TCP-wrappers) library, <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="ftp://ftp.porcupine.org/pub/security/index.html"> available here</link>.</para>
+        </step>
+        <step>
+            <para>Uncompress the eventlog archive using the </para>
+            <synopsis>$ tar xvfz eventlog-x.x.x.x.tar.gz</synopsis>
+            <para>or the </para>
+            <synopsis>$ gunzip -c eventlog-x.x.x.x.tar.gz | tar xvf -</synopsis>
+            <para>command. A new directory containing the source code of eventlog will be created.</para>
+        </step>
+        <step>
+            <para>By default, eventlog creates a file used by the syslog-ng configure script in the <emphasis>/usr/local/lib/pkgconfig</emphasis> directory. Issue the following command to add this directory to your PKG_CONFIG_PATH:</para>
+            <synopsis>PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH</synopsis>
+
+        </step>
+        <step>
+            <para>Enter the new directory and issue the following commands:</para>
+            <synopsis>$ ./configure
+$ make
+$ make install</synopsis>
+        </step>
+        <step>
+            <para>Uncompress the syslog-ng archive using the</para>
+            <synopsis>tar xvfz syslog-ng-x.xx.tar.gz</synopsis>
+            <para>or the</para>
+            <synopsis>unzip -c syslog-ng-x.xx.tar.gz | tar xvf -</synopsis>
+            <para>command. A new directory containing the source code of syslog-ng will be created.</para>
+        </step>
+        <step>
+            <para>Enter the new directory and issue the following commands: </para>
+            <synopsis>$ ./configure
+$ make
+$ make install</synopsis>
+            <para>These commands will build syslog-ng using its default options.</para>
+        </step>
+        <step>
+            <para>If needed, use the following options to change how syslog-ng is compiled using the following command syntax:</para>
+            <synopsis>$ ./configure --compile-time-option-name</synopsis>
+            <note>
+                <para>You can also use <emphasis>--disable options</emphasis>, to explicitly disable a feature and override autodetection. For example, to disable the TCP-wrapper support, use the <emphasis>--disable-tcp-wrapper</emphasis> option. </para>
+            </note>
+            <warning>
+                <para>Starting with syslog-ng Open Source Edition 3.0.2, default linking mode of syslog-ng is <parameter>dynamic</parameter>. This means that syslog-ng might not be able to start up if the <parameter>/usr</parameter> directory is on NFS. On platforms where syslog-ng is used as a system logger, the <parameter>--enable-mixed-linking</parameter> is preferred. </para>
+            </warning>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis>--enable-debug</emphasis> Include debug information.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--enable-dynamic-linking</emphasis> Compile syslog-ng as a completely dynamic binary. If not specified syslog-ng uses mixed linking (<parameter>--enable-mixed-linking</parameter>): it links dynamically to system libraries and statically to everything else.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--enable-ipv6 </emphasis> Enable IPv6 support.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--enable-linux-caps </emphasis> Enable support for capabilities on Linux.</para>
+                    <!-- FIXME link a doc megfelelo reszere -->
+                </listitem>
+                <listitem>
+                    <para><emphasis>--enable-pcre</emphasis> Enable using PCRE-type regular expressions. Requires the <parameter>libpcre</parameter> library package.</para>
+                    <!-- FIXME honnan lehet letolteni -->
+                </listitem>
+                <listitem>
+                    <para><emphasis>--enable-spoof-source</emphasis> Enable spoof_source feature (disabled by default).</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--enable-static-linking</emphasis> Compile syslog-ng as a static binary.</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--enable-sun-door</emphasis> Enable Sun door support even if not detected (autodetected by default).</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--enable-sun-streams</emphasis> Enable Sun STREAMS support even if not detected (autodetected by default).</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--enable-tcp-wrapper</emphasis> Enable using <emphasis>/etc/hosts.deny</emphasis> and <emphasis>/etc/hosts.allow</emphasis> for TCP access (enabled automatically if the <parameter>libwrap</parameter> libraries are detected).</para>
+                </listitem>
+                <listitem>
+                    <para><emphasis>--with-timezone-dir</emphasis> Specifies the directory where syslog-ng looks for the timezone files to resolve the <parameter>time_zone()</parameter> and <parameter>local_time_zone()</parameter> options. If not specified, the <filename>/opt/syslog-ng/share/zoneinfo/</filename> and <filename>/usr/share/zoneinfo/</filename> directories are checked, respectively. Note that HP-UX uses a unique file format (<parameter>tztab</parameter>) to describe the timezone information; that format is currently not supported in syslog-ng. As a workaround, copy the zoneinfo files from another, non-HP-UX system to the <filename>/opt/syslog-ng/share/zoneinfo/</filename> directory of your HP-UX system.</para>
+                </listitem>
+            </itemizedlist>
+        </step>
+    </procedure>
+   
+    <section xml:id="install-pkg" condition="pe">
+        <title>Installing &abbrev; using .pkg installer</title>
+        <para>The &abbrev; application can be installed with user-interaction or in silent mode.</para>
+        <para>The generic syslog service of the operating system is stopped and deregistered automatically by the installer before installation.</para>
+        <warning>
+            <para>Remove any other syslog service before starting the installation. Failing to do so might have unpredictable results.</para>
+        </warning>
+        <para>The package supports both the old UNIX System V (SysV) init mechanism used by Solaris 8 and 9 and the new Service Management Facility (SMF) introduced in Solaris 10.</para>
+        <para>The &abbrev; application is compatible with the standard Solaris logrotate mechanism by default.</para>
+        <itemizedlist>
+            <listitem>
+                <para>To install &abbrev; with user-interaction, complete <xref linkend="install-pkg-interactive"/>.</para>
+            </listitem>
+            <listitem>
+                <para>To install &abbrev; without any user-interaction, complete <xref linkend="install-pkg-silent"/>.</para>
+            </listitem>
+            <listitem>
+                <para>To install &abbrev; from a transformed PKG package, complete <xref linkend="install-pkg-trans"/>.</para>
+            </listitem>
+        </itemizedlist>
+
+        <procedure xml:id="install-pkg-interactive">
+            <title>Installing &abbrev; with user-interaction</title>
+            <indexterm>
+                <primary>installing syslog-ng</primary>
+                <secondary>from PKG package</secondary>
+            </indexterm>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>The &abbrev; application can be installed in an interactive way.</para>
+            <formalpara>
+                <title>Steps:</title>
+                <para/>
+            </formalpara>
+            <step>
+                <para>Unpack the package with the following command:</para>
+                <synopsis>gunzip syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;architecture&gt;.pkg.gz</synopsis>
+            </step>
+            <step>
+                <para>Run the following command:</para>
+                <synopsis>pkgadd -d syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;architecture&gt;.pkg BBsyslng</synopsis>
+            </step>
+            <step>
+                <para>Answer the questions with <parameter>y</parameter> or <parameter>n</parameter>. Besides these, the following commands are available: <parameter>?</parameter> displays the help, <parameter>q</parameter> exits the installer. The installer generates a default configuration file for &abbrev; based on the answers (if an old configuration file is not used):</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>the path of the license file</para>
+                    </listitem>
+                    <listitem>
+                        <para>whether an old configuration file is to be used (if the answer is yes, the rest of the questions will be skipped)</para>
+                    </listitem>
+                    <listitem>
+                        <para>if a new configuration file is requested; whether &abbrev; will send or receive logs over the network</para>
+                    </listitem>
+                </itemizedlist>
+            </step>
+            <step>
+                <para>The installer finishes the installation and the replaces the default syslog service with &abbrev;.</para>
+            </step>
+        </procedure>
+        
+        <procedure xml:id="install-pkg-silent">
+            <title>Installing &abbrev; without user-interaction</title>
+            <indexterm>
+                <primary>installing syslog-ng</primary>
+                <secondary>from PKG package in silent mode</secondary>
+            </indexterm>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>The &abbrev; application can be installed in silent mode without any user-interaction by specifying the required parameters from the command line. Answers to every question of the installer can be set in advance using command-line parameters.</para>
+            <formalpara>
+                <title>Steps:</title>
+                <para/>
+            </formalpara>
+            <step>
+                <para>Generate a response file that contains the answers to the questions.</para>
+                <synopsis>pkgask -r &lt;responsefile&gt; -d syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;architecture&gt;.pkg BBsyslng</synopsis>
+                <para>For example:</para>
+                <synopsis>pkgask -r response_file -d syslog-ng<phrase condition="pe">-premium-edition</phrase>-4.2.1-solaris10-amd64.pkg BBsyslng</synopsis>
+                <warning>
+                    <para>The <parameter>pkgask</parameter> will fail if the response file already exists.</para>
+                </warning>
+            </step>
+            <step>
+                <para>Run the <parameter>pkgadd</parameter> command with the added response file answering <parameter>y</parameter> to all questions.</para>
+                <synopsis>yes | pkgadd -r &lt;responsefile&gt; -d syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;architecture&gt;.pkg BBsyslng</synopsis>
+                <warning>
+                    <para><parameter>pkgask</parameter> runs the request script of the package under the current condition of the operating system. The installation might fail if something changes (another &abbrev; package has been installed, configuration file has been removed), because the response file's contents will be invalid.</para>
+                </warning>
+            </step>
+        </procedure>
+        
+        <procedure xml:id="install-pkg-trans">
+            <title>Installing &abbrev; from a transformed PKG package</title>
+            <indexterm>
+                <primary>installing syslog-ng</primary>
+                <secondary>from a transformed PKG package</secondary>
+            </indexterm>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>The &abbrev; application can be installed from a normal file structure. To perform this, transform the .pkg package.</para>
+            <formalpara>
+                <title>Steps:</title>
+                <para/>
+            </formalpara>
+            <step>
+                <para>To transform the .pkg package, execute the following command:</para>
+                <synopsis>pkgtrans syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;architecture&gt;.pkg &lt;outdirectory&gt;</synopsis>
+                <para>In this case, the .pkg package will be extracted to the &lt;outdirectory&gt; directory.</para>
+                <example>
+                    <title>Extracting &abbrev; from a transformed PKG package</title>
+                    <synopsis>pkgtrans syslog-ng-premium-edition-4.2.0-solaris-9-sparc.pkg /tmp/out</synopsis>
+                    <para>This will extract the files to the <filename>/tmp/out/BBsyslng</filename> directory.</para>
+                </example>
+            </step>
+            <step>
+                <para>To install &abbrev;, execute the following command:</para>
+                <synopsis>pkgadd &lt;options&gt; -d &lt;outdirectory&gt; BBsyslng</synopsis>
+                <para>In this case, &lt;options&gt; stand for the <parameter>pkgadd</parameter> options, for example <parameter>-r &lt;responsefile&gt;</parameter>.</para>
+            </step>
+        </procedure>
+    </section>
+   
+    <section xml:id="upgrading-syslog-ng" condition="pe">
+        <title>Upgrading &abbrev;</title>
+        <para>This section describes the upgrading limitations of &abbrev;.</para>
+        
+        <section>
+            <title>Upgrading &abbrev; to other package versions</title>
+            <formalpara>
+                <title>Upgrading from rpm package to .run package</title>
+                <para/>
+            </formalpara>
+            <para>Unsupported. Installation stops and the following error message is displayed:</para>
+            <para><synopsis>Incompatible syslog-ng package already installed</synopsis></para>
+            <formalpara>
+                <title>Upgrading from .run package to rpm package</title>
+                <para/>
+            </formalpara>
+            <para>Unsupported. Installation stops and the following error message is displayed:</para>
+            <para><synopsis>Incompatible standalone (.run) installer of &product;</synopsis></para>
+            <warning>
+                <para>Hazard of data loss! Installing rpm package &abbrev; on AIX platform is possible even if the upgrade conditions are not met, since the rpm package installs before checking the upgrade conditions and therefore no error message is displayed. This might result in overwriting the old configuration file.</para>
+            </warning>
+            <formalpara>
+                <title>Upgrading from deb package to .run package</title>
+                <para/>
+            </formalpara>
+            <para>Unsupported. Installation stops and the following error message is displayed:</para>
+            <para><synopsis>Incompatible syslog-ng package already installed</synopsis></para>
+            <formalpara>
+                <title>Upgrading from .run package to deb package</title>
+                <para/>
+            </formalpara>
+            <para>Unsupported. Installation stops and the following error message is displayed:</para>
+            <para><synopsis>Errors were encountered while processing</synopsis></para>
+            <formalpara>
+                <title>Upgrading from pkg package to .run package</title>
+                <para/>
+            </formalpara>
+            <para>Unsupported. Installation stops and the following error message is displayed:</para>
+            <para><synopsis>Incompatible syslog-ng package already installed to &lt;syslog-ng path&gt;</synopsis></para>
+            <formalpara>
+                <title>Upgrading from .run package to pkg package</title>
+                <para/>
+            </formalpara>
+            <para>Unsupported. Installation stops and the following error message is displayed:</para>
+            <para><synopsis>Please remove the conflicting package before installing this package. Installation aborted.</synopsis></para>
+        </section>
+        
+        <section>
+            <title>Uprading from previous &abbrev; versions</title>
+            <para>Upgrading is supported from the following &abbrev; versions:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>syslog-ng PE 4.0.x</para>
+                </listitem>
+                <listitem>
+                    <para>syslog-ng PE 3.0.x</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+        
+        <section>
+            <title>Upgrading from previous syslog-ng OSE versions</title>
+            <para>Upgrading is supported from syslog-ng OSE version 3.2.</para>
+        </section>
+        
+        <section>
+            <title>Upgrading from syslog-ng PE to syslog-ng OSE</title>
+            <para>Upgrading from syslog-ng PE to syslog-ng OSE is unsupported since it counts as downgrading.</para>
+        </section>
+        
+        <section>
+            <title>Upgrading from complete syslog-ng PE to client setup version of syslog-ng PE</title>
+            <para>The installer displays the following message if you try to upgrade from complete syslog-ng PE to client setup syslog-ng PE with .run package.</para>
+            <para><synopsis>This version of syslog-ng Premium Edition doesn't support storing messages in SQL servers, while the installed one did.</synopsis></para>
+        </section>
+    </section>
+
+    <xi:include href="uninstalling-syslog-ng.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
+        <xi:fallback>FIXME XINCLUDE ERROR</xi:fallback>
+    </xi:include>
+    
+    <xi:include href="configuring-mssql-server.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
+        <xi:fallback>FIXME XINCLUDE ERROR</xi:fallback>
+    </xi:include>
+</chapter>
