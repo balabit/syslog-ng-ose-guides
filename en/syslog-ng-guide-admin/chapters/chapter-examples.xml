@@ -1,46 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter 
- [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
  %entities;]>
-<chapter xml:id="chapter_examples" xmlns="http://docbook.org/ns/docbook" version="5.0">
+<chapter xml:id="chapter-examples" xmlns="http://docbook.org/ns/docbook" version="5.0">
     <title>Best practices and examples</title>
     <para>This chapter discusses some special examples and recommendations.</para>
-    <section xml:id="example_general">
+    <section xml:id="example-general">
         <title>General recommendations</title>
-        <para>This section provides general tips and recommendations on using syslog-ng. Some of the
-            recommendations are detailed in the subsequent sections.</para>
+        <para>This section provides general tips and recommendations on using syslog-ng. Some of the recommendations are detailed in the subsequent sections.</para>
         <itemizedlist>
             <indexterm>
                 <primary>facilities</primary>
             </indexterm>
             <listitem>
-                <para>Do not base the separation of log messages into different files on the
-                        <parameter>facility</parameter> parameter. As several applications and
-                    processes can use the same facility, the facility does not identify the
-                    application that sent the message. By default, the
-                    <parameter>facility</parameter> parameter is not even included in the log
-                    message itself. In general, sorting the log messages into several different
-                    files can make finding specific log messages difficult. If you must create
-                    separate log files, use the application name.</para>
+                <para>Do not base the separation of log messages into different files on the <parameter>facility</parameter> parameter. As several applications and processes can use the same facility, the facility does not identify the application that sent the message. By default, the <parameter>facility</parameter> parameter is not even included in the log message itself. In general, sorting the log messages into several different files can make finding specific log messages difficult. If you must create separate log files, use the application name.</para>
             </listitem>
             <listitem>
                 <indexterm>
                     <primary>timestamp</primary>
                 </indexterm>
-                <para>Standard log messages include the local time of the sending host, without any
-                    time zone information. It is recommended to replace this timestamp with an
-                    ISODATE timestamp, because the ISODATE format includes the year and timezone as
-                    well. To convert all timestamps to the ISODATE format, include the following
-                    line in the syslog-ng configuration file:</para>
+                <para>Standard log messages include the local time of the sending host, without any time zone information. It is recommended to replace this timestamp with an ISODATE timestamp, because the ISODATE format includes the year and timezone as well. To convert all timestamps to the ISODATE format, include the following line in the syslog-ng configuration file:</para>
                 <synopsis>options {ts_format(iso) ; };</synopsis>
             </listitem>
             <listitem>
                 <indexterm>
                     <primary>name resolution</primary>
                 </indexterm>
-                <para>Resolving the IP addresses of the clients to domain names can decrease the
-                    performance of syslog-ng. For details, see <xref linkend="examples_dns"/>.
-                </para>
+                <para>Resolving the IP addresses of the clients to domain names can decrease the performance of syslog-ng. For details, see <xref linkend="examples-dns"/>. </para>
             </listitem>
         </itemizedlist>
     </section>
@@ -94,7 +80,7 @@
             of <parameter>tcp()</parameter> connections.</para>
     </section>
 
-    <section xml:id="handling_large_load">
+    <section xml:id="handling-large-load">
         <title>Handling large message load</title>
         <indexterm>
             <primary>optimizing syslog-ng performance</primary>
@@ -105,28 +91,25 @@
         <indexterm>
             <primary>regular expressions</primary>
         </indexterm>
-        <para>This section provides tips on optimizing the performance of syslog-ng. Optimizing the
-            performance is important for syslog-ng hosts that handle large traffic.</para>
+        <para>This section provides tips on optimizing the performance of syslog-ng. Optimizing the performance is important for syslog-ng hosts that handle large traffic.</para>
         <itemizedlist>
             <listitem>
-                <para>Disable DNS resolution, or resolve hostnames locally. For details, see <xref
-                        linkend="examples_dns"/>.</para>
+                <para>Disable DNS resolution, or resolve hostnames locally. For details, see <xref linkend="examples-dns"/>.</para>
             </listitem>
             <listitem>
-                <para>Enable flow-control for the TCP sources. For details, see <xref linkend="concepts_flow_control"/>.</para>
+                <para>Enable flow-control for the TCP sources. For details, see <xref linkend="concepts-flow-control"/>.</para>
             </listitem>
             <listitem>
-                <para>Do not use the <parameter>usertty()</parameter> destination driver. Under
-                    heavy load, the users are not be able to read the messages from the console, and
-                    it slows down syslog-ng.</para>
+                <para>Do not use the <parameter>usertty()</parameter> destination driver. Under heavy load, the users are not be able to read the messages from the console, and it slows down syslog-ng.</para>
             </listitem>
             <listitem>
-                <para>Do not use regular expressions in our filters. Evaluating general regular
-                    expressions puts a high load on the CPU. Use simple filter functions and logical
-                    operators instead. For details, see <xref linkend="regular_expressions"/>.</para>
+                <para>Do not use regular expressions in our filters. Evaluating general regular expressions puts a high load on the CPU. Use simple filter functions and logical operators instead. For details, see <xref linkend="regular-expressions"/>.</para>
             </listitem>
             <listitem>
-                <xi:include href="chunks/warning-udp-recvbuf.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                <xi:include href="../../common/wnt/warning-udp-recvbuf.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </listitem>
+            <listitem>
+                <para>Increase the value of the <parameter>flush_lines()</parameter> parameter. Increasing <parameter>flush_lines()</parameter> from <parameter>0</parameter> to <parameter>100</parameter> can increase the performance of &abbrev; by 100%.</para>
             </listitem>
         </itemizedlist>
     </section>
@@ -152,71 +135,53 @@
             </synopsis>
             </section>-->
 
-    <section xml:id="examples_dns">
+    <section xml:id="examples-dns">
         <title>Using name resolution in syslog-ng</title>
         <indexterm>
             <primary>name resolution</primary>
         </indexterm>
-        <para>The syslog-ng application can resolve the hostnames of the clients and include them in
-            the log messages. However, the performance of syslog-ng is severely degraded if the
-            domain name server is unaccessible or slow. Therefore, it is not recommended to resolve
-            hostnames in syslog-ng. If you must use name resolution from syslog-ng, consider the
-            following: </para>
+        <para>The syslog-ng application can resolve the hostnames of the clients and include them in the log messages. However, the performance of syslog-ng is severely degraded if the domain name server is unaccessible or slow. Therefore, it is not recommended to resolve hostnames in syslog-ng. If you must use name resolution from syslog-ng, consider the following:</para>
         <itemizedlist>
             <listitem>
-                <para>Use DNS caching. Verify that the DNS cache is large enough to store all
-                    important hostnames. (By default, the syslog-ng DNS cache stores
-                    <parameter>1007</parameter> entries.)</para>
+                <para>Use DNS caching. Verify that the DNS cache is large enough to store all important hostnames. (By default, the syslog-ng DNS cache stores <parameter>1007</parameter> entries.)</para>
                 <synopsis>options { dns_cache(2000); };</synopsis>
             </listitem>
             <listitem>
-                <para>If the IP addresses of the clients change only rarely, set the expiry of the
-                    DNS cache large.</para>
+                <para>If the IP addresses of the clients change only rarely, set the expiry of the DNS cache large.</para>
                 <synopsis>options { dns_cache_expire(87600); };</synopsis>
             </listitem>
             <listitem>
-                <para>If possible, resolve the hostnames locally. For details, see <xref
-                        linkend="example_local_dns"/>. </para>
+                <para>If possible, resolve the hostnames locally. For details, see <xref linkend="example-local-dns"/>. </para>
             </listitem>
         </itemizedlist>
         <note>
             <para>Domain name resolution is important mainly in relay and server mode.</para>
         </note>
 
-            <procedure xml:id="example_local_dns">
-                <title>Resolving hostnames locally</title>
-                <indexterm>
+        <procedure xml:id="example-local-dns">
+            <title>Resolving hostnames locally</title>
+            <indexterm>
                 <primary>name resolution</primary>
                 <secondary>local</secondary>
             </indexterm>
-                <formalpara>
-                    <title>Purpose:</title>
-                    <para/>
-                </formalpara>
-                <para>Resolving hostnames locally enables you to display hostnames in the log files for
-                frequently used hosts, without having to rely on a DNS server. The known IP address
-                &ndash; hostname pairs are stored locally in a file. In the log messages,
-                syslog-ng will replace the IP addresses of known hosts with their hostnames. To
-                configure local name resolution, complete the following steps:</para>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>Resolving hostnames locally enables you to display hostnames in the log files for frequently used hosts, without having to rely on a DNS server. The known IP address &ndash; hostname pairs are stored locally in a file. In the log messages, syslog-ng will replace the IP addresses of known hosts with their hostnames. To configure local name resolution, complete the following steps:</para>
                 <formalpara>
                     <title>Steps:</title>
                     <para/>
                 </formalpara>
 
                 <step>
-                    <para>Add the hostnames and the respective IP addresses to the file used for
-                        local name resolution. On Linux and UNIX systems, this is the
-                            <filename>/etc/hosts</filename> file. Consult the documentation of your
-                        operating system for details.</para>
+                <para>Add the hostnames and the respective IP addresses to the file used for local name resolution. On Linux and UNIX systems, this is the <filename>/etc/hosts</filename> file. Consult the documentation of your operating system for details.</para>
                 </step>
                 <step>
-                    <para>Instruct syslog-ng to resolve hostnames locally. Set the
-                            <parameter>use_dns()</parameter> option of syslog-ng to
-                            <parameter>persist_only</parameter>.</para>
+                <para>Instruct syslog-ng to resolve hostnames locally. Set the <parameter>use_dns()</parameter> option of syslog-ng to <parameter>persist_only</parameter>.</para>
                 </step>
                 <step>
-                    <para>Set the <parameter>dns_cache_hosts()</parameter> option to point to the
-                        file storing the hostnames. </para>
+                <para>Set the <parameter>dns_cache_hosts()</parameter> option to point to the file storing the hostnames. </para>
                     <synopsis>options {
         use_dns(persist_only);
         dns_cache_hosts(/etc/hosts); };</synopsis>
@@ -224,7 +189,7 @@
             </procedure>
     </section>
 
-        <procedure xml:id="example_chroot">
+    <procedure xml:id="example-chroot">
             <title>Collecting logs from chroot</title>
             <indexterm>
             <primary>chroots</primary>
@@ -233,8 +198,7 @@
                 <title>Purpose:</title>
                 <para/>
             </formalpara>
-            <para>To collect logs from a chroot using a syslog-ng client running on the host, complete
-            the following steps:</para>
+        <para>To collect logs from a chroot using a syslog-ng client running on the host, complete the following steps:</para>
         <figure>
             <title>Collecting logs from chroot</title>
             <mediaobject>
@@ -251,14 +215,10 @@
                 <para/>
             </formalpara>
             <step>
-                <para>Create a <filename>/dev</filename> directory within the chroot. The
-                    applications running in the chroot send their log messages here.</para>
+            <para>Create a <filename>/dev</filename> directory within the chroot. The applications running in the chroot send their log messages here.</para>
             </step>
             <step>
-                <para>Create a local source in the configuration file of the syslog-ng application
-                    running outside the chroot. This source should point to the
-                    <filename>/dev/log</filename> file within the chroot (for example to the
-                        <filename>/chroot/dev/log</filename> directory).</para>
+            <para>Create a local source in the configuration file of the syslog-ng application running outside the chroot. This source should point to the <filename>/dev/log</filename> file within the chroot (for example to the <filename>/chroot/dev/log</filename> directory).</para>
             </step>
             <step>
                 <para>Include the source in a log statement.</para>
@@ -267,8 +227,7 @@
                         <primary>timezone</primary>
                         <secondary>in chroots</secondary>
                     </indexterm>
-                    <para>You need to set up timezone information within your chroot as well. This usually
-                        means creating a symlink to <filename>/etc/localtime</filename>.</para>
+                <para>You need to set up timezone information within your chroot as well. This usually means creating a symlink to <filename>/etc/localtime</filename>.</para>
                 </note>
             </step>
         </procedure>
