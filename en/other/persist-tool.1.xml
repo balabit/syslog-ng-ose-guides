@@ -73,6 +73,7 @@
                     <listitem>
                         <para>Display a brief help message.</para>
                     </listitem>
+                </varlistentry>
             </variablelist>
             <para>Example: <synopsis>persist-tool.exe dump "c:\syslog-ng.persist"</synopsis></para>
             <para>The output looks like:</para>
@@ -88,7 +89,8 @@
                 <command>generate</command>
                 <arg>options</arg>
             </cmdsynopsis>
-            <para>Use the <command>generate</command> command to generate a persist file based on the content of the given configuration file. It will find all files and event sources that match the sources configured in the configuration file, and generate a state entry into the persist file for all of them. The position for the state entries will be set to the end of the source, therefore syslog-ng will continue them from the last position instead of sending messages from the beginning. Any other type of source will be skipped from persist generation.</para>
+            <para>Use the <command>generate</command> command to generate a persist file based on the content of the given configuration file. It will find all files and event sources that match the sources configured in the configuration file, and generate a state entry into the persist file for all of them. The position for the state entries will be set to the end of the source, therefore syslog-ng will continue them from the last position instead of sending messages from the beginning. Any other type of source will be skipped from persist generation. If the persist file already exists, persist-tool will display an error message and exit to prevent overwriting an already existing persist file.</para>
+            <para>To use the <command>generate</command> command: stop syslog-ng, remove the persist file, then execute <command>persist-tool generate</command>.</para>
             <para>The <command>generate</command> command has the following options:</para>
             <variablelist>
                 <varlistentry>
@@ -96,14 +98,66 @@
                     <listitem>
                         <para>Display a brief help message.</para>
                     </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><command>--config-file=&lt;config_file&gt;</command> or <command>-c</command></term>
+                    <listitem>
+                        <para>Required parameter. The syslog-ng configuration file that will be the base of the generated persist file.</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><command>--force</command> or <command>-f</command></term>
+                    <listitem>
+                        <para>Overwrite the persist file if it already exists.</para>
+                        <warning>
+                            <para>Use this option with care, persist-tool will not ask for confirmation.</para>
+                        </warning>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><command>--output-dir=&lt;directory&gt;</command> or <command>-o</command></term>
+                    <listitem>
+                        <para>Required parameter. The directory where the persist file will be generated to. The name of the persist file will be <filename>syslog-ng.persist</filename>.</para>
+                    </listitem>
+                </varlistentry>
             </variablelist>
-            <para>Example: <synopsis>persist-tool.exe dump "c:\syslog-ng.persist"</synopsis></para>
+            <para>Example: <synopsis>/opt/syslog-ng/bin/persist-tool generate -c /opt/syslog-ng/etc/syslog-ng.conf -o</synopsis></para>
             <para>The output looks like:</para>
-            <synopsis>evtxlog_reader_curpos(Application) = { "version": 0, "big_endian": false, "bookmark_xml": "&lt;BookmarkList Direction='backward'&gt;\r\n  &lt;Bookmark Channel='Application' RecordId='2610170' IsCurrent='true'\
-/&gt;\r\n&lt;\/BookmarkList&gt;" }</synopsis>
-            <synopsis>affile_sd_curpos(C:\logs\002-filesource-encoding-utf-8-arvizturo-utf-8.txt) = { "version": 1, "big_endian": false, "raw_buffer_leftover_size": 0, "buffer_pos": 0, "pending_buffer_end": 0, "buffer_size
-": 0, "buffer_cached_eol": 0, "pending_buffer_pos": 0, "raw_stream_pos": 64, "pending_raw_stream_pos": 0, "raw_buffer_size": 0, "pending_raw_buffer_size": 0, "file_size": 64, "file_inode": 0, "run_id"
-: 0 }</synopsis>
+            <synopsis>New persist file generated: ./syslog-ng.persist</synopsis>
+        </refsection>
+        <refsection xml:id="persist-tool-add">
+            <title>The add command</title>
+            <cmdsynopsis>
+                <command>add</command>
+                <arg>options</arg>
+                <arg>input_file</arg>
+            </cmdsynopsis>
+            <para>Use the <command>add</command> command to add or modify a specified state-entry in the persist file. The state-entry should be in the same format as the <command>dump</command> command displays it. If the given state-entry already exists, it will be updated. Otherwise, a new value will be added. If the given persist state is invalid, it will be skipped.</para>
+            <para>To use the <command>add</command> command: use <command>persist-tool dump</command> to print the content of the current persist file, and redirect it to a file. Edit the content of this file. Use <command>persist-tool add</command> with this file to modify the persist.</para>
+            <para>The <command>add</command> command has the following options:</para>
+            <variablelist>
+                <varlistentry>
+                    <term><command>--help</command> or <command>-?</command></term>
+                    <listitem>
+                        <para>Display a brief help message.</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><command>--output-dir=&lt;directory&gt;</command> or <command>-o</command></term>
+                    <listitem>
+                        <para>Required parameter. The directory where the persist file is located at. The name of the persist file stored in this directory must be <filename>syslog-ng.persist</filename>.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+            <para>Example: <synopsis>/opt/syslog-ng/bin/persist-tool add dump_persist -o</synopsis></para>
+            <para>The valid output looks like:</para>
+            <synopsis>log_reader_curpos(Application)      OK
+affile_sd_curpos(/var/aaa.txt)        OK</synopsis>
+            <para>The invalid output looks like:</para>
+            <synopsis>log_reader_curpos(Application)      OK
+wrong
+        FAILED (error: Invalid entry syntax)
+affile_sd_curpos(/var/aaa.txt)        OK</synopsis>
         </refsection>
         <refsection>
             <title>Files</title>
