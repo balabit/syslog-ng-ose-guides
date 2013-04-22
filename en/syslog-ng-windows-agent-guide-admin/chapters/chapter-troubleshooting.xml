@@ -41,7 +41,7 @@
             <para>If you contact the BalaBit Support Team about a problem with the syslog-ng Agent for Windows, execute the <command>syslog-ng-agent -V</command> command from the command line and include every version and platform information it displays in your support request.</para>
         </listitem>
         <listitem>
-            <para><emphasis>CPU load is high</emphasis>: See <xref linkend="windows-cpu" />.</para>
+            <para><emphasis>CPU load is high</emphasis>: See <xref linkend="windows-cpu"/>.</para>
         </listitem>
         <listitem>
             <indexterm>
@@ -59,94 +59,122 @@
         </tip>
         <para>When relaying the messages from multiple sources, the &agentabbrev; sends one message at a time from each source. That way a single source with a large log traffic does not block other log sources.</para>
     </section>
-    <section xml:id="windows-core-dumps">
-        <title>Creating core and memory dumps</title>
+    <section>
+        <title>Debugging &agentabbrev;</title>
         <indexterm>
             <primary>&agentabbrev;</primary>
             <secondary>troubleshooting</secondary>
         </indexterm>
         <indexterm>
             <primary>&agentabbrev;</primary>
-            <secondary>creating core dumps</secondary>
+            <secondary>debugging</secondary>
         </indexterm>
-        <para>In certain rare cases, you might have to create core dumps of the &agentabbrev; to investigate a particular problem. When enabled, the &agent; application creates core dumps automatically when it experiences an unexpected shutdown.</para>
-        <itemizedlist>
-            <listitem>
-                <para>To enable core dumps, set the <parameter>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/WriteMinidump</parameter> registry key to 1.</para>
-            </listitem>
-            <listitem>
-                <para>If you use an XML file to configure the &agent; application, add the <parameter>WriteMinidump="1"</parameter> attribute to the XML file:</para>
-                <synopsis>&lt;syslog-ng_Agent WriteMinidump="1"&gt;</synopsis>
-            </listitem>
-        </itemizedlist>
-        <para>Core dumps are written into the installation folder of the &agentabbrev; under the <filename>syslog-ng-agent.dmp</filename> filename. The size of a core file is typically about 40-50 MB.</para>
-        <!-- FIXME mi a default install dir, az elejen az installhoz is! -->
+        <indexterm>
+            <primary>debugging</primary>
+        </indexterm>
+        <para>To enable debug options, create the <filename>debug.ini</filename>file in the &agentabbrev; install directory.</para>
+        <example>
+            <title>Content of the debug.ini file</title>
+            <para>The <filename>debug.ini</filename> can consist of the following entries:</para>
+            <synopsis>[AgentDbgLog]
+enabled=on/off
+path=optional
+
+[GpoDbgLog]
+enabled=on/off
+path=optional
+
+[WriteMiniDump]
+enabled=on/off</synopsis>
+        </example>
+        <section xml:id="windows-core-dumps">
+            <title>Creating core and memory dumps</title>
+            <indexterm>
+                <primary>&agentabbrev;</primary>
+                <secondary>troubleshooting</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>&agentabbrev;</primary>
+                <secondary>creating core dumps</secondary>
+            </indexterm>
+            <para>In certain rare cases, you might have to create core dumps of the &agentabbrev; to investigate a particular problem. When enabled, the &agent; application creates core dumps automatically when it experiences an unexpected shutdown.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>To enable core dumps, enter the following lines in the <filename>debug.ini</filename> file:</para>
+                        <synopsis>[WriteMiniDump]
+enabled=on</synopsis>
+                    </listitem>
+                    <listitem>
+                        <para>If you use an XML file to configure the &agent; application, add the <parameter>WriteMinidump="1"</parameter> attribute to the XML file:</para>
+                        <synopsis>&lt;syslog-ng_Agent WriteMinidump="1"&gt;</synopsis>
+                    </listitem>
+                </itemizedlist>
+                <!-- FIXME mi a default install dir, az elejen az installhoz is! -->
+                <para>Core dumps are written into the installation folder of the &agentabbrev; under the <filename>syslog-ng-agent.PID.dmp</filename> filename. The size of a core file is typically about 40-50 MB.</para>
+                <note>
+                    <para>By default, this option is enabled. Due to disk space limits you can disable it to prevent hard disk becomes full. </para>
+                </note>
+        </section>
+        <procedure xml:id="debug-agent">
+            <title>Enabling debug logging in &agentabbrev;</title>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>In case you experience problems with The &agentabbrev; the BalaBit support team might request you to create debug logs for the application to help troubleshoot the problem. Complete the following steps.</para>
+            <note>
+                <para>If you use an XML file to configure the &agent; application, add the <parameter>AgentDbgLog</parameter> attribute to the XML configration file, and set it to 1 (send the debug logs to the DebugView application) or 2 (send the debug logs into a file).</para>
+                <synopsis>&lt;syslog-ng_Agent AgentDbgLog="1"&gt;</synopsis>
+            </note>
+            <formalpara>
+                <title>Steps:</title>
+                <para/>
+            </formalpara>
+            <step>
+                <para>To enable logging debug logs, enter the following lines in the <filename>debug.ini</filename> file:</para>
+                <synopsis>[AgentDbgLog]
+enabled=on
+path=&lt;debug_file_folder_path&gt;</synopsis>
+                <para>Debug messages are written into the installation folder of the &agentabbrev; under the <filename>syslog_ng_agent_dbg.log</filename> filename by default, if no other path is specified. To change the destination folder of the debug log file, enter a path in the path=&lt;debug_file_folder_path&gt; row.</para>
+            </step>
+            <step>
+                <para>After enabling debug logging, a log message is automatically generated about the start of debug logging mode, with a timestamp and the path of the logfile.</para>
+                <example>
+                    <title>Debug logging enabled log message</title>
+                    <synopsis>Apr 16 13:14:02 zts-win015 syslog-ng[252]: syslog-ng Agent debug mode is enabled; output file='.\syslog_ng_agent_dbg.log'</synopsis>
+                </example>
+            </step>
+            <step>
+                <para>Reproduce the error. It will be included in the debug log.</para>
+            </step>
+            <step>
+                <para>After solving the problem, disable debug logging, otherwise the log file will grow and might consume the available hard disk space. The log file contains the log messages received and processed by the &agentabbrev; as well.</para>
+            </step>
+        </procedure>
+        <procedure xml:id="debug-domain-update">
+            <title>Logging domain update errors</title>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>If the domain settings are not downloaded to a domain host, the &agentabbrev; (starting from version 3.0.6) can create a logfile to debug why the domain settings are not updated on the client. Complete the following steps:</para>
+            <formalpara>
+                <title>Steps:</title>
+                <para/>
+            </formalpara>
+            <step>
+                <para>To enable logging domain update errors, enter the following lines in the <filename>debug.ini</filename> file:</para>
+                <synopsis>[GpoDbgLog]
+enabled=on
+path=&lt;debug_file_folder_path&gt;</synopsis>
+                <para>Debug messages are written into the installation folder of the &agentabbrev; under the <filename>syslog_ng_agent_gpo_dbg.log</filename> filename by default, if no other path is specified. To change the destination folder of the debug log file, enter a path in the path=&lt;debug_file_folder_path&gt; row.</para>
+            </step>
+            <step>
+                <para>Select <guimenu>Start > Run > gpupdate</guimenu> to reproduce the error.</para>
+            </step>
+            <step>
+                <para>After solving the problem, disable logging domain update errors, otherwise the log file will grow every time when the domain settings of the client are updated.</para>
+            </step>
+        </procedure>
     </section>
-    <procedure xml:id="debug-agent">
-        <title>Enabling debug logging in &agentabbrev;</title>
-        <formalpara>
-            <title>Purpose:</title>
-            <para/>
-        </formalpara>
-        <para>In case you experience problems with The &agentabbrev; the BalaBit support team might request you to create debug logs for the application to help troubleshoot the problem. Complete the following steps.</para>
-        <note>
-            <para>When using an XML configuration file, do not modify the registry. Instead, add the <parameter>AgentDbgLog</parameter> attribute to the XML configration file, and set it to 1 or two.</para>
-            <synopsis>&lt;syslog-ng_Agent AgentDbgLog="1"&gt;</synopsis>
-        </note>
-        <formalpara>
-            <title>Steps:</title>
-            <para/>
-        </formalpara>
-        <step>
-            <para>On the client host select <guimenu>Start > Run > regedit</guimenu>.</para>
-        </step>
-        <step>
-            <para>Navigate to <guimenu>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/</guimenu>.</para>
-        </step>
-        <step>
-            <para>Select <guimenu>Edit > New > Key</guimenu>, and create a registry key called <guimenu>AgentDbgLog</guimenu>. The type of the key must be DWORD.</para>
-        </step>
-        <step>
-            <para>Set the output of the debug logs.</para>
-            <itemizedlist>
-                <listitem>
-                    <para>To send the debug logs into a file, set the <guimenu>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/AgentDbgLog</guimenu> key to <parameter>2</parameter>.</para>
-                </listitem>
-                <listitem>
-                    <para>To send the debug logs to the DebugView application, set the <guimenu>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/AgentDbgLog</guimenu> key to <parameter>1</parameter>.</para>
-                </listitem>
-            </itemizedlist>
-        </step>
-        <step>
-            <para>Reproduce the error. If you requested file output, the <filename>syslog_ng_Agent.txt</filename> file will be created in the folder where the &agentabbrev; is installed (<filename>%PROGRAMFILES%\syslog-ng Agent\</filename> by default).</para>
-        </step>
-        <step>
-            <para>After solving the problem, delete the <guimenu>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/AgentDbgLog</guimenu> key from the registry, otherwise the log file will grow and might consume the available hard disk space. The log file contains the log messages received and processed by the &agentabbrev; as well.</para>
-        </step>
-    </procedure>
-    <procedure xml:id="debug-domain-update">
-        <title>Logging domain update errors</title>
-        <formalpara>
-            <title>Purpose:</title>
-            <para/>
-        </formalpara>
-        <para>If the domain settings are not downloaded to a domain host, the &agentabbrev; (starting from version 3.0.6) can create a logfile to debug why the domain settings are not updated on the client. Complete the following steps:</para>
-        <formalpara>
-            <title>Steps:</title>
-            <para/>
-        </formalpara>
-        <step>
-            <para>On the client host select <guimenu>Start > Run > regedit</guimenu>.</para>
-        </step>
-        <step>
-            <para>To send the debug logs into a file, set the <guimenu>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/GpoDbgLog</guimenu> key to <parameter>2</parameter>.</para>
-            <para>To send the debug logs to the DebugView application, set the <guimenu>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/GpoDbgLog</guimenu> key to <parameter>1</parameter>.</para>
-        </step>
-        <step>
-            <para>Select <guimenu>Start > Run > gpupdate</guimenu> to reproduce the error. If you requestet file output, the <filename>%systemroot%\system32\syslog_gpext.txt</filename> file will be created.</para>
-        </step>
-        <step>
-            <para>After solving the problem, delete the <guimenu>HKEY_LOCAL_MACHINE/Software/Balabit/syslog-ng Agent/GpoDbgLog</guimenu> key from the registry, otherwise the <filename>%systemroot%\system32\syslog_gpext.txt</filename> file will grow every time when the domain settings of the client are updated.</para>
-        </step>
-    </procedure>
 </chapter>
