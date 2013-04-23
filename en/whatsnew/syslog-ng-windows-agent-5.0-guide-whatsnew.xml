@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE article
+  [<!ENTITY % entities SYSTEM "../common/syslog-ng-entities.ent">
+  %entities;
+  ]
+ >
+<article xml:id="syslog-ng-windows-agent-guide-whatsnew" xml:lang="en-EN" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <info>
+        <title>What is new in &agent; &version;</title>
+        <orgname>&vendor;</orgname>
+        <keywordset>
+            <keyword>syslog-ng, &product;, &abbrev;, logging, log collection, syslog-ng documentation, syslog-ng configuration, syslog-ng manual, system logging, eventlog collection, central log server, log management</keyword>
+        </keywordset>
+        <subjectset>
+            <subject>
+                <subjectterm>&product; &version; features</subjectterm>
+            </subject>
+        </subjectset>
+        <xi:include href="../xml-stylesheet/common/common.xml" xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="common_copyright_bb"/>
+        <pubdate><?dbtimestamp?></pubdate>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../xml-stylesheet/common/common.xml" xpointer="common_logo_bb"/>
+    </info>
+    <section xml:id="preface">
+        <title>Preface</title>
+        <para>Welcome to &agent; (&agentabbrev;) version &version; and thank you for choosing our product. This document describes the new features and most important changes since the latest release of &agentabbrev;. The main aim of this paper is to aid system administrators in planning the migration to the new version of &agentabbrev;. The following sections describe the news and highlights of &agentabbrev; &version;.</para>
+        <para>This document covers the &version; release of the &agent; product.</para>
+        <para>As of June 2011, the following release policy applies to &product;:</para>
+        <itemizedlist>
+            <listitem>
+                <para><emphasis>Long Term Supported or LTS releases</emphasis> (for example, &agentabbrev; 4 LTS) are supported for 3 years after their original publication date and for 1 year after the next LTS release is published (whichever date is later). The second digit of the revisions of such releases is 0 (for example, &abbrev; 4.0.1). Maintenance releases to LTS releases contain only bugfixes and security updates.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Feature releases</emphasis> (for example, &agentabbrev; 4 F1) are supported for 6 months after their original publication date and for 2 months after succeeding Feature or LTS Release is published (whichever date is later). Feature releases contain enhancements and new features, presumably 1-3 new feature per release. Only the last of the feature releases is supported (for example when a new feature release comes out, the last one becomes unsupported).</para>
+            </listitem>
+        </itemizedlist>
+        <warning>
+            <para>Downgrading from a feature release to an earlier (and thus unsupported) feature release, or to the previous LTS release is officially not supported, but usually works as long as your &agentabbrev; configuration file is appropriate for the old &agentabbrev; version. However, persistent data like the position of the last processed message in a file source will be probably lost.</para>
+        </warning>
+    </section>
+    <section>
+        <title><trademark>Reliable Log Transfer Protocol</trademark></title>
+        <para>The &agentabbrev; application can send and receive log messages in a reliable way over the TCP transport layer using the <trademark>Reliable Log Transfer Protocol</trademark> (<trademark>RLTP</trademark>). <trademark>RLTP</trademark> is a new transport protocol that prevents message loss during connection breaks. It detects the last received message on the receiving end and then starts resending messages from that point. Therefore, messages are not duplicated at the receiving end in case of a connection break. It also allows the negotiation of using TLS with a single source driver.</para>
+        <para>For details on <trademark>Reliable Log Transfer Protocol</trademark>, see <olink targetdoc="syslog-ng-pe-guide-admin" targetptr="chapter-rltp"/>.</para>
+    </section>
+    <section>
+        <title>Customizable hostnames</title>
+        <para>In earlier versions, the hostname in a message could differ even on the same host. For example, the hostname was different if the host was a member of a domain or not. Version 5 LTS of &agentabbrev; makes it possible to set a standard format for the hostname, and include it in every message, regardless of domain membership, message source, and other factors. It is also possible to automatically convert the hostnames to lowercase.</para>
+    <!-- FIXME add screenshot and olink
+    <para>For details on setting and customizing the hostname, see <olink targetdoc="syslog-ng-windows-agent-guide-admin" targetptr="windows-hostnames"/>.</para>-->
+    </section>
+    <section>
+        <title>Control over internal messages</title>
+        <para>With &agent; &version;, you can control which internal messages of &agentabbrev; should be sent to the eventlog, or to the remote destinations.</para>
+        <!-- FIXME add screenshot and olink
+        <para>For details on the internal messages of &agentabbrev;, see <olink targetdoc="syslog-ng-windows-agent-guide-admin" targetptr="windows-internal-messages"/>.</para>-->
+    </section>
+    <section>
+        <title>Flow control</title>
+        <para>The destinations in &agentabbrev; 5 LTS are flow-controlled. This means that &agentabbrev; adapts the rate of sending messages to the speed of the server that receives the messages. If you use multiple destinations and enable flow-control for them, &agentabbrev; will send the messages according to the slowest destination. This functionality replaces the Primary server option.</para>
+    </section>
+    <section>
+        <title>Removed functionality</title>
+        <para>Compared to version 4.0.x, the following features are not available in &agentabbrev; 5 LTS:</para>
+        <itemizedlist>
+            <listitem>
+                <para>The Windows 2000 platform is no longer supported.</para>
+            </listitem>
+            <listitem>
+                <para>The <guimenu>IIS 5.x Log</guimenu> option of file sources has been removed.</para>
+            </listitem>
+            <listitem>
+                <para>The <guimenu>Server Properties > Messages > Metadata to include > EventData (deprecated Agent v3.1 functionality)</guimenu> option has been removed.</para>
+            </listitem>
+            <listitem>
+                <para>The <guimenu>Server Properties > Messages > Message Type > Agent v3.1 Snare Compatible Message Type (deprecated)</guimenu> option has been removed.</para>
+            </listitem>
+            <listitem>
+                <para>The <parameter>/SENDOLDMSGS</parameter> option of the &agentabbrev; installer has been removed. This feature can be set in the configuration of the &agentabbrev;.
+                <!-- FIXME add olink
+                For details, see <olink targetdoc="syslog-ng-windows-agent-guide-admin" targetptr="windows-source-read-old-messages"/>.-->
+                </para>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section>
+        <title>File sources</title>
+        <itemizedlist>
+            <listitem>
+                <para>The &agentabbrev; application can properly handle file sources that use the following encodings: <parameter>1200 (UTF-16LE), 1201 (UTF-16BE), 12000 (UTF-32LE), 12001 (UTF-32BE)</parameter>.</para>
+            </listitem>
+            <listitem>
+                <para>Similarly to &product;, the &agent; application will automatically remove the last CRLF control character from multiline messages.</para>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section>
+        <title>Wildcards in Event Source names</title>
+        <para>Starting with &agent; 5 LTS, you can use the <parameter>*</parameter> and <parameter>?</parameter> wildcard characters in the names of event containers. Every time the &agentabbrev; application is restarted, it will automatically check for new event containers that match the pattern and start sending messages from the new containers.</para>
+        <!-- FIXME add olink
+        <para>For details on using wildcards in event sources, see <olink targetdoc="syslog-ng-windows-agent-guide-admin" targetptr="windows-event-source-wildcard"/>.</para>-->
+    </section>
+    <section>
+        <title>Changes in troubleshooting</title>
+        <para>Instead of setting debug logging options in the registry, you can set these options using an INI file.</para>
+        <para>Note that starting with &agent; version 5 LTS, it is not possible to display the debug logs using the DebugView application.</para>
+        <!-- FIXME add olink
+        <para>For details setting debug logging options, see <olink targetdoc="syslog-ng-windows-agent-guide-admin" targetptr="chapter-windows-troubleshooting"/>.</para>-->
+    </section>
+    <section>
+        <title>Changes on the graphical interface</title>
+        <para>In addition to the changes described in other sections, the following has changed on the grapical user interface of &agentabbrev;:</para>
+        <itemizedlist>
+            <listitem>
+                <para>The <guimenu>Throttle</guimenu> option is now available as a global destination option at <guimenu>FIXME</guimenu>.</para>
+            </listitem>
+            <listitem>
+                <para>The <guimenu>Structured Data for event messages</guimenu> option is now available as a global destination option at <guimenu>FIXME</guimenu>.</para>
+            </listitem>
+            <listitem>
+                <para>The <guimenu>Force DNS</guimenu> option is now available as a global option at <guimenu>FIXME > Hostname</guimenu>.</para>
+            </listitem>
+        </itemizedlist>
+    </section>
+    <section>
+        <title>Command-line changes</title>
+        <itemizedlist>
+            <listitem>
+                <para>The <parameter>/e</parameter>: start the syslog-ng Agent in debug mode and send the messages to the Application eventlog container option has been removed.</para>
+            </listitem>
+            <listitem>
+                <para></para>
+            </listitem>
+        </itemizedlist>
+
+    </section>
+    <section>
+        <title>Other changes</title>
+        <itemizedlist>
+            <listitem>
+                <para>The method how &agentabbrev; computes the fingerprint of its configuration has changed. As a result, the configuration fingerprint will be different after upgrading a host to 5 LTS. If you are using a monitoring tool that alerts if the configuration of the &agentabbrev; hosts changes, adjust the reference fingerprint after the upgrade.</para>
+            </listitem>
+            <listitem>
+                <para>Version 5 LTS of &agentabbrev; uses the PCRE engine to process regular expressions. This is compatible with the POSIX engine used in earlier versions.</para>
+            </listitem>
+            <listitem>
+                <para>The $DATE, $S_DATE and $R_DATE macros use the BSD timestamp format by default, instead of the ISO timestamp format used in earlier versions. The default templates of &agentabbrev; did not use these macros. If you used the $DATE, $S_DATE, or $R_DATE macros in a custom template, replace them with their $ISODATE, $S_ISODATE, or $R_ISODATE, respectively.</para>
+            </listitem>
+            <listitem>
+                <para>In version 5 LTS of &agentabbrev;, the $TZ macro contains the timezone offset instead of the timezone name (similarly to &product;). For example it will change from "Central Europe Daylight Time" (4.0.3) to "+02:00" (5.0.1). The default templates of &agentabbrev; did not use this macro.</para>
+            </listitem>
+            <listitem>
+                <para>When using the syslog protocol (the RFC5424 message format), &agentabbrev; will not include a macro in the SDATA if the value of the macro is empty. Earlier versions worked similarly, but the $EVENT_SID_TYPE macro was added even if it was empty (in that case, &agentabbrev; replaced its value with <parameter>N/A</parameter>).</para>
+            </listitem>
+        </itemizedlist>
+    </section>
+</article>
