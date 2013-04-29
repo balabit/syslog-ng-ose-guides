@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter
+[
+<!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+  %entities;]>
+<chapter xml:id="chapter-format" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>Customizing the message format</title>
+    <indexterm>
+        <primary>message format</primary>
+        <secondary>&agentabbrev;</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>&agentabbrev;</primary>
+        <secondary>message format</secondary>
+    </indexterm>
+    <para>The format of the messages received from the eventlog and the file sources can be customized using templates. You can define separate message format for the eventlog and the file sources. If you have multiple destination servers configured, you can define separate templates for each server. When creating a template to customize the message format, you can use macros, all alphanumeric characters, and the following special characters: <parameter>&lt;&gt;,():;-+/_</parameter>.</para>
+    <procedure xml:id="windows-customize-messages">
+        <title>Customizing messages using templates</title>
+        <formalpara>
+            <title>Purpose:</title>
+            <para/>
+        </formalpara>
+        <para>To create a template, complete the following procedure:</para>
+        <warning>
+            <para>These macros are available only in the &agent;. To recognize Windows-specific elements of the log message (for example eventlog-related macros) on the syslog-ng server, you have to use parsers on the syslog-ng server. The parser must be configured to match the message format set in the syslog-ng Agent. For details on configuring parsers on your &product; server, see <olink targetdoc="syslog-ng-pe-guide-admin" targetptr="chapter-parsers"/>.</para>
+        </warning>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <step>
+            <para>Start the configuration interface of the &agent; application.</para>
+        </step>
+        <step>
+            <para>Select <guimenu>syslog-ng Agent Settings > Destinations</guimenu>. Select your logserver, and click <guimenu>Properties</guimenu>.</para>
+        </step>
+        <step>
+            <para>To change the format of messages received from eventlog sources, type the message format you want to use into the <guimenu>Event Message Format > Message Template</guimenu> field.</para>
+            <para>To change the format of messages received from file sources, type the message format you want to use into the <guimenu>File Message Format > Message Template</guimenu> field.</para>
+            <para>Do not forget to add the <parameter>$</parameter> character before macros. For a complete list of the available macros, see <xref linkend="windows-macros"/>.</para>
+            <para>For example, to send the messages in the <parameter>DATE HOSTNAME MESSAGE</parameter> format, type <parameter>Date:$DATE Hostname:$HOST Logmessage:$MESSAGE</parameter>.</para>
+            <para>Note that the $MESSAGE macro contains not only the text of the log message, but also additional information received from the message source, such as the name of the eventlog container, or the file, as set in the eventlog-specific and file-specific templates.</para>
+            <note>
+                <para>Templates are assigned to a single destination server, so it is possible to use different templates for different servers. However, a server and its failover servers always receive the same message.</para>
+            </note>
+            <warning>
+                <para>If you have more than one destination servers configured (separate servers, not in failover mode), and you want to use the same template for every server, you must manually copy the template into the configuration of each server. Template modifications are not applied automatically to every server.</para>
+                <para>To use a Snare-compatible message format, select <guimenu>Message Type > Snare Compatible Message Type</guimenu> and click <guimenu>Reset Message Template</guimenu>.</para>
+                <indexterm>
+                    <primary>snare</primary>
+                </indexterm>
+            </warning>
+        </step>
+        <step>
+            <para>Click <guimenu>OK</guimenu>.</para>
+        </step>
+        <step>
+            <para>To activate the changes, restart the &agentabbrev; service.</para>
+        </step>
+    </procedure>
+
+    <section xml:id="windows-timestamp">
+        <title>Customizing the timestamp used by the &agentabbrev;</title>
+        <indexterm>
+            <primary>timestamp</primary>
+            <secondary>&agentabbrev;</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>&agentabbrev;</primary>
+            <secondary>timestamp</secondary>
+        </indexterm>
+        <para>The &agentabbrev; can send the syslog messages using either the ISO or the BSD timestamp format. It is recommended to use the ISO format, because it contains much more information than the BSD format.</para>
+        <para>Note that in the &agentabbrev;, the macros without prefix (for example <parameter>DATE</parameter>) always refer to the receiving date of the message (for example <parameter>R_DATE</parameter>) when it arrived into the event log container, and are included only for compatibility reasons.</para>
+        <warning>
+            <indexterm>
+                <primary>timezone</primary>
+                <secondary>Windows</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>eventlog</primary>
+                <secondary>remote logging</secondary>
+            </indexterm>
+            <para>If a remote host is logging into the event log of the local host that is running &agent;, both hosts should be in the same timezone, because the event log message does not include the timezone information of the sender host. Otherwise, the date of the messages received from the remote host will be incorrect.</para>
+        </warning>
+    </section>
+    <section xml:id="windows-macros">
+        <title>Macros available in the &agentabbrev;</title>
+        <para>The following sections list the available macros:</para>
+        <warning>
+            <para>These macros are available only in the &agent;. To recognize Windows-specific elements of the log message (for example eventlog-related macros) on the syslog-ng server, you have to use parsers on the syslog-ng server. The parser must be configured to match the message format set in the syslog-ng Agent. For details on configuring parsers on your &abbrev; server, see <olink targetdoc="syslog-ng-pe-guide-admin" targetptr="chapter-parsers"/>.</para>
+        </warning>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    <link linkend="macro-protocol-agent">Macros related to protocol headers</link>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <link linkend="macro-time-agent">Macros related to the date and time of the message</link>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <link linkend="macro-event-agent">Macros related to eventlog sources</link>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <link linkend="macro-file-agent">Macros related to file sources</link>
+                </para>
+            </listitem>
+        </itemizedlist>
+        <note>
+            <para>Note that if you use the Syslog protocol template (meaning that messages are sent using the IETF-syslog protocol), only the message part of the log message can be customized, the structure of the headers and other information is fixed by the protocol.</para>
+        </note>
+        <!-- FIXME ezt updatelni, mi van file sourcenal -->
+        <para>By default, &agentabbrev; uses the following format: <parameter>&lt;${PRI}&gt;${BSDDATE} ${HOST} ${MSGHDR}${MESSAGE}</parameter>, where <parameter>$MESSAGE</parameter> is <parameter>${EVENT_USERNAME}: ${EVENT_NAME} ${EVENT_SOURCE}: [${EVENT_TYPE}] ${EVENT_MSG} (EventID ${EVENT_ID})</parameter> for eventlog messages, and <parameter>$FILE_NAME: $FILE_CURRENT_POSITION/$FILE_SIZE: $FILE_MESSAGE</parameter> for file messages.</para>
+        <indexterm>
+            <primary>&agentabbrev;</primary>
+            <secondary>default message format</secondary>
+        </indexterm>
+        <section xml:id="macro-protocol-agent">
+            <title>Protocol-related macros of the &agentabbrev;</title>
+            <indexterm>
+                <primary>macros</primary>
+                <secondary>&agentabbrev;</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>macros</primary>
+                <secondary>protocol</secondary>
+            </indexterm>
+            <simplesect xml:id="APP-NAME">
+                <title>APP_NAME</title>
+                <para><guimenu>Description:</guimenu> An alias for the <link linkend="APPLICATION-NAME"><parameter>APPLICATION_NAME</parameter></link> macro.</para>
+            </simplesect>
+            <simplesect xml:id="APPLICATION-NAME">
+                <title>APPLICATION_NAME</title>
+                <para><guimenu>Description:</guimenu>
+                    <itemizedlist>
+                        <listitem>
+                            <para>At event container: Name of the application the message came from</para>
+                        </listitem>
+                        <listitem>
+                            <para>At file as the name of creator (default value): syslog-ng-agent </para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+            </simplesect>
+            <simplesect xml:id="HOST">
+                <title>HOST</title>
+                <para><guimenu>Description:</guimenu> Name of the host sending the message. Hostnames are automatically converted to lowercase.</para>
+            </simplesect>
+            <simplesect xml:id="MESSAGE">
+                <title>MESSAGE</title>
+                <para><guimenu>Description:</guimenu> The content of the message, including the text of the message and any file- or event-specific macros that are set for the source.</para>
+            </simplesect>
+            <simplesect xml:id="MSG">
+                <title>MSG</title>
+                <para><guimenu>Description:</guimenu> An alias for the <link linkend="MESSAGE"><parameter>MESSAGE</parameter></link> macro.</para>
+            </simplesect>
+
+            <xi:include href="../../common/chunk/macro-msghdr.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+            <simplesect xml:id="PRI">
+                <title>PRI</title>
+                <para><guimenu>Description:</guimenu> Priority header of the message, storing the facility and the level of the message.</para>
+            </simplesect>
+            <simplesect xml:id="PROCESS-ID">
+                <title>PROCESS_ID</title>
+                <para><guimenu>Description:</guimenu> PID of the application the message came from.</para>
+            </simplesect>
+        </section>
+        <section xml:id="macro-time-agent">
+            <title>Time-related macros of the &agentabbrev;</title>
+            <indexterm>
+                <primary>macros</primary>
+                <secondary>&agentabbrev;</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>macros</primary>
+                <secondary>date and time</secondary>
+            </indexterm>
+            <simplesect xml:id="macro-bsddate">
+                <title>BSDDATE, R_BSDDATE, S_BSDDATE</title>
+                <indexterm type="parameter">
+                    <primary>BSDDATE, R_BSDDATE, S_BSDDATE</primary>
+                </indexterm>
+                <para><guimenu>Description:</guimenu> Date of the message in BSD timestamp format (month/day/hour/minute/second, each expressed in two digits). This is the original syslog time stamp without year information, for example <parameter>Jun 13 15:58:00</parameter>. If possible, it is recommended to use <parameter>ISODATE</parameter> for timestamping.</para>
+            </simplesect>
+            <xi:include href="../../common/chunk/macro-date.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/macro-day.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/macro-fulldate.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/macro-hour.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <simplesect xml:id="macro-isodate">
+                <title>ISODATE, R_ISODATE, S_ISODATE</title>
+                <indexterm type="parameter">
+                    <primary>ISODATE, R_ISODATE, S_ISODATE</primary>
+                </indexterm>
+                <para><guimenu>Description:</guimenu> Date of the message in the ISO 8601 compatible standard timestamp format (yyyy-mm-ddThh:mm:ss+-ZONE), for example: <parameter>2006-06-13T15:58:00.123+01:00</parameter>. If possible, it is recommended to use <parameter>ISODATE</parameter> for timestamping. Note that the &agentabbrev; cannot produce fractions of a second (for example milliseconds) in the timestamp.</para>
+            </simplesect>
+            <xi:include href="../../common/chunk/macro-min.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/macro-month.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <simplesect xml:id="macro-monthname">
+                <title>MONTHNAME, R_MONTHNAME, S_MONTHNAME</title>
+                <indexterm type="parameter">
+                    <primary>MONTHNAME, R_MONTHNAME, S_MONTHNAME</primary>
+                </indexterm>
+                <para><guimenu>Description:</guimenu> The English name of the month the message was sent, abbreviated to three characters (for example Jan, Feb, and so on).</para>
+            </simplesect>
+            <xi:include href="../../common/chunk/macro-sec.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/macro-tz.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/macro-tzoffset.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/macro-unixtime.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/macro-year.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../common/chunk/macro-week.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <simplesect xml:id="macro-weekday">
+                <title>WEEKDAY, R_WEEKDAY, S_WEEKDAY</title>
+                <indexterm type="parameter">
+                    <primary>WEEKDAY, R_WEEKDAY, S_WEEKDAY</primary>
+                </indexterm>
+                <indexterm type="parameter">
+                    <primary>$WEEKDAY, $R_WEEKDAY, $S_WEEKDAY</primary>
+                </indexterm>
+                <para><guimenu>Description:</guimenu> The 3-letter name of the day of week the message was sent, for example <parameter>Thu</parameter>.</para>
+            </simplesect>
+        </section>
+        <section xml:id="macro-event-agent">
+            <title>Eventlog-related macros of the &agentabbrev;</title>
+            <indexterm>
+                <primary>macros</primary>
+                <secondary>&agentabbrev;</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>macros</primary>
+                <secondary>eventlog sources</secondary>
+            </indexterm>
+            <simplesect xml:id="EVENT-CATEGORY">
+                <title>EVENT_CATEGORY</title>
+                <para><guimenu>Description:</guimenu> The category of the event.</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-FACILITY">
+                <title>EVENT_FACILITY</title>
+                <para><guimenu>Description:</guimenu> The facility that sent the message.</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-ID">
+                <title>EVENT_ID</title>
+                <para><guimenu>Description:</guimenu> The identification number of the event.</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-LEVEL">
+                <title>EVENT_LEVEL</title>
+                <para><guimenu>Description:</guimenu> Importance level of the message represented as a number: 6 - Success, 5 - Informational, 4- Warning, or 3 - Error).</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-MESSAGE">
+                <title>EVENT_MESSAGE</title>
+                <para><guimenu>Description:</guimenu> The content of the message.</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-MESSAGE-XML">
+                <title>EVENT_MESSAGE_XML</title>
+                <para><guimenu>Description:</guimenu> Contains the entire message in XML format. Available only on Windows Vista and Server 2008 platforms</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-MSG">
+                <title>EVENT_MSG</title>
+                <para><guimenu>Description:</guimenu> The content of the message. This is an alias of the <link linkend="EVENT-MESSAGE"><parameter>EVENT_MESSAGE</parameter></link>.</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-MSG-XML">
+                <title>EVENT_MSG_XML</title>
+                <para><guimenu>Description:</guimenu> Contains the entire message in XML format. This is an alias of the <link linkend="EVENT-MESSAGE-XML"><parameter>EVENT_MESSAGE_XML</parameter></link>. Available only on Windows Vista and Server 2008 platforms</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-NAME">
+                <title>EVENT_NAME</title>
+                <para><guimenu>Description:</guimenu> Name of the Windows event log container (for example Application or Security).</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-REC-NUM">
+                <title>EVENT_REC_NUM</title>
+                <para><guimenu>Description:</guimenu> The record number of the event in the event log.</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-SID">
+                <title>EVENT_SID</title>
+                <para><guimenu>Description:</guimenu> The security identification number of the event.</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-SID-TYPE">
+                <title>EVENT_SID_TYPE</title>
+                <para><guimenu>Description:</guimenu> The security identification number resolved into name. One of the following: <parameter>User</parameter>, <parameter>Group</parameter>, <parameter>Domain</parameter>, <parameter>Alias</parameter>
+                    <parameter>WellKnownGroup</parameter>, <parameter>DeletedAccount</parameter>, <parameter>Invalid</parameter>, <parameter>Unknown</parameter>, <parameter>Computer</parameter>. </para>
+            </simplesect>
+            <simplesect xml:id="EVENT-SOURCE">
+                <title>EVENT_SOURCE</title>
+                <para><guimenu>Description:</guimenu> The application that created the message.</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-TASK">
+                <title>EVENT_TASK</title>
+                <para><guimenu>Description:</guimenu> The task category of the event. Available only on Windows Vista and Server 2008 platforms</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-TYPE">
+                <title>EVENT_TYPE</title>
+                <para><guimenu>Description:</guimenu> The importance level of the message in text format.</para>
+            </simplesect>
+            <simplesect xml:id="EVENT-USERNAME">
+                <title>EVENT_USERNAME</title>
+                <para><guimenu>Description:</guimenu> The user running the application that created the message.</para>
+            </simplesect>
+        </section>
+        <section xml:id="macro-file-agent">
+            <title>File-related macros of the &agentabbrev;</title>
+            <indexterm>
+                <primary>macros</primary>
+                <secondary>&agentabbrev;</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>macros</primary>
+                <secondary>file sources</secondary>
+            </indexterm>
+            <simplesect xml:id="FILE-CURRENT-POSITION">
+                <title>FILE_CURRENT_POSITION</title>
+                <para><guimenu>Description:</guimenu> The position of the message from the beginning of the file in bytes.</para>
+            </simplesect>
+            <simplesect xml:id="FILE-FACILITY">
+                <title>FILE_FACILITY</title>
+                <para><guimenu>Description:</guimenu> The facility that sent the message.</para>
+            </simplesect>
+            <simplesect xml:id="FILE-LEVEL">
+                <title>FILE_LEVEL</title>
+                <para><guimenu>Description:</guimenu> Importance level of the message represented as a number: 6 - Success, 5 - Informational, 4- Warning, or 3 - Error).</para>
+            </simplesect>
+            <simplesect xml:id="FILE-MESSAGE">
+                <title>FILE_MESSAGE</title>
+                <para><guimenu>Description:</guimenu> The content of the message.</para>
+            </simplesect>
+            <simplesect xml:id="FILE-MSG">
+                <title>FILE_MSG</title>
+                <para><guimenu>Description:</guimenu> The content of the message. This is an alias of the <link linkend="FILE-MESSAGE"><parameter>FILE_MESSAGE</parameter></link> macro.</para>
+            </simplesect>
+            <simplesect xml:id="FILE-NAME">
+                <title>FILE_NAME</title>
+                <para><guimenu>Description:</guimenu> Name of the log file (including its path) from where the &agentabbrev; received the message.</para>
+            </simplesect>
+            <simplesect xml:id="FILE-SIZE">
+                <title>FILE_SIZE</title>
+                <para><guimenu>Description:</guimenu> The current size of the file in bytes.</para>
+            </simplesect>
+        </section>
+    </section>
+</chapter>
