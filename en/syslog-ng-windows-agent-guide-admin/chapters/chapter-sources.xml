@@ -275,7 +275,7 @@
             <title>Purpose:</title>
             <para/>
         </formalpara>
-        <para>The &agent; application can send the hostname macro in different format types (FQDN or hostname), depending on domain membership and source type. The hostname settings will affect all logs originating from file source, eventlog source, mark message and start/stop message. To prevent using two host licenses from a trusted source, use the same hostname type in every outgoing message. The hostname is the hostname part of the event source without DN, or the machine hostname in case of other events.</para>
+        <para>The &agent; application can send the hostname macro in different format types (FQDN or short hostname), depending on domain membership and source type. The hostname settings will affect all logs originating from file source, eventlog source, mark message and start/stop message. To prevent using two host licenses from a trusted source, use the same hostname type in every outgoing message. The hostname is the hostname part of the event source without DN, or the machine hostname in case of other events.</para>
         <note>
             <para>The &agentabbrev; will never rewrite hostnames.</para>
         </note>
@@ -303,7 +303,7 @@
                             <para>In case of file source, mark message and start / stop messages the outgoing hostname will be the hostname of the actual computer.</para>
                         </listitem>
                         <listitem>
-                            <para>In case of eventlog source, &agentabbrev; will use the hostname (for example <parameter>mypc</parameter>), or will cut the domain name from the FQDN and use the hostname part (for example <parameter>mypc.mycompany.local</parameter> becomes <parameter>mypc</parameter>).</para>
+                            <para>In case of eventlog source, the hostname will be the short hostname of the hostname of the event message. (for example <parameter>mypc</parameter>), or will cut the domain name from the FQDN and use the hostname part (for example <parameter>mypc.mycompany.local</parameter> becomes <parameter>mypc</parameter>).</para>
                         </listitem>
                     </itemizedlist>
                 </listitem>
@@ -311,10 +311,16 @@
                     <para>To use FQDN (<parameter>hostname.domain_name</parameter>) in the <parameter>$HOST</parameter> macro of the outgoing message, select <guimenu>Use FQDN</guimenu>.</para>
                     <itemizedlist>
                         <listitem>
-                            <para>In case of file source, mark message and start / stop messages the hostname of the actual computer will be resolved with the DNS server. In this case, the received FQDN will be used. If there is no DNS server, or the DNS server cannot resolve the hostname, only the hostname will be used.</para>
+                            <para>In case of file source, mark message and start / stop messages the hostname will be the FQDN of the hostname of the actual computer.</para>
+                            <note>
+                                <para>If there is no DNS server, or the DNS server cannot resolve the hostname, only the simple hostname of the hostname of the actual computer will be used.</para>
+                            </note>
                         </listitem>
                         <listitem>
-                            <para>If there is a hostname in the eventlog message, &agentabbrev; will resolve this hostname with the DNS server and use the received FQDN (for example <parameter>mypc</parameter> becomes <parameter>mypc.mycompany.local</parameter>). If there is an FQDN in the eventlog message, &agentabbrev; will use the FQDN (for example <parameter>mypc.mycompany.local</parameter> will be used as such).</para>
+                            <para>In case of eventlog source, if the hostname of event message is already an FQDN, &agentabbrev; will use it as a hostname (for example <parameter>mypc.mycompany.local</parameter> will be used as such). If this is not an FQDN, &agentabbrev; will try to resolve this hostname and use the received FQDN as hostname (for example <parameter>mypc</parameter> becomes <parameter>mypc.mycompany.local</parameter>).</para>
+                            <note>
+                                <para>If there is no DNS server, or the DNS server cannot resolve the hostname, only the simple hostname of event message will be used.</para>
+                            </note>
                         </listitem>
                     </itemizedlist>
                 </listitem>
@@ -333,8 +339,12 @@
             <note>
                 <para>The hostname still can be different in the outgoing messages if in the eventlog message, the hostname in the event is different from the machine hostname:</para>
                 <itemizedlist>
-                    <listitem><para>In case of a forwareded eventlog: the original machine hostname will be the hostname.</para></listitem>
-                    <listitem><para>The machine hostname is different from what the DNS server provides (if there is a DNS server and it can resolve the hostname).</para></listitem>
+                    <listitem>
+                        <para>In case of a forwareded eventlog: the original machine hostname will be the hostname.</para>
+                    </listitem>
+                    <listitem>
+                        <para>The machine hostname is different from what the DNS server provides (if there is a DNS server and it can resolve the hostname).</para>
+                    </listitem>
                 </itemizedlist>
             </note>
         </step>
