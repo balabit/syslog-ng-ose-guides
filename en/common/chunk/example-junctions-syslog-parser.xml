@@ -6,7 +6,7 @@
     <title>Using junctions</title>
     <para>For example, suppose that you have a single network source that receives log messages from different devices, and some devices send messages that are not RFC-compliant (some routers are notorious for that). To solve this problem in earlier versions of &abbrev;, you had to create two different network sources using different IP addresses or ports: one that received the RFC-compliant messages, and one that received the improperly formatted messages (for example, using the <parameter>flags(no-parse)</parameter> option). Using junctions this becomes much more simple: you can use a single network source to receive every message, then use a junction and two channels. The first channel processes the RFC-compliant messages, the second everything else. At the end, every message is stored in a single file. The filters used in the example can be <parameter>host()</parameter> filters (if you have a list of the IP addresses of the devices sending non-compliant messages), but that depends on your environment.</para>
     <synopsis>log {
-    source s_network { syslog(ip(10.1.2.3) transport("tcp")); flags(no-parse); };
+    source s_network { syslog(ip(10.1.2.3) transport("tcp") flags(no-parse)); };
     junction {
         channel { filter(f_compliant_hosts); parser { syslog-parser(); }; };
         channel { filter(f_noncompliant_hosts); };
@@ -15,7 +15,7 @@
 };</synopsis>
     <para>Since every channel receives every message that reaches the junction, use the <parameter>flags(final)</parameter> option in the channels to avoid the unnecessary processing the messages multiple times:</para>
     <synopsis>log {
-    source s_network { syslog(ip(10.1.2.3) transport("tcp")); flags(no-parse); };
+    source s_network { syslog(ip(10.1.2.3) transport("tcp") flags(no-parse)); };
     junction {
         channel { filter(f_compliant_hosts); parser { syslog-parser(); }; flags(final); };
         channel { filter(f_noncompliant_hosts); flags(final); };
