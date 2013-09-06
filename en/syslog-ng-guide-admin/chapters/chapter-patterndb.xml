@@ -580,7 +580,7 @@ while (&lt;&gt;) {
                                 <para>If the <parameter>&lt;pattern&gt;</parameter> element of a ruleset is not specified, &abbrev; will use this ruleset as a fallback ruleset: it will apply the ruleset to messages that have an empty PROGRAM header, or if none of the program patterns matched the PROGRAM header of the incoming message. </para>
                             </note>
                         </listitem>
-                        <listitem>
+                        <listitem xml:id="patterndb-schema-rules">
                             <para><guimenu>&lt;rules&gt;</guimenu>: A container element for the rules of the ruleset.</para>
                             <indexterm type="parameter">
                                 <primary>rules</primary>
@@ -787,119 +787,119 @@ while (&lt;&gt;) {
                                           </listitem>
                                           </itemizedlist>
                                         </listitem>
-                                        <listitem xml:id="patterndb-schema-actions">
-                                          <indexterm type="parameter">
-                                            <primary>actions</primary>
-                                          </indexterm>
-                                          <para><guimenu>actions</guimenu>: OPTIONAL &mdash; A container element for actions that are performed if a message is recognized by the pattern. For details on actions, see <xref linkend="patterndb-triggers-actions"/>.</para>
-                                          <itemizedlist>
-                                            <listitem>
-                                                <indexterm type="parameter">
-                                                    <primary>action</primary>
-                                                </indexterm>
-                                                <para><guimenu>action</guimenu>: OPTIONAL &mdash; A container element describing an action that is performed when a message matching the rule is received.</para>
-                                                <itemizedlist>
-                                                    <listitem>
-                                                        <indexterm type="parameter">
-                                                            <primary>condition</primary>
-                                                        </indexterm>
-                                                        <indexterm type="parameter">
-                                                            <primary>$(context-length)</primary>
-                                                        </indexterm>
-                                                        <indexterm>
-                                                            <primary>actions</primary>
-                                                            <secondary>context-length</secondary>
-                                                        </indexterm>
-                                                        <para><emphasis>condition</emphasis>: A syslog-ng filter expression. The action is performed only if the message matches the filter. The filter can include macros and name-value pairs extracted from the message. When using actions together with message-correlation, you can also use the <parameter>$(context-length)</parameter> macro, which returns the number of messages in the current context. For example, this can be used to determine if the expected number of messages has arrived to the context: <parameter>condition='"$(context-length)" >= "5"'</parameter></para>
-                                                    </listitem>
-                                                    <listitem>
-                                                        <indexterm type="parameter">
-                                                            <primary>rate</primary>
-                                                        </indexterm>
-                                                        <para><emphasis>rate</emphasis>: Specifies maximum how many messages should be generated in the specified time period in the following format: <parameter>&lt;number-of-messages&gt;/&lt;period-in-seconds&gt;</parameter>. For example: <parameter>1/60</parameter> allows 1 message per minute. Rates apply within the scope of the context, that is, if <parameter>context-scope="host"</parameter> and <parameter>rate="1/60"</parameter>, then maximum one message is generated per minute for every host that sends a log message matching the rule. Excess messages are dropped. Note that when applying the rate to the generated messages, &abbrev; uses the timestamps of the log messages, similarly to calculating the <parameter>context-timeout</parameter>. That way <parameter>rate</parameter> is applied correctly even if the log messages are processed offline.</para>
-                                                    </listitem>
-                                                    <listitem>
-                                                        <indexterm type="parameter">
-                                                            <primary>trigger</primary>
-                                                        </indexterm>
-                                                        <para><emphasis>trigger</emphasis>: Specifies when the action is executed. The <parameter>trigger</parameter> attribute has the following possible values:</para>
-                                                        <itemizedlist>
-                                                            <listitem>
-                                                                <indexterm type="parameter">
-                                                                    <primary>match</primary>
-                                                                </indexterm>
-                                                                <para><emphasis>match</emphasis>: Execute the action immediately when a message matching the rule is received.</para>
-                                                            </listitem>
-                                                            <listitem>
-                                                                <indexterm type="parameter">
-                                                                    <primary>timeout</primary>
-                                                                </indexterm>
-                                                                <para><emphasis>timeout</emphasis>: Execute the action when the correlation timer (<link linkend="patterndb-schema-context-timeout"><parameter>context-timeout</parameter></link>) expires. This is available only if actions are used together with correlating messages.</para>
-                                                            </listitem>
-                                                        </itemizedlist>
-                                                    </listitem>
-                                                    <listitem>
-                                                        <indexterm type="parameter">
-                                                            <primary>message</primary>
-                                                        </indexterm>
-                                                        <para><guimenu>message</guimenu>: A container element storing the message to be sent when the action is executed. Currently &abbrev; sends these messages to the <parameter>internal()</parameter> destination.</para>
-                                                        <itemizedlist>
-                                                            <listitem>
-                                                                <indexterm type="parameter">
-                                                                    <primary>inherit-properties</primary>
-                                                                </indexterm>
-                                                                <para><emphasis>inherit-properties</emphasis>: If set to TRUE, the original message that triggered the action is cloned, including its name-value pairs and tags. For details, see <xref linkend="patterndb-triggers-actions"/>.</para>
-                                                            </listitem>
-                                                        </itemizedlist>
-                                                    </listitem>
-                                                    <listitem>
-                                                        <indexterm type="parameter">
-                                                            <primary>values &mdash; action</primary>
-                                                        </indexterm>
-                                                        <para><guimenu>values</guimenu>: A container element for values and fields that are used to create the message generated b the action.</para>
-                                                        <itemizedlist>
-                                                            <listitem>
-                                                                <indexterm type="parameter">
-                                                                    <primary>value &mdash; action</primary>
-                                                                </indexterm>
-                                                                <para><guimenu>value</guimenu>: Sets the value of the message field specified in the <parameter>name</parameter> attribute of the element. For example, to specify the body of the generated message, use the following syntax:</para>
-                                                                <synopsis>&lt;value name="MESSAGE"&gt;A log message matched rule number $.classifier.rule_id&lt;/value&gt;</synopsis>
-                                                                <para>Note that currently it is not possible to add DATE, FACILITY, or SEVERITY fields to the message.</para>
-                                                                <para>When the action is used together with message correlation, the &abbrev; application automatically adds fields to the message based on the <parameter>context-scope</parameter> parameter. For example, using <parameter>context-scope="process"</parameter> automatically fills the HOST, PROGRAM, and PID fields of the generated message.</para>
-                                                            </listitem>
-                                                            <listitem>
-                                                                <indexterm type="parameter">
-                                                                    <primary>name &mdash; value &mdash; action</primary>
-                                                                </indexterm>
-                                                                <para><emphasis>name</emphasis>: Name of the message field set by the <parameter>value</parameter> element.</para>
-                                                            </listitem>
-                                                        </itemizedlist>
-                                                    </listitem>
-                                                </itemizedlist>
-                                            </listitem>
-                                          </itemizedlist>
+                                   </itemizedlist>
+                                </listitem>
+                            </itemizedlist>
+                        </listitem>
+                        <listitem xml:id="patterndb-schema-actions">
+                            <indexterm type="parameter">
+                                <primary>actions</primary>
+                            </indexterm>
+                            <para><guimenu>actions</guimenu>: OPTIONAL &mdash; A container element for actions that are performed if a message is recognized by the pattern. For details on actions, see <xref linkend="patterndb-triggers-actions"/>.</para>
+                            <itemizedlist>
+                                <listitem>
+                                    <indexterm type="parameter">
+                                        <primary>action</primary>
+                                    </indexterm>
+                                    <para><guimenu>action</guimenu>: OPTIONAL &mdash; A container element describing an action that is performed when a message matching the rule is received.</para>
+                                    <itemizedlist>
+                                        <listitem>
+                                            <indexterm type="parameter">
+                                                <primary>condition</primary>
+                                            </indexterm>
+                                            <indexterm type="parameter">
+                                                <primary>$(context-length)</primary>
+                                            </indexterm>
+                                            <indexterm>
+                                                <primary>actions</primary>
+                                                <secondary>context-length</secondary>
+                                            </indexterm>
+                                            <para><emphasis>condition</emphasis>: A syslog-ng filter expression. The action is performed only if the message matches the filter. The filter can include macros and name-value pairs extracted from the message. When using actions together with message-correlation, you can also use the <parameter>$(context-length)</parameter> macro, which returns the number of messages in the current context. For example, this can be used to determine if the expected number of messages has arrived to the context: <parameter>condition='"$(context-length)" >= "5"'</parameter></para>
                                         </listitem>
                                         <listitem>
-                                          <indexterm>
-                                          <primary>tagging messages</primary>
-                                          </indexterm>
-                                          <indexterm>
-                                          <primary>tags</primary>
-                                          </indexterm>
-                                          <indexterm type="parameter">
-                                              <primary>tags &mdash; rule</primary>
-                                          </indexterm>
-                                          <para><guimenu>tags</guimenu>: OPTIONAL &mdash; An element containing custom keywords (tags) about the messages matching the patterns. The tags can be used to label specific events (for example user logons). It is also possible to filter on these tags later (for details, see <xref linkend="tagging-messages"/>). Starting with &product; 3.2, the list of tags assigned to a message can be referenced with the <parameter>${TAGS}</parameter> macro.</para>
-                                          <itemizedlist>
-                                          <listitem>
-                                          <indexterm type="parameter">
-                                              <primary>tag &mdash; rule</primary>
-                                          </indexterm>
-                                          <para><guimenu>tag</guimenu>: OPTIONAL &mdash; A keyword or tags applied to messages matching the rule. For example: <synopsis>&lt;tags&gt;&lt;tag&gt;UserLogin&lt;/tag&gt;&lt;/tags&gt;</synopsis></para>
-                                          </listitem>
-                                          </itemizedlist>
+                                            <indexterm type="parameter">
+                                                <primary>rate</primary>
+                                            </indexterm>
+                                            <para><emphasis>rate</emphasis>: Specifies maximum how many messages should be generated in the specified time period in the following format: <parameter>&lt;number-of-messages&gt;/&lt;period-in-seconds&gt;</parameter>. For example: <parameter>1/60</parameter> allows 1 message per minute. Rates apply within the scope of the context, that is, if <parameter>context-scope="host"</parameter> and <parameter>rate="1/60"</parameter>, then maximum one message is generated per minute for every host that sends a log message matching the rule. Excess messages are dropped. Note that when applying the rate to the generated messages, &abbrev; uses the timestamps of the log messages, similarly to calculating the <parameter>context-timeout</parameter>. That way <parameter>rate</parameter> is applied correctly even if the log messages are processed offline.</para>
+                                        </listitem>
+                                        <listitem>
+                                            <indexterm type="parameter">
+                                                <primary>trigger</primary>
+                                            </indexterm>
+                                            <para><emphasis>trigger</emphasis>: Specifies when the action is executed. The <parameter>trigger</parameter> attribute has the following possible values:</para>
+                                            <itemizedlist>
+                                                <listitem>
+                                                    <indexterm type="parameter">
+                                                        <primary>match</primary>
+                                                    </indexterm>
+                                                    <para><emphasis>match</emphasis>: Execute the action immediately when a message matching the rule is received.</para>
+                                                </listitem>
+                                                <listitem>
+                                                    <indexterm type="parameter">
+                                                        <primary>timeout</primary>
+                                                    </indexterm>
+                                                    <para><emphasis>timeout</emphasis>: Execute the action when the correlation timer (<link linkend="patterndb-schema-context-timeout"><parameter>context-timeout</parameter></link>) expires. This is available only if actions are used together with correlating messages.</para>
+                                                </listitem>
+                                            </itemizedlist>
+                                        </listitem>
+                                        <listitem>
+                                            <indexterm type="parameter">
+                                                <primary>message</primary>
+                                            </indexterm>
+                                            <para><guimenu>message</guimenu>: A container element storing the message to be sent when the action is executed. Currently &abbrev; sends these messages to the <parameter>internal()</parameter> destination.</para>
+                                            <itemizedlist>
+                                                <listitem>
+                                                    <indexterm type="parameter">
+                                                        <primary>inherit-properties</primary>
+                                                    </indexterm>
+                                                    <para><emphasis>inherit-properties</emphasis>: If set to TRUE, the original message that triggered the action is cloned, including its name-value pairs and tags. For details, see <xref linkend="patterndb-triggers-actions"/>.</para>
+                                                </listitem>
+                                            </itemizedlist>
+                                        </listitem>
+                                        <listitem>
+                                            <indexterm type="parameter">
+                                                <primary>values &mdash; action</primary>
+                                            </indexterm>
+                                            <para><guimenu>values</guimenu>: A container element for values and fields that are used to create the message generated b the action.</para>
+                                            <itemizedlist>
+                                                <listitem>
+                                                    <indexterm type="parameter">
+                                                        <primary>value &mdash; action</primary>
+                                                    </indexterm>
+                                                    <para><guimenu>value</guimenu>: Sets the value of the message field specified in the <parameter>name</parameter> attribute of the element. For example, to specify the body of the generated message, use the following syntax:</para>
+                                                    <synopsis>&lt;value name="MESSAGE"&gt;A log message matched rule number $.classifier.rule_id&lt;/value&gt;</synopsis>
+                                                    <para>Note that currently it is not possible to add DATE, FACILITY, or SEVERITY fields to the message.</para>
+                                                    <para>When the action is used together with message correlation, the &abbrev; application automatically adds fields to the message based on the <parameter>context-scope</parameter> parameter. For example, using <parameter>context-scope="process"</parameter> automatically fills the HOST, PROGRAM, and PID fields of the generated message.</para>
+                                                </listitem>
+                                                <listitem>
+                                                    <indexterm type="parameter">
+                                                        <primary>name &mdash; value &mdash; action</primary>
+                                                    </indexterm>
+                                                    <para><emphasis>name</emphasis>: Name of the message field set by the <parameter>value</parameter> element.</para>
+                                                </listitem>
+                                            </itemizedlist>
                                         </listitem>
                                     </itemizedlist>
+                                </listitem>
+                              </itemizedlist>
+                            </listitem>
+                        <listitem xml:id="patterndb-schema-tags">
+                            <indexterm>
+                                <primary>tagging messages</primary>
+                            </indexterm>
+                            <indexterm>
+                                <primary>tags</primary>
+                            </indexterm>
+                            <indexterm type="parameter">
+                                <primary>tags &mdash; rule</primary>
+                            </indexterm>
+                            <para><guimenu>tags</guimenu>: OPTIONAL &mdash; An element containing custom keywords (tags) about the messages matching the patterns. The tags can be used to label specific events (for example user logons). It is also possible to filter on these tags later (for details, see <xref linkend="tagging-messages"/>). Starting with &product; 3.2, the list of tags assigned to a message can be referenced with the <parameter>${TAGS}</parameter> macro.</para>
+                            <itemizedlist>
+                                <listitem>
+                                    <indexterm type="parameter">
+                                        <primary>tag &mdash; rule</primary>
+                                    </indexterm>
+                                    <para><guimenu>tag</guimenu>: OPTIONAL &mdash; A keyword or tags applied to messages matching the rule. For example: <synopsis>&lt;tags&gt;&lt;tag&gt;UserLogin&lt;/tag&gt;&lt;/tags&gt;</synopsis></para>
                                 </listitem>
                             </itemizedlist>
                         </listitem>
