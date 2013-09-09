@@ -14,12 +14,16 @@
 		<indexterm>
 			<primary>splitting messages</primary>
 		</indexterm>
-		<para>JavaScript Object Notation (JSON) is a text-based open standard designed  for human-readable data interchange. It is used primarily to transmit data between a server and web application, serving as an alternative to XML. It is described in <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://tools.ietf.org/html/rfc4627">RFC 4627</link>. The syslog-ng application can separate parts of JSON-encoded log messages to name-value pairs, using json-c.</para>
+		<para>JavaScript Object Notation (JSON) is a text-based open standard designed for human-readable data interchange. It is used primarily to transmit data between a server and web application, serving as an alternative to XML. It is described in <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://tools.ietf.org/html/rfc4627">RFC 4627</link>. The &abbrev; application can separate parts of JSON-encoded log messages to name-value pairs, using json-c.</para>
+		<para>You can refer to the separated parts of the JSON message using the key of the JSON object as a macro. For example, if the JSON contains <parameter>{"KEY1":"value1","KEY2":"value2"}</parameter>, you can refer to the values as <parameter>${KEY1}</parameter> and <parameter>${KEY2}</parameter>. If the JSON content is structured, &abbrev; converts it to dot-notation-format. For example, to access the value of the following structure <parameter>{"KEY1": {"KEY2": "VALUE"}}</parameter>, use the <parameter>${KEY1.KEY2}</parameter> macro.</para>
+		<warning>
+			<para>If the names of keys in the JSON content are the same as the names of &abbrev; macros, the value from the JSON content will overwrite the value of the macro. For example, the <parameter>{"PROGRAM":"value1","MESSAGE":"value2"}</parameter> JSON content will overwrite the <parameter>${PROGRAM}</parameter> and <parameter>${MESSAGE}</parameter> macros. To avoid overwriting such macros, use the <parameter>prefix()</parameter> option.</para>
+		</warning>
 		<note>
 			<para>The JSON parser currently supports only integer, double and string values when interpreting JSON structures. As syslog-ng does not handle different data types internally, the JSON parser converts all JSON data to string values. In case of boolean types, the value is converted to 'TRUE' or 'FALSE' as their string representation.</para>
             <para>The JSON parser discards messages if it cannot parse them as JSON messages, so it acts as a JSON-filter as well.</para>
 		</note>
-		<para>To create a parser, define the parser name, the parser itself. Defining the prefix and the marker are optional.</para>
+		<para>To create a JSON parser, define a parser that has the <parameter>json-parser()</parameter> option. Defining the prefix and the marker are optional. By default, the parser will process the MESSAGE part of the log message. To process other parts of a log message with the JSON parser, use the <parameter>template()</parameter> option.</para>
 		<synopsis>Declaration:
     parser parser_name {
         json-parser(
@@ -97,5 +101,23 @@ log {
 				</tgroup>
 			</informaltable>
 			<para><guimenu>Description:</guimenu> The prefix inserts a prefix before the name part of the name-value pairs to facilitate further processing.</para>
+		</simplesect>
+		<simplesect>
+			<title>template()</title>
+			<indexterm type="parameter">
+				<primary>template()</primary>
+			</indexterm>
+			<informaltable frame="topbot" colsep="0" rowsep="0">
+				<tgroup cols="2">
+				<colspec colnum="1" colwidth="50pt"/>
+					<tbody>
+						<row>
+							<entry>Synopsis: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+							<entry>template("${&lt;macroname&gt;}")</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</informaltable>
+			<para><guimenu>Description:</guimenu> The macro that contains the part of the message that the parser will process. It can also be a macro created by a previous parser of the log path. By default, this is empty and the parser processes the entire message (<parameter>${MESSAGE}</parameter>).</para>
 		</simplesect>
 	</section>
