@@ -128,7 +128,18 @@
             <indexterm>
                 <primary>message classification</primary>
             </indexterm>
-            <para>The results of message classification and parsing can be used in custom filters and file and database templates as well. There are two built-in macros in &abbrev; that allow you to use the results of the classification: the <parameter>.classifier.class</parameter> macro contains the class assigned to the message (for example violation, security, or unknown), while the <parameter>.classifier.rule_id</parameter> macro contains the identifier of the message pattern that matched the message.</para>
+            <para>The results of message classification and parsing can be used in custom filters and templates, for example, in file and database templates. The following built-in macros allow you to use the results of the classification:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>The <parameter>.classifier.class</parameter> macro contains the class assigned to the message (for example violation, security, or unknown).</para>
+                </listitem>
+                <listitem>
+                    <para>The <parameter>.classifier.rule_id</parameter> macro contains the identifier of the message pattern that matched the message.</para>
+                </listitem>
+                <listitem>
+                    <para>The <parameter>.classifier.context_id</parameter> macro contains the identifier of the context for messages that were correlated. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
+                </listitem>
+            </itemizedlist>
             <indexterm>
                 <primary>filtering</primary>
                 <secondary>on message class</secondary>
@@ -231,7 +242,7 @@
         <para>Log messages are supposed to describe events, but applications often separate information about a single event into different log messages. For example, the Postfix e-mail server logs the sender and recipient addresses into separate log messages, or in case of an unsuccessful login attempt, the OpenSSH server sends a log message about the authentication failure, and the reason of the failure in the next message.</para>
         <para>Of course, messages that are not so directly related can be correlated as well, for example, login-logout messages, and so on.</para>
         <para>To correlate log messages, &abbrev; uses the pattern database to add messages into message-groups called contexts. A context consists of a series of log messages that are related to each other in some way, for example, the log messages of an SSH session can belong to the same context. As new messages come in, they may be added to a context. Also, when an incoming message is identified it can trigger actions to be performed, for example, generate a new message that contains all the important information that was stored previously in the context. (For details on triggering actions and generating messages, see <xref linkend="patterndb-triggers-actions"/>.)</para>
-        <para>There are two attributes for pattern database rules that determine if a message matching the rule is added to a context: <parameter>context-scope</parameter> and <parameter>context-id</parameter>. The <parameter>context-scope</parameter> attribute acts as an early filter, selecting messages sent by the same process (${HOST}${PROGRAM}${PID} is identical), application (${HOST}${PROGRAM} is identical), or host, while the <parameter>context-id</parameter> actually adds the message to the context specified in the id. The <parameter>context-id</parameter> can be a simple string, or can contain macros or values extracted from the log messages for further filtering.</para>
+        <para>There are two attributes for pattern database rules that determine if a message matching the rule is added to a context: <parameter>context-scope</parameter> and <parameter>context-id</parameter>. The <parameter>context-scope</parameter> attribute acts as an early filter, selecting messages sent by the same process (${HOST}${PROGRAM}${PID} is identical), application (${HOST}${PROGRAM} is identical), or host, while the <parameter>context-id</parameter> actually adds the message to the context specified in the id. The <parameter>context-id</parameter> can be a simple string, or can contain macros or values extracted from the log messages for further filtering. Starting with &abbrev; version <phrase condition="ose">3.5</phrase>, if a message is added to a context, &abbrev; automatically adds the identifier of the context to the <parameter>.classifier.context_id</parameter> macro of the message.</para>
         <note>
 			<para>Message contexts are persistent and are not lost when &abbrev; is reloaded (SIGHUP), but are lost when &abbrev; is restarted.</para>
         </note>
@@ -635,7 +646,7 @@ while (&lt;&gt;) {
                                     <indexterm type="parameter">
                                         <primary>context-id</primary>
                                     </indexterm>
-                                    <para><emphasis>context-id</emphasis>: OPTIONAL &mdash; An identifier to group related log messages when using the pattern database to correlate events. The ID can be a descriptive string describing the events related to the log message (for example, <parameter>ssh-sessions</parameter> for log messages related to SSH traffic), but can also contain macros to generate IDs dynamically. When using macros in IDs, see also the <link linkend="patterndb-schema-context-scope"><parameter>context-scope</parameter></link> attribute. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
+                                    <para><emphasis>context-id</emphasis>: OPTIONAL &mdash; An identifier to group related log messages when using the pattern database to correlate events. The ID can be a descriptive string describing the events related to the log message (for example, <parameter>ssh-sessions</parameter> for log messages related to SSH traffic), but can also contain macros to generate IDs dynamically. When using macros in IDs, see also the <link linkend="patterndb-schema-context-scope"><parameter>context-scope</parameter></link> attribute. Starting with &abbrev; version <phrase condition="ose">3.5</phrase>, if a message is added to a context, &abbrev; automatically adds the identifier of the context to the <parameter>.classifier.context_id</parameter> macro of the message. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
                                     <note>
                                         <para>The &abbrev; application determines the context of the message <emphasis>after</emphasis> the pattern matching is completed. This means that macros and name-value pairs created by the matching pattern database rule can be used as context-id macros.</para>
                                     </note>
