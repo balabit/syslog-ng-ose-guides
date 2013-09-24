@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+ [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]>
+<simplesect xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>spoof_interface()</title>
+    <indexterm type="parameter">
+        <primary>spoof_interface()</primary>
+    </indexterm>
+    <informaltable frame="topbot" colsep="0" rowsep="0">
+        <tgroup cols="2">
+            <colspec colnum="1" colwidth="40pt"/>
+            <tbody>
+                <row>
+                    <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                    <entry>string (the name of the interface)</entry>
+                </row>
+                <row>
+                    <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                    <entry>empty</entry>
+                </row>
+            </tbody>
+        </tgroup>
+    </informaltable>
+    <para><guimenu>Description:</guimenu> Specifies the name of the interface that will be used to send the spoofed messages. Using this option is required only on Microsoft Windows platforms. The name of the interface is the internal device identifier used by WinPcap, which has absolutely no relation to any other possible device identifiers used by Windows. To determine the identifier of the interface, execute the <filename>iflist.exe</filename> file that is installed with &abbrev;. A sample output of the <filename>iflist.exe</filename> output is shown below. The first line is the identifier of the interface, but note that you need use an extra backslash character. For example, if the identifier is <parameter>\Device\NPF_{ADE8ECA1-183A-43A2-AF01-9C81ABB4A4C1}</parameter>, you must use <parameter>spoof_interface("\\Device\\NPF_{ADE8ECA1-183A-43A2-AF01-9C81ABB4A4C1}"</parameter> in the configuration file of &abbrev;.</para>
+    <synopsis>\Device\NPF_{ADE8ECA1-183A-43A2-AF01-9C81ABB4A4C1}
+        Description: VMware Accelerated AMD PCNet Adapter (Microsoft's Packet Scheduler)
+        Loopback: no
+        Address Family: #2
+        Address Family Name: AF_INET
+        Address: 192.168.250.1
+        Netmask: 255.255.255.0
+        Broadcast Address: 255.255.255.255</synopsis>
+    <example>
+        <title>Spoofing the source address on Microsoft Windows</title>
+        <indexterm>
+            <primary>spoofing</primary>
+            <secondary>on Microsoft Windows</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>spoof source</primary>
+            <secondary>on Microsoft Windows</secondary>
+        </indexterm>
+        <para>The following UDP destination spoofs the address of the original client. On Microsoft Windows platforms, the <parameter>spoof_interface()</parameter> option must be also set.</para>
+        <synopsis>destination d_udp {
+        udp("10.30.0.32" port(5555)
+            spoof-source(yes)
+            spoof_interface("\\Device\\NPF_{578D4231-71C1-470F-AFFE-2CB1E5BC35A8}")
+           );
+};</synopsis>
+    </example>
+    <warning>
+        <para>To use spoofing, you must also use the <parameter>spoof-source(yes)</parameter> option.</para>
+    </warning>
+</simplesect>
