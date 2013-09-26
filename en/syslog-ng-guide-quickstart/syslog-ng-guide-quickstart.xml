@@ -134,7 +134,7 @@
 						<para><command>sh syslog-ng-premium-edition-4.2.4-linux-glibc2.3.6-amd64.run</command></para>
 					</step>
 					<step>
-						<para>Select <guimenu>Continue</guimenu> on the Welcome screen, and accept the EULA.</para>
+						<para>Select <guimenu>Continue</guimenu> on the Welcome computeroutput, and accept the EULA.</para>
 					</step>
 					<step>
 						<para>Verify that the system summary is correct.</para>
@@ -197,7 +197,7 @@
 						<para><command>sh syslog-ng-premium-edition-4.2.4-linux-glibc2.3.6-amd64.run</command></para>
 					</step>
 					<step>
-						<para>Select <guimenu>Continue</guimenu> on the Welcome screen, and accept the EULA.</para>
+						<para>Select <guimenu>Continue</guimenu> on the Welcome computeroutput, and accept the EULA.</para>
 					</step>
 					<step>
 						<para>Verify that the system summary is correct.</para>
@@ -343,7 +343,10 @@
 				</step>
 				<step>
 					<para>Modify it to look like the following line:</para>
-					<para><computeroutput>destination d_logserver { tcp("&lt;PEServerIP&gt;" disk-buffer(disk-buf-size(2000000)));};</computeroutput></para>
+					<synopsis>destination d_logserver
+						{
+							tcp("&lt;PEServerIP&gt;" disk-buffer(disk-buf-size(2000000)));
+						};</synopsis>
 					<para>Replace <parameter>&lt;PEServerIP&gt;</parameter> with the hostname or IP address of the &abbrev; server.</para>
 				</step>
 				<step>
@@ -370,7 +373,7 @@
 					</step>
 					<step>
 						<para>Replace the line <computeroutput>syslog();</computeroutput> with the following:</para>
-						<para><computeroutput>syslog(port(601) transport(rltp(tls_required(no))));</computeroutput></para>
+						<synopsis>syslog(port(601) transport(rltp(tls_required(no))));</synopsis>
 					</step>
 					<step>
 						<para>Save the file and restart syslog-ng</para>
@@ -420,7 +423,12 @@
 					</step>
 					<step>
 						<para>Replace the line starting with <computeroutput>destination d_logserver</computeroutput> with the following:</para>
-						<para><computeroutput>destination d_logserver { syslog("&lt;PEServerIP&gt;" transport(rltp()) port("601") disk-buffer(disk-buf-size(2000000)));};</computeroutput></para>
+						<synopsis>destination d_logserver
+							{
+								syslog("&lt;PEServerIP&gt;" transport(rltp())
+								port("601")
+								disk-buffer(disk-buf-size(2000000)));
+							};</synopsis>
 						<para>Replace <parameter>&lt;PEServerIP&gt;</parameter> with the hostname or IP address of the &abbrev; server.</para>
 					</step>
 					<step>
@@ -445,7 +453,11 @@
 				</step>
 				<step>
 					<para>Modify it to look like the following line:</para>
-					<para><computeroutput>destination d_messages {file(“/var/log/messages”); file("/var/log/$YEAR/$WEEK/$HOST-messages" create_dirs(yes)); };</computeroutput></para>
+					<synopsis>destination d_messages
+						{
+							file(“/var/log/messages”);
+							file("/var/log/$YEAR/$WEEK/$HOST-messages" create_dirs(yes));
+						};</synopsis>
 				</step>
 				<step>
 					<para>Save the file and restart syslog-ng</para>
@@ -473,14 +485,17 @@
 				</step>
 				<step>
 					<para>Add the following line right below:</para>
-					<para><computeroutput>destination d_logstore { logstore("/var/log/messages.lgs" compress(9) ); };</computeroutput></para>
+					<synopsis>destination d_logstore
+						{
+							logstore("/var/log/messages.lgs" compress(9) );
+						};</synopsis>
 				</step>
 				<step>
 					<para>Locate the line containing <computeroutput>destination(d_messages)</computeroutput></para>
 				</step>
 				<step>
 					<para>Add the following line right below:</para>
-					<para><computeroutput>destination(d_logstore)</computeroutput></para>
+					<synopsis>destination(d_logstore)</synopsis>
 				</step>
 				<step>
 					<para>Restart syslog-ng for the configuration changes to take effect</para>
@@ -507,28 +522,27 @@
 				</step>
 				<step>
 					<para>Add a new UDP source for router logs:</para>
-					<para><computeroutput>source s_udp {udp();}; </computeroutput></para>
+					<synopsis>source s_udp {udp();}; </synopsis>
 				</step>
 				<step>
 					<para>Add a new log path for storing local logs locally:</para>
-					<para><computeroutput>log { source(s_local); destination(d_messages); };</computeroutput></para>
+					<synopsis>log { source(s_local); destination(d_messages); };</synopsis>
 				</step>
 				<step>
 					<para>Add a new log path for sending both local messages and logs collected from the UDP source to the central server:</para>
-					<para><computeroutput>log {</computeroutput></para>
-					<para><computeroutput>source(s_local);</computeroutput></para>
-					<para><computeroutput>source(s_udp);</computeroutput></para>
-					<para><computeroutput>destination(d_logserver);</computeroutput></para>
-					<para><computeroutput>};</computeroutput></para>
+					<synopsis>log
+						{
+							source(s_local);
+							source(s_udp);
+							destination(d_logserver);
+						};</synopsis>
 				</step>
 				<step>
 					<para><emphasis>Validating the changes</emphasis></para>
 					<para>Test the relay by executing the following command on the relay machine:</para>
 					<para><command>/opt/syslog-ng/bin/loggen -i -D localhost 514</command></para>
 					<para>It generates about a thousand messages a second and sends to the UDP port of the local &abbrev; relay. Executing <command>tail /var/log/messages</command> should not show any of the generated messages on the relay, but doing the same on the server machine should show a large number of similar lines:</para>
-					<para>
-						<synopsis>Sep 20 21:18:09 relayhost prg00000[1234]: seq: 0000009458, thread: 0000, runid: 1379704679, stamp: 2013-09-20T21:18:09 PADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADD</synopsis>
-					</para>
+					<synopsis>Sep 20 21:18:09 relayhost prg00000[1234]: seq: 0000009458, thread: 0000, runid: 1379704679, stamp: 2013-09-20T21:18:09 PADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADD</synopsis>
 				</step>
 			</procedure>
 		</section>
