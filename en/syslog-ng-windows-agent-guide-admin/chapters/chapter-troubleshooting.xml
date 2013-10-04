@@ -200,53 +200,9 @@ enabled=on</synopsis>
         </indexterm>
         <para>To read the messages from eventlog containers, the &agent; application uses the native Windows API tools. The Windows Vista and newer platforms use an XML-based eventlog format. The API (called EVTX) that reads the XML-messages from the eventlog container and passes them to &agentabbrev; is inherently slow, severely limiting the performance of &agentabbrev;.</para>
         <para>The API tools that &agentabbrev; uses on the Microsoft Windows XP and 2003 Server platforms is available on the newer platforms as well, and can increase the speed of reading from eventlog containers, up to 500%. However, using this old API (called EVT) has limitations when used with XML-based eventlog containers.</para>
-        <section xml:id="windows-agent-eventlog-api-limitations">
-            <title>Limitations of using the EVT API on Windows Vista or newer</title>
-            <indexterm>
-                <primary>EVT API</primary>
-                <secondary>limitations on Windows Vista or newer</secondary>
-            </indexterm>
-            <para>When using the EVT API to read messages from XML-based eventlog containers, note the following limitations.</para>
-            <itemizedlist>
-                <listitem>
-                    <para>The EVT API supports only containers are listed under the <parameter>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Eventlog\</parameter> key in the registry. The three default containers (Security, Application, System) are listed here by default.</para>
-                </listitem>
-                <listitem>
-                    <para>Derived containers (for example, <parameter>microsoft-windows-bits-client/analytic</parameter>) are not supported.</para>
-                </listitem>
-                <listitem>
-                    <para>The following macros do not work, that is, their values will be empty: <parameter>${EVENT_CATEGORY}</parameter>, <parameter>${EVENT_MESSAGE_XML}</parameter>, <parameter>${EVENT_MSG_XML}</parameter>, and <parameter>${EVENT_TASK}</parameter>.</para>
-                </listitem>
-                <listitem>
-                    <para>The way how the EVT API provided by Microsoft reads the values of the XML-based is not perfect. Therefore, filters that use these macros might not work properly. The following list shows the known limitations and errors:</para>
-                    <itemizedlist>
-                        <listitem>
-                            <para><parameter>${EVENT_LEVEL}</parameter>: The value of this macro can be incorrect. It will always be a number as expected, but not necessarily the correct value.</para>
-                        </listitem>
-                        <listitem>
-                            <para><parameter>${EVENT_SOURCE}</parameter>: It is possible that the value of this macro will be formatted differently. For example, <parameter>Microsoft-Windows-Security-Auditing</parameter> instead of <parameter>Microsoft Windows security auditing</parameter>. </para>
-                        </listitem>
-                        <listitem>
-                            <para><parameter>${EVENT_TYPE}</parameter>: The value of this macro is known to be incorrect in the following scenarios:</para>
-                            <itemizedlist>
-                                <listitem>
-                                    <para>For security audit logs, if <parameter>${EVENT_LEVEL}</parameter> is 4, the value of the <parameter>${EVENT_TYPE}</parameter> macro will be <parameter>Audit Success</parameter> instead of <parameter>Information</parameter>. This is known to happen when the "Audit log cleared" event is generated.</para>
-                                </listitem>
-                                <listitem>
-                                    <para>For non-security audit logs, if <parameter>${EVENT_LEVEL}</parameter> is 0, the value of the <parameter>${EVENT_TYPE}</parameter> macro will be <parameter>Undefined</parameter> instead of <parameter>Information</parameter>.</para>
-                                </listitem>
-                            </itemizedlist>
-                        </listitem>
-                        <listitem>
-                            <para><parameter>${EVENT_USERNAME}</parameter>: The EVT API will always add value of the Username field to this macro. If the Username field of the event is empty, the EVTX API used the TargetUserName or the SubjectUserName instead, but this is not possible with the EVT API. For example, the Username field of events from the security container will be often <parameter>N/A</parameter>.</para>
-                        </listitem>
-                        <listitem>
-                            <para><parameter>${PRI}</parameter>: The value of this macro is based on the <parameter>${EVENT_LEVEL}</parameter>, therefore, it can be incorrect.</para>
-                        </listitem>
-                    </itemizedlist>
-                </listitem>
-            </itemizedlist>
-        </section>
+        
+        <xi:include href="../../common/syslog-ng-troubleshoot-eventlog.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        
         <procedure xml:id="windows-agent-eventlog-api-enable">
             <title>Enabling the EVT API on Windows Vista or newer</title>
             <indexterm>
