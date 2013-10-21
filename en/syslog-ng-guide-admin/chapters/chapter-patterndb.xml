@@ -23,11 +23,11 @@
         <para>To classify a message, syslog-ng selects the first character of the message (the text of message, not the header), and selects the patterns starting with this character, other patterns are ignored for the rest of the process. After that, the second character of the message is compared to the second character of the selected patterns. Again, matching patterns are selected, and the others discarded. This process is repeated until a single pattern completely matches the message, or no match is found. In the latter case, the message is classified as unknown, otherwise the class of the matching pattern is assigned to the message.</para>
         <para>To make the message classification more flexible and robust, the patterns can contain pattern parsers: elements that match on a set of characters. For example, the NUMBER parser matches on any integer or hexadecimal number (for example 1, 123, 894054, 0xFFFF, and so on). Other pattern parsers match on various strings and IP addresses. For the details of available pattern parsers, see <xref linkend="syslog-ng-patterndb-using-parsers"/>.</para>
         <para>The functionality of the pattern database is similar to that of the logcheck project, but it is much easier to write and maintain the patterns used by syslog-ng, than the regular expressions used by logcheck. Also, it is much easier to understand syslog-ng pattens than regular expressions.</para>
-        <para>Pattern matching based on regular expressions is computationally very intensive, especially when the number of patterns increases. The solution used by syslog-ng can be performed real-time, and is independent from the number of patterns, so it scales much better. The following patterns describe the same message: <parameter>Accepted password for bazsi from 10.50.0.247 port 42156 ssh2</parameter>
+        <para>Pattern matching based on regular expressions is computationally very intensive, especially when the number of patterns increases. The solution used by syslog-ng can be performed real-time, and is independent from the number of patterns, so it scales much better. The following patterns describe the same message: <userinput>Accepted password for bazsi from 10.50.0.247 port 42156 ssh2</userinput>
         </para>
-        <para>A regular expression matching this message from the logcheck project: <parameter>Accepted (gssapi(-with-mic|-keyex)?|rsa|dsa|password|publickey|keyboard-interactive/pam) for [^[:space:]]+ from [^[:space:]]+ port [0-9]+( (ssh|ssh2))?</parameter>
+        <para>A regular expression matching this message from the logcheck project: <userinput>Accepted (gssapi(-with-mic|-keyex)?|rsa|dsa|password|publickey|keyboard-interactive/pam) for [^[:space:]]+ from [^[:space:]]+ port [0-9]+( (ssh|ssh2))?</userinput>
         </para>
-        <para>A syslog-ng database pattern for this message: <parameter>Accepted @QSTRING:auth_method: @ for@QSTRING:username: @from @QSTRING:client_addr: @port @NUMBER:port:@ ssh2</parameter>
+        <para>A syslog-ng database pattern for this message: <userinput>Accepted @QSTRING:auth_method: @ for@QSTRING:username: @from @QSTRING:client_addr: @port @NUMBER:port:@ ssh2</userinput>
         </para>
         <para>For details on using pattern databases to classify log messages, see <xref linkend="configuring-pattern-databases"/>.</para>
         <xi:include href="../../common/syslog-ng-patterndb-structure.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -143,7 +143,7 @@
             </indexterm>
             <example>
                 <title>Using classification results for filtering messages</title>
-                <para>To filter on a specific message class, create a filter that checks the <guimenu>.classifier_class</guimenu> macro, and use this filter in a log statement.</para>
+                <para>To filter on a specific message class, create a filter that checks the <parameter>.classifier_class</parameter> macro, and use this filter in a log statement.</para>
                 <synopsis>filter fi_class_violation {
                     match("violation"
                     value(".classifier.class")
@@ -157,7 +157,7 @@
                     destination(di_class_violation);
                     };</synopsis>
                 <para>Filtering on the <parameter>unknown</parameter> class selects messages that did not match any rule of the pattern database. Routing these messages into a separate file allows you to periodically review new or unknown messages.</para>
-                <para>To filter on messages matching a specific classification rule, create a filter that checks the <guimenu>.classifier.rule_id</guimenu> macro. The unique identifier of the rule (for example <parameter>e1e9c0d8-13bb-11de-8293-000c2922ed0a</parameter>) is the <parameter>id</parameter> attribute of the rule in the XML database.</para>
+                <para>To filter on messages matching a specific classification rule, create a filter that checks the <parameter>.classifier.rule_id</parameter> macro. The unique identifier of the rule (for example <userinput>e1e9c0d8-13bb-11de-8293-000c2922ed0a</userinput>) is the <userinput>id</userinput> attribute of the rule in the XML database.</para>
                 <synopsis>filter fi_class_rule {
                     match("e1e9c0d8-13bb-11de-8293-000c2922ed0a"
                     value(".classifier.rule_id")
@@ -173,16 +173,16 @@
             <para>The message-segments parsed by the pattern parsers can also be used as macros as well. To accomplish this, you have to add a name to the parser, and then you can use this name as a macro that refers to the parsed value of the message.</para>
             <example>
                 <title>Using pattern parsers as macros</title>
-                <para>For example, you want to parse messages of an application that look like <parameter>"Transaction: &lt;type&gt;."</parameter>, where &lt;type&gt; is a string that has different values (for example refused, accepted, incomplete, and so on). To parse these messages, you can use the following pattern:</para>
+                <para>For example, you want to parse messages of an application that look like <userinput>"Transaction: &lt;type&gt;."</userinput>, where &lt;type&gt; is a string that has different values (for example refused, accepted, incomplete, and so on). To parse these messages, you can use the following pattern:</para>
                 <synopsis>'Transaction: @ESTRING::.@'</synopsis>
                 <para>Here the @ESTRING@ parser parses the message until the next full stop character. To use the results in a filter or a filename template, include a name in the parser of the pattern, for example:</para>
                 <synopsis>'Transaction: @ESTRING:TRANSACTIONTYPE:.@'</synopsis>
-                <para>After that, add a custom template to the log path that uses this template. For example, to select every <parameter>accepted</parameter> transaction, use the following custom filter in the log path:</para>
+                <para>After that, add a custom template to the log path that uses this template. For example, to select every <userinput>accepted</userinput> transaction, use the following custom filter in the log path:</para>
                 <synopsis>match("accepted" value("TRANSACTIONTYPE"));</synopsis>
             </example>
             <note>
                 <para>The above macros can be used in database columns and filename templates as well, if you create custom templates for the destination or logspace.</para>
-                <para>Use a consistent naming scheme for your macros, for example, <parameter>APPLICATIONNAME_MACRONAME</parameter>.</para>
+                <para>Use a consistent naming scheme for your macros, for example, <userinput>APPLICATIONNAME_MACRONAME</userinput>.</para>
             </note>
         </section>
         <section xml:id="patterndb-download">
@@ -247,7 +247,7 @@
                 <para>When a new message is added to a context, &abbrev; will restart the timeout using the <parameter>context-timeout</parameter> set for the new message.</para>
             </listitem>
             <listitem>
-                <para>When calculating if the timeout has already expired or not, &abbrev; uses the timestamps of the incoming messages, not system time elapsed between receiving the two messages (unless the messages do not include a timestamp, or the <parameter>keep-timestamp(no)</parameter> option is set). That way &abbrev; can be used to process and correlate already existing log messages offline. However, the timestamps of the messages must be in chronological order (that is, a new message cannot be older than the one already processed), and if a message is newer than the current system time (that is, it seems to be coming from the future), &abbrev; will replace its timestamp with the current system time.</para>
+                <para>When calculating if the timeout has already expired or not, &abbrev; uses the timestamps of the incoming messages, not system time elapsed between receiving the two messages (unless the messages do not include a timestamp, or the <userinput>keep-timestamp(no)</userinput> option is set). That way &abbrev; can be used to process and correlate already existing log messages offline. However, the timestamps of the messages must be in chronological order (that is, a new message cannot be older than the one already processed), and if a message is newer than the current system time (that is, it seems to be coming from the future), &abbrev; will replace its timestamp with the current system time.</para>
                 <example>
                     <title>How &abbrev; calculates <parameter>context-timeout</parameter></title>
                     <para>Consider the following two messages:</para>
@@ -275,7 +275,7 @@
             <indexterm type="parameter">
                 <primary>@distance</primary>
             </indexterm>
-            <para>When using the <parameter>&lt;value&gt;</parameter> element in pattern database rules together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <parameter>@&lt;distance-of-referenced-message-from-the-current&gt;</parameter> suffix to the macro. For example, if there are three log messages in a context, and you are creating a generated message for the third log message, the <parameter>${HOST}@1</parameter> expression refers to the host field of the current (third) message in the context, the <parameter>${HOST}@2</parameter> expression refers to the host field of the previous (second) message in the context, <parameter>${PID}@3</parameter> to the PID of the first message, and so on. For example, the following message can be created from SSH login/logout messages (for details on generating new messages, see <xref linkend="patterndb-triggers-actions"/>): <parameter>An SSH session for ${SSH_USERNAME}@1 from ${SSH_CLIENT_ADDRESS}@2 closed. Session lasted from ${DATE}@2 to ${DATE}</parameter>.</para>
+            <para>When using the <userinput>&lt;value&gt;</userinput> element in pattern database rules together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <userinput>@&lt;distance-of-referenced-message-from-the-current&gt;</userinput> suffix to the macro. For example, if there are three log messages in a context, and you are creating a generated message for the third log message, the <userinput>${HOST}@1</userinput> expression refers to the host field of the current (third) message in the context, the <userinput>${HOST}@2</userinput> expression refers to the host field of the previous (second) message in the context, <userinput>${PID}@3</userinput> to the PID of the first message, and so on. For example, the following message can be created from SSH login/logout messages (for details on generating new messages, see <xref linkend="patterndb-triggers-actions"/>): <userinput>An SSH session for ${SSH_USERNAME}@1 from ${SSH_CLIENT_ADDRESS}@2 closed. Session lasted from ${DATE}@2 to ${DATE}</userinput>.</para>
             <xi:include href="../../common/wnt/note-escape-at.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </section>
     </section>
@@ -310,12 +310,12 @@
         <para>The generated message is injected into the same place where the <parameter>db_parser</parameter> statement is referenced in the log path. To post the generated message into the <parameter>internal()</parameter> source instead, use the <parameter>inject-mode()</parameter> option in the definition of the parser.</para>
         <example>
             <title>Sending triggered messages to the <parameter>internal()</parameter> source</title>
-            <para>To send the generated messages to the <parameter>internal</parameter> source, use the <parameter>inject_mode(internal)</parameter> option:</para>
+            <para>To send the generated messages to the <parameter>internal</parameter> source, use the <userinput>inject_mode(internal)</userinput> option:</para>
             <synopsis>parser p_db {db_parser(
     file("mypatterndbfile.xml")
     inject_mode(internal)
 );}; </synopsis>
-            <para>To inject the generated messages where the pattern database is referenced, use the <parameter>inject_mode(pass-through)</parameter> option:</para>
+            <para>To inject the generated messages where the pattern database is referenced, use the <userinput>inject_mode(pass-through)</userinput> option:</para>
             <synopsis>parser p_db {db_parser(
     file("mypatterndbfile.xml")
     inject_mode(pass-through)
@@ -345,7 +345,7 @@
                 <primary>actions</primary>
                 <secondary>conditional actions</secondary>
             </indexterm>
-            <para>To limit when a message is triggered, use the <parameter>condition</parameter> attribute and specify a filter expression: the action will be executed only if the condition is met. For example, the following action is executed only if the message was sent by the host called <parameter>myhost</parameter>.</para>
+            <para>To limit when a message is triggered, use the <parameter>condition</parameter> attribute and specify a filter expression: the action will be executed only if the condition is met. For example, the following action is executed only if the message was sent by the host called <userinput>myhost</userinput>.</para>
             <synopsis>&lt;action condition="'${HOST}' == 'example'"&gt;</synopsis>
             <para>The following action can be used to log the length of an SSH session (the time difference between a login and a logout message in the context):</para>
             <synopsis>&lt;actions&gt;
@@ -407,14 +407,14 @@ while (&lt;&gt;) {
             <para>Certain features of generating messages can be used only if message correlation is used as well.</para>
             <itemizedlist>
                 <listitem>
-                    <para>The &abbrev; application automatically fills the fields for the generated message based on the scope of the context, for example, the HOST and PROGRAM fields if the <parameter>context-scope</parameter> is <parameter>program</parameter>.</para>
+                    <para>The &abbrev; application automatically fills the fields for the generated message based on the scope of the context, for example, the HOST and PROGRAM fields if the <parameter>context-scope</parameter> is <userinput>program</userinput>.</para>
                 </listitem>
                 <listitem>
                     <!-- FIXME most of this para is copied to the colleration section -->
-                    <para>When used together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <parameter>@&lt;distance-of-referenced-message-from-the-current&gt;</parameter> suffix to the macro. For details, see <xref linkend="referencing-previous-messages"/>.</para>
+                    <para>When used together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <userinput>@&lt;distance-of-referenced-message-from-the-current&gt;</userinput> suffix to the macro. For details, see <xref linkend="referencing-previous-messages"/>.</para>
                 </listitem>
                 <listitem>
-                    <para>It is possible to generate a message when the <parameter>context-timeout</parameter> of the original message expires and no new message is added to the context during this time. To accomplish this, include the <parameter>trigger="timeout"</parameter> attribute in the action element:</para>
+                    <para>It is possible to generate a message when the <parameter>context-timeout</parameter> of the original message expires and no new message is added to the context during this time. To accomplish this, include the <userinput>trigger="timeout"</userinput> attribute in the action element:</para>
                     <synopsis>&lt;action trigger="timeout"&gt;</synopsis>
                 </listitem>
             </itemizedlist>
@@ -479,7 +479,7 @@ while (&lt;&gt;) {
                     <indexterm type="parameter">
                         <primary>version</primary>
                     </indexterm>
-                    <para><emphasis>version</emphasis>: The schema version of the pattern database. The current version is <parameter>4</parameter>.</para>
+                    <para><emphasis>version</emphasis>: The schema version of the pattern database. The current version is <userinput>4</userinput>.</para>
                 </listitem>
                 <listitem>
                     <indexterm type="parameter">
@@ -492,19 +492,19 @@ while (&lt;&gt;) {
                         <primary>ruleset</primary>
                     </indexterm>
                     <para><guimenu>&lt;ruleset&gt;</guimenu>: A container element to group log patterns for an application or program. For example: <synopsis>&lt;ruleset name='su' id='480de478-d4a6-4a7f-bea4-0c0245d361e1'&gt;</synopsis></para>
-                    <para>A <parameter>&lt;patterndb&gt;</parameter> element may contain any number of <guimenu>&lt;ruleset&gt;</guimenu> elements.</para>
+                    <para>A <userinput>&lt;patterndb&gt;</userinput> element may contain any number of <userinput>&lt;ruleset&gt;</userinput> elements.</para>
                     <itemizedlist>
                         <listitem>
                             <indexterm type="parameter">
                                 <primary>name &mdash; ruleset</primary>
                             </indexterm>
-                            <para><emphasis>name</emphasis>: The name of the application. Note that the function of this attribute is to make the database more readable, syslog-ng uses the <parameter>&lt;pattern&gt;</parameter> element to identify the applications sending log messages.</para>
+                            <para><emphasis>name</emphasis>: The name of the application. Note that the function of this attribute is to make the database more readable, syslog-ng uses the <userinput>&lt;pattern&gt;</userinput> element to identify the applications sending log messages.</para>
                         </listitem>
                         <listitem>
                             <indexterm type="parameter">
                                 <primary>id &mdash; ruleset</primary>
                             </indexterm>
-                            <para><emphasis>id</emphasis>: A unique ID of the application, for example, the md5 sum of the <parameter>name</parameter> attribute.</para>
+                            <para><emphasis>id</emphasis>: A unique ID of the application, for example, the md5 sum of the <userinput>name</userinput> attribute.</para>
                         </listitem>
                         <listitem>
                             <indexterm type="parameter">
@@ -519,14 +519,14 @@ while (&lt;&gt;) {
                             <para><guimenu>url</guimenu>: OPTIONAL &mdash; An URL referring to further information about the ruleset or the application.</para>
                         </listitem>
                         <listitem xml:id="patterndb-schema-patterns">
-                            <para><guimenu>&lt;patterns&gt;</guimenu>: A container element storing program names also called <parameter>program pattern</parameter>. For example:</para>
+                            <para><guimenu>&lt;patterns&gt;</guimenu>: A container element storing program names also called <userinput>program pattern</userinput>. For example:</para>
                             <synopsis>&lt;patterns&gt;
     &lt;pattern&gt;su&lt;/pattern&gt;
 &lt;/patterns&gt;</synopsis>
                             <indexterm type="parameter">
                                 <primary>patterns</primary>
                             </indexterm>
-                            <para>A <parameter>&lt;patterns&gt;</parameter> element may contain any number of <guimenu>&lt;pattern&gt;</guimenu> elements.</para>
+                            <para>A <userinput>&lt;patterns&gt;</userinput> element may contain any number of <userinput>&lt;pattern&gt;</userinput> elements.</para>
                             <itemizedlist>
                                 <listitem>
                                     <indexterm type="parameter">
@@ -538,11 +538,11 @@ while (&lt;&gt;) {
     &lt;pattern&gt;firstapplication&lt;/pattern&gt;
     &lt;pattern&gt;otherapplication&lt;/pattern&gt;
 &lt;/patterns&gt;</synopsis>
-                                    <para>It is not necessary to use multiple patterns if only the end of the ${PROGRAM} fields is different, use only the beginning of the ${PROGRAM} field as the <parameter>pattern</parameter>. For example, the Postfix e-mail server sends messages using different process names, but all of them begin with the <parameter>postfix</parameter> string.</para>
+                                    <para>It is not necessary to use multiple patterns if only the end of the ${PROGRAM} fields is different, use only the beginning of the ${PROGRAM} field as the <userinput>pattern</userinput>. For example, the Postfix e-mail server sends messages using different process names, but all of them begin with the <userinput>postfix</userinput> string.</para>
                                 </listitem>
                             </itemizedlist>
                             <note>
-                                <para>If the <parameter>&lt;pattern&gt;</parameter> element of a ruleset is not specified, &abbrev; will use this ruleset as a fallback ruleset: it will apply the ruleset to messages that have an empty PROGRAM header, or if none of the program patterns matched the PROGRAM header of the incoming message. </para>
+                                <para>If the <userinput>&lt;pattern&gt;</userinput> element of a ruleset is not specified, &abbrev; will use this ruleset as a fallback ruleset: it will apply the ruleset to messages that have an empty PROGRAM header, or if none of the program patterns matched the PROGRAM header of the incoming message. </para>
                             </note>
                         </listitem>
                         <listitem>
@@ -563,16 +563,16 @@ while (&lt;&gt;) {
                                         <para>If the following characters appear in the message, they must be escaped in the rule as follows:</para>
                                         <itemizedlist>
                                             <listitem>
-                                                <para><parameter>@</parameter>: Use @@, for example <parameter>user@@example.com</parameter></para>
+                                                <para><userinput>@</userinput>: Use @@, for example <userinput>user@@example.com</userinput></para>
                                             </listitem>
                                             <listitem>
-                                                <para><emphasis>&lt;</emphasis>: Use <parameter>&amp;lt;</parameter></para>
+                                                <para><emphasis>&lt;</emphasis>: Use <userinput>&amp;lt;</userinput></para>
                                             </listitem>
                                             <listitem>
-                                                <para><emphasis>&gt;</emphasis>: Use <parameter>&amp;gt;</parameter></para>
+                                                <para><emphasis>&gt;</emphasis>: Use <userinput>&amp;gt;</userinput></para>
                                             </listitem>
                                             <listitem>
-                                                <para>&amp;: Use <parameter>&amp;amp;</parameter></para>
+                                                <para>&amp;: Use <userinput>&amp;amp;</userinput></para>
                                             </listitem>
                                         </itemizedlist>
                                     </note>
@@ -600,7 +600,7 @@ while (&lt;&gt;) {
                                     <indexterm type="parameter">
                                         <primary>context-id</primary>
                                     </indexterm>
-                                    <para><emphasis>context-id</emphasis>: OPTIONAL &mdash; An identifier to group related log messages when using the pattern database to correlate events. The ID can be a descriptive string describing the events related to the log message (for example, <parameter>ssh-sessions</parameter> for log messages related to SSH traffic), but can also contain macros to generate IDs dynamically. When using macros in IDs, see also the <link linkend="patterndb-schema-context-scope"><parameter>context-scope</parameter></link> attribute. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
+                                    <para><emphasis>context-id</emphasis>: OPTIONAL &mdash; An identifier to group related log messages when using the pattern database to correlate events. The ID can be a descriptive string describing the events related to the log message (for example, <userinput>ssh-sessions</userinput> for log messages related to SSH traffic), but can also contain macros to generate IDs dynamically. When using macros in IDs, see also the <link linkend="patterndb-schema-context-scope"><parameter>context-scope</parameter></link> attribute. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
                                     <note>
                                         <para>The &abbrev; application determines the context of the message <emphasis>after</emphasis> the pattern matching is completed. This means that macros and name-value pairs created by the matching pattern database rule can be used as context-id macros.</para>
                                     </note>
@@ -657,9 +657,9 @@ while (&lt;&gt;) {
                                             <indexterm type="parameter">
                                                 <primary>pattern &mdash; rule</primary>
                                             </indexterm>
-                                            <para><guimenu>&lt;pattern&gt;</guimenu>: A pattern describing a log message. This element is also called <parameter>message pattern</parameter>. For example: <synopsis>&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</synopsis></para>
+                                            <para><guimenu>&lt;pattern&gt;</guimenu>: A pattern describing a log message. This element is also called <userinput>message pattern</userinput>. For example: <synopsis>&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</synopsis></para>
                                             <note>
-                                                <para>Support for XML entities is limited, you can use only the following entities: <parameter>&amp;amp; &amp;lt; &amp;gt; &amp;quot; &amp;apos;</parameter>. User-defined entities are not supported.</para>
+                                                <para>Support for XML entities is limited, you can use only the following entities: <userinput>&amp;amp; &amp;lt; &amp;gt; &amp;quot; &amp;apos;</userinput>. User-defined entities are not supported.</para>
                                             </note>
                                         </listitem>
                                         <listitem>
@@ -774,7 +774,7 @@ while (&lt;&gt;) {
                                                             <indexterm type="parameter">
                                                                 <primary>rate</primary>
                                                             </indexterm>
-                                                            <para><emphasis>rate</emphasis>: Specifies maximum how many messages should be generated in the specified time period in the following format: <parameter>&lt;number-of-messages&gt;/&lt;period-in-seconds&gt;</parameter>. For example: <parameter>1/60</parameter> allows 1 message per minute. Rates apply within the scope of the context, that is, if <parameter>context-scope="host"</parameter> and <parameter>rate="1/60"</parameter>, then maximum one message is generated per minute for every host that sends a log message matching the rule. Excess messages are dropped. Note that when applying the rate to the generated messages, &abbrev; uses the timestamps of the log messages, similarly to calculating the <parameter>context-timeout</parameter>. That way <parameter>rate</parameter> is applied correctly even if the log messages are processed offline.</para>
+                                                            <para><emphasis>rate</emphasis>: Specifies maximum how many messages should be generated in the specified time period in the following format: <userinput>&lt;number-of-messages&gt;/&lt;period-in-seconds&gt;</userinput>. For example: <userinput>1/60</userinput> allows 1 message per minute. Rates apply within the scope of the context, that is, if <userinput>context-scope="host"</userinput> and <userinput>rate="1/60"</userinput>, then maximum one message is generated per minute for every host that sends a log message matching the rule. Excess messages are dropped. Note that when applying the rate to the generated messages, &abbrev; uses the timestamps of the log messages, similarly to calculating the <parameter>context-timeout</parameter>. That way <userinput>rate</userinput> is applied correctly even if the log messages are processed offline.</para>
                                                         </listitem>
                                                         <listitem>
                                                             <indexterm type="parameter">
@@ -815,7 +815,7 @@ while (&lt;&gt;) {
                                                                     <para><guimenu>value</guimenu>: Sets the value of the message field specified in the <parameter>name</parameter> attribute of the element. For example, to specify the body of the generated message, use the following syntax:</para>
                                                                     <synopsis>&lt;value name="MESSAGE"&gt;A log message matched rule number $.classifier.rule_id&lt;/value&gt;</synopsis>
                                                                     <para>Note that currently it is not possible to add DATE, FACILITY, or SEVERITY fields to the message.</para>
-                                                                    <para>When the action is used together with message correlation, the &abbrev; application automatically adds fields to the message based on the <parameter>context-scope</parameter> parameter. For example, using <parameter>context-scope="process"</parameter> automatically fills the HOST, PROGRAM, and PID fields of the generated message.</para>
+                                                                    <para>When the action is used together with message correlation, the &abbrev; application automatically adds fields to the message based on the <parameter>context-scope</parameter> parameter. For example, using <userinput>context-scope="process"</userinput> automatically fills the HOST, PROGRAM, and PID fields of the generated message.</para>
                                                                 </listitem>
                                                                 <listitem>
                                                                     <indexterm type="parameter">
@@ -861,7 +861,7 @@ while (&lt;&gt;) {
                 <indexterm>
                     <primary>pattern database</primary>
                 </indexterm>
-                <para>The following pattern database contains a single rule that matches a log message of the <parameter>ssh</parameter> application. A sample log message looks like:</para>
+                <para>The following pattern database contains a single rule that matches a log message of the <userinput>ssh</userinput> application. A sample log message looks like:</para>
                 <synopsis>Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2</synopsis>
                 <para>The following is a simple pattern database containing a matching rule.</para>
                 <synopsis>&lt;patterndb version='4' pub_date='2010-10-17'&gt;
@@ -876,7 +876,7 @@ while (&lt;&gt;) {
             &lt;/rules&gt;
     &lt;/ruleset&gt;
 &lt;/patterndb&gt;</synopsis>
-                <para>Note that the rule uses macros that refer to parts of the message, for example, you can use the <parameter>${SSH_USERNAME}</parameter> macro refer to the username used in the connection.</para>
+                <para>Note that the rule uses macros that refer to parts of the message, for example, you can use the <userinput>${SSH_USERNAME}</userinput> macro refer to the username used in the connection.</para>
                 <para>The following is the same example, but with a test message and test values for the parsers.</para>
                 <synopsis>&lt;patterndb version='4' pub_date='2010-10-17'&gt;
     &lt;ruleset name='ssh' id='123456678'&gt;
