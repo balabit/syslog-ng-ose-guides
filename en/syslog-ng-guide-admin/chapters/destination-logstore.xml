@@ -32,7 +32,7 @@
     </indexterm>
     <para>The &abbrev; application can store log messages securely in encrypted, compressed and timestamped binary files. Timestamps can be requested from an external Timestamping Authority (TSA).</para>
     <para>Logstore files consist of individual chunks, every chunk can be encrypted, compressed, and timestamped separately. Chunks contain compressed log messages and header information needed for retrieving messages from the logstore file.</para>
-    <para>The &abbrev; application generates an SHA-1 hash for every chunk to verify the integrity of the chunk. The hashes of the chunks are chained together to prevent injecting chunks into the logstore file. The &abbrev; application can encrypt the logstore using various algorithms, using the <parameter>aes128</parameter> encryption algorithm in CBC mode and the <parameter>hmac-sha1</parameter> hashing (HMAC) algorithm as default. For other algorithms, see <xref linkend="destination-logstore-options-cipher"/> and <xref linkend="destination-logstore-options-digest"/>.</para>
+    <para>The &abbrev; application generates an SHA-1 hash for every chunk to verify the integrity of the chunk. The hashes of the chunks are chained together to prevent injecting chunks into the logstore file. The &abbrev; application can encrypt the logstore using various algorithms, using the <userinput>aes128</userinput> encryption algorithm in CBC mode and the <userinput>hmac-sha1</userinput> hashing (HMAC) algorithm as default. For other algorithms, see <xref linkend="destination-logstore-options-cipher"/> and <xref linkend="destination-logstore-options-digest"/>.</para>
     <para>The destination filename may include macros which get expanded when the message is written, thus a simple <parameter>logstore()</parameter> driver may create several files. For more information on available macros see <xref linkend="reference-macros"/>. </para>
     <para>If the expanded filename refers to a directory which does not exist, it will be created depending on the <parameter>create_dirs()</parameter> setting (both global and a per destination option).</para>
     <para>The <parameter>logstore()</parameter> has a single required parameter that specifies the filename that stores the log messages. For the list of available optional parameters, see <xref linkend="reference-destination-logstore"/>.</para>
@@ -100,18 +100,18 @@ perm(0777)
                     <para>When every block of a journal becomes full and &abbrev; stops processing incoming traffic, <emphasis>it will not read new messages at all</emphasis> until a block is successfully written to the related logstore file. This is in contrast with flow-control, where only messages from the source related to the particular destination are not processed.</para>
                 </listitem>
                 <listitem>
-                    <para>The messages in the journal file are in plain-text format: they are neither encrypted nor compressed. The journal file has the same permission as the logstore, by default, <parameter>root</parameter> privileges are required to access them. Make sure you consider this if you change the permissions of the journal file (owner, group, perm) in the &abbrev; configuration file. </para>
+                    <para>The messages in the journal file are in plain-text format: they are neither encrypted nor compressed. The journal file has the same permission as the logstore, by default, <userinput>root</userinput> privileges are required to access them. Make sure you consider this if you change the permissions of the journal file (owner, group, perm) in the &abbrev; configuration file. </para>
                 </listitem>
             </itemizedlist>
         </warning>
         <note>
-            <para>Journal files are located in the same folder as the logstore file. The name of the journal file is the same as the logstore file with <parameter>.jor</parameter> suffix added. For example, the journal file for <filename>messages.lgs</filename> is <parameter>messages.lgs.jor</parameter>.</para>
+            <para>Journal files are located in the same folder as the logstore file. The name of the journal file is the same as the logstore file with <filename>.jor</filename> suffix added. For example, the journal file for <filename>messages.lgs</filename> is <filename>messages.lgs.jor</filename>.</para>
         </note>
         <indexterm>
             <primary>memory use of</primary>
             <secondary>logstore journal files</secondary>
         </indexterm>
-        <para>The &abbrev; application uses a separate journal file for every logstore file; every journal file is processed by a separate thread. The journal files are mapped into the memory. The journal of an individual logstore file uses up to <parameter>journal_block_size()*journal_block_count()</parameter> memory address, which is 4MB by default. However, if you have several logstore files open in parallel (for example, you are collecting log messages from 500 hosts and storing them in separate files for every host, and the hosts are continuously sending messages) the memory requirements for journaling rise quickly (to ~2GB for the 500 hosts). To limit the memory use of journals, adjust the <link linkend="logstore-option-journal-memory-limit"><parameter>logstore_journal_shmem_threshold()</parameter></link> global option (by default, it is 512 MB).</para>
+        <para>The &abbrev; application uses a separate journal file for every logstore file; every journal file is processed by a separate thread. The journal files are mapped into the memory. The journal of an individual logstore file uses up to <userinput>journal_block_size()*journal_block_count()</userinput> memory address, which is 4MB by default. However, if you have several logstore files open in parallel (for example, you are collecting log messages from 500 hosts and storing them in separate files for every host, and the hosts are continuously sending messages) the memory requirements for journaling rise quickly (to ~2GB for the 500 hosts). To limit the memory use of journals, adjust the <link linkend="logstore-option-journal-memory-limit"><parameter>logstore_journal_shmem_threshold()</parameter></link> global option (by default, it is 512 MB).</para>
         <xi:include href="../../common/chunk/option-description-destination-logstore-journal-shmem-threshold.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <warning>
             <para>If you have a large amount of open logstore files in parrallel (for example, you are using the <parameter>${HOST}</parameter> or <parameter>${PROGRAM}</parameter> macros in your filenames) consider lowering the <parameter>journal_block_size()</parameter> to avoid &abbrev; consuming the entire memory of the system.</para>
@@ -147,13 +147,13 @@ logstore(filename options());</synopsis>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry><parameter>aes-128-cbc</parameter></entry>
+                            <entry><userinput>aes-128-cbc</userinput></entry>
                         </row>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><guimenu>Description:</guimenu> Set the cipher method used to encrypt the logstore. The following cipher methods are available: <parameter>aes-128-cbc</parameter>, <parameter>aes-128-cfb</parameter>, <parameter>aes-128-cfb1</parameter>, <parameter>aes-128-cfb8</parameter>, <parameter>aes-128-ecb</parameter>, <parameter>aes-128-ofb </parameter>, <parameter>aes-192-cbc</parameter>, <parameter>aes-192-cfb</parameter>, <parameter>aes-192-cfb1</parameter>, <parameter>aes-192-cfb8</parameter>, <parameter>aes-192-ecb</parameter>, <parameter>aes-192-ofb </parameter>, <parameter>aes-256-cbc</parameter>, <parameter>aes-256-cfb</parameter>, <parameter>aes-256-cfb1</parameter>, <parameter>aes-256-cfb8</parameter>, <parameter>aes-256-ecb</parameter>, <parameter>aes-256-ofb </parameter>, <parameter>aes128 </parameter>, <parameter>aes192 </parameter>, <parameter>aes256</parameter>, <parameter>bf </parameter>, <parameter>bf-cbc </parameter>, <parameter>bf-cfb</parameter>, <parameter>bf-ecb </parameter>, <parameter>bf-ofb </parameter>, <parameter>blowfish</parameter>, <parameter>cast </parameter>, <parameter>cast-cbc </parameter>, <parameter>cast5-cbc </parameter>, <parameter>cast5-cfb</parameter>, <parameter>cast5-ecb</parameter>, <parameter>cast5-ofb </parameter>, <parameter>des</parameter>, <parameter>des-cbc</parameter>, <parameter>des-cfb </parameter>, <parameter>des-cfb1 </parameter>, <parameter>des-cfb8 </parameter>, <parameter>des-ecb </parameter>, <parameter>des-ede</parameter>, <parameter>des-ede-cbc</parameter>, <parameter>des-ede-cfb </parameter>, <parameter>des-ede-ofb</parameter>, <parameter>des-ede3 </parameter>, <parameter>des-ede3-cbc</parameter>, <parameter>des-ede3-cfb</parameter>, <parameter>des-ede3-ofb</parameter>, <parameter>des-ofb </parameter>, <parameter>des3 </parameter>, <parameter>desx </parameter>, <parameter>desx-cbc</parameter>, <parameter>rc2</parameter>, <parameter>rc2-40-cbc </parameter>, <parameter>rc2-64-cbc</parameter>, <parameter>rc2-cbc</parameter>, <parameter>rc2-cfb</parameter>, <parameter>rc2-ecb </parameter>, <parameter>rc2-ofb</parameter>, <parameter>rc4</parameter>, and <parameter>rc4-40</parameter>. By default, syslog-ng PE uses the <parameter>aes-128-cbc</parameter> method.</para>
-            <para>Note that the size of the digest hash must be equal to or larger than the key size of the cipher method. For example, to use the <parameter>aes-256-cbc</parameter> cipher method, the digest method must be at least <parameter>SHA-256</parameter>. This option is available in syslog-ng PE 3.1 and later.</para>
+            <para><guimenu>Description:</guimenu> Set the cipher method used to encrypt the logstore. The following cipher methods are available: <userinput>aes-128-cbc</userinput>, <userinput>aes-128-cfb</userinput>, <userinput>aes-128-cfb1</userinput>, <userinput>aes-128-cfb8</userinput>, <userinput>aes-128-ecb</userinput>, <userinput>aes-128-ofb </userinput>, <userinput>aes-192-cbc</userinput>, <userinput>aes-192-cfb</userinput>, <userinput>aes-192-cfb1</userinput>, <userinput>aes-192-cfb8</userinput>, <userinput>aes-192-ecb</userinput>, <userinput>aes-192-ofb </userinput>, <userinput>aes-256-cbc</userinput>, <userinput>aes-256-cfb</userinput>, <userinput>aes-256-cfb1</userinput>, <userinput>aes-256-cfb8</userinput>, <userinput>aes-256-ecb</userinput>, <userinput>aes-256-ofb </userinput>, <userinput>aes128 </userinput>, <userinput>aes192 </userinput>, <userinput>aes256</userinput>, <userinput>bf </userinput>, <userinput>bf-cbc </userinput>, <userinput>bf-cfb</userinput>, <userinput>bf-ecb </userinput>, <userinput>bf-ofb </userinput>, <userinput>blowfish</userinput>, <userinput>cast </userinput>, <userinput>cast-cbc </userinput>, <userinput>cast5-cbc </userinput>, <userinput>cast5-cfb</userinput>, <userinput>cast5-ecb</userinput>, <userinput>cast5-ofb </userinput>, <userinput>des</userinput>, <userinput>des-cbc</userinput>, <userinput>des-cfb </userinput>, <userinput>des-cfb1 </userinput>, <userinput>des-cfb8 </userinput>, <userinput>des-ecb </userinput>, <userinput>des-ede</userinput>, <userinput>des-ede-cbc</userinput>, <userinput>des-ede-cfb </userinput>, <userinput>des-ede-ofb</userinput>, <userinput>des-ede3 </userinput>, <userinput>des-ede3-cbc</userinput>, <userinput>des-ede3-cfb</userinput>, <userinput>des-ede3-ofb</userinput>, <userinput>des-ofb </userinput>, <userinput>des3 </userinput>, <userinput>desx </userinput>, <userinput>desx-cbc</userinput>, <userinput>rc2</userinput>, <userinput>rc2-40-cbc </userinput>, <userinput>rc2-64-cbc</userinput>, <userinput>rc2-cbc</userinput>, <userinput>rc2-cfb</userinput>, <userinput>rc2-ecb </userinput>, <userinput>rc2-ofb</userinput>, <userinput>rc4</userinput>, and <userinput>rc4-40</userinput>. By default, syslog-ng PE uses the <userinput>aes-128-cbc</userinput> method.</para>
+            <para>Note that the size of the digest hash must be equal to or larger than the key size of the cipher method. For example, to use the <userinput>aes-256-cbc</userinput> cipher method, the digest method must be at least <userinput>SHA-256</userinput>. This option is available in syslog-ng PE 3.1 and later.</para>
         </simplesect>
         <simplesect>
             <title>chunk_size()</title>
@@ -175,8 +175,8 @@ logstore(filename options());</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><guimenu>Description:</guimenu> This option is obsolete. Use the <parameter>journal_block_size</parameter> option instead.</para>
-            <para>Size of a logstore chunk in kilobytes. Note that this size refers to the compressed size of the chunk. Also, the gzip library used for compressing the messages has a 32k long buffer; messages may not appear in the actual logfile until this buffer is not filled. Logstore chunks are closed when they reach the specified size, or when the time limit set in <parameter>chunk_time</parameter> expires.</para>
+            <para><guimenu>Description:</guimenu> This option is obsolete. Use the <parameter>journal_block_size()</parameter> option instead.</para>
+            <para>Size of a logstore chunk in kilobytes. Note that this size refers to the compressed size of the chunk. Also, the gzip library used for compressing the messages has a 32k long buffer; messages may not appear in the actual logfile until this buffer is not filled. Logstore chunks are closed when they reach the specified size, or when the time limit set in <parameter>chunk_time()</parameter> expires.</para>
         </simplesect>
         <simplesect>
             <title>chunk_time()</title>
@@ -199,7 +199,7 @@ logstore(filename options());</synopsis>
                 </tgroup>
             </informaltable>
             <para><guimenu>Description:</guimenu> This option is obsolete.</para>
-            <para>Time limit in seconds: syslog-ng PE closes the chunk if no new messages arrive until the time limit expires. Logstore chunks are closed when the time limit expires, or when they reach the size specified in the <parameter>chunk_size</parameter> parameter. If the time limit set in the <parameter>time_reap</parameter> parameter expires, the entire file is closed.</para>
+            <para>Time limit in seconds: syslog-ng PE closes the chunk if no new messages arrive until the time limit expires. Logstore chunks are closed when the time limit expires, or when they reach the size specified in the <parameter>chunk_size()</parameter> parameter. If the time limit set in the <parameter>time_reap()</parameter> parameter expires, the entire file is closed.</para>
         </simplesect>
         <simplesect>
             <title>compress()</title>
@@ -221,7 +221,7 @@ logstore(filename options());</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><guimenu>Description:</guimenu> Compression level. <parameter>0</parameter> means uncompressed files, while 1-9 is the compression level used by gzip (<parameter>9</parameter> means the highest but slowest compression, <parameter>3</parameter> is usually a good compromise).</para>
+            <para><guimenu>Description:</guimenu> Compression level. <userinput>0</userinput> means uncompressed files, while 1-9 is the compression level used by gzip (<userinput>9</userinput> means the highest but slowest compression, <userinput>3</userinput> is usually a good compromise).</para>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-create-dirs.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -246,8 +246,8 @@ logstore(filename options());</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><guimenu>Description:</guimenu> Set the digest method to use. The following digest methods are available: <parameter>MD2</parameter>, <parameter>MD4</parameter>, <parameter>MD5</parameter>, <parameter>SHA-0 (SHA)</parameter>, <parameter>SHA-1</parameter>, <parameter>RIPEMD-160</parameter>, <parameter>SHA-224</parameter>, <parameter>SHA-256</parameter>, <parameter>SHA-384</parameter>, and <parameter>SHA-512</parameter>. By default, syslog-ng PE uses the <parameter>SHA-1</parameter> method.</para>
-            <para>Note that the size of the digest hash must be equal to or larger than the key size of the cipher method. For example, to use the <parameter>aes-256-cbc</parameter> cipher method, the digest method must be at least <parameter>SHA-256</parameter>. This option is available in syslog-ng PE 3.1 and later.</para>
+            <para><guimenu>Description:</guimenu> Set the digest method to use. The following digest methods are available: <userinput>MD2</userinput>, <userinput>MD4</userinput>, <userinput>MD5</userinput>, <userinput>SHA-0 (SHA)</userinput>, <userinput>SHA-1</userinput>, <userinput>RIPEMD-160</userinput>, <userinput>SHA-224</userinput>, <userinput>SHA-256</userinput>, <userinput>SHA-384</userinput>, and <userinput>SHA-512</userinput>. By default, syslog-ng PE uses the <userinput>SHA-1</userinput> method.</para>
+            <para>Note that the size of the digest hash must be equal to or larger than the key size of the cipher method. For example, to use the <userinput>aes-256-cbc</userinput> cipher method, the digest method must be at least <userinput>SHA-256</userinput>. This option is available in syslog-ng PE 3.1 and later.</para>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-dir-group.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -317,7 +317,7 @@ logstore(filename options());</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><guimenu>Description:</guimenu> The number of blocks in the journal file. If set to <parameter>0</parameter>, syslog-ng will set it to the default value (<parameter>4</parameter>). The maximal value is <parameter>255</parameter>; if <parameter>journal_block_count()</parameter> is set higher than 255 syslog-ng will use the maximum value.</para>
+            <para><guimenu>Description:</guimenu> The number of blocks in the journal file. If set to <userinput>0</userinput>, syslog-ng will set it to the default value (<userinput>4</userinput>). The maximal value is <userinput>255</userinput>; if <parameter>journal_block_count()</parameter> is set higher than 255 syslog-ng will use the maximum value.</para>
             <note>
                 <para>By default, journal files are mapped into the memory of the host. To influence the amount of memory addresses used by journal files, see the <link linkend="logstore-option-journal-memory-limit"><parameter>logstore_journal_shmem_threshold()</parameter></link> global option.</para>
             </note>
