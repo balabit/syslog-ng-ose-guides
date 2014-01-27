@@ -27,7 +27,7 @@ export SCRIPTDIR
 # include the generated config file
 include $(MAKECONF)
 
-all: $(BUILDERREPO) setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
+all: $(BUILDERREPO) setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(WEBHELP_OUTPUTS) $(MANPAGES)
 
 selfcheck: $(BUILDERREPO) Makefile $(MASTER_MAKEFILE)
 	@if ! diff Makefile $(MASTER_MAKEFILE) 2>&1 >/dev/null; then \
