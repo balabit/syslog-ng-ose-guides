@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+
+	<section xml:id="json-parser" xmlns="http://docbook.org/ns/docbook" version="5.0">
+		<title>The JSON parser</title>
+		<indexterm>
+			<primary>segmenting messages</primary>
+		</indexterm>
+		<indexterm>
+			<primary>JSON parsers</primary>
+		</indexterm>
+		<indexterm>
+			<primary>splitting messages</primary>
+		</indexterm>
+		<para>JavaScript Object Notation (JSON) is a text-based open standard designed for human-readable data interchange. It is used primarily to transmit data between a server and web application, serving as an alternative to XML. It is described in <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://tools.ietf.org/html/rfc4627">RFC 4627</link>. The &abbrev; application can separate parts of JSON-encoded log messages to name-value pairs, using json-c.</para>
+		<para>You can refer to the separated parts of the JSON message using the key of the JSON object as a macro. For example, if the JSON contains <userinput>{"KEY1":"value1","KEY2":"value2"}</userinput>, you can refer to the values as <userinput>${KEY1}</userinput> and <userinput>${KEY2}</userinput>. If the JSON content is structured, &abbrev; converts it to dot-notation-format. For example, to access the value of the following structure <userinput>{"KEY1": {"KEY2": "VALUE"}}</userinput>, use the <userinput>${KEY1.KEY2}</userinput> macro.</para>
+		<warning>
+			<para>If the names of keys in the JSON content are the same as the names of &abbrev; macros, the value from the JSON content will overwrite the value of the macro. For example, the <userinput>{"PROGRAM":"value1","MESSAGE":"value2"}</userinput> JSON content will overwrite the <userinput>${PROGRAM}</userinput> and <userinput>${MESSAGE}</userinput> macros. To avoid overwriting such macros, use the <parameter>prefix()</parameter> option.</para>
+		</warning>
+		<note>
+			<para>The JSON parser currently supports only integer, double and string values when interpreting JSON structures. As syslog-ng does not handle different data types internally, the JSON parser converts all JSON data to string values. In case of boolean types, the value is converted to 'TRUE' or 'FALSE' as their string representation.</para>
+            <para>The JSON parser discards messages if it cannot parse them as JSON messages, so it acts as a JSON-filter as well.</para>
+		</note>
+		<para>To create a JSON parser, define a parser that has the <parameter>json-parser()</parameter> option. Defining the prefix and the marker are optional. By default, the parser will process the <userinput>${MESSAGE}</userinput> part of the log message. To process other parts of a log message with the JSON parser, use the <parameter>template()</parameter> option.</para>
+		<synopsis>Declaration:
+    parser parser_name {
+        json-parser(
+        marker()
+        prefix()
+    );
+};</synopsis>
+		<example>
+			<title>Using a JSON parser</title>
+			<para>In the following example, the source is a JSON encoded log message. The syslog parser is disabled, so that &abbrev; does not parse the message: <userinput>flags(no-parse)</userinput>. The json-parser inserts "<userinput>.json.</userinput>" prefix before all extracted name-value pairs. The destination is a file, that uses the <parameter>format-json</parameter> template function. Every name-value pair that begins with a dot ("<userinput>.</userinput>") character will be written to the file (<userinput>dot-nv-pairs</userinput>). The log line connects the source, the destination and the parser.</para>
+			<synopsis>source s_json {
+    tcp(port(21514) flags(no-parse));
+};
+
+destination d_json {
+    file("/tmp/test.json"
+        template("$(format-json --scope dot-nv-pairs)\n"));
+};
+
+parser p_json {
+    json-parser (prefix(".json."));
+};
+
+log {
+    source(s_json);
+    parser(p_json);
+    destination(d_json);
+};</synopsis>
+		</example>
+		<simplesect xml:id="json-parser-marker">
+			<title>marker</title>
+			<indexterm type="parameter">
+				<primary>marker</primary>
+			</indexterm>
+			<informaltable frame="topbot" colsep="0" rowsep="0">
+				<tgroup cols="2">
+					<colspec colnum="1" colwidth="50pt"/>
+					<tbody>
+						<row>
+							<entry>Synopsis:
+								<?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+							<entry>marker()</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</informaltable>
+			<para><emphasis role="bold">Description:</emphasis> Use a marker in case of mixed log messages, to identify JSON encoded messages for the parser.</para>
+            <para>Some logging implementations require a marker to be set before the JSON payload. The JSON parser is able to find these markers and parse the message only if it is present.</para>
+            <example>
+                <title>Using the marker option in JSON parser</title>
+                <para>This json parser parses log messages which use the "@cee:" marker in front of the json payload. It inserts "<userinput>.cee.</userinput>" in front of the name of name-value pairs, so later on it is easier to find name-value pairs that were parsed using this parser.</para>
+                <synopsis>parser {
+    json-parser(
+        marker("@cee:")
+        prefix(".cee.")
+    );
+};</synopsis>
+            </example>
+		</simplesect>
+		<simplesect xml:id="json-parser-prefix">
+			<title>prefix</title>
+			<indexterm type="parameter">
+				<primary>prefix</primary>
+			</indexterm>
+			<informaltable frame="topbot" colsep="0" rowsep="0">
+				<tgroup cols="2">
+					<colspec colnum="1" colwidth="50pt"/>
+					<tbody>
+						<row>
+							<entry>Synopsis:
+								<?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+							<entry>prefix()</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</informaltable>
+			<para><emphasis role="bold">Description:</emphasis> The prefix inserts a prefix before the name part of the name-value pairs to facilitate further processing.</para>
+		</simplesect>
+		<simplesect>
+			<title>template()</title>
+			<indexterm type="parameter">
+				<primary>template()</primary>
+			</indexterm>
+			<informaltable frame="topbot" colsep="0" rowsep="0">
+				<tgroup cols="2">
+				<colspec colnum="1" colwidth="50pt"/>
+					<tbody>
+						<row>
+							<entry>Synopsis: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+							<entry>template("${&lt;macroname&gt;}")</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</informaltable>
+			<para><emphasis role="bold">Description:</emphasis> The macro that contains the part of the message that the parser will process. It can also be a macro created by a previous parser of the log path. By default, this is empty and the parser processes the entire message (<userinput>${MESSAGE}</userinput>).</para>
+		</simplesect>
+	</section>
