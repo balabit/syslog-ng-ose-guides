@@ -14,6 +14,45 @@
             <synopsis>$(echo argument)</synopsis></para>
         <para><emphasis role="bold">Description:</emphasis> Returns the value of its argument. Using <userinput>$(echo ${HOST})</userinput> is equivalent to <parameter>${HOST}</parameter>.</para>
     </simplesect>
+    <simplesect xml:id="template-function-format-json">
+        <title>format-json</title>
+            <indexterm type="parameter">
+                <primary>format-json</primary>
+            </indexterm>
+        <indexterm>
+            <primary>JSON</primary>
+        </indexterm>
+        <indexterm>
+            <primary>JavaScript Object Notation</primary>
+        </indexterm>
+        <para><emphasis role="bold">Syntax:</emphasis> <synopsis>$(format-json parameters)</synopsis></para>
+        <para><emphasis role="bold">Description:</emphasis> The <parameter>format-json</parameter> template function receives value-pairs as parameters and converts them into JavaScript Object Notation (JSON) format. Including the template function in a message template allows you to store selected information about a log message (that is, its content, macros, or other metadata) in JSON format.</para>
+        <para>For details on selecting value-pairs in &abbrev; and for possibilities to specify which information to convert to JSON format, see <xref linkend="concepts-value-pairs"/>. Note that the syntax of <parameter>format-json</parameter> is different from the syntax of <parameter>value-pairs()</parameter>: <parameter>format-json</parameter> uses a syntax similar to command lines.</para>
+
+        <xi:include href="../../common/wnt/note-typehinting.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        <example>
+            <title>Using the format-json template function</title>
+            <para>The following example selects every available information about the log message, except for the date-related macros (<userinput>R_*</userinput> and <userinput>S_*</userinput>), selects the <userinput>.SDATA.meta.sequenceId</userinput> macro, and defines a new value-pair called <userinput>MSGHDR</userinput> that contains the program name and PID of the application that sent the log message.</para>
+            <synopsis>$(format-json --scope syslog,all_macros,selected_macros \
+  --exclude R_* --exclude S_* --key .SDATA.meta.sequenceId \
+  --pair MSGHDR="$PROGRAM[$PID]: ")</synopsis>
+                    <para>The following example shows how to use this template function to store log messages in JSON format:</para>
+                    <synopsis>destination d_json {
+  file("/var/log/messages.json" template("$(format_json --scope selected_macros --scope nv_pairs)\n"));
+};</synopsis>
+        </example>
+        <note>
+            <para>In case of syslog-ng macros starting with a dot (for example "<userinput>.SDATA.meta.sequenceID</userinput>") an empty key name is added at the top level of the JSON structure. You can work around this by adding <userinput>--shift 1</userinput> as a parameter to the template function. For example in case of "<userinput>.SDATA.meta.sequenceID</userinput>", an empty key name is added at the top level of the JSON structure:</para>
+            <synopsis>{"":
+    {"SDATA" :
+        {"meta" :
+            {"sequenceID": "123"}
+        }
+    }
+}</synopsis>
+        </note>
+    </simplesect>
     <simplesect xml:id="template-function-format-welf" condition="pe">
         <title>format-welf</title>
         <indexterm type="parameter">
