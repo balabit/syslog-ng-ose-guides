@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+    <section xml:id="configuring-destinations-mongodb" xmlns="http://docbook.org/ns/docbook" version="5.0">
+        <title>Storing messages in a MongoDB database</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>mongodb()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>mongodb()</parameter> driver sends messages to a <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.mongodb.org/">MongoDB</link> database. MongoDB is a schema-free, document-oriented database. For the list of available optional parameters, see <xref linkend="reference-destination-mongodb"/>.</para>
+            <synopsis>Declaration:
+                mongodb(parameters);</synopsis>
+            <para>The <parameter>mongodb()</parameter> driver does not support creating indexes, as that can be a very complex operation in MongoDB. If needed, the administrator of the MongoDB database must ensure that indexes are created on the collections.</para>
+
+            <xi:include href="../../common/wnt/note-typehinting.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+            <example xml:id="example-destination-mongodb">
+                <title>Using the mongodb() driver</title>
+                <para>The following example creates a <parameter>mongodb()</parameter> destination using only default values.</para>
+                <synopsis>destination d_mongodb {
+    mongodb();
+};</synopsis>
+                <para>The following example displays the default values, and is equivalent with the previous example.</para>
+                <synopsis>destination d_mongodb {
+    mongodb(
+        servers("localhost:27017")
+        database("syslog")
+        collection("messages")
+        value-pairs(
+            scope("selected-macros" "nv-pairs")
+            exclude("R_*")
+            exclude("S_*")
+            exclude("HOST_FROM")
+            exclude("LEGACY_MSGHDR")
+            exclude("MSG")
+            exclude("SDATA")
+        )
+    );
+};</synopsis>
+            </example>
+            <section xml:id="reference-destination-mongodb" condition="ose">
+                <title>mongodb() destination options</title>
+                <indexterm>
+                    <primary>destination drivers</primary>
+                    <secondary><parameter>mongodb()</parameter> driver</secondary>
+                </indexterm>
+                <para>The <parameter>mongodb()</parameter> driver sends messages to a MongoDB database. MongoDB is a schema-free, document-oriented database.</para>
+                <para>The <parameter>mongodb()</parameter> destination has the following options:</para>
+                <simplesect xml:id="mongodb-option-collection">
+                    <title>collection()</title>
+                        <indexterm type="parameter">
+                            <primary>collection()</primary>
+                        </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                            <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>messages</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>
+                    </informaltable>
+                    <para><emphasis role="bold">Description:</emphasis> The name of the MongoDB collection where the log messages are stored (collections are similar to SQL tables). Note that the name of the collection must not start with a dollar sign ($), and that it may contain dot (.) characters.</para>
+                    <warning>
+                        <para>Hazard of data loss! The &abbrev; application does not verify that the specified collection name does not contain invalid characters. If you specify a collection with an invalid name, the log messages sent to the MongoDB database will be irrevocably lost without any warning.</para>
+                    </warning>
+                </simplesect>
+                <simplesect xml:id="mongodb-option-database">
+                    <title>database()</title>
+                        <indexterm type="parameter">
+                            <primary>database()</primary>
+                        </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                            <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>syslog</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>
+                    </informaltable>
+                    <para><emphasis role="bold">Description:</emphasis> The name of the MongoDB database where the log messages are stored. Note that the name of the database must not start with a dollar sign ($) and it cannot contain dot (.) characters.</para>
+                    <warning>
+                        <para>Hazard of data loss! The &abbrev; application does not verify that the specified database name does not contain invalid characters. If you specify a database with an invalid name, the log messages sent to the MongoDB database will be irrevocably lost without any warning.</para>
+                    </warning>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="../../common/chunk/option-destination-frac-digits.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect>
+                    <title>host() (DEPRECATED)</title>
+                    <indexterm type="parameter">
+                        <primary>host()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>hostname or IP address</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>localhost</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>
+                    </informaltable>
+                    <para>OBSOLETE: use the <parameter>servers()</parameter> option instead.</para>
+                    <para><emphasis role="bold">Description:</emphasis> Hostname or IP address of the database server. When specifying an IP address, IPv4 (for example, <parameter>192.168.0.1</parameter>) or IPv6 (for example, <parameter>[::1]</parameter>) can be used as well.</para>
+                    <note>
+                        <para>If you specify <parameter>host="localhost"</parameter> (or use the default), &abbrev; will use a socket to connect to the local database server. Use <parameter>host="127.0.0.1"</parameter> to force TCP communication between &abbrev; and the local database server.</para>
+                    </note>
+                </simplesect>
+                <simplesect>
+                    <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+                <simplesect xml:id="mongodb-option-port">
+	                <title>port() (DEPRECATED)</title>
+	                <indexterm type="parameter">
+	                    <primary>port()</primary>
+	                </indexterm>
+	                <informaltable frame="topbot" colsep="0" rowsep="0">
+	                    <tgroup cols="2">
+	                    <colspec colnum="1" colwidth="40pt"/>
+	                        <tbody>
+	                            <row>
+	                                <entry>Type:
+	                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+	                                <entry>number</entry>
+	                            </row>
+	                            <row>
+	                                <entry>Default:
+	                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+	                                <entry>27017</entry>
+	                            </row>
+	                        </tbody>
+	                    </tgroup>
+	                </informaltable>
+                    <para>OBSOLETE: use the <parameter>servers()</parameter> option instead.</para>
+	                <para><emphasis role="bold">Description:</emphasis> The port number to connect to.</para>
+	            </simplesect>
+                <simplesect xml:id="mongodb-option-path">
+                    <title>path()</title>
+                    <indexterm type="parameter">
+                        <primary>path()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>string</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>empty</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>
+                    </informaltable>
+                    <para><emphasis role="bold">Description:</emphasis> If the <parameter>path()</parameter> option is set, &abbrev; will connect to the database using specified socket. Note that you cannot set the <parameter>path()</parameter> and the <parameter>servers()</parameter> options at the same time.</para>
+                </simplesect>
+                <simplesect xml:id="mongodb-option-safe-mode">
+                    <title>safe-mode()</title>
+                    <indexterm type="parameter">
+                        <primary>safe-mode()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>yes or no</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>no</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>
+                    </informaltable>
+                    <para><emphasis role="bold">Description:</emphasis> If <parameter>safe-mode()</parameter> is enabled, &abbrev; performs an extra check after each insert to verify that the insert succeeded. The insert is successful only if this second check is successful. Note that enabling this option reduces the performance of the driver.</para>
+                </simplesect>
+                <simplesect xml:id="mongodb-option-servers">
+                    <title>servers()</title>
+                    <indexterm type="parameter">
+                        <primary>servers()</primary>
+                    </indexterm>
+                    <informaltable frame="topbot" colsep="0" rowsep="0">
+                        <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                            <tbody>
+                                <row>
+                                    <entry>Type:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>list of hostname:port pairs</entry>
+                                </row>
+                                <row>
+                                    <entry>Default:
+                                        <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                    <entry>127.0.0.1:27017</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>
+                    </informaltable>
+                    <para><emphasis role="bold">Description:</emphasis> Specifies the hostname or IP address and the port number of the database server. When specifying an IP address, IPv4 (for example, <userinput>192.168.0.1</userinput>) or IPv6 (for example, <userinput>[::1]</userinput>) can be used as well.</para>
+                    <para>To send the messages to a MongoDB replicaset, specify the addresses of the database servers as a comma-separated list, for example: <userinput>servers(192.168.1.1:27017,192.168.3.3:27017)</userinput></para>
+                    <note>
+                        <para>If you specify <userinput>servers("localhost")</userinput> (or use the default), &abbrev; will use a socket to connect to the local database server. Use <userinput>servers("127.0.0.1")</userinput> to force TCP communication between &abbrev; and the local database server.</para>
+                    </note>
+                </simplesect>
+<!--            FIXME not supported in OSE 3.4, but will be in 3.6
+                <simplesect>
+                    <xi:include href="../../common/chunk/option-destination-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                </simplesect>
+-->
+                <xi:include href="../../common/chunk/destination-option-value-pairs.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </section>
+        </section>
