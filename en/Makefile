@@ -5,8 +5,8 @@
 
 GIT_BASE=git+ssh://git.balabit/var/scm/git
 HOSTNAME=$(shell hostname)
-ifneq (,$(findstring hapci,$(HOSTNAME)))
-GIT_BASE=/var/scm/git
+ifneq (,$(findstring docbuilder,$(HOSTNAME)))
+GIT_BASE=git://git.balabit/var/scm/git
 endif
 
 BUILDERREPO=xml-stylesheet
