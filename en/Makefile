@@ -19,6 +19,8 @@ MAKECONF=Makefile.conf
 MAKEVARS=Makefile.vars
 MAKETARGETS=Maketargets.json
 PYTHON=python
+DOC_LANGUAGE=$(shell basename $(PWD))
+COMMON_CHUNKS=$(BUILDERREPO)/common
 
 export SCRIPTDIR
 
@@ -48,6 +50,10 @@ $(MAKECONF): out $(MAKEMAKER) $(MAKETARGETS) $(MAKESTUBS)
 $(BUILDERREPO):
 	[ -d $@ ] || git clone $(GIT_BASE)/docs/$(BUILDERREPO)-5.git $@
 	[ -d $@ ] && (cd $@ && git pull)
+	# Clone the appropriate, language-specific branch of the common-doc-chunks.git repository into xml-stylesheet/common
+	[ -d $(COMMON_CHUNKS) ] || if [ $(DOC_LANGUAGE) = 'en' ] ; then git clone $(GIT_BASE)/docs/common-doc-chunks.git $@/common ; \
+		else git clone -b $(DOC_LANGUAGE) $(GIT_BASE)/docs/common-doc-chunks.git $@/common ; fi
+	[ -d $(COMMON_CHUNKS) ] && (cd $(COMMON_CHUNKS) && git pull)
 
 $(MAKEMAKER): $(BUILDERREPO)
 
