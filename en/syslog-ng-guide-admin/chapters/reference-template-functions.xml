@@ -64,10 +64,19 @@
         <indexterm>
             <primary>WebTrends Enhanced Log file Format</primary>
         </indexterm>
-        <para>This template function converts the retrieved records into the WebTrends Enhanced Log file Format (WELF). For details on the WELF format, see <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.m86security.com/kb/article.aspx?id=10899">http://www.m86security.com/kb/article.aspx?id=10899</link>.</para>
-        <note>
-            <para>The <parameter>format-welf</parameter> function does not keep the order of columns between queries.</para>
-        </note>
+        <para>This template function converts value-pairs into the WebTrends Enhanced Log file Format (WELF). The WELF format is a comma-separated list of <userinput>name=value</userinput> elements. Note that the order of the elements is random. If the value contains whitespace, it is enclosed in double-quotes, for example, <userinput>name="value"</userinput>. For details on the WELF format, see <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.m86security.com/kb/article.aspx?id=10899">http://www.m86security.com/kb/article.aspx?id=10899</link>.</para>
+        <para>To select which value-pairs to convert, use the command-line syntax of the <parameter>value-pairs()</parameter> option. For details on selecting value-pairs, see <xref linkend="options-value-pairs"/>.</para>
+        <example>
+            <title>Using the <parameter>format-welf()</parameter> template function</title>
+             <para>The following example selects every available information about the log message, except for the date-related macros (<userinput>R_*</userinput> and <userinput>S_*</userinput>), selects the <userinput>.SDATA.meta.sequenceId</userinput> macro, and defines a new value-pair called <userinput>MSGHDR</userinput> that contains the program name and PID of the application that sent the log message (since you will use the template-function in a template, you must escape the double-quotes).</para>
+            <synopsis>$(format-welf --scope syslog,all_macros,selected_macros \
+  --exclude R_* --exclude S_* --key .SDATA.meta.sequenceId \
+  --pair MSGHDR=\"$PROGRAM[$PID]: \")</synopsis>
+                    <para>The following example shows how to use this template function to store log messages in WELF format:</para>
+                    <synopsis>destination d_welf {
+  file("/var/log/messages.welf" template("$(format_welf --scope selected_macros --scope nv_pairs)\n"));
+};</synopsis>
+        </example>
     </simplesect>
     <simplesect xml:id="template-function-grep">
         <title>grep</title>
