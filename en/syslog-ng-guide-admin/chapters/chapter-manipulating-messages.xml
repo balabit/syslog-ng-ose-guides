@@ -341,10 +341,52 @@ rewrite &lt;name_of_the_rule&gt; {
             <indexterm>
                 <primary>filtering rewrites</primary>
             </indexterm>
-            <para>Starting with <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.2</phrase>, it is possible to apply a rewrite rule to a message only if certain conditions are met. The <parameter>condition()</parameter> option effectively embeds a filter expression into the rewrite rule: the message is modified only if the message passes the filter. If the condition is not met, the message is passed to the next element of the log path (that is, the element following the rewrite rule in the log statement, for example, the destination). Any filter expression normally used in filters can be used as a rewrite condition. Existing filter statements can be referenced using the <parameter>filter()</parameter> function within the condition.</para>
+            <para>Starting with <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.2</phrase>, it is possible to apply a rewrite rule to a message only if certain conditions are met. The <parameter>condition()</parameter> option effectively embeds a filter expression into the rewrite rule: the message is modified only if the message passes the filter. If the condition is not met, the message is passed to the next element of the log path (that is, the element following the rewrite rule in the log statement, for example, the destination). Any filter expression normally used in filters can be used as a rewrite condition. Existing filter statements can be referenced using the <parameter>filter()</parameter> function within the condition. For details on filters, see <xref linkend="filters"/>.</para>
             <tip>
                 <para>Using conditions in rewrite rules can simplify your &abbrev; configuration file, as you do not need to create separate log paths to modify certain messages.</para>
             </tip>
+            <procedure xml:id="procedure-conditional-rewrite">
+                <title>How conditional rewriting works</title>
+                <indexterm type="parameter">
+                    <primary>condition()</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>conditional rewrites</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>rewrite if</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>rewriting messages</primary>
+                    <secondary>conditional rewrites</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>filtering rewrites</primary>
+                </indexterm>
+                <formalpara>
+                    <title>Purpose:</title>
+                    <para/>
+                </formalpara>
+                <para>The following procedure summarizes how conditional rewrite rules (rewrite rules that have the <parameter>condition()</parameter> parameter set) work. The following configuration snippet is used to illustrate the procedure:</para>
+                <synopsis>rewrite r_rewrite_set{set("myhost", value("HOST") condition(program("myapplication")));};
+log {
+    source(s1);
+    r_rewrite_set;
+    destination(d1);};</synopsis>
+                <formalpara>
+                    <title>Steps:</title>
+                    <para/>
+                </formalpara>
+                <step>
+                    <para>The log path receives a message from the source (<userinput>s1</userinput>).</para>
+                </step>
+                <step>
+                    <para>The rewrite rule (<userinput>r_rewrite_set</userinput>) evaluates the condition. If the message matches the condition (the PROGRAM field of the message is "myapplication"), &abbrev; rewrites the log message (sets the value of the HOST field to "myhost"), otherwise it is not modified.</para>
+                </step>
+                <step>
+                    <para>The next element of the log path processes the message (<userinput>d1</userinput>).</para>
+                </step>
+            </procedure>
             <example xml:id="example-conditional-rewrite">
                 <title>Using conditional rewriting</title>
                 <para>The following example sets the HOST field of the message to <userinput>myhost</userinput> only if the message was sent by the <userinput>myapplication</userinput> program.</para>
