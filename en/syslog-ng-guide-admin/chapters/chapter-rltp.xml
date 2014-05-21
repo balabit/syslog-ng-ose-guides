@@ -18,16 +18,26 @@
             <primary>transport</primary>
             <secondary>TCP</secondary>
         </indexterm>
-        <para xml:id="para-rltp-intro">The syslog-ng application can send and receive log messages in a reliable way over the TCP transport layer using the <trademark>Reliable Log Transfer Protocol</trademark> (<trademark>RLTP</trademark>). <trademark>RLTP</trademark> is a new transport protocol that prevents message loss during connection breaks. The transport is used between syslog-ng and syslog-ng and it interoperates with the flow control and reliable disk-buffer mechanisms, thus providing the best loss-less environment. It detects the last received message on the receiving end and then starts resending messages from that point. Therefore, messages are not duplicated at the receiving end in case of a connection break (however, in failover mode this is not completely ensured). <!-- This protocol allows a message rate of at least 200k message/second. --> It also allows the negotiation of using TLS with a single source driver (for example negotiation at the beginning of the connection).</para>
+        <para xml:id="para-rltp-intro">The &abbrev; application can send and receive log messages in a reliable way over the TCP transport layer using the <trademark>Reliable Log Transfer Protocol</trademark> (<trademark>RLTP</trademark>). <trademark>RLTP</trademark> is a proprietary transport protocol that prevents message loss during connection breaks. The transport is used between &abbrev; hosts (for example, a client and a server, or a client-relay-server), and it interoperates with the flow control and reliable disk-buffer mechanisms, thus providing the best way to prevent message loss. The sender detects which messages has the receiver successfully received. If message are lost during the transfer, the sender resends the missing messages from the last received message. Therefore, messages are not duplicated at the receiving end in case of a connection break (however, in failover mode this is not completely ensured). <!-- This protocol allows a message rate of at least 200k message/second. --> <trademark>RLTP</trademark> also allows to receive encrypted and non-encrypted connections on the same port, using a single source driver.</para>
         <warning>
-            <para>If you use <trademark>RLTP</trademark> together with non-reliable disk-buffer, it is possible to lose logs. When sending logs through a relay that is using a non-reliable disk-buffer, it is possible to lose logs in case of relay crash.</para>
-            <para>When sending logs through a relay that is using a non-reliable disk-buffer, it is possible that logs are duplicated in case of relay crash or stopping the relay.</para>
+            <itemizedlist>
+                <listitem>
+                    <para>If you use <trademark>RLTP</trademark> together with non-reliable disk-buffer, it is possible to lose logs. When sending logs through a relay that is using a non-reliable disk-buffer, it is possible to lose logs if the relay crashes.</para>
+                </listitem>
+                <listitem>
+                    <para>When sending logs through a relay that is using a non-reliable disk-buffer, it is possible that logs are duplicated if the relay crashes, or it is stopped.</para>
+                </listitem>
+                <listitem>
+                    <para>If the underlying disk system of &abbrev; fails to write the log messages to the disk, but it does not return a write error.</para>
+                </listitem>
+            </itemizedlist>
         </warning>
-        <para>It is used on top of TCP, and can use STARTTLS for encryption. <trademark>RLTP</trademark> supports IPv4 and IPv6 addresses. Inside the <trademark>RLTP</trademark> message, the format can be RFC3164 (BSD syslog) or RFC5424 (IETF syslog). The default port of <trademark>RLTP</trademark> is <userinput>35514</userinput>.</para>
+        <para>The <trademark>RLTP</trademark> protocol works on top of TCP, and can use STARTTLS for encryption. <trademark>RLTP</trademark> supports IPv4 and IPv6 addresses. Inside the <trademark>RLTP</trademark> message, the message can use any format, for example, RFC3164 (BSD-syslog) or RFC5424 (IETF-syslog). The default port of <trademark>RLTP</trademark> is <userinput>35514</userinput>.</para>
         <para><trademark>RLTP</trademark> can be added to the configuration like a transport protocol within the <parameter>syslog()</parameter> driver and the <parameter>network()</parameter> driver.</para>
     </section>
     <section xml:id="rltp-options">
         <title><trademark>RLTP</trademark> options</title>
+        <para>The following options are specific to the <trademark>RLTP</trademark> protocol. Note that when using <trademark>RLTP</trademark> in a source or a destination, the options of the <parameter>syslog()</parameter> or the <parameter>network()</parameter> driver can be used as well.</para>
         <simplesect>
             <title>allow-compress()</title>
             <indexterm type="parameter">
@@ -55,7 +65,7 @@
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Enable on-the-wire compression in the RLTP communication. Note that this option must be enabled both on the server and the client side to have any effect. Enabling compression can significantly reduce the bandwidth required to transport the messages, but can slightly decrease the performance of &abbrev;, reducing the number of transferred messages. Available in &abbrev; <phrase condition="pe">5.0</phrase> and later.</para>
+            <para><emphasis role="bold">Description:</emphasis> Enable on-the-wire compression in the RLTP communication. Note that this option must be enabled both on the server and the client side to have any effect. Enabling compression can significantly reduce the bandwidth required to transport the messages, but can slightly decrease the performance of &abbrev;, reducing the number of transferred messages. The <parameter>allow-compress()</parameter> option can be used in source and destination drivers as well. Available in &abbrev; <phrase condition="pe">5.0</phrase> and later.</para>
         </simplesect>
         <simplesect>
             <title>message_acknowledgement_timeout()</title>
@@ -76,7 +86,7 @@
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> After not receiving any reply to the messages in the given timeframe, syslog-ng terminates the connection with the other side</para>
+            <para><emphasis role="bold">Description:</emphasis> When the receiver (&abbrev; server) receives and successfully processes a message, it sends an acknowledgement to the sender (the &abbrev; client). If the receiver does not acknowledge receiving the messages within this period, the sender terminates the connection with the receiver. Use this option only in source drivers.</para>
         </simplesect>
         <simplesect>
             <title>response_timeout()</title>
@@ -97,7 +107,8 @@
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> After not receiving any message in the given timeframe, syslog-ng terminates the connection with the other side</para>
+            <para><emphasis role="bold">Description:</emphasis> If &abbrev; does not receive any message (acknowledgement, or other message related to the ) in the given timeframe, &abbrev; terminates the connection with the peer, and the "Connection broken" message appears in the logs of the sender (the &abbrev; client). This is normal, and happens when the sender does not send any new message to the receiver.</para>
+            <para>Under normal circumstances, you should not change the value of this option. The <parameter>response_timeout()</parameter> option can be used in source and destination drivers as well.</para>
         </simplesect>
         <simplesect>
             <title>tls_required()</title>
@@ -118,7 +129,10 @@
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Determines whether STARTTLS is to be used during communication. If the option is set to <userinput>yes</userinput>, setting up <parameter>tls()</parameter> context is required. This option can be used both on client and server side. For example, if on server side <userinput>tls_required(yes)</userinput> and on client side <userinput>tls_required(no)</userinput>, the connection is dropped. If one of them is set to <userinput>optional</userinput>, the other side is the decisive one. If both sides are set to <userinput>optional</userinput>, and there is <parameter>tls()</parameter> context, they will communicate through TLS. The following table summarizes the possible options and their results.</para>
+            <para><emphasis role="bold">Description:</emphasis> Determines whether STARTTLS is to be used during communication. If the option is set to <userinput>yes</userinput>, you must also configure the <parameter>tls()</parameter> option to specify other parameters of the TLS connection (for example, the authentication of the server and the client).</para>
+            <para>The <parameter>tls_required()</parameter> option can be used in source and destination drivers as well.</para>
+            <para>For example, if you configure <userinput>tls_required(yes)</userinput> on server side and <userinput>tls_required(no)</userinput> on client side, the connection is dropped. If one of them is set to <userinput>optional</userinput>, the configuration of the other side will decide if TLS is used or not. If both sides are set to <userinput>optional</userinput>, and the <parameter>tls()</parameter> option is properly configured, TLS encryption will be used. The following table summarizes the possible options and their results.</para>
+            <para>Note that the various parameters of the <parameter>tls()</parameter> option are considered in the connection only if the <parameter>tls_required()</parameter> settings of the peers result in <userinput>TLS-encryption</userinput> in the following table. In other words: the <parameter>tls_required()</parameter> option of <trademark>RLTP</trademark> determines if TLS should be used at all, while the <parameter>peer_verify()</parameter> option of the <parameter>tls()</parameter>setting determines if the TLS connection can be actually established.</para>
             <informaltable>
                 <tgroup cols="5">
                     <colspec colnum="1" colname="col1"/>
@@ -167,13 +181,13 @@
         <title>Examples for using <trademark>RLTP</trademark></title>
         <example>
             <title>RLTP with optional TLS encryption</title>
-            <para>For both source and destination sides, <parameter>tls_required</parameter> is set to optional, therefore they will communicate through TLS. For the server (source side) the <parameter>response_timeout</parameter> and <parameter>message_acknowledgement_timeout</parameter> settings ensure that the connection is terminated if no messages are received in the set timeframes. For the client (destination side), the reliable disk-buffer is set to yes, to prevent data loss.</para>
+            <para>For both source and destination sides, <parameter>tls_required</parameter> is set to optional, therefore they will communicate through TLS. For the server (source side) the <parameter>message_acknowledgement_timeout</parameter> settings ensure that the connection is terminated if no messages are received in the set timeframe. For the client (destination side), the reliable disk-buffer is set to yes, to prevent data loss.</para>
             <para><emphasis>source</emphasis></para>
             <synopsis>source s_syslog_rltp {
         syslog(
             ip("127.0.0.1")
             port("4444")
-            transport(rltp(tls_required(optional) response_timeout(20) message_acknowledgement_timeout(10) ))
+            transport(rltp(tls_required(optional) message_acknowledgement_timeout(10) ))
             ip-protocol(4)
             tls(
                 peer-verify(required-trusted)
@@ -223,7 +237,7 @@
         network(
             "127.0.0.1"
             port("5555")
-            transport(rltp(tls_required(no) response_timeout(20)))
+            transport(rltp(tls_required(no)))
             ip-protocol(4)
         );
 };</synopsis>
