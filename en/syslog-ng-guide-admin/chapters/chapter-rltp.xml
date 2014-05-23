@@ -142,7 +142,7 @@
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> When the receiver (&abbrev; server) receives and successfully processes a message, it sends an acknowledgement to the sender (the &abbrev; client). If the receiver does not acknowledge receiving the messages within this period, the sender terminates the connection with the receiver. Use this option only in source drivers.</para>
+            <para><emphasis role="bold">Description:</emphasis> When the receiver (&abbrev; server) receives and successfully processes a message, it sends an acknowledgement to the sender (the &abbrev; client). If the receiver does not acknowledge receiving the messages within this period, the sender terminates the connection with the receiver. Use this option only in destination drivers.</para>
         </simplesect>
         <simplesect>
             <title>response_timeout()</title>
@@ -163,7 +163,7 @@
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> If &abbrev; does not receive any message (acknowledgement, or other message related to the ) in the given timeframe, &abbrev; terminates the connection with the peer, and the "Connection broken" message appears in the logs of the sender (the &abbrev; client). This is normal, and happens when the sender does not send any new message to the receiver.</para>
+            <para><emphasis role="bold">Description:</emphasis> If &abbrev; does not receive any message (acknowledgement, or other message related to the <trademark>RLTP</trademark> protocol) in the given timeframe, &abbrev; terminates the connection with the peer, and the "Connection broken" message appears in the logs of the sender (the &abbrev; client). This is normal, and happens when the sender does not send any new message to the receiver.</para>
             <para>Under normal circumstances, you should not change the value of this option. The <parameter>response_timeout()</parameter> option can be used in source and destination drivers as well.</para>
         </simplesect>
         <simplesect>
@@ -225,7 +225,7 @@
                             <entry align="center"><?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?> <emphasis role="bold">optional</emphasis> </entry>
                             <entry> TLS-encryption </entry>
                             <entry> unencrypted connection </entry>
-                            <entry> TLS-encryption </entry>
+                            <entry> TLS-encryption if the <parameter>tls()</parameter> option is set, unencrypted connection otherwise </entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -235,15 +235,37 @@
     </section>
     <section xml:id="rltp-examples">
         <title>Examples for using <trademark>RLTP</trademark></title>
+         <example>
+            <title>Simple <trademark>RLTP</trademark> connection</title>
+            <para>The sender and the receiver use <trademark>RLTP</trademark> over the <parameter>network()</parameter> protocol. Since the <userinput>tls()</userinput> option  is not configured neither on the sender nor on the receiver, the communication will be unencrypted.</para>
+            <para><emphasis>Receiver configuration (&abbrev; server)</emphasis>:</para>
+            <synopsis>source s_network_rltp {
+        network(
+            ip("127.0.0.1")
+            port("5555")
+            transport(rltp)
+            ip-protocol(4)
+        );
+};</synopsis>
+            <para><emphasis>Sender configuration (&abbrev; client)</emphasis>:</para>
+            <synopsis>destination d_network_rltp {
+        network(
+            "127.0.0.1"
+            port("5555")
+            transport(rltp)
+            ip-protocol(4)
+        );
+};</synopsis>
+        </example>
         <example>
-            <title>RLTP with optional TLS encryption</title>
-            <para>For both source and destination sides, <parameter>tls_required</parameter> is set to optional, therefore they will communicate through TLS. For the server (source side) the <parameter>message_acknowledgement_timeout</parameter> settings ensure that the connection is terminated if no messages are received in the set timeframe. For the client (destination side), the reliable disk-buffer is set to yes, to prevent data loss.</para>
-            <para><emphasis>source</emphasis></para>
+            <title><trademark>RLTP</trademark> with TLS encryption</title>
+            <para>The following example configure a sender and a receiver to communicate using <trademark>RLTP</trademark>. Since the <parameter>tls_required()</parameter> option is set to <userinput>optional</userinput> on the receiver and <userinput>yes</userinput> on the sender, and the <parameter>tls()</parameter> option is configured, the communication will be TLS-encrypted. For the sender (&abbrev; client), reliable disk-buffering is enabled to prevent data loss.</para>
+            <para><emphasis>Receiver configuration (&abbrev; server)</emphasis>:</para>
             <synopsis>source s_syslog_rltp {
         syslog(
             ip("127.0.0.1")
             port("4444")
-            transport(rltp(tls_required(optional) message_acknowledgement_timeout(10) ))
+            transport(rltp(tls_required(optional)))
             ip-protocol(4)
             tls(
                 peer-verify(required-trusted)
@@ -253,12 +275,12 @@
             )
         );
 };</synopsis>
-            <para><emphasis>destination</emphasis></para>
+            <para><emphasis>Sender configuration (&abbrev; client)</emphasis>:</para>
             <synopsis>destination d_syslog_rltp {
         syslog(
             "127.0.0.1"
             port("4444")
-            transport(rltp(tls_required(optional)))
+            transport(rltp(tls_required(yes)))
             ip-protocol(4)
             disk-buffer( mem-buf-size(200000) disk-buf-size(2000000) reliable(yes) )
             tls(
@@ -267,34 +289,6 @@
                 key_file("/var/tmp/client/client_priv.key")
                 cert_file("/var/tmp/client/client.crt")
             )
-        );
-};</synopsis>
-        </example>
-        <example>
-            <title>RLTP with tls_required()</title>
-            <para>The source and the destination would communicate through the network protocol, but since <parameter>tls_required</parameter> is set to <userinput>yes</userinput> on the server side and <userinput>no</userinput> on the client side, the connection is terminated by the server.</para>
-            <para><emphasis>source</emphasis></para>
-            <synopsis>source s_network_rltp {
-        network(
-            ip("127.0.0.1")
-            port("5555")
-            transport(rltp(tls_required(yes) ))
-            ip-protocol(4)
-            tls(
-                peer-verify(required-trusted)
-                ca_dir("/var/tmp/client/")
-                key_file("/var/tmp/server/server_priv.key")
-                cert_file("/var/tmp/server/server.crt")
-            )
-        );
-};</synopsis>
-            <para><emphasis>destination</emphasis></para>
-            <synopsis>destination d_network_rltp {
-        network(
-            "127.0.0.1"
-            port("5555")
-            transport(rltp(tls_required(no)))
-            ip-protocol(4)
         );
 };</synopsis>
         </example>
