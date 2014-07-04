@@ -45,22 +45,22 @@
         <xi:include href="../../common/wnt/note-windows-filenames.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <para>A more detailed example that encrypts messages, modifies the parameters for closing chunks, and sets file privileges.</para>
         <synopsis>destination d_logstore { logstore("/var/log/messages-logstore.lgs"
-encrypt_certificate("/opt/syslog-ng/etc/syslog-ng/keys/10-100-20-40/public-certificate-of-the-server.pem")
+encrypt-certificate("/opt/syslog-ng/etc/syslog-ng/keys/10-100-20-40/public-certificate-of-the-server.pem")
 owner("balabit")
 group("balabit")
 perm(0777)
 ); };</synopsis>
         <para>The URL to the Timestamping Authority and if needed, the OID of the timestamping policy can be set as global options, or also per logstore destination. The following example specifies the URL and the OID as global options:</para>
         <synopsis>options {
-        timestamp_url("http://10.50.50.50:8080/");
-        timestamp_policy("0.4.0.2023.1.1");
+        timestamp-url("http://10.50.50.50:8080/");
+        timestamp-policy("0.4.0.2023.1.1");
 };</synopsis>
     </example>
     <note>
         <para>When using the <parameter>logstore()</parameter> destination, update the configuration of your log rotation program to rotate these files. Otherwise, the log files can become very large.</para>
     </note>
     <warning>
-        <para>Since the state of each created file must be tracked by syslog-ng, it consumes some memory for each file. If no new messages are written to a file within 60 seconds (controlled by the <parameter>time_reap()</parameter> global option), it is closed, and its state is freed. </para>
+        <para>Since the state of each created file must be tracked by syslog-ng, it consumes some memory for each file. If no new messages are written to a file within 60 seconds (controlled by the <parameter>time-reap()</parameter> global option), it is closed, and its state is freed. </para>
         <para>Exploiting this, a DoS attack can be mounted against the system. If the number of possible destination files and its needed memory is more than the amount available on the syslog-ng server.</para>
         <para>The most suspicious macro is <parameter>${PROGRAM}</parameter>, where the number of possible variations is rather high. Do not use the <parameter>${PROGRAM}</parameter> macro in insecure environments.</para>
     </warning>
@@ -90,12 +90,12 @@ perm(0777)
             <primary>journal files</primary>
         </indexterm>
         <para>Starting with &product; 3.2, &abbrev; processes log messages into a journal file before writing them to the logstore file. That way logstore files are consistent even if &abbrev; crashes unexpectedly, avoiding losing messages. Note that this does not protect against losing messages if the operating system crashes.</para>
-        <para>A journal file is automatically created for every logstore file that &abbrev; opens. A journal file consists of journal blocks which store the log messages. When a journal block fills up with messages, &abbrev; writes the entire block into the logstore file and starts to reuse the journal block (one journal block becomes one chunk in the logstore file). If the messages cannot be written to the logstore file (for example, because the disk becomes unaccessible, or file operations are slow), messages are put to the next journal block (&abbrev; uses four blocks by default). When all journal blocks become full, &abbrev; will stop processing incoming traffic. &abbrev; starts accepting messages to the logstore file again when the first journal block is successfully written to the logstore file. If &abbrev; receives a HUP or STOP signal, or no new message arrives into the logstore for the period set in the <parameter>time_reap()</parameter> parameter, it writes every journal block to the logstore.</para>
+        <para>A journal file is automatically created for every logstore file that &abbrev; opens. A journal file consists of journal blocks which store the log messages. When a journal block fills up with messages, &abbrev; writes the entire block into the logstore file and starts to reuse the journal block (one journal block becomes one chunk in the logstore file). If the messages cannot be written to the logstore file (for example, because the disk becomes unaccessible, or file operations are slow), messages are put to the next journal block (&abbrev; uses four blocks by default). When all journal blocks become full, &abbrev; will stop processing incoming traffic. &abbrev; starts accepting messages to the logstore file again when the first journal block is successfully written to the logstore file. If &abbrev; receives a HUP or STOP signal, or no new message arrives into the logstore for the period set in the <parameter>time-reap()</parameter> parameter, it writes every journal block to the logstore.</para>
         <para>When &abbrev; is restarted, it automatically processes the journal files to the logstore files, unless a particular logstore file is not part of configuration of &abbrev;. Such orphaned journal files can be processed with the <command>lgstool recover</command> command. For details on processing orphaned journal files, see <xref linkend="lgstool-recover"/>.</para>
         <warning>
             <itemizedlist>
                 <listitem>
-                    <para>If a particular logstore destination receives messages at a constant but very low message rate (for example, a 100-byte message every 30 seconds), messages do not get written to the logstore file for a long time, because the journal block does not get full, and messages are more frequent than the <parameter>time_reap()</parameter> time. This becomes a problem when using logrotate to rotate the logstore files, because log messages will not be in the files they are expected. To avoid this situation, either use time-based macros in the filenames of the logstore files, or send a HUP signal to &abbrev; right before rotating the logstore files.</para>
+                    <para>If a particular logstore destination receives messages at a constant but very low message rate (for example, a 100-byte message every 30 seconds), messages do not get written to the logstore file for a long time, because the journal block does not get full, and messages are more frequent than the <parameter>time-reap()</parameter> time. This becomes a problem when using logrotate to rotate the logstore files, because log messages will not be in the files they are expected. To avoid this situation, either use time-based macros in the filenames of the logstore files, or send a HUP signal to &abbrev; right before rotating the logstore files.</para>
                 </listitem>
                 <listitem>
                     <para>When every block of a journal becomes full and &abbrev; stops processing incoming traffic, <emphasis>it will not read new messages at all</emphasis> until a block is successfully written to the related logstore file. This is in contrast with flow-control, where only messages from the source related to the particular destination are not processed.</para>
@@ -112,10 +112,10 @@ perm(0777)
             <primary>memory use of</primary>
             <secondary>logstore journal files</secondary>
         </indexterm>
-        <para>The &abbrev; application uses a separate journal file for every logstore file; every journal file is processed by a separate thread. The journal files are mapped into the memory. The journal of an individual logstore file uses up to <userinput>journal_block_size()*journal_block_count()</userinput> memory address, which is 4MB by default. However, if you have several logstore files open in parallel (for example, you are collecting log messages from 500 hosts and storing them in separate files for every host, and the hosts are continuously sending messages) the memory requirements for journaling rise quickly (to ~2GB for the 500 hosts). To limit the memory use of journals, adjust the <link linkend="logstore-option-journal-memory-limit"><parameter>logstore_journal_shmem_threshold()</parameter></link> global option (by default, it is 512 MB).</para>
+        <para>The &abbrev; application uses a separate journal file for every logstore file; every journal file is processed by a separate thread. The journal files are mapped into the memory. The journal of an individual logstore file uses up to <userinput>journal-block-size()*journal-block-count()</userinput> memory address, which is 4MB by default. However, if you have several logstore files open in parallel (for example, you are collecting log messages from 500 hosts and storing them in separate files for every host, and the hosts are continuously sending messages) the memory requirements for journaling rise quickly (to ~2GB for the 500 hosts). To limit the memory use of journals, adjust the <link linkend="logstore-option-journal-memory-limit"><parameter>logstore-journal-shmem-threshold()</parameter></link> global option (by default, it is 512 MB).</para>
         <xi:include href="../../common/chunk/option-description-destination-logstore-journal-shmem-threshold.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <warning>
-            <para>If you have a large amount of open logstore files in parrallel (for example, you are using the <parameter>${HOST}</parameter> or <parameter>${PROGRAM}</parameter> macros in your filenames) consider lowering the <parameter>journal_block_size()</parameter> to avoid &abbrev; consuming the entire memory of the system.</para>
+            <para>If you have a large amount of open logstore files in parrallel (for example, you are using the <parameter>${HOST}</parameter> or <parameter>${PROGRAM}</parameter> macros in your filenames) consider lowering the <parameter>journal-block-size()</parameter> to avoid &abbrev; consuming the entire memory of the system.</para>
         </warning>
         <xi:include href="../../common/chunk/example-logstore-memory-threshold.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     </section>
@@ -176,7 +176,7 @@ logstore(filename options());</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> This option is obsolete. Use the <parameter>journal_block_size()</parameter> option instead.</para>
+            <para><emphasis role="bold">Description:</emphasis> This option is obsolete. Use the <parameter>journal-block-size()</parameter> option instead.</para>
             <para>Size of a logstore chunk in kilobytes. Note that this size refers to the compressed size of the chunk. Also, the gzip library used for compressing the messages has a 32k long buffer; messages may not appear in the actual logfile until this buffer is not filled. Logstore chunks are closed when they reach the specified size, or when the time limit set in <parameter>chunk_time()</parameter> expires.</para>
         </simplesect>
         <simplesect>
@@ -200,7 +200,7 @@ logstore(filename options());</synopsis>
                 </tgroup>
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> This option is obsolete.</para>
-            <para>Time limit in seconds: syslog-ng PE closes the chunk if no new messages arrive until the time limit expires. Logstore chunks are closed when the time limit expires, or when they reach the size specified in the <parameter>chunk_size()</parameter> parameter. If the time limit set in the <parameter>time_reap()</parameter> parameter expires, the entire file is closed.</para>
+            <para>Time limit in seconds: syslog-ng PE closes the chunk if no new messages arrive until the time limit expires. Logstore chunks are closed when the time limit expires, or when they reach the size specified in the <parameter>chunk_size()</parameter> parameter. If the time limit set in the <parameter>time-reap()</parameter> parameter expires, the entire file is closed.</para>
         </simplesect>
         <simplesect>
             <title>compress()</title>
@@ -260,9 +260,9 @@ logstore(filename options());</synopsis>
             <xi:include href="../../common/chunk/option-destination-dir-perm.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
         <simplesect>
-            <title>encrypt_certificate()</title>
+            <title>encrypt-certificate()</title>
             <indexterm type="parameter">
-                <primary>encrypt_certificate()</primary>
+                <primary>encrypt-certificate()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -318,9 +318,9 @@ logstore(filename options());</synopsis>
             <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
         <simplesect>
-            <title>journal_block_count()</title>
+            <title>journal-block-count()</title>
             <indexterm type="parameter">
-                <primary>journal_block_count()</primary>
+                <primary>journal-block-count()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -337,16 +337,16 @@ logstore(filename options());</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The number of blocks in the journal file. If set to <userinput>0</userinput>, syslog-ng will set it to the default value (<userinput>4</userinput>). The maximal value is <userinput>255</userinput>; if <parameter>journal_block_count()</parameter> is set higher than 255 syslog-ng will use the maximum value.</para>
+            <para><emphasis role="bold">Description:</emphasis> The number of blocks in the journal file. If set to <userinput>0</userinput>, syslog-ng will set it to the default value (<userinput>4</userinput>). The maximal value is <userinput>255</userinput>; if <parameter>journal-block-count()</parameter> is set higher than 255 syslog-ng will use the maximum value.</para>
             <note>
-                <para>By default, journal files are mapped into the memory of the host. To influence the amount of memory addresses used by journal files, see the <link linkend="logstore-option-journal-memory-limit"><parameter>logstore_journal_shmem_threshold()</parameter></link> global option.</para>
+                <para>By default, journal files are mapped into the memory of the host. To influence the amount of memory addresses used by journal files, see the <link linkend="logstore-option-journal-memory-limit"><parameter>logstore-journal-shmem-threshold()</parameter></link> global option.</para>
             </note>
             <xi:include href="../../common/chunk/example-logstore-journal.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
         <simplesect>
-            <title>journal_block_size()</title>
+            <title>journal-block-size()</title>
             <indexterm type="parameter">
-                <primary>journal_block_size()</primary>
+                <primary>journal-block-size()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -363,7 +363,7 @@ logstore(filename options());</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The size of blocks (in bytes) in the journal file. The size of the block must be a multiple of the page size: if not, &abbrev; automatically increases it to the next multiple of the page size. The maximum size of a journal block is 32MB, the minimum size is 256KB. If the value specified as <parameter>journal_block_size()</parameter> is lower than minimum size or higher than the maximum size, &abbrev; will use the minimum or maximum size, respectively.</para>
+            <para><emphasis role="bold">Description:</emphasis> The size of blocks (in bytes) in the journal file. The size of the block must be a multiple of the page size: if not, &abbrev; automatically increases it to the next multiple of the page size. The maximum size of a journal block is 32MB, the minimum size is 256KB. If the value specified as <parameter>journal-block-size()</parameter> is lower than minimum size or higher than the maximum size, &abbrev; will use the minimum or maximum size, respectively.</para>
             <note>
                 <itemizedlist>
                     <listitem>
@@ -400,9 +400,9 @@ logstore(filename options());</synopsis>
             <xi:include href="../../common/chunk/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
         <simplesect>
-            <title>timestamp_freq()</title>
+            <title>timestamp-freq()</title>
             <indexterm type="parameter">
-                <primary>timestamp_freq()</primary>
+                <primary>timestamp-freq()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -422,9 +422,9 @@ logstore(filename options());</synopsis>
             <xi:include href="../../common/chunk/option-description-destination-logstore-timestamp-freq.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
         <simplesect>
-            <title>timestamp_policy()</title>
+            <title>timestamp-policy()</title>
             <indexterm type="parameter">
-                <primary>timestamp_policy()</primary>
+                <primary>timestamp-policy()</primary>
             </indexterm>
             <indexterm>
                 <primary>timestamping</primary>
@@ -452,9 +452,9 @@ logstore(filename options());</synopsis>
             <para><emphasis role="bold">Description:</emphasis> If the Timestamping Server has timestamping policies configured, specify the OID of the policy to use with this parameter. &abbrev; will include this ID in the timestamping requests sent to the TSA. This option is available in syslog-ng PE 3.1 and later.</para>
         </simplesect>
         <simplesect>
-            <title>timestamp_url()</title>
+            <title>timestamp-url()</title>
             <indexterm type="parameter">
-                <primary>timestamp_url()</primary>
+                <primary>timestamp-url()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
