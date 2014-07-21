@@ -94,7 +94,7 @@
                     </row>
                     <row>
                         <entry>HP-UX 11 or later</entry>
-                        <entry>HP-UX uses a named pipe called <filename>/dev/log</filename> that is padded to 2048 bytes, for example <userinput>source s_hp-ux {pipe ("/dev/log" pad_size(2048)}</userinput>.</entry>
+                        <entry>HP-UX uses a named pipe called <filename>/dev/log</filename> that is padded to 2048 bytes, for example <userinput>source s_hp-ux {pipe ("/dev/log" pad-size(2048)}</userinput>.</entry>
                     </row>
                     <row>
                         <!-- FIXME -->
@@ -194,7 +194,7 @@
             <primary>wildcards</primary>
             <secondary>in file sources</secondary>
         </indexterm>
-        <para xml:id="reference-file-wildcard" condition="pe">In &abbrev;, the filename (but not the pathname) may include wildcard characters (for example <userinput>*</userinput>). Note that when using wildcards in filenames, always set how often syslog-ng should check the file for new messages using the <parameter>follow_freq()</parameter> parameter.</para>
+        <para xml:id="reference-file-wildcard" condition="pe">In &abbrev;, the filename (but not the pathname) may include wildcard characters (for example <userinput>*</userinput>). Note that when using wildcards in filenames, always set how often syslog-ng should check the file for new messages using the <parameter>follow-freq()</parameter> parameter.</para>
         <para xml:id="reference-file-wildcard-inotify" condition="pe">When using wildcards, syslog-ng PE monitors every matching file, and can receive new log messages from any of the files. However, monitoring (polling) many files (that is, more than ten) has a significant overhead and may affect performance. On Linux this overhead is not so significant, because &abbrev; uses the inotify feature of the kernel.</para>
         <example xml:id="example-source-file">
             <title>Using the file() driver</title>
@@ -205,12 +205,12 @@
             <title>Tailing files</title>
             <para>The following source checks the <filename>access.log</filename> file every second for new messages.</para>
             <synopsis>source s_tail { file("/var/log/apache/access.log"
-            follow_freq(1) flags(no-parse)); };</synopsis>
+            follow-freq(1) flags(no-parse)); };</synopsis>
         </example>
         <example xml:id="example-source-file-wildcard" condition="pe">
             <title>Using wildcards in the filename</title>
             <para>The following example monitors every file with the <filename>.log</filename> extension in the <filename>/var/application</filename> directory for log messages. Note that only syslog-ng PE supports wildcards in the file and pathnames.</para>
-            <synopsis>source s_file { file("/var/application/*.log" follow_freq(1));};</synopsis>
+            <synopsis>source s_file { file("/var/application/*.log" follow-freq(1));};</synopsis>
         </example>
         <note>
             <para>If the message does not have a proper syslog header, syslog-ng treats messages received from files as sent by the <parameter>kern</parameter> facility. Use the <parameter>default-facility</parameter> and <parameter>default-priority</parameter> options in the source definition to assign a different facility if needed.</para>
@@ -223,7 +223,7 @@
                     <primary>kmsg</primary>
                 </indexterm>
                 <listitem>
-                    <para>The kernel usually sends log messages to a special file (<filename>/dev/kmsg</filename> on BSDs, <filename>/proc/kmsg</filename> on Linux). The <parameter>file()</parameter> driver reads log messages from such files. The syslog-ng application can periodically check the file for new log messages if the <parameter>follow_freq()</parameter> option is set. </para>
+                    <para>The kernel usually sends log messages to a special file (<filename>/dev/kmsg</filename> on BSDs, <filename>/proc/kmsg</filename> on Linux). The <parameter>file()</parameter> driver reads log messages from such files. The syslog-ng application can periodically check the file for new log messages if the <parameter>follow-freq()</parameter> option is set. </para>
                 </listitem>
                 <listitem>
                     <indexterm>
@@ -232,11 +232,11 @@
                     <para>On Linux, the <parameter>klogd</parameter> daemon can be used in addition to syslog-ng to read kernel messages and forward them to syslog-ng. <parameter>klogd</parameter> used to preprocess kernel messages to resolve symbols and so on, but as this is deprecated by <parameter>ksymoops</parameter> there is really no point in running both <parameter>klogd</parameter> and syslog-ng in parallel. Also note that running two processes reading <filename>/proc/kmsg</filename> at the same time might result in dead-locks. </para>
                 </listitem>
                 <listitem>
-                    <para>When using syslog-ng to read messages from the <filename>/proc/kmsg</filename> file, syslog-ng automatically disables the <parameter>follow_freq()</parameter> parameter to avoid blocking the file.</para>
+                    <para>When using syslog-ng to read messages from the <filename>/proc/kmsg</filename> file, syslog-ng automatically disables the <parameter>follow-freq()</parameter> parameter to avoid blocking the file.</para>
                 </listitem>
                 <listitem>
                     <para>To read the kernel messages on HP-UX platforms, use the following options in the source statement:</para>
-                    <synopsis>file("/dev/klog" program_override("kernel") flags(kernel) follow_freq(0));</synopsis>
+                    <synopsis>file("/dev/klog" program-override("kernel") flags(kernel) follow-freq(0));</synopsis>
                 </listitem>
             </itemizedlist>
         </section>
@@ -350,9 +350,9 @@
                 <xi:include href="../../common/chunk/option-source-program-override.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
-                <title>read_old_records()</title>
+                <title>read-old-records()</title>
                 <indexterm type="parameter">
-                    <primary>read_old_records()</primary>
+                    <primary>read-old-records()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -397,8 +397,8 @@
                     <para>The following example reads files having the <filename>.log</filename> extension from the <filename>/var/application/</filename> directory and its subdirectories. Note that only syslog-ng PE supports recursive directory handling and wildcards in the file and pathnames.</para>
                     <synopsis>source s_file_subdirectories { file("/var/application/*.log"
                     recursive(yes)
-                    follow_freq(1)
-                    log_fetch_limit(100)
+                    follow-freq(1)
+                    log-fetch-limit(100)
                     );};</synopsis>
                 </example>
             </simplesect>
@@ -441,7 +441,7 @@
         </warning>
         <example xml:id="example-source-pipe">
             <title>Using the pipe() driver</title>
-            <synopsis>source s_pipe { pipe("/dev/pipe" pad_size(2048)); };</synopsis>
+            <synopsis>source s_pipe { pipe("/dev/pipe" pad-size(2048)); };</synopsis>
         </example>
         <section xml:id="reference-source-pipe">
             <title>pipe() source options</title>
@@ -703,7 +703,7 @@ program(filename);</synopsis>
             <primary>sql sources</primary>
         </indexterm>
         <para>The <parameter>sql()</parameter> driver collects messages from an SQL database. Currently the Microsoft SQL (MSSQL), MySQL, Oracle and PostgreSQL databases are supported.</para>
-        <para>The <parameter>sql()</parameter> driver has the following required parameters: <link linkend="sql-source-option-database"><parameter>database()</parameter></link>, <link linkend="sql-source-option-host"><parameter>host()</parameter></link>, <link linkend="sql-source-option-table"><parameter>table()</parameter></link>, <link linkend="sql-source-option-type"><parameter>type()</parameter></link>, <link linkend="sql-source-option-uid-column"><parameter>uid_column()</parameter></link>, <link linkend="sql-source-option-datetime-column"><parameter>datetime_column()</parameter></link> or <link linkend="sql-source-option-date-column"><parameter>date_column()</parameter></link> and <link linkend="sql-source-option-time-column"><parameter>time_column()</parameter></link>.</para>
+        <para>The <parameter>sql()</parameter> driver has the following required parameters: <link linkend="sql-source-option-database"><parameter>database()</parameter></link>, <link linkend="sql-source-option-host"><parameter>host()</parameter></link>, <link linkend="sql-source-option-table"><parameter>table()</parameter></link>, <link linkend="sql-source-option-type"><parameter>type()</parameter></link>, <link linkend="sql-source-option-uid-column"><parameter>uid-column()</parameter></link>, <link linkend="sql-source-option-datetime-column"><parameter>datetime-column()</parameter></link> or <link linkend="sql-source-option-date-column"><parameter>date-column()</parameter></link> and <link linkend="sql-source-option-time-column"><parameter>time-column()</parameter></link>.</para>
         <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <synopsis>Declaration:
     sql(options);</synopsis>
@@ -720,7 +720,7 @@ program(filename);</synopsis>
                 <para>Timestamps columns with timezone are not supported. The &abbrev; application will retrieve the timestamp from these columns, but without the timezone information.</para>
             </listitem>
             <listitem>
-                <para>The <parameter>sql()</parameter> source driver ignores the <parameter>log_msg_size()</parameter> option, that is, messages read from the SQL database can be longer than the maximal message length set in the <parameter>log_msg_size()</parameter> option.</para>
+                <para>The <parameter>sql()</parameter> source driver ignores the <parameter>log-msg-size()</parameter> option, that is, messages read from the SQL database can be longer than the maximal message length set in the <parameter>log-msg-size()</parameter> option.</para>
             </listitem>
             <listitem>
                 <para>There is an ID column that is the monotonically increasing unique ID of the monitored table. It is not possible to use more than one ID column as complex ID.</para>
@@ -746,11 +746,11 @@ program(filename);</synopsis>
                 database("test_db")
                 table("test_log")
                 datetime-column("timestamp")
-                uid_column("id")
-                message_template("${.sql.id} ${.sql.log}")
-                program_template("${.sql.program}")
-                host_template("${.sql.host}")
-                fast_follow_mode(yes)
+                uid-column("id")
+                message-template("${.sql.id} ${.sql.log}")
+                program-template("${.sql.program}")
+                host-template("${.sql.host}")
+                fast-follow-mode(yes)
 
 );};</synopsis>
         </example>
@@ -893,9 +893,9 @@ program(filename);</synopsis>
             <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <para>The <parameter>sql()</parameter> driver has the following options.</para>
             <simplesect>
-                <title>archive_query()</title>
+                <title>archive-query()</title>
                 <indexterm type="parameter">
-                    <primary>archive_query()</primary>
+                    <primary>archive-query()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -912,13 +912,13 @@ program(filename);</synopsis>
                         </tbody>
                     </tgroup>
                 </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The SQL-like statement which is executed after &abbrev; has queried a batch of records (as set in the <parameter>log_fetch_limit()</parameter> option). This statement can be used for example to archive or delete the records processed by &abbrev;. Note that the user account that &abbrev; uses to access the database requires the appropriate privileges to execute the statement. If executing the statement fails, &abbrev; will log the error message returned by the database, and continue processing the other records.</para>
+                <para><emphasis role="bold">Description:</emphasis> The SQL-like statement which is executed after &abbrev; has queried a batch of records (as set in the <parameter>log-fetch-limit()</parameter> option). This statement can be used for example to archive or delete the records processed by &abbrev;. Note that the user account that &abbrev; uses to access the database requires the appropriate privileges to execute the statement. If executing the statement fails, &abbrev; will log the error message returned by the database, and continue processing the other records.</para>
                 <para>For details on customizing queries, see <xref linkend="sql-source-customized-queries"/>.</para>
                 <xi:include href="../../common/wnt/warning-source-sql-customized-queries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 <example>
                     <title>A sample archive query</title>
                     <para>The following statement deletes the records already retreived from the database if the table is read from the beginning.</para>
-                    <synopsis>archive_query("DELETE FROM test_logs WHERE id &lt;= $last_read_uid")</synopsis>
+                    <synopsis>archive-query("DELETE FROM test_logs WHERE id &lt;= $last_read_uid")</synopsis>
                 </example>
             </simplesect>
             <simplesect>
@@ -948,9 +948,9 @@ program(filename);</synopsis>
                 </example>
             </simplesect>
             <simplesect>
-                <title>connect_query()</title>
+                <title>connect-query()</title>
                 <indexterm type="parameter">
-                    <primary>connect_query()</primary>
+                    <primary>connect-query()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -972,16 +972,16 @@ program(filename);</synopsis>
                 <xi:include href="../../common/wnt/warning-source-sql-customized-queries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 <example>
                     <title>A sample connect query</title>
-                    <synopsis>connect_query("SET COLLATION_CONNECTION='utf8_general_ci'")</synopsis>
+                    <synopsis>connect-query("SET COLLATION_CONNECTION='utf8_general_ci'")</synopsis>
                 </example>
             </simplesect>
             <simplesect xml:id="sql-source-option-database">
                 <xi:include href="../../common/chunk/option-sql-database.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect xml:id="sql-source-option-date-column">
-                <title>date_column(col_name, [format])</title>
+                <title>date-column(col_name, [format])</title>
                 <indexterm type="parameter">
-                    <primary>date_column(col_name, [format])</primary>
+                    <primary>date-column(col_name, [format])</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1004,9 +1004,9 @@ program(filename);</synopsis>
                 </note>
             </simplesect>
             <simplesect xml:id="sql-source-option-datetime-column">
-                <title>datetime_column(col_name, [format])</title>
+                <title>datetime-column(col_name, [format])</title>
                 <indexterm type="parameter">
-                    <primary>datetime_column(col_name, [format])</primary>
+                    <primary>datetime-column(col_name, [format])</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1040,7 +1040,7 @@ program(filename);</synopsis>
                 </itemizedlist>
                 <para><emphasis role="bold">Description:</emphasis> The column containing the timestamp. If the type is int, it is considered to contain a UNIX timestamp. The format value is required if the type is string, and has to be in <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://linux.die.net/man/3/strptime">strptime format</link>. For details, see the strptime manual page (<command>man strptime</command>).</para>
                 <example>
-                    <title>SQL source option datetime_column(col_name, [format])</title>
+                    <title>SQL source option datetime-column(col_name, [format])</title>
                     <para><userinput>datetime("timestampcol", "%Y-%m-%d")</userinput></para>
                 </example>
             </simplesect>
@@ -1089,9 +1089,9 @@ program(filename);</synopsis>
                 <para><emphasis role="bold">Description:</emphasis> This parameter assigns an emergency level to the messages received from the sql source.</para>
             </simplesect>
             <simplesect>
-                <title>fast_follow_mode()</title>
+                <title>fast-follow-mode()</title>
                 <indexterm type="parameter">
-                    <primary>fast_follow_mode()</primary>
+                    <primary>fast-follow-mode()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1108,12 +1108,12 @@ program(filename);</synopsis>
                         </tbody>
                     </tgroup>
                 </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> If set to <userinput>yes</userinput>, &abbrev; reads the database table as fast as possible, until it reaches the last record. After this, it will execute only one query in <parameter>follow_freq()</parameter> time. If it is set to <userinput>no</userinput>, &abbrev; executes only one query in <parameter>follow_freq()</parameter> time.</para>
+                <para><emphasis role="bold">Description:</emphasis> If set to <userinput>yes</userinput>, &abbrev; reads the database table as fast as possible, until it reaches the last record. After this, it will execute only one query in <parameter>follow-freq()</parameter> time. If it is set to <userinput>no</userinput>, &abbrev; executes only one query in <parameter>follow-freq()</parameter> time.</para>
             </simplesect>
             <simplesect>
-                <title>fetch_query()</title>
+                <title>fetch-query()</title>
                 <indexterm type="parameter">
-                    <primary>fetch_query()</primary>
+                    <primary>fetch-query()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1138,7 +1138,7 @@ program(filename);</synopsis>
                 <xi:include href="../../common/wnt/warning-source-sql-customized-queries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 <example>
                     <title>A sample fetch query</title>
-                    <synopsis>fetch_query("SELECT * FROM $table WHERE id > $last_read_uid AND test_logs.log LIKE '.*ERROR.* ORDER BY $uid")</synopsis>
+                    <synopsis>fetch-query("SELECT * FROM $table WHERE id > $last_read_uid AND test_logs.log LIKE '.*ERROR.* ORDER BY $uid")</synopsis>
                 </example>
                 <para>The default fetch queries are the following:</para>
                 <indexterm>
@@ -1162,9 +1162,9 @@ program(filename);</synopsis>
                 </itemizedlist>
             </simplesect>
             <simplesect>
-                <title>follow_freq()</title>
+                <title>follow-freq()</title>
                 <indexterm type="parameter">
-                    <primary>follow_freq()</primary>
+                    <primary>follow-freq()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1181,7 +1181,7 @@ program(filename);</synopsis>
                         </tbody>
                     </tgroup>
                 </informaltable>
-                <para>Indicates that the source should be checked periodically. This is useful for SQL sources which always indicate readability, even though no new records were appended. If this value is higher than zero, syslog-ng will not attempt to use <parameter>poll()</parameter> on the SQL source, but checks whether the SQL source changed every time the <parameter>follow_freq()</parameter> interval (in seconds) has elapsed. Floating-point numbers (for example <userinput>1.5</userinput>) can be used as well.</para>
+                <para>Indicates that the source should be checked periodically. This is useful for SQL sources which always indicate readability, even though no new records were appended. If this value is higher than zero, syslog-ng will not attempt to use <parameter>poll()</parameter> on the SQL source, but checks whether the SQL source changed every time the <parameter>follow-freq()</parameter> interval (in seconds) has elapsed. Floating-point numbers (for example <userinput>1.5</userinput>) can be used as well.</para>
             </simplesect>
             <simplesect xml:id="sql-source-option-host">
                 <xi:include href="../../common/chunk/option-sql-host.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -1208,13 +1208,13 @@ program(filename);</synopsis>
                 </informaltable>
                 <para><emphasis role="bold">Description:</emphasis> The template for defining the HOST part of the message. If the <parameter>host-template()</parameter> option is not specified, the value of the <parameter>host()</parameter> option will be used in the HOST part of the message.</para>
                 <note>
-                    <para>This option requires the option <parameter>keep_hostname()</parameter> to be enabled: <userinput>keep_hostname(yes)</userinput>.</para>
+                    <para>This option requires the option <parameter>keep-hostname()</parameter> to be enabled: <userinput>keep-hostname(yes)</userinput>.</para>
                 </note>
             </simplesect>
             <simplesect>
-                <title>log_fetch_limit()</title>
+                <title>log-fetch-limit()</title>
                 <indexterm type="parameter">
-                    <primary>log_fetch_limit()</primary>
+                    <primary>log-fetch-limit()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1313,9 +1313,9 @@ program(filename);</synopsis>
                 <para><emphasis role="bold">Description:</emphasis> The template for defining the PROGRAM part of the message. If not specified, the <parameter>PROGRAM</parameter> message part will be empty.</para>
             </simplesect>
             <simplesect>
-                <title>read_old_records()</title>
+                <title>read-old-records()</title>
                 <indexterm type="parameter">
-                    <primary>read_old_records()</primary>
+                    <primary>read-old-records()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1357,9 +1357,9 @@ program(filename);</synopsis>
                 <para><emphasis role="bold">Description:</emphasis> The name of the monitored table. Only a single literal name is accepted, macros cannot be used in the name of the table. Monitoring rotated tables is not supported.</para>
             </simplesect>
             <simplesect>
-                <title>table_init_query()</title>
+                <title>table-init-query()</title>
                 <indexterm type="parameter">
-                    <primary>table_init_query()</primary>
+                    <primary>table-init-query()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1430,9 +1430,9 @@ program(filename);</synopsis>
                 </example>
             </simplesect>
             <simplesect xml:id="sql-source-option-time-column">
-                <title>time_column(col_name, [format])</title>
+                <title>time-column(col_name, [format])</title>
                 <indexterm type="parameter">
-                    <primary>time_column(col_name, [format])</primary>
+                    <primary>time-column(col_name, [format])</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1458,9 +1458,9 @@ program(filename);</synopsis>
                 <xi:include href="../../common/chunk/option-source-time-reopen.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect xml:id="source-commonoption-time-zone">
-                <title>time_zone()</title>
+                <title>time-zone()</title>
                 <indexterm type="parameter">
-                    <primary>time_zone()</primary>
+                    <primary>time-zone()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1502,9 +1502,9 @@ program(filename);</synopsis>
                 <xi:include href="../../common/chunk/option-description-sql-type.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect xml:id="sql-source-option-uid-column">
-                <title>uid_column()</title>
+                <title>uid-column()</title>
                 <indexterm type="parameter">
-                    <primary>uid_column()</primary>
+                    <primary>uid-column()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1555,7 +1555,7 @@ program(filename);</synopsis>
             </note>
             <itemizedlist>
                 <listitem>
-                    <para><parameter>$uid</parameter>: The name of the <parameter>uid_column</parameter>.</para>
+                    <para><parameter>$uid</parameter>: The name of the <parameter>uid-column()</parameter>.</para>
                 </listitem>
                 <listitem>
                     <para><parameter>$table</parameter>: The name of the <parameter>table</parameter> option.</para>
@@ -1567,11 +1567,11 @@ program(filename);</synopsis>
                     <para><parameter>$columns</parameter>: Reach the <parameter>columns</parameter> option of the SQL source (the default is <userinput>*</userinput>). If columns is defined in the configuration (for example <userinput>columns("id" "message")</userinput>), then the value of this variable will be a comma separated list (for example <userinput>"id,message"</userinput>).</para>
                 </listitem>
                 <listitem>
-                    <para><parameter>$fetch_limit</parameter>: Reach the value of the <parameter>log_fetch_limit</parameter> option.</para>
+                    <para><parameter>$fetch_limit</parameter>: Reach the value of the <parameter>log-fetch-limit()</parameter> option.</para>
                 </listitem>
             </itemizedlist>
             <example>
-                <title>SQL source fetch_query</title>
+                <title>SQL source fetch-query()</title>
                 <para>The following queries records that are older than the last record:</para>
                 <synopsis>SELECT * FROM $table WHERE $table.$uid > $last_read_uid ORDER BY $table.$uid</synopsis>
             </example>
@@ -1696,9 +1696,9 @@ program(filename);</synopsis>
     transport("tls")
     tls(
     peer-verify(required-trusted)
-    ca_dir('/opt/syslog-ng/etc/syslog-ng/keys/ca.d/')
-    key_file('/opt/syslog-ng/etc/syslog-ng/keys/server_privatekey.pem')
-    cert_file('/opt/syslog-ng/etc/syslog-ng/keys/server_certificate.pem')
+    ca-dir('/opt/syslog-ng/etc/syslog-ng/keys/ca.d/')
+    key-file('/opt/syslog-ng/etc/syslog-ng/keys/server_privatekey.pem')
+    cert-file('/opt/syslog-ng/etc/syslog-ng/keys/server_certificate.pem')
     )
     );};</synopsis>
         </example>
@@ -1768,7 +1768,7 @@ program(filename);</synopsis>
                         <entry>HP-UX</entry>
                         <entry>
                             <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?>
-                            <synopsis>pipe("/dev/log" pad_size(2048));</synopsis>
+                            <synopsis>pipe("/dev/log" pad-size(2048));</synopsis>
                         </entry>
                     </row>
                     <row>
@@ -1857,8 +1857,8 @@ program(filename);</synopsis>
             <para>A TCP source listening on a TLS-encrypted channel.</para>
             <synopsis>source s_tcp { tcp(ip(127.0.0.1) port(1999)
            tls(peer-verify('required-trusted')
-               key_file('/opt/syslog-ng/etc/syslog-ng/syslog-ng.key')
-           cert_file('/opt/syslog-ng/etc/syslog-ng/syslog-ng.crt')));
+               key-file('/opt/syslog-ng/etc/syslog-ng/syslog-ng.key')
+           cert-file('/opt/syslog-ng/etc/syslog-ng/syslog-ng.crt')));
 };</synopsis>
             <para>A TCP source listening for messages using the IETF-syslog message format. Note that for transferring IETF-syslog messages, generally you are recommended to use the <parameter>syslog()</parameter> driver on both the client and the server, as it uses both the IETF-syslog message format and the protocol. For details, see <xref linkend="configuring-sources-syslog"/>.</para>
             <synopsis>source s_tcp_syslog { tcp(ip(127.0.0.1) port(1999) flags(syslog-protocol) ); };</synopsis>
