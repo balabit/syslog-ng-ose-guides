@@ -277,18 +277,18 @@
         <indexterm>
             <primary>parameters</primary>
             <secondary>
-                <parameter>log_fetch_limit()</parameter>
+                <parameter>log-fetch-limit()</parameter>
             </secondary>
         </indexterm>
         <indexterm>
             <primary>parameters</primary>
             <secondary>
-                <parameter>log_fifo_size()</parameter>
+                <parameter>log-fifo-size()</parameter>
             </secondary>
         </indexterm>
         <para>This section describes the internal message-processing model of syslog-ng, as well as the flow-control feature that can prevent message losses. To use flow-control, the <parameter>flow-control</parameter> flag must be enabled for the particular log path.</para>
         <para>The syslog-ng application monitors (polls) the sources defined in its configuration file, periodically checking each source for messages. When a log message is found in one of the sources, syslog-ng polls every source and reads the available messages. These messages are processed and put into the output buffer of syslog-ng (also called fifo). From the output buffer, the operating system sends the messages to the appropriate destinations.</para>
-        <para>In large-traffic environments many messages can arrive during a single poll loop, therefore syslog-ng reads only a fixed number of messages from each source. The <parameter>log_fetch_limit()</parameter> option specifies the number of messages read during a poll loop from a single source.</para>
+        <para>In large-traffic environments many messages can arrive during a single poll loop, therefore syslog-ng reads only a fixed number of messages from each source. The <parameter>log-fetch-limit()</parameter> option specifies the number of messages read during a poll loop from a single source.</para>
         <figure>
             <title>Managing log messages in syslog-ng</title>
             <mediaobject>
@@ -301,23 +301,23 @@
             </mediaobject>
         </figure>
         <note>
-            <para>The <parameter>log_fetch_limit()</parameter> parameter can be set as a global option, or for every source individually.</para>
+            <para>The <parameter>log-fetch-limit()</parameter> parameter can be set as a global option, or for every source individually.</para>
         </note>
         <indexterm>
             <primary>output buffer</primary>
         </indexterm>
-        <para>Every destination has its own output buffer. The output buffer is needed because the destination might not be able to accept all messages immediately. The <parameter>log_fifo_size()</parameter> parameter sets the size of the output buffer. The output buffer must be larger than the <parameter>log_fetch_limit()</parameter> of the sources, to ensure that every message read during the poll loop fits into the output buffer. If the log path sends messages to a destination from multiple sources, the output buffer must be large enough to store the incoming messages of every source.</para>
-        <para>TCP and unix-stream sources can receive the logs from several incoming connections (for example many different clients or applications). For such sources, syslog-ng reads messages from every connection, thus the <parameter>log_fetch_limit()</parameter> parameter applies individually to every connection of the source.</para>
+        <para>Every destination has its own output buffer. The output buffer is needed because the destination might not be able to accept all messages immediately. The <parameter>log-fifo-size()</parameter> parameter sets the size of the output buffer. The output buffer must be larger than the <parameter>log-fetch-limit()</parameter> of the sources, to ensure that every message read during the poll loop fits into the output buffer. If the log path sends messages to a destination from multiple sources, the output buffer must be large enough to store the incoming messages of every source.</para>
+        <para>TCP and unix-stream sources can receive the logs from several incoming connections (for example many different clients or applications). For such sources, syslog-ng reads messages from every connection, thus the <parameter>log-fetch-limit()</parameter> parameter applies individually to every connection of the source.</para>
         <indexterm>
             <primary>parameters</primary>
             <secondary>
-                <parameter>log_iw_size()</parameter>
+                <parameter>log-iw-size()</parameter>
             </secondary>
         </indexterm>
         <indexterm>
             <primary>parameters</primary>
             <secondary>
-                <parameter>max_connections()</parameter>
+                <parameter>max-connections()</parameter>
             </secondary>
         </indexterm>
         <figure>
@@ -331,11 +331,11 @@
                 </imageobject>
             </mediaobject>
         </figure>
-        <para>The flow-control of syslog-ng introduces a control window to the source that tracks how many messages can syslog-ng accept from the source. Every message that syslog-ng reads from the source lowers the window size by one; every message that syslog-ng successfully sends from the output buffer increases the window size by one. If the window is full (that is, its size decreases to zero), syslog-ng stops reading messages from the source. The initial size of the control window is by default <userinput>1000</userinput>: the <parameter>log_fifo_size()</parameter> must be larger than this value in order for flow-control to have any effect. If a source accepts messages from multiple connections, all messages use the same control window.</para>
+        <para>The flow-control of syslog-ng introduces a control window to the source that tracks how many messages can syslog-ng accept from the source. Every message that syslog-ng reads from the source lowers the window size by one; every message that syslog-ng successfully sends from the output buffer increases the window size by one. If the window is full (that is, its size decreases to zero), syslog-ng stops reading messages from the source. The initial size of the control window is by default <userinput>1000</userinput>: the <parameter>log-fifo-size()</parameter> must be larger than this value in order for flow-control to have any effect. If a source accepts messages from multiple connections, all messages use the same control window.</para>
         <note>
-            <para>Starting with &abbrev; version <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.3</phrase>, if the source can handle multiple connections (for example, <parameter>tcp()</parameter>), the size of the control window is divided by the value of the <parameter>max_connections()</parameter> parameter and this smaller control window is applied to each connection of the source.</para>
+            <para>Starting with &abbrev; version <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.3</phrase>, if the source can handle multiple connections (for example, <parameter>tcp()</parameter>), the size of the control window is divided by the value of the <parameter>max-connections()</parameter> parameter and this smaller control window is applied to each connection of the source.</para>
         </note>
-        <para>When flow-control is used, every source has its own control window. As a worst-case situation, the output buffer of the destination must be set to accommodate all messages of every control window, that is, the <parameter>log_fifo_size()</parameter> of the destination must be greater than <userinput>number_of_sources</userinput>*<parameter>log_iw_size()</parameter>. This applies to every source that sends logs to the particular destination. Thus if two sources having several connections and heavy traffic send logs to the same destination, the control window of both sources must fit into the output buffer of the destination. Otherwise, syslog-ng does not activate the flow-control, and messages may be lost.</para>
+        <para>When flow-control is used, every source has its own control window. As a worst-case situation, the output buffer of the destination must be set to accommodate all messages of every control window, that is, the <parameter>log-fifo-size()</parameter> of the destination must be greater than <userinput>number_of_sources</userinput>*<parameter>log-iw-size()</parameter>. This applies to every source that sends logs to the particular destination. Thus if two sources having several connections and heavy traffic send logs to the same destination, the control window of both sources must fit into the output buffer of the destination. Otherwise, syslog-ng does not activate the flow-control, and messages may be lost.</para>
         <para>The syslog-ng application handles outgoing messages the following way:</para>
         <figure>
             <title>Handling outgoing messages in &abbrev;</title>
@@ -367,7 +367,7 @@
                     <primary>overflow queue</primary>
                     <secondary>output buffer</secondary>
                 </indexterm>
-                <para><emphasis>Overflow queue</emphasis>: If the output queue is full<phrase condition="pe"> and the disk buffer is disabled or full</phrase>, syslog-ng puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <parameter>log_fifo_size()</parameter> parameter specifies the number of messages stored in the overflow queue. For details on sizing the <parameter>log_fifo_size()</parameter> parameter, see <xref linkend="concepts-flow-control"/>.</para>
+                <para><emphasis>Overflow queue</emphasis>: If the output queue is full<phrase condition="pe"> and the disk buffer is disabled or full</phrase>, syslog-ng puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <parameter>log-fifo-size()</parameter> parameter specifies the number of messages stored in the overflow queue. For details on sizing the <parameter>log-fifo-size()</parameter> parameter, see <xref linkend="concepts-flow-control"/>.</para>
             </listitem>
         </itemizedlist>
         <para>There are two types of flow-control: Hard flow-control and soft flow-control.</para>
@@ -382,7 +382,7 @@
                     <title>Soft flow-control</title>
                     <synopsis>source s_file {file("/tmp/input_file.log");};
 destination d_file {file("/tmp/output_file.log");};
-destination d_tcp { tcp("127.0.0.1" port(2222) log_fifo_size(1000)); };
+destination d_tcp { tcp("127.0.0.1" port(2222) log-fifo-size(1000)); };
 log{ source(s_file); destination(d_file); destination(d_tcp);};
 </synopsis>
                  </example>
@@ -400,7 +400,7 @@ log{ source(s_file); destination(d_file); destination(d_tcp);};
                     <title>Hard flow-control</title>
                     <synopsis>source s_file {file("/tmp/input_file.log");};
 destination d_file {file("/tmp/output_file.log");};
-destination d_tcp { tcp("127.0.0.1" port(2222) log_fifo_size(1000)); };
+destination d_tcp { tcp("127.0.0.1" port(2222) log-fifo-size(1000)); };
 log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow_control);};
 </synopsis>
                 </example>
@@ -425,25 +425,25 @@ log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow_control)
             <indexterm>
                 <primary>parameters</primary>
                 <secondary>
-                    <parameter>log_fetch_limit()</parameter>
+                    <parameter>log-fetch-limit()</parameter>
                 </secondary>
             </indexterm>
             <indexterm>
                 <primary>parameters</primary>
                 <secondary>
-                    <parameter>log_fifo_size()</parameter>
+                    <parameter>log-fifo-size()</parameter>
                 </secondary>
             </indexterm>
             <indexterm>
                 <primary>parameters</primary>
                 <secondary>
-                    <parameter>log_iw_size()</parameter>
+                    <parameter>log-iw-size()</parameter>
                 </secondary>
             </indexterm>
             <indexterm>
                 <primary>parameters</primary>
                 <secondary>
-                    <parameter>max_connections()</parameter>
+                    <parameter>max-connections()</parameter>
                 </secondary>
             </indexterm>
             <indexterm>
@@ -452,19 +452,19 @@ log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow_control)
             <para>For details on how flow-control works, see <xref linkend="concepts-flow-control"/>. The summary of the main points is as follows:</para>
             <itemizedlist>
                 <listitem>
-                    <para>The syslog-ng application normally reads a maximum of <parameter>log_fetch_limit()</parameter> number of messages from a source.</para>
+                    <para>The syslog-ng application normally reads a maximum of <parameter>log-fetch-limit()</parameter> number of messages from a source.</para>
                 </listitem>
                 <listitem>
-                    <para>From TCP and unix-stream sources, syslog-ng reads a maximum of <parameter>log_fetch_limit()</parameter> from every connection of the source. The number of connections to the source is set using the <parameter>max_connections()</parameter> parameter.</para>
+                    <para>From TCP and unix-stream sources, syslog-ng reads a maximum of <parameter>log-fetch-limit()</parameter> from every connection of the source. The number of connections to the source is set using the <parameter>max-connections()</parameter> parameter.</para>
                 </listitem>
                 <listitem>
-                    <para>Every destination has an output buffer (<parameter>log_fifo_size()</parameter>).</para>
+                    <para>Every destination has an output buffer (<parameter>log-fifo-size()</parameter>).</para>
                 </listitem>
                 <listitem>
-                    <para>Flow-control uses a control window to determine if there is free space in the output buffer for new messages. Every source has its own control window; <parameter>log_iw_size()</parameter> parameter sets the size of the control window.</para>
+                    <para>Flow-control uses a control window to determine if there is free space in the output buffer for new messages. Every source has its own control window; <parameter>log-iw-size()</parameter> parameter sets the size of the control window.</para>
                 </listitem>
                 <listitem>
-                    <para>When a source accepts multiple connections, the size of the control window is divided by the value of the <parameter>max_connections()</parameter> parameter and this smaller control window is applied to each connection of the source.</para>
+                    <para>When a source accepts multiple connections, the size of the control window is divided by the value of the <parameter>max-connections()</parameter> parameter and this smaller control window is applied to each connection of the source.</para>
                 </listitem>
                 <listitem>
                     <para>The output buffer must be larger than the control window of every source that logs to the destination.</para>
@@ -478,7 +478,7 @@ log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow_control)
                 </listitem>
             </itemizedlist>
             <warning>
-                <para>If you modify the <parameter>max_connections()</parameter> or the <parameter>log_fetch_limit()</parameter> parameter, do not forget to adjust the <parameter>log_iw_size()</parameter> and <parameter>log_fifo_size()</parameter> parameters accordingly.</para>
+                <para>If you modify the <parameter>max-connections()</parameter> or the <parameter>log-fetch-limit()</parameter> parameter, do not forget to adjust the <parameter>log-iw-size()</parameter> and <parameter>log-fifo-size()</parameter> parameters accordingly.</para>
             </warning>
             <example>
                 <title>Sizing parameters for flow-control</title>
@@ -490,20 +490,20 @@ log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow_control)
                     <primary>flow-control</primary>
                     <secondary>example</secondary>
                 </indexterm>
-                <para>Suppose that syslog-ng has a source that must accept up to 300 parallel connections. Such situation can arise when a network source receives connections from many clients, or if many applications log to the same socket. Therefore, set the <parameter>max_connections()</parameter> parameter of the source to <userinput>300</userinput>. However, the <parameter>log_fetch_limit()</parameter> (default value: 10) parameter applies to every connection of the source individually, while the <parameter>log_iw_size()</parameter> (default value: 1000) parameter applies to the source. In a worst-case scenario, the destination does not accept any messages, while all 300 connections send at least <parameter>log_fetch_limit()</parameter> number of messages to the source during every poll loop. Therefore, the control window must accommodate at least <parameter>max_connections()</parameter>*<parameter>log_fetch_limit()</parameter> messages to be able to read every incoming message of a poll loop. In the current example this means that (<parameter>log_iw_size()</parameter> should be greater than <userinput>300*10=3000</userinput>. If the control window is smaller than this value, the control window might fill up with messages from the first connections &mdash; causing syslog-ng to read only one message of the last connections in every poll loop. </para>
-                <para>The output buffer of the destination must accommodate at least <parameter>log_iw_size()</parameter> messages, but use a greater value: in the current example <userinput>3000*10=30000</userinput> messages. That way all incoming messages of ten poll loops fit in the output buffer. If the output buffer is full, syslog-ng does not read any messages from the source until some messages are successfully sent to the destination.</para>
+                <para>Suppose that syslog-ng has a source that must accept up to 300 parallel connections. Such situation can arise when a network source receives connections from many clients, or if many applications log to the same socket. Therefore, set the <parameter>max-connections()</parameter> parameter of the source to <userinput>300</userinput>. However, the <parameter>log-fetch-limit()</parameter> (default value: 10) parameter applies to every connection of the source individually, while the <parameter>log-iw-size()</parameter> (default value: 1000) parameter applies to the source. In a worst-case scenario, the destination does not accept any messages, while all 300 connections send at least <parameter>log-fetch-limit()</parameter> number of messages to the source during every poll loop. Therefore, the control window must accommodate at least <parameter>max-connections()</parameter>*<parameter>log-fetch-limit()</parameter> messages to be able to read every incoming message of a poll loop. In the current example this means that (<parameter>log-iw-size()</parameter> should be greater than <userinput>300*10=3000</userinput>. If the control window is smaller than this value, the control window might fill up with messages from the first connections &mdash; causing syslog-ng to read only one message of the last connections in every poll loop. </para>
+                <para>The output buffer of the destination must accommodate at least <parameter>log-iw-size()</parameter> messages, but use a greater value: in the current example <userinput>3000*10=30000</userinput> messages. That way all incoming messages of ten poll loops fit in the output buffer. If the output buffer is full, syslog-ng does not read any messages from the source until some messages are successfully sent to the destination.</para>
                 <synopsis>source s_localhost {
             tcp(ip(127.0.0.1) port(1999) max-connections(300)); };
 destination d_tcp {
-            tcp("10.1.2.3" port(1999); localport(999)); log_fifo_size(30000); };
+            tcp("10.1.2.3" port(1999); localport(999)); log-fifo-size(30000); };
 log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis>
-                <para>If other sources send messages to this destination, than the output buffer must be further increased. For example, if a network host with maximum <userinput>100</userinput> connections also logs into the destination, than increase the <parameter>log_fifo_size()</parameter> by <userinput>10000</userinput>.</para>
+                <para>If other sources send messages to this destination, than the output buffer must be further increased. For example, if a network host with maximum <userinput>100</userinput> connections also logs into the destination, than increase the <parameter>log-fifo-size()</parameter> by <userinput>10000</userinput>.</para>
                 <synopsis>source s_localhost {
             tcp(ip(127.0.0.1) port(1999) max-connections(300)); };
 source s_tcp {
             tcp(ip(192.168.1.5) port(1999) max-connections(100)); };
 destination d_tcp {
-            tcp("10.1.2.3" port(1999); localport(999)); log_fifo_size(40000); };
+            tcp("10.1.2.3" port(1999); localport(999)); log-fifo-size(40000); };
 log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis>
             </example>
             <para>For details, see also <xref linkend="parallel_connections"/>.</para>
