@@ -182,4 +182,40 @@
             </note>
         </step>
     </procedure>
+    
+    <section>
+        <title>Configuring log rotation</title>
+        <para>The &abbrev; application does not rotate logs by itself. To use &abbrev; for log rotation, consider the following approaches:</para>
+        <formalpara>
+            <title>Use logrotate together with &abbrev;:</title>
+            <para/>
+        </formalpara>
+        <itemizedlist>
+            <listitem><para>Ideal for workstations or when processing fewer logs.</para></listitem>
+            <listitem><para>It is included in most distributions by default.</para></listitem>
+            <listitem><para>Less scripting is required, you only have to configure logrotate correctly.</para></listitem>
+            <listitem><para>Requires frequent restart (&abbrev; must be reloaded/restarted when the files are rotated).</para></listitem>
+            <listitem><para>The statistics collected by &abbrev;, and the correlation information gathered with Pattern Database is lost with each restart.</para></listitem>
+        </itemizedlist>
+        <formalpara>
+            <title>Separate incoming logs based on time, host or other information:</title>
+            <para/>
+        </formalpara>
+        <itemizedlist>
+            <listitem><para>Ideal for central log servers, where regular restart of syslog-ng is unfavorable.</para></listitem>
+            <listitem><para>Requires shell scripts or cron jobs to remove old logs.</para></listitem>
+            <listitem><para>It can be done by using macros in the destination name (in the filename, directory name, or the database table name).</para></listitem>
+        </itemizedlist>
+       
+        <example>
+            <title>File destination for log rotation </title>
+            <para>Sample file destination to store incoming logs into directories based on host names and inside based on current year, month and day:</para>
+            <synopsis>destination d_sorted { file("/var/log/remote/${HOST}/${YEAR}_${MONTH}_${DAY}.log" create-dirs(yes)); };</synopsis>
+        </example>
+        <example>
+            <title>Command for cron for log rotation</title>
+            <para>Sample command for cron to remove files older than two weeks from the <filename>/var/log/remote</filename> directory:</para>
+            <synopsis>find /var/log/remote/ -daystart -mtime +14 -type f -exec rm {} \;</synopsis>
+        </example>
+    </section>
 </chapter>
