@@ -230,5 +230,45 @@
                 <para>You need to set up timezone information within your chroot as well. This usually means creating a symlink to <filename>/etc/localtime</filename>.</para>
                 </note>
             </step>
-        </procedure>
+    </procedure>
+    
+    <section>
+        <title>Configuring log rotation</title>
+        <para>The &abbrev; application does not rotate logs by itself. To use &abbrev; for log rotation, consider the following approaches:</para>
+        <formalpara>
+            <title>Use logrotate together with &abbrev;:</title>
+            <para/>
+        </formalpara>
+        <itemizedlist>
+            <listitem><para>Ideal for workstations or when processing fewer logs.</para></listitem>
+            <listitem><para>It is included in most distributions by default.</para></listitem>
+            <listitem><para>Less scripting is required, only <command>logrotate</command> has to be configured correctly.</para></listitem>
+            <listitem><para>Requires frequent restart (&abbrev; must be reloaded/restarted when the files are rotated).</para></listitem>
+            <listitem><para>The statistics collected by &abbrev;, and the correlation information gathered with Pattern Database is lost with each restart.</para></listitem>
+        </itemizedlist>
+        <formalpara>
+            <title>Separate incoming logs based on time, host or other information:</title>
+            <para/>
+        </formalpara>
+        <itemizedlist>
+            <listitem><para>Ideal for central log servers, where regular restart of &abbrev; is unfavorable.</para></listitem>
+            <listitem><para>Requires shell scripts or cron jobs to remove old logs.</para></listitem>
+            <listitem><para>It can be done by using macros in the destination name (in the filename, directory name, or the database table name).</para></listitem>
+        </itemizedlist>
+        <example>
+            <title>File destination for log rotation </title>
+            <para>This sample file destination configuration stores incoming logs in files that are named based on the current year, month and day, and places these files in directories that are named based on the hostname:</para>
+            <synopsis>destination d_sorted { file("/var/log/remote/${HOST}/${YEAR}_${MONTH}_${DAY}.log" create-dirs(yes)); };</synopsis>
+        </example>
+        <example condition="pe">
+            <title>Logstore destination for log rotation </title>
+            <para>This sample logstore destination configuration stores incoming logs in logstores that are named based on the current year, month and day, and places these logstores in directories that are named based on the hostname:</para>
+            <synopsis>destination d_logstore { logstore("/var/log/remote/${HOST}/${YEAR}_${MONTH}_${DAY}.lgs" compress(9) create-dirs(yes)); };</synopsis>
+        </example>
+        <example>
+            <title>Command for cron for log rotation</title>
+            <para>This sample command for <command>cron</command> removes files older than two weeks from the <filename>/var/log/remote</filename> directory:</para>
+            <synopsis>find /var/log/remote/ -daystart -mtime +14 -type f -exec rm {} \;</synopsis>
+        </example>
+    </section>
 </chapter>
