@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="configuring-destinations-smtp" condition="pe" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>Generating SMTP messages (e-mail) from logs</title>
+    <indexterm>
+        <primary>destination drivers</primary>
+        <secondary><parameter>smtp()</parameter> driver</secondary>
+    </indexterm>
+    <para>The destination is aimed at a fully controlled local, or near-local, trusted SMTP server. The goal is to send mail to trusted recipients, through a controlled channel. Therefore, the destination should implement only the bare minimum of what is required from a mail client, and not deal with mail delivery agent features. It hands mails over to an SMTP server, and that is all it does, therefore the resulting solution is as reliable as sending an e-mail in general. For example, &abbrev; does not verify whether the recipient exists.</para>
+    <para>The <parameter>smtp()</parameter> driver sends e-mail messages triggered by log messages. The <parameter>smtp()</parameter> driver uses SMTP, without needing external applications. You can customize the main fields of the e-mail, add extra headers, send the e-mail to multiple recipients, and so on.</para>
+    <para>The <parameter>subject()</parameter>, <parameter>body()</parameter>, and <parameter>header()</parameter> fields may include macros which get expanded in the e-mail. For more information on available macros see <xref linkend="reference-macros"/>. </para>
+    <para>The <parameter>smtp()</parameter> driver has the following required parameters: <parameter>from()</parameter>, <parameter>to()</parameter> or <parameter>bcc()</parameter>, <parameter>subject()</parameter>, and <parameter>body()</parameter>. For the list of available optional parameters, see <xref linkend="reference-destination-smtp"/>.</para>
+    <note>
+        <para>Windows platforms are not supported. Mark mode is not supported at all, if SMTP receives a mark message, it will drop the message.</para>
+    </note>
+    <synopsis>Declaration:
+        smtp(from() to() subject() body() options());</synopsis>
+            <example xml:id="example-destination-smtp">
+                <title>Using the smtp() driver</title>
+                <para>The following example defines an <parameter>smtp()</parameter> destination using only the required parameters.</para>
+                <synopsis>destination d_smtp {
+    smtp(
+        from("syslog-ng alert service" "noreply@example.com")
+        to("Admin #1" "admin1@example.com")
+        subject("[ALERT] Important log message of $LEVEL condition received from $HOST/$PROGRAM!")
+        body("Hi!\nThe syslog-ng alerting service detected the following important log message:\n $MSG\n-- \nsyslog-ng\n")
+    );
+};</synopsis>
+                <para>The following example sets some optional parameters as well.</para>
+                <synopsis>destination d_smtp {
+    smtp(
+        host("localhost")
+        port(25)
+        from("syslog-ng alert service" "noreply@example.com")
+        to("Admin #1" "admin1@example.com")
+        to("Admin #2" "admin2@example.com")
+        cc("Admin BOSS" "admin.boss@example.com")
+        bcc("Blind CC" "blindcc@example.com")
+        subject("[ALERT] Important log message of $LEVEL condition received from $HOST/$PROGRAM!")
+        body("Hi!\nThe syslog-ng alerting service detected the following important log message:\n $MSG\n-- \nsyslog-ng\n")
+        header("X-Program", "$PROGRAM")
+        );
+};</synopsis>
+            </example>
+            <example xml:id="example-destination-smtp-alerting">
+                <title>Simple e-mail alerting with the <parameter>smtp()</parameter> driver</title>
+                <para>The following example sends an e-mail alert if the eth0 network interface of the host is down.</para>
+                <synopsis>filter f_linkdown {
+    match("eth0: link down" value("MESSAGE"));
+};
+destination d_alert {
+    smtp(
+        host("localhost") port(25)
+        from("syslog-ng alert service" "syslog@localhost")
+        reply-to("Admins" "root@localhost")
+        to("Ennekem" "me@localhost")
+        subject("[SYSLOG ALERT]: eth0 link down")
+        body("Syslog received an alert:\n$MSG")
+        );
+};
+
+log {
+    source(s_local);
+    filter(f_linkdown);
+    destination(d_alert);
+};</synopsis>
+            </example>
+    <section xml:id="reference-destination-smtp">
+        <title>smtp() destination options</title>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary><parameter>smtp()</parameter> driver</secondary>
+        </indexterm>
+        <para>The <parameter>smtp()</parameter> sends e-mail messages using SMTP, without needing external applications. The <parameter>smtp()</parameter> destination has the following options:</para>
+        <simplesect xml:id="smtp-option-body">
+            <title>body()</title>
+            <indexterm type="parameter">
+                <primary>body()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>body()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>n/a</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The BODY field of the e-mail. You can also use macros in the string. Use <userinput>\n</userinput> to start a new line. For example:</para>
+            <synopsis>body("&abbrev; received the following alert from $HOST:\n$MSG")</synopsis>
+        </simplesect>
+        <simplesect xml:id="smtp-option-bcc">
+            <title>bcc()</title>
+            <indexterm type="parameter">
+                <primary>bcc()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>bcc()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>n/a</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The BCC recipient of the e-mail (contents of the BCC field). You can specify the e-mail address, or the name and the e-mail address. Set the <parameter>bcc()</parameter> option multiple times to send the e-mail to multiple recipients. For example:
+            <synopsis>bcc("admin@example.com")</synopsis> or
+            <synopsis>bcc("Admin" "admin@example.com")</synopsis> or <synopsis>bcc("Admin" "admin@example.com")
+bcc("Admin2" "admin2@example.com")</synopsis></para>
+        </simplesect>
+        <simplesect xml:id="smtp-option-cc">
+            <title>cc()</title>
+            <indexterm type="parameter">
+                <primary>cc()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>cc()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>n/a</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The CC recipient of the e-mail (contents of the CC field). You can specify the e-mail address, or the name and the e-mail address. Set the <parameter>cc()</parameter> option multiple times to send the e-mail to multiple recipients. For example:
+            <synopsis>cc("admin@example.com")</synopsis> or
+            <synopsis>cc("Admin" "admin@example.com")</synopsis> or <synopsis>cc("Admin" "admin@example.com")
+cc("Admin2" "admin2@example.com")</synopsis></para>
+        </simplesect>
+        <simplesect condition="pe">
+            <xi:include href="../../common/chunk/option-destination-diskbuffer.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect condition="pe">
+            <xi:include href="../../common/chunk/option-destination-frac-digits.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect xml:id="smtp-option-from">
+            <title>from()</title>
+            <indexterm type="parameter">
+                <primary>from()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>from()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>n/a</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The sender of the e-mail (contents of the FROM field). You can specify the e-mail address, or the name and the e-mail address. For example:
+            <synopsis>from("admin@example.com")</synopsis> or
+            <synopsis>from("Admin" "admin@example.com")</synopsis></para>
+            <para>If you specify the <parameter>from()</parameter> option multiple times, the last value will be used. Instead of the <parameter>from()</parameter> option, you can also use <parameter>sender()</parameter>, which is just an alias of the <parameter>from()</parameter> option.</para>
+        </simplesect>
+        <simplesect xml:id="smtp-option-header">
+            <title>header()</title>
+            <indexterm type="parameter">
+                <primary>header()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>header()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>n/a</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Adds an extra header to the e-mail with the specified name and content. The first parameter sets the name of the header, the second one its value. The value of the header can contain macros. Set the <parameter>header()</parameter> option multiple times to add multiple headers. For example:</para>
+            <synopsis>header("X-Program", "$PROGRAM")</synopsis>
+            <para>When using the header option, note the following points:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Do not use the <parameter>header()</parameter> option to set the values of headers that have dedicated options. Use it only to add extra headers.</para>
+                </listitem>
+                <listitem>
+                    <para>If you set the same custom header multiple times, only the first will be added to the e-mail, other occurrences will be ignored.</para>
+                </listitem>
+                <listitem>
+                    <para>It is not possible to set the DATE, Return-Path, Original-Recipient, Content-*, MIME-*, Resent-*, Received headers.</para>
+                </listitem>
+            </itemizedlist>
+        </simplesect>
+        <simplesect xml:id="smtp-option-host">
+            <title>host()</title>
+            <indexterm type="parameter">
+                <primary>host()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>host()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>hostname or IP address</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>n/a</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Hostname or IP address of the SMTP server.</para>
+            <note>
+                <para>If you specify <userinput>host="localhost"</userinput>, &abbrev; will use a socket to connect to the local SMTP server. Use <userinput>host="127.0.0.1"</userinput> to force TCP communication between &abbrev; and the local SMTP server.</para>
+            </note>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect xml:id="smtp-option-port">
+            <title>port()</title>
+            <indexterm type="parameter">
+                <primary>port()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>port()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>number</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>25</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The port number of the SMTP server.</para>
+        </simplesect>
+        <simplesect xml:id="smtp-option-reply-to">
+            <title>reply-to()</title>
+            <indexterm type="parameter">
+                <primary>reply-to()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>reply-to()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>n/a</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Replies of the recipient will be sent to this address (contents of the REPLY-TO field). You can specify the e-mail address, or the name and the e-mail address. Set the <parameter>reply-to()</parameter> option multiple times to send the e-mail to multiple recipients. For example:
+            <synopsis>reply-to("admin@example.com")</synopsis> or
+            <synopsis>reply-to("Admin" "admin@example.com")</synopsis> or <synopsis>reply-to("Admin" "admin@example.com")
+reply-to("Admin2" "admin2@example.com")</synopsis></para>
+        </simplesect>
+        <simplesect xml:id="smtp-option-retries">
+            <title>retries()</title>
+            <indexterm type="parameter">
+                <primary>retries()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>retries()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>number</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>3</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Number of times a message send operation is retried upon failure. </para>
+        </simplesect>
+        <simplesect xml:id="smtp-option-sender">
+            <title>sender()</title>
+            <indexterm type="parameter">
+                <primary>sender()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>sender()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>n/a</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> An alias for the <parameter>from()</parameter> option</para>
+        </simplesect>
+        <simplesect xml:id="smtp-option-subject">
+            <title>subject()</title>
+            <indexterm type="parameter">
+                <primary>subject()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>subject()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>n/a</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The SUBJECT field of the e-mail. You can also use macros. For example:</para>
+            <synopsis>subject("[SYSLOG ALERT]: Critical error message received from $HOST")</synopsis>
+            <para>If you specify the <parameter>subject()</parameter> option multiple times, the last value will be used.</para>
+        </simplesect>
+<!--
+        <simplesect>
+            <xi:include href="reference_common.xml" xpointer="xpointer(//simplesect[@id = 'destination_commonoption_throttle']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+-->
+        <simplesect condition="pe">
+            <xi:include href="../../common/chunk/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect condition="pe">
+            <xi:include href="../../common/chunk/option-destination-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect xml:id="smtp-option-to">
+            <title>to()</title>
+            <indexterm type="parameter">
+                <primary>to()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>to()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>localhost</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The recipient of the e-mail (contents of the TO field). You can specify the e-mail address, or the name and the e-mail address. Set the <parameter>to()</parameter> option multiple times to send the e-mail to multiple recipients. For example:
+            <synopsis>to("admin@example.com")</synopsis> or
+            <synopsis>to("Admin" "admin@example.com")</synopsis> or <synopsis>to("Admin" "admin@example.com")
+to("Admin2" "admin2@example.com")</synopsis></para>
+        </simplesect>
+    </section>
+    
+    <section>
+        <title>Error handling</title>
+        <para>If the connection fails, &abbrev; repeatedly attempts to reconnect in intervals specified in <parameter>time-reopen()</parameter>.</para>
+        <para>If the connection is successful, but the message is not accepted, &abbrev; attempts to resend the message N times regardless of the reject being a hard or a soft reject. The number of attempts is specified with the option <parameter>retries()</parameter>.</para>
+        <note>
+            <para>If the message was sent to two addresses and only one address fails, the retry will still apply for both addresses. The assumption is that the destination will be used with a local SMTP server acting as a relay, and the local server will handle all the edge cases. </para>
+        </note>
+        <para>Greylisting is not explicitly handled.</para>  
+    </section>
+</section>
