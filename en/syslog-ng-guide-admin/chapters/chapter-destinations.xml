@@ -25,7 +25,7 @@
         <title>A simple destination statement</title>
         <para>The following destination statement sends messages to the TCP port <userinput>1999</userinput> of the <userinput>10.1.2.3</userinput> host.</para>
         <synopsis>destination d_demo_tcp { tcp("10.1.2.3" port(1999)); };</synopsis>
-    <para>If name resolution is configured, the hostname of the target server can be used as well.</para>
+        <para>If name resolution is configured, the hostname of the target server can be used as well.</para>
         <synopsis>destination d_tcp { tcp("target_host" port(1999); localport(999)); };</synopsis>
     </example>
     <note>
@@ -133,14 +133,14 @@
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
+                        <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>number</entry>
                             </row>
                             <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>0</entry>
                             </row>
                         </tbody>
@@ -176,6 +176,102 @@
                 <xi:include href="../../common/chunk/option-destination-ts-format.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
         </section>
+    </section>
+
+    <section xml:id="configuring-destinations-graphite">
+        <title>Sending metrics to Graphite</title>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary>graphite()</secondary>
+        </indexterm>
+        <para>There are many ways to feed the Graphite template function with name value pairs. The syslog-ng CSV and PatternDB parsers (for details, see <xref linkend="syslog-ng-patterndb-using-parsers"/>) can parse log messages and generate name value pairs based on message content. The CSV parser (for details, see <xref linkend="csv-parser"/>) can be used for logs which have a constant field based structure, like the Apache web server access logs. The patterndb parser can parse information and can extract important fields from free form log messages, as long as patterns describing the log messages are available. Another way is to send JSON-based log messages (for details, see <xref linkend="json-parser"/>) to syslog-ng, like running a simple shell script collecting metrics and running it from cron regularly.</para>
+        <synopsis>Declaration:
+             graphite(payload() options());</synopsis>
+        <example xml:id="example-destination-graphite">
+            <title>Using the graphite() driver</title>
+            <para> To use the graphite() destination, the only mandatory parameter is payload, which specifies, which value pairs to send to graphite. In the following example any value pairs starting with "monitor." are forwarded to graphite.</para>
+            <synopsis>destination d_graphite { graphite(payload("--key monitor.*")); };</synopsis>
+        </example>
+        <note>
+            <para>The <parameter>graphite()</parameter> destination is only a wrapper around the <parameter>tcp()</parameter> destination and the <parameter>graphite-output</parameter> template function. If you want to fine-tune the TCP parameters, use the <parameter>tcp()</parameter> destination instead, as described in <xref linkend="template-function-graphite"/>.</para>
+        </note>
+        <section>
+            <title>graphite() destination options</title>
+        </section>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary><parameter>graphite()</parameter> driver</secondary>
+        </indexterm>
+        <para>The <parameter>graphite()</parameter> destination has the following options:</para>
+        <simplesect xml:id="graphite-option-host">
+            <title>host()</title>
+            <indexterm type="parameter">
+                <primary>host()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>hostname or IP address</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>localhost</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The hostname or IP address of the Graphite server.</para>
+        </simplesect>
+        <simplesect xml:id="graphite-option-port">
+            <title>port()</title>
+            <indexterm type="parameter">
+                <primary>port()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>number</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>2003</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The port number of the Graphite server.</para>
+        </simplesect>
+        <simplesect xml:id="graphite-option-payload">
+            <title>payload()</title>
+            <indexterm type="parameter">
+                <primary>payload()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>parameter list of the <parameter>payload()</parameter> option</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry><synopsis>empty string</synopsis></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The payload() option allows you to select which value pairs to forward to graphite. For details on using the payload() option, see <xref linkend="template-function-graphite"/>.</para>
+            <note>
+                <para>If left empty, there is no data to be forwarded to Graphite.</para>
+            </note>
+        </simplesect>
     </section>
 
     <xi:include href="destination-mongodb.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -244,14 +340,14 @@
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
+                        <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>number</entry>
                             </row>
                             <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>0600</entry>
                             </row>
                         </tbody>
@@ -376,9 +472,9 @@
         <indexterm>
             <primary>sql destinations</primary>
         </indexterm>
-       <para>The <parameter>sql()</parameter> driver sends messages into an SQL database. Currently the Microsoft SQL (MSSQL), MySQL, Oracle, PostgreSQL, and SQLite databases are supported.</para>
-                <!-- FIXME ezt valahogy visszarakni -->
-<!--            <para>The <parameter>sql()</parameter> driver has the following required parameters:</para>
+        <para>The <parameter>sql()</parameter> driver sends messages into an SQL database. Currently the Microsoft SQL (MSSQL), MySQL, Oracle, PostgreSQL, and SQLite databases are supported.</para>
+        <!-- FIXME ezt valahogy visszarakni -->
+        <!--            <para>The <parameter>sql()</parameter> driver has the following required parameters:</para>
             <simplesect>
                     <xi:include href="chapter_reference.xml" xpointer="xpointer(//simplesect[@id = 'sql_option_type']/node() )" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
@@ -456,7 +552,7 @@
                     <para>If the <filename>tnsnames.ora</filename> file is not located in the /etc directory (or in the /var/opt/oracle directory on Solaris), set the following Oracle-related environment variables, so &abbrev; will find the file: <parameter>ORACLE_BASE</parameter>, <parameter>ORACLE_HOME</parameter>, and <parameter>ORACLE_SID</parameter>. For details, see the documentation of the Oracle Instant Client.</para>
                 </listitem>
                 <listitem>
-                    <para>You cannot use the same <parameter>database()</parameter> settings in more than one destination, because the <parameter>database()</parameter> option of the SQL driver is just a reference to the connection string of the <filename>tnsnames.ora</filename> file.  To overcome this problem, you can duplicate the connections in the <filename>tnsnames.ora</filename> file under a different name, and use a different table in each Oracle destination in &abbrev;.</para>
+                    <para>You cannot use the same <parameter>database()</parameter> settings in more than one destination, because the <parameter>database()</parameter> option of the SQL driver is just a reference to the connection string of the <filename>tnsnames.ora</filename> file. To overcome this problem, you can duplicate the connections in the <filename>tnsnames.ora</filename> file under a different name, and use a different table in each Oracle destination in &abbrev;.</para>
                 </listitem>
                 <listitem>
                     <para>As certain database versions limit the maximum length of table names, macros in the table names should be used with care.</para>
@@ -551,7 +647,7 @@
                     <secondary>sql() configuration</secondary>
                 </indexterm>
                 <para>The following example sends the log messages into an MSSQL database running on the <userinput>logserver</userinput> host. The messages are inserted into the <userinput>syslogng</userinput> database, the name of the table includes the exact date when the messages were sent. The syslog-ng application automatically creates the required tables and columns, if the user account used to connect to the database has the required privileges.</para>
-                    <synopsis>destination d_mssql {
+                <synopsis>destination d_mssql {
 sql(type(mssql) host("logserver") port("1433")
   username("syslogng") password("syslogng") database("syslogng")
   table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")columns("datetime varchar(16)", "host varchar(32)",
@@ -661,8 +757,8 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             <section>
                 <title>MsSQL-specific interaction methods</title>
                 <para>In SQL Server 2005 this restriction is lifted - kind of. The total length of all key columns in an index cannot exceed 900 bytes.</para>
-            <para>If you are using <parameter>null()</parameter> in your configuration, be sure that the columns allow <parameter>NULL</parameter> to insert. Give the column as the following example: <userinput>"datetime varchar(16) NULL"</userinput>.</para>
-            <para>The date format used by the MSSQL database must be explicitly set in the <filename>/etc/locales.conf</filename> file of the syslog-ng server. <userinput>[default] date = "%Y-%m-%d %H:%M:%S"</userinput>.</para>
+                <para>If you are using <parameter>null()</parameter> in your configuration, be sure that the columns allow <parameter>NULL</parameter> to insert. Give the column as the following example: <userinput>"datetime varchar(16) NULL"</userinput>.</para>
+                <para>The date format used by the MSSQL database must be explicitly set in the <filename>/etc/locales.conf</filename> file of the syslog-ng server. <userinput>[default] date = "%Y-%m-%d %H:%M:%S"</userinput>.</para>
             </section>
         </section>
         <section xml:id="reference-destination-sql">
@@ -683,14 +779,14 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
+                        <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>string list</entry>
                             </row>
                             <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>"date", "facility", "level", "host", "program", "pid", "message"</entry>
                             </row>
                         </tbody>
@@ -709,16 +805,14 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
+                        <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                                <entry>Type:
-                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>string</entry>
                             </row>
                             <row>
-                                <entry>Default:
-                                    <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>empty string</entry>
                             </row>
                         </tbody>
@@ -738,14 +832,14 @@ dbd-option("null.sleep.query" 5)</synopsis>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
+                        <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>list of flags</entry>
                             </row>
                             <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>empty string</entry>
                             </row>
                         </tbody>
@@ -791,14 +885,14 @@ dbd-option("null.sleep.query" 5)</synopsis>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
+                        <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>string list</entry>
                             </row>
                             <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>"date", "facility", "host", "program"</entry>
                             </row>
                         </tbody>
@@ -816,7 +910,7 @@ dbd-option("null.sleep.query" 5)</synopsis>
                 </itemizedlist>
             </simplesect>
             <simplesect>
-                    <xi:include href="../../common/chunk/option-destination-local-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                <xi:include href="../../common/chunk/option-destination-local-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -828,14 +922,14 @@ dbd-option("null.sleep.query" 5)</synopsis>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
+                        <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>string</entry>
                             </row>
                             <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry/>
                             </row>
                         </tbody>
@@ -878,7 +972,7 @@ dbd-option("null.sleep.query" 5)</synopsis>
             </simplesect>
             <simplesect xml:id="sql-option-password">
                 <xi:include href="../../common/chunk/option-sql-password.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </simplesect>
+            </simplesect>
             <simplesect xml:id="sql-option-port">
                 <xi:include href="../../common/chunk/option-sql-port.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
@@ -896,11 +990,11 @@ dbd-option("null.sleep.query" 5)</synopsis>
                         <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>number</entry>
                             </row>
                             <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>3</entry>
                             </row>
                         </tbody>
@@ -915,14 +1009,14 @@ dbd-option("null.sleep.query" 5)</synopsis>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
+                        <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>comma-separated list of SQL statements</entry>
                             </row>
                             <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>empty string</entry>
                             </row>
                         </tbody>
@@ -941,14 +1035,14 @@ dbd-option("null.sleep.query" 5)</synopsis>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
+                        <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>string</entry>
                             </row>
                             <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>messages</entry>
                             </row>
                         </tbody>
@@ -966,14 +1060,14 @@ dbd-option("null.sleep.query" 5)</synopsis>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
+                        <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>mssql, mysql, oracle, pgsql, or sqlite3</entry>
                             </row>
                             <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>mysql</entry>
                             </row>
                         </tbody>
@@ -991,15 +1085,15 @@ dbd-option("null.sleep.query" 5)</synopsis>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
+                        <colspec colnum="1" colwidth="40pt"/>
                         <tbody>
                             <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
                                 <entry>string list</entry>
                             </row>
                             <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>"${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}", "${FACILITY}", "${LEVEL}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}"</entry>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                                <entry>"${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}", "${FACILITY}", "${LEVEL}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}"</entry>
                             </row>
                         </tbody>
                     </tgroup>
@@ -1033,7 +1127,7 @@ dbd-option("null.sleep.query" 5)</synopsis>
         <para>The <parameter>udp</parameter> transport method automatically sends multicast packets if a multicast destination address is specified. The <parameter>tcp</parameter> and <parameter>tls</parameter> methods do not support multicasting.</para>
         <note>
             <para>The default ports for the different transport protocols are as follows: UDP &mdash; 514; TLS &mdash; 6514.</para>
-                <!-- FIXME mi a syslog-TCP default portja? -->
+            <!-- FIXME mi a syslog-TCP default portja? -->
         </note>
         <example xml:id="example-destination-syslog">
             <title>Using the syslog() driver</title>
@@ -1094,9 +1188,9 @@ dbd-option("null.sleep.query" 5)</synopsis>
             <title>Using the tcp() driver</title>
             <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999) localport(999)); };</synopsis>
             <para>If name resolution is configured, the hostname of the target server can be used as well.</para>
-                <synopsis>destination d_tcp { tcp("target_host" port(1999) localport(999)); };</synopsis>
-                <para>To send messages using the IETF-syslog message format without using the IETF-syslog protocol, enable the <parameter>syslog-protocol</parameter> flag:</para>
-                <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999) flags(syslog-protocol) ); };</synopsis>
+            <synopsis>destination d_tcp { tcp("target_host" port(1999) localport(999)); };</synopsis>
+            <para>To send messages using the IETF-syslog message format without using the IETF-syslog protocol, enable the <parameter>syslog-protocol</parameter> flag:</para>
+            <synopsis>destination d_tcp { tcp("10.1.2.3" port(1999) flags(syslog-protocol) ); };</synopsis>
             <para>(For details on how to use the IETF-syslog protocol, see <xref linkend="reference-destination-syslog-chapter"/>.)</para>
             <para>Using an IPv6 address:</para>
             <synopsis>tcp6("fd00:abcd:4321:2:20c:29ff:fea8:9671" port(514));</synopsis>
@@ -1284,7 +1378,7 @@ dbd-option("null.sleep.query" 5)</synopsis>
                 <xi:include href="../../common/chunk/option-destination-ts-format.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
         </section>
-     </section>
+    </section>
     <section xml:id="reference-destination-usertty">
         <title>Sending messages to a user terminal &mdash; usertty() destination</title>
         <indexterm>
