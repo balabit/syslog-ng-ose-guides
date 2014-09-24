@@ -1026,6 +1026,52 @@ program(filename);</synopsis>
         <note>
             <para><parameter>syslogd</parameter> on Linux originally used <parameter>SOCK_STREAM</parameter> sockets, but some distributions switched to <parameter>SOCK_DGRAM</parameter> around 1999 to fix a possible DoS problem. On Linux you can choose to use whichever driver you like as syslog clients automatically detect the socket type being used. </para>
         </note>
+        <example xml:id="example-source-unixstream">
+            <title>Using the unix-stream() and unix-dgram() drivers</title>
+            <synopsis>source s_stream { unix-stream("/dev/log" max-connections(10)); };</synopsis>
+            <synopsis>source s_dgram { unix-dgram("/var/run/log"); };</synopsis>
+        </example>
+        <section xml:id="unixstream-unix-credentials" condition="ose">
+			<title>UNIX credentials and other metadata</title>
+			<indexterm>
+				<primary>UNIX credentials</primary>
+			</indexterm>
+			<para>Starting with &version; <phrase condition="ose">3.6</phrase>, the <parameter>unix-stream()</parameter> and <parameter>unix-dgram()</parameter> sources automatically extract the available UNIX credentials and other metainformation from the received log messages. The &abbrev; application can extract the following information on Linux and FreeBSD platforms (examples show the value of the macro for the <userinput>su - myuser</userinput> command):</para>
+			<table>
+				<title>UNIX credentials available via UNIX domain sockets</title>
+				<tgroup cols="2">
+			        <thead>
+			            <row>
+			                <entry align="center">Macro</entry>
+			                <entry align="center">Description</entry>
+			            </row>
+			        </thead>
+			        <tbody>
+			            <row>
+			                <entry><parameter>${.unix.cmdline}</parameter></entry>
+			                <entry>The name (without the path) and command-line options of the executable belonging to the PID that sent the message. For example, <userinput>su - myuser</userinput></entry>
+			            </row>
+			            <row>
+			                <entry><parameter>${.unix.exe}</parameter></entry>
+			                <entry>The path of the executable belonging to the PID that sent the message. For example, <userinput>/usr/bin/su</userinput></entry>
+			            </row>
+			            <row>
+			                <entry><parameter>${.unix.gid}</parameter></entry>
+			                <entry>The group ID (GID) corresponding to the UID of the application that sent the log message. Note that this is the ID number of the group, not its human-readable name. For example, <userinput>0</userinput></entry>
+			            </row>
+			            <row>
+			                <entry><parameter>${.unix.pid}</parameter></entry>
+			                <entry><para>The process ID (PID) of the application that sent the log message. For example, <userinput>774</userinput>.</para>
+			                <para>Note that on every UNIX platforms, if the <parameter>system()</parameter> source uses sockets, it will overwrite the PID macro with the value of <parameter>${.unix.pid}</parameter>, if it is available.</para></entry>
+			            </row>
+			            <row>
+			                <entry><parameter>${.unix.uid}</parameter></entry>
+			                <entry>The user ID (UID) of the application that sent the log message. Note that this is the ID number of the user, not its human-readable name. For example, <userinput>0</userinput></entry>
+			            </row>
+			        </tbody>
+			    </tgroup>
+			</table>
+		</section>
         <!-- FIXME a correct comparison should be added, based on info from Geller Sanyi:
         a unix-dgram nagyjabol minden szempontbol jobb:
         (nem kell 1 fd per kliens, a tevhittel ellentetben nem veszit uzeneteket, blokkolodik a hivo ugyanugy, mint a stream eseteben, megtartja az uzenetek sorrendjet tobb kuldo kozott, 1 read() eleg egy teljes uzenet beolvasasahoz)
@@ -1059,11 +1105,6 @@ program(filename);</synopsis>
         </itemizedlist>
         <para>However, the client does not notice if a message is lost when using the unix-dgram
             driver.</para>-->
-        <example xml:id="example-source-unixstream">
-            <title>Using the unix-stream() and unix-dgram() drivers</title>
-            <synopsis>source s_stream { unix-stream("/dev/log" max-connections(10)); };</synopsis>
-            <synopsis>source s_dgram { unix-dgram("/var/run/log"); };</synopsis>
-        </example>
         <section xml:id="reference-source-unixstream">
             <title>unix-stream() and unix-dgram() source options</title>
             <indexterm>
