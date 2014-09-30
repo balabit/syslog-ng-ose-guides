@@ -346,6 +346,61 @@ rewrite &lt;name_of_the_rule&gt; {
 };</synopsis>
             </example>
         </section>
+        <section xml:id="rewrite-groupset">
+            <title>Setting multiple message fields to specific values</title>
+            <indexterm>
+                <primary>setting message fields</primary>
+                <secondary>setting multiple fields</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>groupset()</primary>
+            </indexterm>
+            <para>The <parameter>groupset()</parameter> rewrite rule allows you to modify the value of multiple message fields at once, for example, to change the value of sensitive fields extracted using patterndb, or received in a JSON format.</para>
+            <itemizedlist>
+				<listitem>
+					<para>The first parameter is the new value of the modified fields. This can be a simple string, a macro, or a template (which can include template functions as well).</para>
+				</listitem>
+				<listitem>
+					<para>The second parameter (<parameter>values()</parameter>) specifies the fields to modify. You can explicitly list the macros or fields (a space-separated list with the values enclosed in double-quotes), or use wildcards and glob expressions to select multiple fields.</para>
+				</listitem>
+				<listitem>
+					<para>Note that <parameter>groupset()</parameter> does not create new fields, it only modifies existing fields.</para>
+				</listitem>
+				<listitem>
+					<para>You can refer to the old value of the field using the <parameter>$_</parameter> macro. This is resolved to the value of the current field, and is available only in <parameter>groupset()</parameter> rules.</para>
+				</listitem>
+			</itemizedlist>
+			<synopsis>Declaration:
+rewrite &lt;name_of_the_rule&gt; {
+    groupset("&lt;new-value-of-the-fields&gt;", values("&lt;field-name-or-glob&gt;" ["&lt;another-field-name-or-glob&gt;"]));
+};</synopsis>
+			<example xml:id="rewrite-groupset-examples">
+				<title>Using groupset rewrite rules</title>
+				<para>The following examples show how to change the values of multiple fields at the same time.</para>
+				<itemizedlist>
+					<listitem>
+						<para>Change the value of the <parameter>HOST</parameter> field to <parameter>myhost</parameter>.</para>
+						<synopsis>groupset ("myhost" values("HOST"))</synopsis>
+					</listitem>
+					<listitem>
+						<para>Change the value of the <parameter>HOST</parameter> and <parameter>FULLHOST</parameter> fields to <parameter>myhost</parameter>.</para>
+						<synopsis>groupset ("myhost" values("HOST" "FULLHOST"))</synopsis>
+					</listitem>
+					<listitem>
+						<para>Change the value of the <parameter>HOST</parameter> <parameter>FULLHOST</parameter> and fields to lowercase.</para>
+						<synopsis>groupset ("$(lowercase "$_")" values("HOST" "FULLHOST"))</synopsis>
+					</listitem>
+					<listitem>
+						<para>Change the value of each field and macro that begins with <parameter>.USER</parameter> to <parameter>nobody</parameter>.</para>
+						<synopsis>groupset ("nobody" values(".USER.*"))</synopsis>
+					</listitem>
+					<listitem>
+						<para>Change the value of each field and macro that begins with <parameter>.USER</parameter> to its SHA-1 hash (truncated to 6 characters).</para>
+						<synopsis>groupset ("$(sha1 --length 6 $_)" values(".USER.*"))</synopsis>
+					</listitem>
+				</itemizedlist>
+			</example>
+        </section>
         <section xml:id="conditional-rewrite">
             <title>Conditional rewrites</title>
             <indexterm type="parameter">
