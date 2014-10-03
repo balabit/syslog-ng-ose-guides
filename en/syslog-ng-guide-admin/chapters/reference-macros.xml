@@ -352,34 +352,57 @@
         <indexterm type="parameter">
             <primary>${SEQNUM}</primary>
         </indexterm>
-        <para><emphasis role="bold">Description:</emphasis> The sequence number of the message is a unique identifier of the message between the end-points. The syslog-ng client calculates this number when processing a new message from a local source; it is not calculated for relayed messages. The sequence number increases for every message, and is not lost even if syslog-ng is reloaded. The sequence number starts again from 0 when &abbrev; is restarted. The sequence number is a part of every message that uses the new IETF-syslog protocol (<userinput>${.SDATA.meta.sequenceId}</userinput>), and can be added to BSD-syslog messages using this macro.</para>
         <indexterm>
             <primary>sequence ID</primary>
         </indexterm>
-        <para condition="pe">If &abbrev; receives a message via the IETF-syslog protocol that includes a sequence ID, this ID is automatically available in the <parameter>${SEQNUM}</parameter> macro.</para>
-        <indexterm>
-            <primary>Cisco timestamp</primary>
-        </indexterm>
-        <indexterm>
-            <primary>Cisco sequence number</primary>
-        </indexterm>
-        <indexterm>
-            <primary>sequence number</primary>
-        </indexterm>
-        <indexterm>
-            <primary>sequence number</primary>
-            <secondary>Cisco</secondary>
-        </indexterm>
-        <indexterm>
-            <primary>message</primary>
-            <secondary>ID</secondary>
-        </indexterm>
-        <indexterm>
-            <primary>extended timestamp format</primary>
-        </indexterm>
-        <para>&abbrev; versions <phrase condition="pe">3.2</phrase><phrase condition="ose">3.4</phrase> and later versions store the sequence number from Cisco IOS log messages using the extended timestamp format in this macro. If this message is then forwarded using the IETF-syslog protocol, &abbrev; includes the sequence number received from the Cisco device in the <userinput>${.SDATA.meta.sequenceId}</userinput> part of the message.</para>
+        <para><emphasis role="bold">Description:</emphasis> The <parameter>${SEQNUM}</parameter> macro contains a sequence number for the log message. The value of the macro depends on the scenario, and can be one of the following:</para>
+        <itemizedlist>
+            <listitem>
+                <para>If &abbrev; receives a message via the IETF-syslog protocol that includes a sequence ID, this ID is automatically available in the <parameter>${SEQNUM}</parameter> macro.</para>
+            </listitem>
+            <listitem>
+                <indexterm>
+                    <primary>Cisco timestamp</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>Cisco sequence number</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>sequence number</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>sequence number</primary>
+                    <secondary>Cisco</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>message</primary>
+                    <secondary>ID</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>extended timestamp format</primary>
+                </indexterm>
+                <para>If the message is a Cisco IOS log message using the extended timestamp format, then &abbrev; stores the sequence number from the message in this macro. If you forward this message the IETF-syslog protocol, &abbrev; includes the sequence number received from the Cisco device in the <userinput>${.SDATA.meta.sequenceId}</userinput> part of the message.</para>
+                <note>
+                    <para>To enable sequence numbering of log messages on Cisco devices, use the following command on the device (available in IOS 10.0 and later): <command>service sequence-numbers</command>. For details, see the manual of your Cisco device.</para>
+                </note>
+            </listitem>
+            <listitem>
+                <para>For locally generated messages (that is, for messages that are received from a local source, and not from the network), &abbrev; calculates a sequence number when sending the message to a destination (it is not calculated for relayed messages).</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>The sequence number is not global, but per-destination. Essentially, it counts the number of messages sent to the destination.</para>
+                    </listitem>
+                    <listitem>
+                        <para>This sequence number increases by one for every message sent to the destination, and is not lost even when &abbrev; is reloaded or restarted.</para>
+                    </listitem>
+                    <listitem>
+                        <para>This sequence number is added to every message that uses the IETF-syslog protocol (<userinput>${.SDATA.meta.sequenceId}</userinput>), and can be added to BSD-syslog messages using the <parameter>${SEQNUM}</parameter> macro.</para>
+                    </listitem>
+                </itemizedlist>
+            </listitem>
+        </itemizedlist>
         <note>
-            <para>To enable sequence numbering of log messages on Cisco devices, use the following command on the device (available in IOS 10.0 and later): <command>service sequence-numbers</command>. For details, see the manual of your Cisco device.</para>
+            <para>If you need a sequence number for every log message that &abbrev; receives, use the <link linkend="macro-rcptid">RCPTID</link> macro.</para>
         </note>
     </simplesect>
     <simplesect xml:id="macro-source">
