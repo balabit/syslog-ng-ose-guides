@@ -3,7 +3,7 @@
  [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
  %entities;]>
 <section xml:id="csv-parser" xmlns="http://docbook.org/ns/docbook" version="5.0">
-    <title>Parsing messages</title>
+    <title>Parsing messages with comma-separated and similar values</title>
     <indexterm>
         <primary>segmenting messages</primary>
     </indexterm>
@@ -13,23 +13,23 @@
     <indexterm>
         <primary>CSV-values</primary>
     </indexterm>
-    <para>The syslog-ng application can separate parts of log messages (that is, the contents of the $MSG macro) to named fields (columns). These fields act as user-defined macros that can be referenced in message templates, file- and tablenames, and so on. </para>
-    <para>Parsers are similar to filters: they must be defined in the syslog-ng configuration file and used in the log statement.</para>
+    <para>The &abbrev; application can separate parts of log messages (that is, the contents of the $MSG macro) at delimiter characters to named fields (columns). One way to achieve this is to use a csv (comma-separated-values) parser (for other methods and possibilities, see the other sections of <xref linkend="chapter-parser"/>. The parsed fields act as user-defined macros that can be referenced in message templates, file- and tablenames, and so on. </para>
+    <para>Parsers are similar to filters: they must be defined in the &abbrev; configuration file and used in the log statement.</para>
     <!-- FIXME parsert/rewriteot is lehet inline definialni? -->
     <note>
         <para>The order of filters, rewriting rules, and parsers in the log statement is important, as they are processed sequentially. <!-- FIXME bovebben, peldaval, filterekhez/rewrite sectionbe is --></para>
     </note>
-    <para>To create a parser, define the columns of the message, the delimiter or separator characters (for example, semicolon or tabulator), and optionally the characters that are used to escape the delimiter characters (quote-pairs). For the list of parser parameters, see <xref linkend="reference-parsers-csv"/>.</para>
+    <para>To create a <parameter>csv-parser()</parameter>, you have to define the columns of the message, the delimiter or separator characters (for example, semicolon or tabulator), and optionally the characters that are used to escape the delimiter characters (quote-pairs). For the list of parser parameters, see <xref linkend="reference-parsers-csv"/>.</para>
     <synopsis>Declaration:
-        parser parser_name {
+        parser &lt;parser_name&gt; {
             csv-parser(
             columns(column1, column2, ...)
             delimiters()
             quote-pairs()
             );
         };</synopsis>
-    <para>Column names work like macros. Always use a prefix to identify the columns of the parsers, for example <userinput>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</userinput>, and so on. Column names starting with a dot (for example <userinput>.HOST</userinput>) are reserved for use by syslog-ng.</para>
-    <example xml:id="example-parser">
+    <para>Column names work like macros. Always use a prefix to identify the columns of the parsers, for example <userinput>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</userinput>, and so on. Column names starting with a dot (for example <userinput>.HOST</userinput>) are reserved for use by &abbrev;.</para>
+    <example xml:id="example-csv-parser">
         <title>Segmenting hostnames separated with a dash</title>
         <para>The following example separates hostnames like <userinput>example-1</userinput> and <userinput>example-2</userinput> into two parts.</para>
         <synopsis>parser p_hostname_segmentation {
@@ -64,18 +64,16 @@ log { source(s_local); parser(p_hostname_segmentation); destination(d_file);};</
 };
 destination d_file { file("/var/log/messages-${APACHE.USER_NAME:-nouser}"); };</synopsis>
     </example>
-    <para>Multiple parsers can be used to split a part of an already parsed message into further segments.</para>
     <example xml:id="example-parser-multiple">
         <title>Segmenting a part of a message</title>
-        <para>The following example splits the timestamp of a parsed Apache log message into separate fields.</para>
+        <para>Multiple parsers can be used to split a part of an already parsed message into further segments. The following example splits the timestamp of a parsed Apache log message into separate fields.</para>
         <synopsis>parser p_apache_timestamp {
     csv-parser(columns("APACHE.TIMESTAMP.DAY", "APACHE.TIMESTAMP.MONTH", "APACHE.TIMESTAMP.YEAR", "APACHE.TIMESTAMP.HOUR", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.ZONE")
     delimiters("/: ")
     flags(escape-none)
     template("${APACHE.TIMESTAMP}"));
     };
-log { source(s_local);
-    log { parser(p_apache); parser(p_apache_timestamp); destination(d_file);};
+log { source(s_local); parser(p_apache); parser(p_apache_timestamp); destination(d_file);
 };</synopsis>
     </example>
     <formalpara>
@@ -98,21 +96,25 @@ log { source(s_local);
         <indexterm>
             <primary>splitting messages</primary>
         </indexterm>
-        <para>The syslog-ng application can separate parts of log messages (that is, the contents of the ${MSG} macro) to named fields (columns). These fields act as user-defined macros that can be referenced in message templates, file- and tablenames, and so on. </para>
-        <para>To create a parser, define the columns of the message, the delimiter or separator characters, and optionally the characters that are used to escape the delimiter characters (quote-pairs).</para>
+        <para>The &abbrev; application can separate parts of log messages (that is, the contents of the $MSG macro) at delimiter characters to named fields (columns). One way to achieve this is to use a csv (comma-separated-values) parser (for other methods and possibilities, see the other sections of <xref linkend="chapter-parser"/>.</para>
+        <para>To create a <parameter>csv-parser()</parameter>, you have to define the columns of the message, the delimiter or separator characters (for example, semicolon or tabulator), and optionally the characters that are used to escape the delimiter characters (quote-pairs).</para>
+        <indexterm>
+            <primary>csv-parser()</primary>
+        </indexterm>
         <synopsis>Declaration:
-    parser parser_name {
+    parser &lt;parser_name&gt; {
         csv-parser(
         columns(column1, column2, ...)
         delimiters()
         quote-pairs()
         );
     };</synopsis>
-        <para>Column names work like macros. Always use a prefix to identify the columns of the parsers, for example <userinput>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</userinput>, and so on. Column names starting with a dot (for example <userinput>.HOST</userinput>) are reserved for use by syslog-ng. </para>
+        <para>Column names work like macros. Always use a prefix to identify the columns of the parsers, for example <userinput>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</userinput>, and so on. Column names starting with a dot (for example <userinput>.HOST</userinput>) are reserved for use by &abbrev;.</para>
+        <!-- FIXME lots of the above descriptions is almost the same as the descriptions at the beginning of this section, they should be single-sourced -->
         <simplesect xml:id="parser-options">
-            <title>csv-parser()</title>
-            <indexterm>
-                <primary>csv-parser()</primary>
+            <title>columns()</title>
+            <indexterm type="parameter">
+                <primary>columns()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -120,12 +122,12 @@ log { source(s_local);
                     <tbody>
                         <row>
                             <entry>Synopsis: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>csv-parser(columns("PARSER.COLUMN1", "PARSER.COLUMN2", ...))</entry>
+                            <entry>columns("PARSER.COLUMN1", "PARSER.COLUMN2", ...)</entry>
                         </row>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies the type of parser to use, and the name of the columns to separate messages to. Currently only the <parameter>csv-parser()</parameter> is implemented, which can separate columns based on delimiter characters and strings.</para>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the name of the columns to separate messages to. These names will be automatically available as macros.</para>
         </simplesect>
         <simplesect xml:id="csv-parser-delimiter">
             <title>delimiters()</title>
@@ -250,7 +252,7 @@ log { source(s_local);
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The macro that contains the part of the message that the parser will process. It can also be a macro created by a previous parser of the log path. By default, this is empty and the parser processes the entire message (<parameter>${MESSAGE}</parameter>). For examples, see <xref linkend="example-parser"/> and <xref linkend="example-parser-multiple"/>.</para>
+            <para><emphasis role="bold">Description:</emphasis> The macro that contains the part of the message that the parser will process. It can also be a macro created by a previous parser of the log path. By default, this is empty and the parser processes the entire message (<parameter>${MESSAGE}</parameter>). For examples, see <xref linkend="example-csv-parser"/> and <xref linkend="example-parser-multiple"/>.</para>
         </simplesect>
     </section>
 </section>
