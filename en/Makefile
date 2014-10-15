@@ -40,7 +40,11 @@ selfcheck: $(BUILDERREPO) Makefile $(MASTER_MAKEFILE)
 		echo ==============================================; \
 	fi
 
-setup: selfcheck $(BUILDERREPO) targetdbs olinkdbs
+git-hooks:
+	# Copies the contents of the xml-stylesheet/git-hooks directory to the .git directory of the cloned repository
+	cp --force --update $(BUILDERREPO)/git-hooks/* $$(git rev-parse --show-toplevel)/.git/hooks
+
+setup: selfcheck $(BUILDERREPO) targetdbs olinkdbs git-hooks
 
 out:
 	mkdir -p out
