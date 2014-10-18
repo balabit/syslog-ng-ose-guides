@@ -106,6 +106,42 @@
         <para>It is possible to specify multiple name-value pairs as parameters, separated with commas. If multiple messages match the condition of <parameter>grep</parameter>, these will be returned also separated by commas. This can be used for example to collect the e-mail recipients from postfix messages.</para>
         <!-- FIXME konkret peldat! -->
     </simplesect>
+    <simplesect xml:id="template-function-hash">
+        <title>tfhash</title>
+        <indexterm type="parameter">
+            <primary>tfhash</primary>
+        </indexterm>
+        <indexterm type="parameter">
+            <primary>$(hash)</primary>
+        </indexterm>
+        <indexterm type="parameter">
+            <primary>$(md5), $(md4)</primary>
+        </indexterm>
+        <indexterm type="parameter">
+            <primary>$(sha1), $(sha256), $(sha512)</primary>
+        </indexterm>
+        <indexterm type="parameter">
+            <primary>tfhash</primary>
+        </indexterm>
+        <para><emphasis role="bold">Syntax:</emphasis> <synopsis>$(&lt;method&gt; [opts] $arg1 $arg2 $arg3...)</synopsis></para>
+        <para><emphasis role="bold">Options:</emphasis> <synopsis>--length N, -l N</synopsis> Truncate the hash to the first N characters.</para>
+        <para><emphasis role="bold">Description:</emphasis> <userinput>&lt;method&gt;</userinput> can be one of md5, md4, sha1, sha256, sha512 and "hash", which is equivalent to md5. Macros are expected as arguments, and they are concatenated without the use of additional characters.</para>
+        <para>This template function can be used for anonymizing sensitive parts of the log message (for example username) that were parsed out using PatternDB before storing or forwarding the message. This way, the ability of correlating messages along this value is retained.</para>
+        <para>Also, using this template, quasi-unique IDs can be generated for data, using the <parameter>--length</parameter> option. This way, IDs will be shorter than a regular hash, but there is a very small possibility of them not being as unique as a non-truncated hash.</para>
+        <note condition="ose">
+            <para>These template functions are available only if <phrase condition="ose">&abbrev; has been compiled with the <parameter>--enable-ssl</parameter> compile option and </phrase>the <filename>tfhash</filename> module has been loaded. By default, &abbrev; loads every available module.</para>
+            <!-- FIXME link a modulokrol szolo leirasra-->
+        </note>
+        <example xml:id="template-function-hash-example">
+            <title>Using the $(hash) template function</title>
+            <para>The following example calculates the SHA1 hash of the hostname of the message:</para>
+            <synopsis>$(sha1 $HOST)</synopsis>
+            <para>To use shorter hashes, set the <parameter>--length</parameter>:</para>
+            <synopsis>$(sha1 --length 6 $HOST)</synopsis>
+            <para>To replace the hostname with its hash, use a rewrite rule:</para>
+            <synopsis>rewrite r_rewrite_hoistname{set("$(sha1 $HOST)", value("HOST"));};</synopsis>
+        </example>
+    </simplesect>
     <simplesect xml:id="template-function-if">
         <title>if</title>
             <indexterm type="parameter">
@@ -344,54 +380,6 @@ file ("/var/log/${MONTH}/${DAY}/$(lowercase "${HOST}")/messages");
       template-escape(no);
   };</synopsis>
         </example>
-    </simplesect>
-    <simplesect xml:id="template-function-hash" condition="ose">
-        <title>tfhash</title>
-        <indexterm type="parameter">
-            <primary>tfhash</primary>
-        </indexterm>
-        <indexterm type="parameter">
-            <primary>$(hash)</primary>
-        </indexterm>
-        <indexterm type="parameter">
-            <primary>$(md5), $(md4)</primary>
-        </indexterm>
-        <indexterm type="parameter">
-            <primary>$(sha1), $(sha256), $(sha512)</primary>
-        </indexterm>
-        <indexterm type="parameter">
-            <primary>tfhash</primary>
-        </indexterm>
-        <para><emphasis role="bold">Syntax:</emphasis> <synopsis>$(&lt;method&gt; [opts] $arg1 $arg2 $arg3...)</synopsis></para>
-        <para><emphasis role="bold">Options:</emphasis> <synopsis>--length N, -l N</synopsis> Truncate the hash to the first N characters.</para>
-        <para><emphasis role="bold">Description:</emphasis> <userinput>&lt;method&gt;</userinput> can be one of md5, md4, sha1, sha256, sha512 and "hash", which is equivalent to md5. Macros are expected as arguments, and they are concatenated without the use of additional characters.</para>
-        <para>This template function can be used for anonymizing sensitive parts of the log message (for example username) that were parsed out using PatternDB before storing or forwarding the message. This way, the ability of correlating messages along this value is retained.</para>
-        <para>Also, using this template, quasi-unique IDs can be generated for data, using the <parameter>--length</parameter> option. This way, IDs will be shorter than a regular hash, but there is a very small possibility of them not being as unique as a non-truncated hash.</para>
-        <note>
-            <para>These template functions are available only if <phrase condition="ose">&abbrev; has been compiled with the <parameter>--enable-ssl</parameter> compile option and </phrase>the <filename>tfhash</filename> module has been loaded. By default, &abbrev; loads every available module.</para>
-            <!-- FIXME link a modulokrol szolo leirasra-->
-        </note>
-        <example xml:id="template-function-hash-example">
-            <title>Using the $(hash) template function</title>
-            <para>The following example calculates the SHA1 hash of the hostname of the message:</para>
-            <synopsis>$(sha1 $HOST)</synopsis>
-            <para>To use shorter hashes, set the <parameter>--length</parameter>:</para>
-            <synopsis>$(sha1 --length 6 $HOST)</synopsis>
-            <para>To replace the hostname with its hash, use a rewrite rule:</para>
-            <synopsis>rewrite r_rewrite_hoistname{set("$(sha1 $HOST)", value("HOST"));};</synopsis>
-        </example>
-    </simplesect>
-    <simplesect xml:id="template-function-uppercase" condition="ose">
-        <title>uppercase</title>
-            <indexterm type="parameter">
-                <primary>uppercase</primary>
-            </indexterm>
-        <para><emphasis role="bold">Syntax:</emphasis> <synopsis>$(uppercase "&lt;macro&gt;")</synopsis></para>
-        <para><emphasis role="bold">Description:</emphasis> Returns the uppercase version of the specified string or macro. For example, the following example uses the uppercase version of the hostname in a directory name:</para>
-        <synopsis>destination d_file {
-file ("/var/log/${MONTH}/${DAY}/$(uppercase "${HOST}")/messages");
-};</synopsis>
-        <para>Available in &abbrev; <phrase condition="ose">3.5</phrase> and later.</para>
     </simplesect>
     <simplesect xml:id="template-function-uuid" condition="ose">
         <title>uuid</title>
