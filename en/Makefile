@@ -29,7 +29,8 @@ export SCRIPTDIR
 # include the generated config file
 include $(MAKECONF)
 
-all: $(BUILDERREPO) setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(MANPAGES)
+all: $(BUILDERREPO) setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(WEBHELP_OUTPUTS) $(MANPAGES)
+		sh $(SCRIPTDIR)/copy-webhelp-to-html.sh out/en/
 
 selfcheck: $(BUILDERREPO) Makefile $(MASTER_MAKEFILE)
 	@if ! diff Makefile $(MASTER_MAKEFILE) 2>&1 >/dev/null; then \
@@ -39,7 +40,11 @@ selfcheck: $(BUILDERREPO) Makefile $(MASTER_MAKEFILE)
 		echo ==============================================; \
 	fi
 
-setup: selfcheck $(BUILDERREPO) targetdbs olinkdbs
+git-hooks:
+	# Copies the contents of the xml-stylesheet/git-hooks directory to the .git directory of the cloned repository
+	cp --force --update $(BUILDERREPO)/git-hooks/* $$(git rev-parse --show-toplevel)/.git/hooks
+
+setup: selfcheck $(BUILDERREPO) targetdbs olinkdbs git-hooks
 
 out:
 	mkdir -p out
@@ -65,4 +70,4 @@ clean:
 	-rm -rf targetdbs $(MAKECONF)
 
 # MANSOURCES and OLINKDBS_IN must be .PHONY otherwise they won't be regenerated everytime.
-.PHONY: targetdbs olinkdbs clean setup realsetup $(PDF_OUTPUTS) $(HTML_OUTPUTS) manpages $(MANSOURCES) $(OLINKDBS_IN) $(BUILDERREPO)
+.PHONY: targetdbs olinkdbs clean setup realsetup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(WEBHELP_OUTPUTS) manpages $(MANSOURCES) $(OLINKDBS_IN) $(BUILDERREPO)
