@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE procedure
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+
+	<procedure xml:id="selinux-support" xmlns="http://docbook.org/ns/docbook" version="5.0" condition="pe">
+		<title>Using &abbrev; on SELinux</title>
+		<indexterm>
+			<primary>SELinux</primary>
+		</indexterm>
+		<formalpara>
+			<title>Purpose:</title>
+			<para/>
+		</formalpara>
+		<para>Version &abbrev; 5 F2 and later properly supports SELinux on Red Hat Enterprise Linux 6.5 and newer platforms. The CentOS platforms corresponding to the supported RHEL versions are supported as well. To use &abbrev; on a SELinux-enabled host, complete the following steps.</para>
+		<note>
+			<para>The following steps enable &abbrev; to properly run with its default configuration and default installation path (<filename>/opt/syslog-ng</filename>) on a SELinux-enabled host.</para>
+		</note>
+		<formalpara>
+			<title>Prerequisites:</title>
+			<para/>
+		</formalpara>
+		<itemizedlist>
+			<listitem>
+				<para>The following packages must be available on the host: <filename>policycoreutils</filename>,<filename>policycoreutils-devel</filename>, <filename>policycoreutils-python</filename>. If they are not already installed, issue the following command: <command>yum install policycoreutils policycoreutils-devel policycoreutils-python</command></para>
+			</listitem>
+			<listitem>
+				<para>On RHEL 6.5, update the following packages at least to the indicated versions. These packages are available in the Red Hat repositories and are installed by default on RHEL 6.6. You can update them with the <command>yum update selinux-policy</command> command.</para>
+				<itemizedlist>
+					<listitem>
+						<para><filename>selinux-policy-3.7.19-231.el6.noarch > 3.7.19-260.el6.noarch</filename></para>
+					</listitem>
+					<listitem>
+						<para><filename>selinux-policy-targeted-3.7.19-231.el6.noarch > 3.7.19-260.el6.noarch</filename></para>
+					</listitem>
+				</itemizedlist>
+			</listitem>
+			<listitem>
+				<para>The &abbrev; application must be installed on the host. For details, see <xref linkend="chapter-install"/>.</para>
+			</listitem>
+		</itemizedlist>
+		<formalpara>
+			<title>Steps:</title>
+			<para/>
+		</formalpara>
+		<step>
+			<para>Download the &abbrev; SELinux policy module from <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/downloads/files/syslog-ng/syslog-ng-pe-5F2-SELinux/syslog-ng-selinux.tar.gz">http://www.balabit.com/downloads/files/syslog-ng/syslog-ng-pe-5F2-SELinux/syslog-ng-selinux.tar.gz</link></para>
+		</step>
+		<step>
+			<para>Uncompress the file and run the <command>./syslog_ng.sh</command> script to compile and load the <filename>syslog_ng</filename> module.</para>
+		</step>
+		<step>
+			<para>Restart &abbrev; using the following command.</para>
+			<warning>
+				<para>The SELinux policy works only if &abbrev; is started by the init daemon.</para>
+			</warning>
+			<itemizedlist>
+				<listitem>
+					<para>On RHEL6: <command>service syslog-ng restart</command></para>
+				</listitem>
+				<listitem>
+					<para>On RHEL7: <command>systemctl restart syslog-ng</command></para>
+				</listitem>
+			</itemizedlist>
+		</step>
+		<step>
+			<para><emphasis>Optional Step</emphasis>: The &abbrev; application can create coredumpsm but this is disabled by default. You can enable coredumps with the <command>setsebool -P daemons_dump_core 1</command> command.</para>
+			<para>Note that his command enables every daemons on your system to create core dumps, not just &abbrev;. There is no way to enable per-application core dumps in SELinux.</para>
+		</step>
+		<formalpara>
+			<title>Expected result:</title>
+			<para/>
+		</formalpara>
+		<para>The &abbrev; application is installed and properly running under SELinux.</para>
+	</procedure>
