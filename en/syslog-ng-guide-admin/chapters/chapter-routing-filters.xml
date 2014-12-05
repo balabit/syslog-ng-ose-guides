@@ -520,9 +520,12 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         <note>
             <para>Disk-based buffering can be used in conjunction with flow-control. For details, see <xref linkend="concepts-flow-control"/>.</para>
         </note>
-        <para>Disk buffers can be used with <parameter>tcp()</parameter>, <parameter>tcp6()</parameter>, <parameter>syslog()</parameter> (when using the <parameter>tcp</parameter> or <parameter>tls</parameter> transport methods), and <parameter>sql()</parameter> destinations. Every such destination uses a separate disk buffer (similarly to the output buffers controlled by <parameter>log-fifo-size()</parameter>). The hard disk space is not pre-allocated, so ensure that there is always enough free space to store the disk buffers even when the disk buffers are full.</para>
-        <para>If syslog-ng is restarted (using the <command>/etc/init.d/syslog-ng restart</command> command), it automatically saves any unsent messages of the disk buffer and the output queue. After the restart, syslog-ng sends the saved messages to the server. In other words, the disk buffer is persistent. The disk buffer is also resistant to syslog-ng crashes.</para>
-        <para>The syslog-ng application handles outgoing messages the following way:</para>
+
+        <xi:include href="../../common/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        <para>Every such destination uses a separate disk buffer (similarly to the output buffers controlled by <parameter>log-fifo-size()</parameter>). The hard disk space is not pre-allocated, so ensure that there is always enough free space to store the disk buffers even when the disk buffers are full.</para>
+        <para>If &abbrev; is restarted (using the <command>/etc/init.d/syslog-ng restart</command> command), it automatically saves any unsent messages of the disk buffer and the output queue. After the restart, &abbrev; sends the saved messages to the server. In other words, the disk buffer is persistent. The disk buffer is also resistant to &abbrev; crashes.</para>
+        <para>The &abbrev; application handles outgoing messages the following way:</para>
         <figure>
             <title>Handling outgoing messages in syslog-ng PE</title>
             <mediaobject>
@@ -561,7 +564,10 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         </note>
         <section xml:id="configuring-diskbuffer-reliable">
             <title>Enabling reliable disk-based buffering</title>
-            <para>To enable reliable disk-based buffering, use the <userinput>disk-buffer(reliable(yes))</userinput> parameter in the destination. The following destination drivers can use reliable disk-based buffering: network(), program(), sql(), syslog(), tcp() and tcp6(), udp() and udp6(), unix-dgram() and unix-stream(). Use reliable disk-based buffering if you do not want to lose logs in case of reload/restart, unreachable destination or &abbrev; crash. This solution provides a slower, but reliable disk-buffer option. It is created and initialized at startup and gradually grows as new messages arrive. The filename of the reliable disk buffer file is the following: <filename>&lt;syslog-ng path&gt;/var/syslog-ng-00000.rqf</filename>.</para>
+
+            <xi:include href="../../common/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+            <para>To enable reliable disk-based buffering, use the <userinput>disk-buffer(reliable(yes))</userinput> parameter in the destination. Use reliable disk-based buffering if you do not want to lose logs in case of reload/restart, unreachable destination or &abbrev; crash. This solution provides a slower, but reliable disk-buffer option. It is created and initialized at startup and gradually grows as new messages arrive. The filename of the reliable disk buffer file is the following: <filename>&lt;syslog-ng path&gt;/var/syslog-ng-00000.rqf</filename>.</para>
             <example>
                 <title>Example for using reliable disk-based buffering</title>
                 <synopsis>destination d_BSD {
@@ -582,7 +588,10 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         </section>
         <section xml:id="configuring-diskbuffer-normal">
             <title>Enabling normal disk-based buffering</title>
-            <para>To enable normal disk-based buffering, use the <userinput>disk-buffer(reliable(no))</userinput> parameter in the destination. The following destination drivers can use normal disk-based buffering: network(), program(), sql(), syslog(), tcp() and tcp6(), udp() and udp6(), unix-dgram() and unix-stream(). Use normal disk-based buffering if you want a solution that is faster than the reliable disk-based buffering. In this case, disk buffering will be less reliable and it is possible to lose logs in case of &abbrev; crash. The filename of the normal disk buffer file is the following: <filename>&lt;syslog-ng path&gt;/var/syslog-ng-00000.qf</filename>.</para>
+
+            <xi:include href="../../common/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+            <para>To enable normal disk-based buffering, use the <userinput>disk-buffer(reliable(no))</userinput> parameter in the destination. Use normal disk-based buffering if you want a solution that is faster than the reliable disk-based buffering. In this case, disk buffering will be less reliable and it is possible to lose logs in case of &abbrev; crash. The filename of the normal disk buffer file is the following: <filename>&lt;syslog-ng path&gt;/var/syslog-ng-00000.qf</filename>.</para>
             <para>It is possible to use this option without using the disk-buffer plugin. In this case, use the <parameter>log-disk-fifo-size()</parameter> parameter in the destination.</para>
             <example>
                 <title>Example for using normal disk-based buffering</title>
