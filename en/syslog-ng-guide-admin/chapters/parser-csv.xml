@@ -13,22 +13,9 @@
     <indexterm>
         <primary>CSV-values</primary>
     </indexterm>
-    <para>The &abbrev; application can separate parts of log messages (that is, the contents of the $MSG macro) at delimiter characters to named fields (columns). One way to achieve this is to use a csv (comma-separated-values) parser (for other methods and possibilities, see the other sections of <xref linkend="chapter-parsers"/>. The parsed fields act as user-defined macros that can be referenced in message templates, file- and tablenames, and so on. </para>
-    <para>Parsers are similar to filters: they must be defined in the &abbrev; configuration file and used in the log statement.</para>
-    <!-- FIXME parsert/rewriteot is lehet inline definialni? -->
-    <note>
-        <para>The order of filters, rewriting rules, and parsers in the log statement is important, as they are processed sequentially. <!-- FIXME bovebben, peldaval, filterekhez/rewrite sectionbe is --></para>
-    </note>
-    <para>To create a <parameter>csv-parser()</parameter>, you have to define the columns of the message, the delimiter or separator characters (for example, semicolon or tabulator), and optionally the characters that are used to escape the delimiter characters (quote-pairs). For the list of parser parameters, see <xref linkend="reference-parsers-csv"/>.</para>
-    <synopsis>Declaration:
-        parser &lt;parser_name&gt; {
-            csv-parser(
-            columns(column1, column2, ...)
-            delimiters()
-            quote-pairs()
-            );
-        };</synopsis>
-    <para>Column names work like macros. Always use a prefix to identify the columns of the parsers, for example <userinput>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</userinput>, and so on. Column names starting with a dot (for example <userinput>.HOST</userinput>) are reserved for use by &abbrev;.</para>
+
+    <xi:include href="../../common/chunk/topic-parser-csv-intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
     <example xml:id="example-csv-parser">
         <title>Segmenting hostnames separated with a dash</title>
         <para>The following example separates hostnames like <userinput>example-1</userinput> and <userinput>example-2</userinput> into two parts.</para>
@@ -96,21 +83,9 @@ log { source(s_local); parser(p_apache); parser(p_apache_timestamp); destination
         <indexterm>
             <primary>splitting messages</primary>
         </indexterm>
-        <para>The &abbrev; application can separate parts of log messages (that is, the contents of the $MSG macro) at delimiter characters to named fields (columns). One way to achieve this is to use a csv (comma-separated-values) parser (for other methods and possibilities, see the other sections of <xref linkend="chapter-parsers"/>.</para>
-        <para>To create a <parameter>csv-parser()</parameter>, you have to define the columns of the message, the delimiter or separator characters (for example, semicolon or tabulator), and optionally the characters that are used to escape the delimiter characters (quote-pairs).</para>
-        <indexterm>
-            <primary>csv-parser()</primary>
-        </indexterm>
-        <synopsis>Declaration:
-    parser &lt;parser_name&gt; {
-        csv-parser(
-        columns(column1, column2, ...)
-        delimiters()
-        quote-pairs()
-        );
-    };</synopsis>
-        <para>Column names work like macros. Always use a prefix to identify the columns of the parsers, for example <userinput>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</userinput>, and so on. Column names starting with a dot (for example <userinput>.HOST</userinput>) are reserved for use by &abbrev;.</para>
-        <!-- FIXME lots of the above descriptions is almost the same as the descriptions at the beginning of this section, they should be single-sourced -->
+
+        <xi:include href="../../common/chunk/topic-parser-csv-intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
         <simplesect xml:id="parser-options">
             <title>columns()</title>
             <indexterm type="parameter">
@@ -127,7 +102,7 @@ log { source(s_local); parser(p_apache); parser(p_apache_timestamp); destination
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies the name of the columns to separate messages to. These names will be automatically available as macros.</para>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the name of the columns to separate messages to. These names will be automatically available as macros. The values of these macros do not include the delimiters.</para>
         </simplesect>
         <simplesect xml:id="csv-parser-delimiter">
             <title>delimiters()</title>
@@ -140,12 +115,30 @@ log { source(s_local); parser(p_apache); parser(p_apache_timestamp); destination
                     <tbody>
                         <row>
                             <entry>Synopsis: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>delimiters("&lt;delimiter_characters&gt;")</entry>
+                            <entry><para>delimiters(chars("&lt;delimiter_characters&gt;")) <emphasis>or <parameter>delimiters("&lt;delimiter_characters&gt;")</parameter></emphasis></para>
+                            <para>delimiters(strings("&lt;delimiter_string1&gt;", "&lt;delimiter_string2&gt;", ...)")</para>
+                            <para>delimiters(chars("&lt;delimiter_characters&gt;"), strings("&lt;delimiter_strings&gt;"))</para></entry>
                         </row>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The character that separates the columns in the message. If you specify multiple characters, every character will be treated as a delimiter. To separate the columns at the tabulator (tab character), specify <userinput>\t</userinput>. For example, to separate the text at evert hyphen (-) and colon (:) character, use <userinput>delimiters("-:")</userinput></para>
+            <para><emphasis role="bold">Description:</emphasis> The delimiter is the character or string that separates the columns in the message. If you specify multiple characters using the <userinput>delimiters(chars("&lt;delimiter_characters&gt;"))</userinput> option, every character will be treated as a delimiter. To separate the columns at the tabulator (tab character), specify <userinput>\t</userinput>. For example, to separate the text at every hyphen (-) and colon (:) character, use <userinput>delimiters(chars("-:"))</userinput>, Note that the delimiters will not be included in the column values.</para>
+            <para>If you have to use a string as a delimiter, list your string delimiters in the <userinput>delimiters(strings("&lt;delimiter_string1&gt;", "&lt;delimiter_string2&gt;", ...)")</userinput> format.</para>
+			<para>If you use more than one delimiter, note the following points:</para>
+			<itemizedlist>
+				<listitem>
+					<para>&abbrev; will split the message at the nearest possible delimiter. The order of the delimiters in the configuration file does not matter.</para>
+				</listitem>
+				<listitem>
+					<para>You can use both string delimiters and character delimiters in a parser.</para>
+				</listitem>
+				<listitem>
+					<para>The string delimiters can include characters that are also used as character delimiters.</para>
+				</listitem>
+				<listitem>
+					<para>If a string delimiter and a character delimiter both match at the same position of the message, &abbrev; uses the string delimiter.</para>
+				</listitem>
+			</itemizedlist>
         </simplesect>
         <simplesect>
             <title>flags()</title>
@@ -234,7 +227,7 @@ log { source(s_local); parser(p_apache); parser(p_apache_timestamp); destination
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> List quote-pairs between single quotes. Delimiter characters enclosed between quote characters are ignored. Note that the beginning and ending quote character does not have to be identical, for example <userinput>[}</userinput> can also be a quote-pair. For an example of using <parameter>quote-pairs()</parameter> to parse Apache log files, see <xref linkend="example-parser-apache"/>.</para>
+            <para><emphasis role="bold">Description:</emphasis> List quote-pairs between single quotes. Delimiter characters or strings enclosed between quote characters are ignored. Note that the beginning and ending quote character does not have to be identical, for example <userinput>[}</userinput> can also be a quote-pair. For an example of using <parameter>quote-pairs()</parameter> to parse Apache log files, see <xref linkend="example-parser-apache"/>.</para>
         </simplesect>
         <simplesect>
             <title>template()</title>
