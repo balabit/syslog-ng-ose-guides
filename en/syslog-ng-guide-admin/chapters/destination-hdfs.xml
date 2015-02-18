@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="configuring-destinations-hdfs" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>Storing messages on the Hadoop Distributed File System (HDFS)</title>
+    <indexterm>
+        <primary>destination drivers</primary>
+        <secondary><parameter>java()</parameter> driver</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>destination drivers</primary>
+        <secondary><parameter>hdfs</parameter></secondary>
+    </indexterm>
+    <para></para>
+<!--
+    FIXME intro
+-->
+    <para>Note the following limitations when using the &abbrev; <parameter>hdfs</parameter> destination:</para>
+    <itemizedlist>
+		<listitem>
+			<para>The <parameter>hdfs</parameter> destination is only supported on the Linux platform.</para>
+		</listitem>
+		<listitem>
+			<para>Since &abbrev; uses the official Java HDFS client, the <parameter>hdfs</parameter> destination has significant memory usage (about 400MB).</para>
+		</listitem>
+		<listitem>
+			<para>The &abbrev; application always creates a new file if the previous has been closed. Appending data to existing files is not supported.</para>
+		</listitem>
+		<listitem>
+			<para>Macros are not supported in the file path and the filename. You can use only simple file paths for your log files, for example, <filename>/usr/hadoop/logfile.txt</filename></para>
+		</listitem>
+		<listitem>
+			<xi:include href="../../common/chunk/para-hdfs-flush.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+		</listitem>
+	</itemizedlist>
+
+<!--
+FIXME: ezt a filenevnel is le kell irni! MACROS in file name are not supported. A simple file path should be specified in configuration (e.g.: /usr/hadoop/foo.txt)
+-->
+    <formalpara>
+        <title>Declaration:</title>
+        <para/>
+    </formalpara>
+    <synopsis></synopsis>
+    <example xml:id="example-destination-hdfs">
+        <title>Using the smtp() driver</title>
+        <para>The following example defines an <parameter>smtp()</parameter> destination using only the required parameters.</para>
+        <synopsis>destination d_hdfs {
+    java(
+		class_path("/opt/syslog-ng/lib/syslog-ng/java-modules/*.jar:/opt/hadoop/libs/*.jar")
+		class_name("org.syslog_ng.hdfs.HdfsDestination")
+
+		option("hdfs_uri", "hdfs://10.140.32.80:8020")
+		option("hdfs_file", "user/hue/pzolee/0123456789")
+		option("hdfs_archive_dir", "user/hue/archive/")
+		option("hdfs_resources", "/home/pzolee/hadoop/core-site.xml;/home/pzolee/hadoop/hdfs-site.xml")
+	);
+};
+</synopsis>
+    </example>
+    <procedure xml:id="destination-hdfs-prerequisites">
+        <title>Prerequisites</title>
+        <para>To send messages from &abbrev; to HDFS, complete the following steps.</para>
+        <formalpara>
+			<title>Steps:</title>
+			<para/>
+		</formalpara>
+		<step>
+			<para>Download and install the Java Runtime Environment (JRE), 1.7 (or newer). The &abbrev; <parameter>hdfs</parameter> destination is tested and supported when using the Oracle implementation of Java. Other implementations are untested and unsupported, they may or may not work as expected.</para>
+		</step>
+		<step>
+			<para>Download the Hadoop Distributed File System (HDFS) libraries (version 2.x) from <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://hadoop.apache.org/releases.html">http://hadoop.apache.org/releases.html</link>.</para>
+		</step>
+		<step>
+			<para>Extract the HDFS libraries into a temporary directory, then copy the following <filename>.jar</filename> files into a directory (for example, <filename>/opt/hadoop/lib/</filename>) where &abbrev; can access them. You must specify this directory in the &abbrev; configuration file. The files are located in the various <filename>lib</filename> directories under the <filename>share/hadoop/</filename> directory of the Hadoop release package.</para>
+			<para>Note that the version numbers in the filenames can be different in the various Hadoop releases: <filename>commons-cli-1.2.jar</filename><filename>commons-configuration-1.6.jar</filename><filename>commons-logging-1.1.3.jar</filename><filename>hadoop-auth-2.6.0.jar</filename><filename>hadoop-hdfs-2.6.0.jar</filename><filename>log4j-1.2.17.jar</filename><filename>slf4j-api-1.7.5.jar</filename><filename>commons-collections-3.2.1.jar</filename><filename>commons-lang-2.6.jar</filename><filename>guava-11.0.2.jar</filename><filename>hadoop-common-2.6.0.jar</filename><filename>htrace-core-3.0.4.jar</filename><filename>protobuf-java-2.5.0.jar</filename><filename>slf4j-log4j12-1.7.5.jar</filename></para>
+		</step>
+<!-- The java home must be given at installation time for the installer. FIXME: installerbe is beleirni!
+the next libs are required for hdfs:
+
+A hdfs lib latom log4j-t hasznal, hova loggol? Be lehet huzni a logokat syslog-ng-be?
+
+-->
+    </procedure>
+    <procedure xml:id="destination-hdfs-interaction">
+        <title>How &abbrev; interacts with HDFS</title>
+        <para>The way how &abbrev; interacts with HDFS is described in the following steps.</para>
+        <step>
+			<para>After &abbrev; is started and the first message arrives to the <parameter>hdfs</parameter> destination, the <parameter>hdfs</parameter> destination tries to connect to the HDFS NameNode. If the connection fails, &abbrev; will repeatedly attempt to connect again after the period set in <parameter>time-reopen()</parameter> expires.</para>
+		</step>
+        <step>
+			<para>&abbrev; creates the destination file (using the filename set in the &abbrev; configuration file, with a UUID suffix to make it unique, for example, <filename>/usr/hadoop/logfile.txt.3dc1c59e-ab3b-4b71-9e81-93db477ed9d9</filename>) and writes the message into the file. After the file is created, &abbrev; will write all incoming messages into e <parameter>hdfs</parameter> destination.</para>
+			<note>
+				<xi:include href="../../common/chunk/para-hdfs-flush.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+			</note>
+		</step>
+        <step>
+			<para>If the HDFS client returns an error, &abbrev; attempts to close the file, then opens a new file and repeats sending the message (trying to connect to HDFS and send the message), as set in the <parameter>retries()</parameter> parameter. If sending the message fails for <parameter>retries()</parameter> times, &abbrev; drops the message.</para>
+		</step>
+        <step>
+			<para>The &abbrev; application closes the destination file in the following cases:</para>
+			<itemizedlist>
+				<listitem>
+					<para>&abbrev; is reloaded</para>
+				</listitem>
+				<listitem>
+					<para>&abbrev; is restarted</para>
+				</listitem>
+				<listitem>
+					<para>The HDFS client returns an error.</para>
+				</listitem>
+			</itemizedlist>
+		</step>
+        <step>
+			<para>If the file is closed and you have set an archive directory, &abbrev; moves the file to this directory. If &abbrev; cannot move the file for some reason (for example, &abbrev; cannot connect to the HDFS NameNode), the file remains at its original location, &abbrev; will not try to move it again.</para>
+		</step>
+    </procedure>
+    <section xml:id="reference-destination-hdfs">
+        <title>hdsf destination options</title>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary><parameter>java()</parameter> driver</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary><parameter>hdfs</parameter></secondary>
+        </indexterm>
+        <para>The <parameter>hdfs</parameter> destination stores the log messages in files on the Hadoop Distributed File System (HDFS). The <parameter>hdfs</parameter> destination has the following options. You can specify these options in the following format:</para>
+        <synopsis>option("&lt;option-name&gt;", "&lt;option-value&gt;")</synopsis>
+        <para>For example, <userinput>option("hdfs-uri", "hdfs://10.140.32.80:8020")</userinput></para>
+        <para>The following options are required: <parameter>class-path()</parameter>, <parameter>class-name()</parameter>.</para>
+<!--
+
+hdfs_uri
+string
+required
+the uri of HDFS NameNode with port(namenode:port)
+option("hdfs_uri", "hdfs://10.140.32.80:8020")
+
+hdfs_file
+string
+required
+the path of the file to be written by syslog-ng
+option("hdfs_file", "/user/hue/pzolee/test.txt")
+
+
+hdfs_archive_dir
+string
+optional
+the path of directory where syslog-ng will move the file after closing
+option("hdfs_archive_dir", "/user/hue/archive/")
+
+
+hdfs_resources
+string
+optional
+semicolon seperated list of the hadoop resources to load
+option("hdfs_resources", "/home/pzolee/hadoop/core-site.xml;/home/pzolee/hadoop/hdfs-site.xml")
+
+
+hdfs_max_filename_length
+string
+optional, the default is 255
+limit the maximum file name length. Default: 255. This is needed because the generated file name (with uuid) can be longer that the fs allows. syslog-ng will truncate the file name if it is longer
+option("hdfs_max_filename_length", "255")
+
+Optional:
+log_fifo_size
+
+> ezeket hogy kell megadni, szinten option()-on belul?
+> hdfs_uri es hdfs-uri is mukodik, ugye?
+-->
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-retries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect xml:id="smtp-option-to">
+            <title>to()</title>
+            <indexterm type="parameter">
+                <primary>to()</primary>
+                <secondary>smtp()</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>smtp()</primary>
+                <secondary>to()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>localhost</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The recipient of the e-mail (contents of the TO field). You can specify the e-mail address, or the name and the e-mail address. Set the <parameter>to()</parameter> option multiple times to send the e-mail to multiple recipients. For example:
+            <synopsis>to("admin@example.com")</synopsis> or
+            <synopsis>to("Admin" "admin@example.com")</synopsis> or <synopsis>to("Admin" "admin@example.com")
+to("Admin2" "admin2@example.com")</synopsis></para>
+        </simplesect>
+    </section>
+</section>
