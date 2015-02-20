@@ -12,10 +12,7 @@
         <primary>destination drivers</primary>
         <secondary><parameter>hdfs</parameter></secondary>
     </indexterm>
-    <para></para>
-<!--
-    FIXME intro
--->
+    <para>Version <phrase></phrase> of &abbrev; can send plain-text log files to the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://hadoop.apache.org/">Hadoop Distributed File System (HDFS)</link>, allowing you to store your log data on a distributed, scalable file system. This is especially useful if you have huge amount of log messages that would be difficult to store otherwise, or if you want to process your messages using Hadoop tools (for example, Apache Pig).</para>
     <para>Note the following limitations when using the &abbrev; <parameter>hdfs</parameter> destination:</para>
     <itemizedlist>
         <listitem>
@@ -59,6 +56,18 @@
 };
 </synopsis>
     </example>
+    <itemizedlist>
+        <listitem>
+            <para>To install the software required for the <parameter>hdfs</parameter> destination, see <xref linkend="destination-hdfs-prerequisites"/>.</para>
+        </listitem>
+        <listitem>
+            <para>For details on how the <parameter>hdfs</parameter> destination works, see <xref linkend="destination-hdfs-interaction"/>.</para>
+        </listitem>
+        <listitem>
+            <para>For the list of options, see <xref linkend="reference-destination-hdfs"/>.</para>
+        </listitem>
+    </itemizedlist>
+
     <procedure xml:id="destination-hdfs-prerequisites">
         <title>Prerequisites</title>
         <para>To send messages from &abbrev; to HDFS, complete the following steps.</para>
@@ -76,16 +85,12 @@
             <para>Extract the HDFS libraries into a temporary directory, then copy the following <filename>.jar</filename> files into a directory (for example, <filename>/opt/hadoop/lib/</filename>) where &abbrev; can access them. You must specify this directory in the &abbrev; configuration file. The files are located in the various <filename>lib</filename> directories under the <filename>share/hadoop/</filename> directory of the Hadoop release package.</para>
             <para>Note that the version numbers in the filenames can be different in the various Hadoop releases: <filename>commons-cli-1.2.jar</filename><filename>commons-configuration-1.6.jar</filename><filename>commons-logging-1.1.3.jar</filename><filename>hadoop-auth-2.6.0.jar</filename><filename>hadoop-hdfs-2.6.0.jar</filename><filename>log4j-1.2.17.jar</filename><filename>slf4j-api-1.7.5.jar</filename><filename>commons-collections-3.2.1.jar</filename><filename>commons-lang-2.6.jar</filename><filename>guava-11.0.2.jar</filename><filename>hadoop-common-2.6.0.jar</filename><filename>htrace-core-3.0.4.jar</filename><filename>protobuf-java-2.5.0.jar</filename><filename>slf4j-log4j12-1.7.5.jar</filename></para>
         </step>
-<!-- The java home must be given at installation time for the installer. FIXME: installerbe is beleirni!
-the next libs are required for hdfs:
-
-A hdfs lib latom log4j-t hasznal, hova loggol? Be lehet huzni a logokat syslog-ng-be?
-
--->
+<!-- The java home must be given at installation time for the installer. FIXME: installerbe is beleirni!  -->
     </procedure>
+
     <procedure xml:id="destination-hdfs-interaction">
         <title>How &abbrev; interacts with HDFS</title>
-        <para>The way how &abbrev; interacts with HDFS is described in the following steps.</para>
+        <para>The &abbrev; application sends the log messages to the official HDFS client library, which forwards the data to the HDFS nodes. The way how &abbrev; interacts with HDFS is described in the following steps.</para>
         <step>
             <para>After &abbrev; is started and the first message arrives to the <parameter>hdfs</parameter> destination, the <parameter>hdfs</parameter> destination tries to connect to the HDFS NameNode. If the connection fails, &abbrev; will repeatedly attempt to connect again after the period set in <parameter>time-reopen()</parameter> expires.</para>
         </step>
@@ -116,6 +121,7 @@ A hdfs lib latom log4j-t hasznal, hova loggol? Be lehet huzni a logokat syslog-n
             <para>If the file is closed and you have set an archive directory, &abbrev; moves the file to this directory. If &abbrev; cannot move the file for some reason (for example, &abbrev; cannot connect to the HDFS NameNode), the file remains at its original location, &abbrev; will not try to move it again.</para>
         </step>
     </procedure>
+
     <section xml:id="reference-destination-hdfs">
         <title>hdsf destination options</title>
         <indexterm>
