@@ -331,7 +331,7 @@
         </figure>
         <para>The flow-control of syslog-ng introduces a control window to the source that tracks how many messages can syslog-ng accept from the source. Every message that syslog-ng reads from the source lowers the window size by one; every message that syslog-ng successfully sends from the output buffer increases the window size by one. If the window is full (that is, its size decreases to zero), syslog-ng stops reading messages from the source. The initial size of the control window is by default <userinput>1000</userinput>: the <parameter>log-fifo-size()</parameter> must be larger than this value in order for flow-control to have any effect. If a source accepts messages from multiple connections, all messages use the same control window.</para>
         <note>
-            <para>Starting with &abbrev; version <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.3</phrase>, if the source can handle multiple connections (for example, <parameter>tcp()</parameter>), the size of the control window is divided by the value of the <parameter>max-connections()</parameter> parameter and this smaller control window is applied to each connection of the source.</para>
+            <para>If the source can handle multiple connections (for example, <parameter>network()</parameter>), the size of the control window is divided by the value of the <parameter>max-connections()</parameter> parameter and this smaller control window is applied to each connection of the source.</para>
         </note>
         <para>When flow-control is used, every source has its own control window. As a worst-case situation, the output buffer of the destination must be set to accommodate all messages of every control window, that is, the <parameter>log-fifo-size()</parameter> of the destination must be greater than <userinput>number-of-sources</userinput>*<parameter>log-iw-size()</parameter>. This applies to every source that sends logs to the particular destination. Thus if two sources having several connections and heavy traffic send logs to the same destination, the control window of both sources must fit into the output buffer of the destination. Otherwise, syslog-ng does not activate the flow-control, and messages may be lost.</para>
         <para>The syslog-ng application handles outgoing messages the following way:</para>
@@ -380,7 +380,7 @@
                     <title>Soft flow-control</title>
                     <synopsis>source s_file {file("/tmp/input_file.log");};
 destination d_file {file("/tmp/output_file.log");};
-destination d_tcp { tcp("127.0.0.1" port(2222) log-fifo-size(1000)); };
+destination d_tcp { network("127.0.0.1" port(2222) log-fifo-size(1000)); };
 log{ source(s_file); destination(d_file); destination(d_tcp);};
 </synopsis>
                 </example>
@@ -398,8 +398,8 @@ log{ source(s_file); destination(d_file); destination(d_tcp);};
                     <title>Hard flow-control</title>
                     <synopsis>source s_file {file("/tmp/input_file.log");};
 destination d_file {file("/tmp/output_file.log");};
-destination d_tcp { tcp("127.0.0.1" port(2222) log-fifo-size(1000)); };
-log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow_control);};
+destination d_tcp { network("127.0.0.1" port(2222) log-fifo-size(1000)); };
+log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow-control);};
 </synopsis>
                 </example>
             </listitem>
@@ -491,17 +491,17 @@ log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow_control)
                 <para>Suppose that syslog-ng has a source that must accept up to 300 parallel connections. Such situation can arise when a network source receives connections from many clients, or if many applications log to the same socket. Therefore, set the <parameter>max-connections()</parameter> parameter of the source to <userinput>300</userinput>. However, the <parameter>log-fetch-limit()</parameter> (default value: 10) parameter applies to every connection of the source individually, while the <parameter>log-iw-size()</parameter> (default value: 1000) parameter applies to the source. In a worst-case scenario, the destination does not accept any messages, while all 300 connections send at least <parameter>log-fetch-limit()</parameter> number of messages to the source during every poll loop. Therefore, the control window must accommodate at least <parameter>max-connections()</parameter>*<parameter>log-fetch-limit()</parameter> messages to be able to read every incoming message of a poll loop. In the current example this means that (<parameter>log-iw-size()</parameter> should be greater than <userinput>300*10=3000</userinput>. If the control window is smaller than this value, the control window might fill up with messages from the first connections &mdash; causing syslog-ng to read only one message of the last connections in every poll loop. </para>
                 <para>The output buffer of the destination must accommodate at least <parameter>log-iw-size()</parameter> messages, but use a greater value: in the current example <userinput>3000*10=30000</userinput> messages. That way all incoming messages of ten poll loops fit in the output buffer. If the output buffer is full, syslog-ng does not read any messages from the source until some messages are successfully sent to the destination.</para>
                 <synopsis>source s_localhost {
-            tcp(ip(127.0.0.1) port(1999) max-connections(300)); };
+            network(ip(127.0.0.1) port(1999) max-connections(300)); };
 destination d_tcp {
-            tcp("10.1.2.3" port(1999); localport(999)); log-fifo-size(30000); };
+            network("10.1.2.3" port(1999); localport(999)); log-fifo-size(30000); };
 log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis>
                 <para>If other sources send messages to this destination, than the output buffer must be further increased. For example, if a network host with maximum <userinput>100</userinput> connections also logs into the destination, than increase the <parameter>log-fifo-size()</parameter> by <userinput>10000</userinput>.</para>
                 <synopsis>source s_localhost {
-            tcp(ip(127.0.0.1) port(1999) max-connections(300)); };
+            network(ip(127.0.0.1) port(1999) max-connections(300)); };
 source s_tcp {
-            tcp(ip(192.168.1.5) port(1999) max-connections(100)); };
+            network(ip(192.168.1.5) port(1999) max-connections(100)); };
 destination d_tcp {
-            tcp("10.1.2.3" port(1999); localport(999)); log-fifo-size(40000); };
+            network("10.1.2.3" port(1999); localport(999)); log-fifo-size(40000); };
 log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis>
             </example>
         </section>
@@ -568,7 +568,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
             <example>
                 <title>Example for using reliable disk-based buffering</title>
                 <synopsis>destination d_BSD {
-    tcp(
+    network(
             "127.0.0.1"
             port(3333)
             disk-buffer(
@@ -591,7 +591,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
                 <title>Example for using normal disk-based buffering</title>
                 <para>When using the disk-buffer plugin</para>
                 <synopsis>destination d_BSD {
-    tcp(
+    network(
             "127.0.0.1"
             port(3333)
             disk-buffer(
@@ -603,7 +603,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         }; </synopsis>
                 <para>Without disk-buffer plugin</para>
                 <synopsis>destination d_BSD {
-    tcp(
+    network(
             "127.0.0.1"
             port(3333)
             log-disk-fifo-size(2000000)
@@ -618,7 +618,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
             <example>
                 <title>Example for using memory buffering</title>
                 <synopsis>destination d_BSD {
-    tcp(
+    network(
             "127.0.0.1"
             port(3333)
             log-fifo-size(10000)
@@ -678,7 +678,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         <para>If &abbrev; uses TLS-encryption to communicate with the remote server, &abbrev; checks the certificate of the failover server as well. The certificates of the failover servers should match their domain names or IP addresses &mdash; for details, see <xref linkend="tls-serverauth"/>. Note that when mutual authentication is used, the &abbrev; client sends the same certificate to every server.</para>
         <para>The primary server and the failover servers must be accessible with the same communication method: it is not possible to use different destination drivers or options for the different servers.</para>
         <note>
-            <para>Client-side failover works only for TCP-based connections, that is, the <parameter>tcp()</parameter> (including TLS-encrypted connections) and the <parameter>syslog()</parameter> and <parameter>network()</parameter> destination drivers (excluding UDP transport).</para>
+            <para>Client-side failover works only for TCP-based connections (including TLS-encrypted connections), that is, the <parameter>syslog()</parameter> and <parameter>network()</parameter> destination drivers (excluding UDP transport).</para>
             <para>Client-side failover is not supported in the <parameter>sql()</parameter> driver, even though it may use a TCP connection to access a remote database.</para>
         </note>
         <para>For details on configuring failover servers, see <xref linkend="example-failover-server-tcp"/> and <xref linkend="reference-destination-syslog-chapter"/>.</para>
@@ -1321,7 +1321,7 @@ log {
                 <example xml:id="example-tags-filtering">
                     <title>Adding tags and filtering messages with tags</title>
                     <synopsis>source s_tcp {
-    tcp(ip(192.168.1.1) port(1514) tags("tcp", "router"));
+    network(ip(192.168.1.1) port(1514) tags("tcp", "router"));
     };</synopsis>
                     <para>Use the <parameter>tags()</parameter> option of the filters to select only specific messages:</para>
                     <synopsis>filter f_tcp {
