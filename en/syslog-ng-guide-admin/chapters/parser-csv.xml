@@ -3,7 +3,7 @@
  [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
  %entities;]>
 <section xml:id="csv-parser" xmlns="http://docbook.org/ns/docbook" version="5.0">
-    <title>Parsing messages</title>
+    <title>Parsing messages with comma-separated and similar values</title>
     <indexterm>
         <primary>segmenting messages</primary>
     </indexterm>
@@ -13,23 +13,10 @@
     <indexterm>
         <primary>CSV-values</primary>
     </indexterm>
-    <para>The syslog-ng application can separate parts of log messages (that is, the contents of the $MSG macro) to named fields (columns). These fields act as user-defined macros that can be referenced in message templates, file- and tablenames, and so on. </para>
-    <para>Parsers are similar to filters: they must be defined in the syslog-ng configuration file and used in the log statement.</para>
-    <!-- FIXME parsert/rewriteot is lehet inline definialni? -->
-    <note>
-        <para>The order of filters, rewriting rules, and parsers in the log statement is important, as they are processed sequentially. <!-- FIXME bovebben, peldaval, filterekhez/rewrite sectionbe is --></para>
-    </note>
-    <para>To create a parser, define the columns of the message, the delimiter or separator characters (for example, semicolon or tabulator), and optionally the characters that are used to escape the delimiter characters (quote-pairs). For the list of parser parameters, see <xref linkend="reference-parsers-csv"/>.</para>
-    <synopsis>Declaration:
-        parser parser_name {
-            csv-parser(
-            columns(column1, column2, ...)
-            delimiters()
-            quote-pairs()
-            );
-        };</synopsis>
-    <para>Column names work like macros. Always use a prefix to identify the columns of the parsers, for example <userinput>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</userinput>, and so on. Column names starting with a dot (for example <userinput>.HOST</userinput>) are reserved for use by syslog-ng.</para>
-    <example xml:id="example-parser">
+
+    <xi:include href="../../common/chunk/topic-parser-csv-intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+    <example xml:id="example-csv-parser">
         <title>Segmenting hostnames separated with a dash</title>
         <para>The following example separates hostnames like <userinput>example-1</userinput> and <userinput>example-2</userinput> into two parts.</para>
         <synopsis>parser p_hostname_segmentation {
@@ -64,18 +51,16 @@ log { source(s_local); parser(p_hostname_segmentation); destination(d_file);};</
 };
 destination d_file { file("/var/log/messages-${APACHE.USER_NAME:-nouser}"); };</synopsis>
     </example>
-    <para>Multiple parsers can be used to split a part of an already parsed message into further segments.</para>
     <example xml:id="example-parser-multiple">
         <title>Segmenting a part of a message</title>
-        <para>The following example splits the timestamp of a parsed Apache log message into separate fields.</para>
+        <para>Multiple parsers can be used to split a part of an already parsed message into further segments. The following example splits the timestamp of a parsed Apache log message into separate fields.</para>
         <synopsis>parser p_apache_timestamp {
     csv-parser(columns("APACHE.TIMESTAMP.DAY", "APACHE.TIMESTAMP.MONTH", "APACHE.TIMESTAMP.YEAR", "APACHE.TIMESTAMP.HOUR", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.ZONE")
     delimiters("/: ")
     flags(escape-none)
     template("${APACHE.TIMESTAMP}"));
     };
-log { source(s_local);
-    log { parser(p_apache); parser(p_apache_timestamp); destination(d_file);};
+log { source(s_local); parser(p_apache); parser(p_apache_timestamp); destination(d_file);
 };</synopsis>
     </example>
     <formalpara>
@@ -98,21 +83,13 @@ log { source(s_local);
         <indexterm>
             <primary>splitting messages</primary>
         </indexterm>
-        <para>The syslog-ng application can separate parts of log messages (that is, the contents of the ${MSG} macro) to named fields (columns). These fields act as user-defined macros that can be referenced in message templates, file- and tablenames, and so on. </para>
-        <para>To create a parser, define the columns of the message, the delimiter or separator characters, and optionally the characters that are used to escape the delimiter characters (quote-pairs).</para>
-        <synopsis>Declaration:
-    parser parser_name {
-        csv-parser(
-        columns(column1, column2, ...)
-        delimiters()
-        quote-pairs()
-        );
-    };</synopsis>
-        <para>Column names work like macros. Always use a prefix to identify the columns of the parsers, for example <userinput>MYPARSER1.COLUMN1, MYPARSER2.COLUMN2</userinput>, and so on. Column names starting with a dot (for example <userinput>.HOST</userinput>) are reserved for use by syslog-ng. </para>
+
+        <xi:include href="../../common/chunk/topic-parser-csv-intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
         <simplesect xml:id="parser-options">
-            <title>csv-parser</title>
+            <title>columns()</title>
             <indexterm type="parameter">
-                <primary>csv-parser</primary>
+                <primary>columns()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -120,17 +97,17 @@ log { source(s_local);
                     <tbody>
                         <row>
                         <entry>Synopsis: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>csv-parser(columns("PARSER.COLUMN1", "PARSER.COLUMN2", ...))</entry>
+                            <entry>columns("PARSER.COLUMN1", "PARSER.COLUMN2", ...)</entry>
                         </row>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies the type of parser to use, and the name of the columns to separate messages to. Currently only the <parameter>csv-parser</parameter> is implemented, which can separate columns based on delimiter characters and strings.</para>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the name of the columns to separate messages to. These names will be automatically available as macros. The values of these macros do not include the delimiters.</para>
         </simplesect>
         <simplesect xml:id="csv-parser-delimiter">
-            <title>delimiters</title>
-            <indexterm type="parameter">
-                <primary>delimiters</primary>
+            <title>delimiters()</title>
+            <indexterm>
+                <primary>delimiters()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -138,16 +115,34 @@ log { source(s_local);
                     <tbody>
                         <row>
                         <entry>Synopsis: <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>delimiters("&lt;delimiter_characters&gt;")</entry>
+                            <entry><para>delimiters(chars("&lt;delimiter_characters&gt;")) <emphasis>or <parameter>delimiters("&lt;delimiter_characters&gt;")</parameter></emphasis></para>
+                            <para>delimiters(strings("&lt;delimiter_string1&gt;", "&lt;delimiter_string2&gt;", ...)")</para>
+                            <para>delimiters(chars("&lt;delimiter_characters&gt;"), strings("&lt;delimiter_string1&gt;"))</para></entry>
                         </row>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The character that separates the columns in the message. If you specify multiple characters, every character will be treated as a delimiter. To separate the columns at the tabulator (tab character), specify <userinput>\t</userinput>. For example, to separate the text at evert hyphen (-) and colon (:) character, use <userinput>delimiters("-:")</userinput></para>
+            <para><emphasis role="bold">Description:</emphasis> The delimiter is the character or string that separates the columns in the message. If you specify multiple characters using the <userinput>delimiters(chars("&lt;delimiter_characters&gt;"))</userinput> option, every character will be treated as a delimiter. To separate the columns at the tabulator (tab character), specify <userinput>\t</userinput>. For example, to separate the text at every hyphen (-) and colon (:) character, use <userinput>delimiters(chars("-:"))</userinput>, Note that the delimiters will not be included in the column values.</para>
+            <para>If you have to use a string as a delimiter, list your string delimiters in the <userinput>delimiters(strings("&lt;delimiter_string1&gt;", "&lt;delimiter_string2&gt;", ...)")</userinput> format.</para>
+			<para>If you use more than one delimiter, note the following points:</para>
+			<itemizedlist>
+				<listitem>
+					<para>&abbrev; will split the message at the nearest possible delimiter. The order of the delimiters in the configuration file does not matter.</para>
+				</listitem>
+				<listitem>
+					<para>You can use both string delimiters and character delimiters in a parser.</para>
+				</listitem>
+				<listitem>
+					<para>The string delimiters can include characters that are also used as character delimiters.</para>
+				</listitem>
+				<listitem>
+					<para>If a string delimiter and a character delimiter both match at the same position of the message, &abbrev; uses the string delimiter.</para>
+				</listitem>
+			</itemizedlist>
         </simplesect>
         <simplesect>
             <title>flags()</title>
-            <indexterm type="parameter">
+            <indexterm>
                 <primary>flags()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -164,7 +159,7 @@ log { source(s_local);
             <para><emphasis role="bold">Description:</emphasis> Specifies various options for parsing the message. The following flags are available:</para>
             <itemizedlist>
                 <listitem>
-                    <indexterm type="parameter">
+                    <indexterm>
                         <primary>drop-invalid</primary>
                     </indexterm>
                     <para><emphasis>drop-invalid</emphasis>: When the <parameter>drop-invalid</parameter> option is set, the parser does not process messages that do not match the parser. For example, a message does not match the parser if it has less columns than specified in the parser, or it has more columns but the <parameter>greedy</parameter> flag is not enabled. Using the <parameter>drop-invalid</parameter> option practically turns the parser into a special filter, that matches messages that have the predefined number of columns (using the specified delimiters).</para>
@@ -173,25 +168,25 @@ log { source(s_local);
                     </tip>
                 </listitem>
                 <listitem>
-                    <indexterm type="parameter">
+                    <indexterm>
                         <primary>escape-backslash</primary>
                     </indexterm>
                     <para><emphasis>escape-backslash</emphasis>: The parsed message uses the backslash (<userinput>\</userinput>) character to escape quote characters.</para>
                 </listitem>
                 <listitem>
-                    <indexterm type="parameter">
+                    <indexterm>
                         <primary>escape-double-char</primary>
                     </indexterm>
                     <para><emphasis>escape-double-char</emphasis>: The parsed message repeats the quote character when the quote character is used literally. For example, to escape a comma (<userinput>,</userinput>), the message contains two commas (<userinput>,,</userinput>).</para>
                 </listitem>
                 <listitem>
-                    <indexterm type="parameter">
+                    <indexterm>
                         <primary>escape-none</primary>
                     </indexterm>
                     <para><emphasis>escape-none</emphasis>: The parsed message does not use any escaping for using the quote character literally.</para>
                 </listitem>
                 <listitem>
-                    <indexterm type="parameter">
+                    <indexterm>
                         <primary>greedy</primary>
                     </indexterm>
                     <para><emphasis>greedy</emphasis>: The <parameter>greedy</parameter> option assigns the remainder of the message to the last column, regardless of the delimiter characters set. You can use this option to process messages where the number of columns varies.</para>
@@ -206,7 +201,7 @@ log { source(s_local);
                     </example>
                 </listitem>
                 <listitem>
-                    <indexterm type="parameter">
+                    <indexterm>
                         <primary>strip-whitespace</primary>
                     </indexterm>
                     <para><emphasis>strip-whitespace</emphasis>: The <parameter>strip-whitespace</parameter> flag removes trailing whitespaces from the beginning and the end of the columns.</para>
@@ -215,8 +210,11 @@ log { source(s_local);
         </simplesect>
         <simplesect>
             <title>quote-pairs()</title>
-            <indexterm type="parameter">
+            <indexterm>
                 <primary>quote-pairs()</primary>
+            </indexterm>
+            <indexterm>
+                <primary>quote_pairs()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -229,11 +227,11 @@ log { source(s_local);
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> List quote-pairs between single quotes. Delimiter characters enclosed between quote characters are ignored. Note that the beginning and ending quote character does not have to be identical, for example <userinput>[}</userinput> can also be a quote-pair. For an example of using <parameter>quote-pairs()</parameter> to parse Apache log files, see <xref linkend="example-parser-apache"/>.</para>
+            <para><emphasis role="bold">Description:</emphasis> List quote-pairs between single quotes. Delimiter characters or strings enclosed between quote characters are ignored. Note that the beginning and ending quote character does not have to be identical, for example <userinput>[}</userinput> can also be a quote-pair. For an example of using <parameter>quote-pairs()</parameter> to parse Apache log files, see <xref linkend="example-parser-apache"/>.</para>
         </simplesect>
         <simplesect>
             <title>template()</title>
-            <indexterm type="parameter">
+            <indexterm>
                 <primary>template()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -247,7 +245,7 @@ log { source(s_local);
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The macro that contains the part of the message that the parser will process. It can also be a macro created by a previous parser of the log path. By default, this is empty and the parser processes the entire message (<parameter>${MESSAGE}</parameter>). For examples, see <xref linkend="example-parser"/> and <xref linkend="example-parser-multiple"/>.</para>
+            <para><emphasis role="bold">Description:</emphasis> The macro that contains the part of the message that the parser will process. It can also be a macro created by a previous parser of the log path. By default, this is empty and the parser processes the entire message (<parameter>${MESSAGE}</parameter>). For examples, see <xref linkend="example-csv-parser"/> and <xref linkend="example-parser-multiple"/>.</para>
         </simplesect>
     </section>
 </section>
