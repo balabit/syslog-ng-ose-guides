@@ -20,7 +20,7 @@
         <indexterm>
             <primary>authentication</primary>
         </indexterm>
-        <para>The syslog-ng application can send and receive log messages securely over the network using the Transport Layer Security (TLS) protocol. TLS is an encryption protocol over the TCP/IP network protocol, so it can be used only with TCP-based sources and destinations ( <parameter>tcp()</parameter> and <parameter>tcp6()</parameter>).</para>
+        <para>The syslog-ng application can send and receive log messages securely over the network using the Transport Layer Security (TLS) protocol using the <parameter>network()</parameter> and <parameter>syslog()</parameter> drivers.</para>
         <para>TLS uses certificates to authenticate and encrypt the communication, as illustrated on the following figure:</para>
         <figure>
             <title>Certificate-based authentication</title>
@@ -87,7 +87,7 @@
                 <title>Purpose:</title>
                 <para/>
             </formalpara>
-            <para>Complete the following steps on every syslog-ng client host. Examples are provided using both the legacy BSD-syslog protocol (using the <parameter>tcp()</parameter> driver) and the new IETF-syslog protocol standard (using the <parameter>syslog()</parameter> driver):</para>
+            <para>Complete the following steps on every syslog-ng client host. Examples are provided using both the legacy BSD-syslog protocol (using the <parameter>network()</parameter> driver) and the new IETF-syslog protocol standard (using the <parameter>syslog()</parameter> driver):</para>
             <formalpara>
                 <title>Steps:</title>
                 <para/>
@@ -101,18 +101,22 @@
                 </para>
             </step>
             <step>
-                <para>Add a destination statement to the syslog-ng configuration file that uses the <userinput>tls( ca-dir(path_to_ca_directory) )</userinput> option and specify the directory using the CA certificate. The destination must use the <parameter>tcp()</parameter> or <parameter>tcpv6()</parameter> destination driver, and the IP address and port parameters of the driver must point to the syslog-ng server. </para>
+                <para>Add a destination statement to the syslog-ng configuration file that uses the <userinput>tls( ca-dir(path_to_ca_directory) )</userinput> option and specify the directory using the CA certificate. The destination must use the <parameter>network()</parameter> or the <parameter>syslog()</parameter> destination driver, and the IP address and port parameters of the driver must point to the syslog-ng server. </para>
                 <example>
                     <title>A destination statement using TLS</title>
                     <para>The following destination encrypts the log messages using TLS and sends them to the <userinput>6514/TCP</userinput> port of the syslog-ng server having the <userinput>10.1.2.3</userinput> IP address. </para>
                     <synopsis>destination demo_tls_destination {
-                tcp("10.1.2.3" port(6514)
-                    tls( ca-dir("/opt/syslog-ng/etc/syslog-ng/ca.d")) ); };</synopsis>
+    network("10.1.2.3" port(6514)
+        transport("tls")
+        tls( ca-dir("/opt/syslog-ng/etc/syslog-ng/ca.d"))
+    );
+};</synopsis>
                     <para>A similar statement using the IETF-syslog protocol and thus the <parameter>syslog()</parameter> driver:</para>
-                    <synopsis>destination demo_tls_syslog_destination { syslog("10.1.2.3" port(6514)
+                    <synopsis>destination demo_tls_syslog_destination {
+    syslog("10.1.2.3" port(6514)
                         transport("tls")
-                        port(3214)
-                        tls(ca-dir("/opt/syslog-ng/etc/syslog-ng/ca.d")) );
+        tls(ca-dir("/opt/syslog-ng/etc/syslog-ng/ca.d"))
+    );
 };</synopsis>
                 </example>
             </step>
@@ -143,20 +147,25 @@
                 <para>Copy the private key (for example <filename>syslog-ng.key</filename>) matching the certificate of the syslog-ng server to the syslog-ng server host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The key must be in PEM format, and must not be password-protected.</para>
             </step>
             <step>
-                <para>Add a source statement to the syslog-ng configuration file that uses the <userinput>tls( key-file(key_file_fullpathname) cert-file(cert_file_fullpathname) )</userinput> option and specify the key and certificate files. The source must use the source driver (<parameter>tcp()</parameter> or <parameter>tcpv6()</parameter>) matching the destination driver used by the syslog-ng client. </para>
+                <para>Add a source statement to the syslog-ng configuration file that uses the <userinput>tls( key-file(key_file_fullpathname) cert-file(cert_file_fullpathname) )</userinput> option and specify the key and certificate files. The source must use the source driver (<parameter>network()</parameter> or <parameter>syslog()</parameter>) matching the destination driver used by the syslog-ng client.</para>
                 <example>
                     <title>A source statement using TLS</title>
                     <para>The following source receives log messages encrypted using TLS, arriving to the <userinput>1999/TCP</userinput> port of any interface of the syslog-ng server.</para>
                     <synopsis>source demo_tls_source {
-           tcp(ip(0.0.0.0) port(1999)
+    network(ip(0.0.0.0) port(1999)
+        transport("tls")
                tls( key-file("/opt/syslog-ng/etc/syslog-ng/key.d/syslog-ng.key")
-                    cert-file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert")) ); };</synopsis>
+             cert-file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert"))
+    );
+};</synopsis>
                     <para>A similar source for receiving messages using the IETF-syslog protocol:</para>
                     <synopsis>source demo_tls_syslog_source {
                     syslog(ip(0.0.0.0) port(1999)
                     transport("tls")
                     tls( key-file("/opt/syslog-ng/etc/syslog-ng/key.d/syslog-ng.key")
-                    cert-file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert")) ); };</synopsis>
+             cert-file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert"))
+    );
+};</synopsis>
                 </example>
             </step>
             <step>
@@ -167,17 +176,22 @@
                     <title>Disabling mutual authentication</title>
                     <para>The following source receives log messages encrypted using TLS, arriving to the <userinput>1999/TCP</userinput> port of any interface of the syslog-ng server. The identity of the syslog-ng client is not verified.</para>
                     <synopsis>source demo_tls_source {
-           tcp(ip(0.0.0.0) port(1999)
+    network(ip(0.0.0.0) port(1999)
+        transport("tls")
                tls( key-file("/opt/syslog-ng/etc/syslog-ng/key.d/syslog-ng.key")
                     cert-file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert")
-                    peer-verify(optional-untrusted))  ); };</synopsis>
+             peer-verify(optional-untrusted))
+    );
+};</synopsis>
                     <para>A similar source for receiving messages using the IETF-syslog protocol:</para>
                     <synopsis>source demo_tls_syslog_source {
                         syslog(ip(0.0.0.0) port(1999)
                         transport("tls")
                         tls( key-file("/opt/syslog-ng/etc/syslog-ng/key.d/syslog-ng.key")
                         cert-file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert")
-                        peer-verify(optional-untrusted))  ); };</synopsis>
+             peer-verify(optional-untrusted))
+    );
+};</synopsis>
                 </example>
                 <warning>
                     <para>Do not forget to update the certificate and key files when they expire.</para>
@@ -203,7 +217,7 @@
                 <title>Purpose:</title>
                 <para/>
             </formalpara>
-            <para>Complete the following steps on every syslog-ng client host. Examples are provided using both the legacy BSD-syslog protocol (using the <parameter>tcp()</parameter> driver) and the new IETF-syslog protocol standard (using the <parameter>syslog()</parameter> driver):</para>
+            <para>Complete the following steps on every syslog-ng client host. Examples are provided using both the legacy BSD-syslog protocol (using the <parameter>network()</parameter> driver) and the new IETF-syslog protocol standard (using the <parameter>syslog()</parameter> driver):</para>
             <formalpara>
                 <title>Steps:</title>
                 <para/>
@@ -227,12 +241,13 @@
                 </para>
             </step>
             <step>
-                <para>Add a destination statement to the syslog-ng configuration file that uses the <userinput>tls( ca-dir(path_to_ca_directory) )</userinput> option and specify the directory using the CA certificate. The destination must use the <parameter>tcp()</parameter> or <parameter>tcpv6()</parameter> destination driver, and the IP address and port parameters of the driver must point to the syslog-ng server. Include the client's certificate and private key in the <parameter>tls()</parameter> options.</para>
+                <para>Add a destination statement to the syslog-ng configuration file that uses the <userinput>tls( ca-dir(path_to_ca_directory) )</userinput> option and specify the directory using the CA certificate. The destination must use the <parameter>network()</parameter> or the <parameter>syslog()</parameter> destination driver, and the IP address and port parameters of the driver must point to the syslog-ng server. Include the client's certificate and private key in the <parameter>tls()</parameter> options.</para>
                 <example>
                     <title>A destination statement using mutual authentication</title>
                     <para>The following destination encrypts the log messages using TLS and sends them to the <userinput>1999/TCP</userinput> port of the syslog-ng server having the <userinput>10.1.2.3</userinput> IP address. The private key and the certificate file authenticating the client is also specified.</para>
                     <synopsis>destination demo_tls_destination {
-    tcp("10.1.2.3" port(1999)
+    network("10.1.2.3" port(1999)
+        transport("tls")
         tls( ca-dir("/opt/syslog-ng/etc/syslog-ng/ca.d")
              key-file("/opt/syslog-ng/etc/syslog-ng/key.d/client.key")
              cert-file("/opt/syslog-ng/etc/syslog-ng/cert.d/client_cert.pem")) ); };</synopsis>
@@ -279,13 +294,14 @@
                 <para>Copy the private key (for example <filename>syslog-ng.key</filename>) matching the certificate of the syslog-ng server to the syslog-ng server host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The key must be in PEM format, and must not be password-protected.</para>
             </step>
             <step>
-                <para>Add a source statement to the syslog-ng configuration file that uses the <userinput>tls( key-file(key_file_fullpathname) cert-file(cert_file_fullpathname) )</userinput> option and specify the key and certificate files. The source must use the source driver (<parameter>tcp()</parameter> or <parameter>tcpv6()</parameter>) matching the destination driver used by the syslog-ng client. Also specify the directory storing the certificate of the CA that issued the client's certificate.</para>
+                <para>Add a source statement to the syslog-ng configuration file that uses the <userinput>tls( key-file(key_file_fullpathname) cert-file(cert_file_fullpathname) )</userinput> option and specify the key and certificate files. The source must use the source driver (<parameter>network()</parameter> or <parameter>syslog()</parameter>) matching the destination driver used by the syslog-ng client. Also specify the directory storing the certificate of the CA that issued the client's certificate.</para>
                 <para>For the details of the available <parameter>tls()</parameter> options, see <xref linkend="tlsoptions"/>.</para>
                 <example>
                     <title>A source statement using TLS</title>
                     <para>The following source receives log messages encrypted using TLS, arriving to the <userinput>1999/TCP</userinput> port of any interface of the syslog-ng server.</para>
                     <synopsis>source demo_tls_source {
-           tcp(ip(0.0.0.0) port(1999)
+    network(ip(0.0.0.0) port(1999)
+        transport("tls")
                tls( key-file("/opt/syslog-ng/etc/syslog-ng/key.d/syslog-ng.key")
                     cert-file("/opt/syslog-ng/etc/syslog-ng/cert.d/syslog-ng.cert")
                     ca-dir("/opt/syslog-ng/etc/syslog-ng/ca.d")) ); };</synopsis>
@@ -314,17 +330,20 @@
             <primary>TLS</primary>
             <secondary>reference</secondary>
         </indexterm>
-        <para>The syslog-ng application is able to encrypt incoming and outgoing syslog message flows using SSL/TLS, if the TCP transport protocol (the <parameter>tcp()</parameter> or <parameter>tcp6()</parameter> sources or destination) is used.</para>
+        <para>The syslog-ng application can encrypt incoming and outgoing syslog message flows using TLS if you use the <parameter>network()</parameter> or <parameter>syslog()</parameter> drivers.</para>
         <note>
             <para>The format of the TLS connections used by syslog-ng is similar to using syslog-ng and stunnel, but the source IP information is not lost.</para>
         </note>
-        <para>To encrypt connections, use the <parameter>tls()</parameter> option in the source and destination statements.</para>
+        <para>To encrypt connections, use the <parameter>transport("tls")</parameter> and <parameter>tls()</parameter> options in the source and destination statements.</para>
         <para>The tls() option can include the following settings:</para>
         <simplesect>
             <title>ca-dir()</title>
                 <indexterm type="parameter">
                     <primary>ca-dir()</primary>
                 </indexterm>
+            <indexterm>
+                <primary>ca_dir()</primary>
+            </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
                     <colspec colnum="1" colwidth="80pt"/>
@@ -347,6 +366,9 @@
                 <indexterm type="parameter">
                     <primary>cert-file()</primary>
                 </indexterm>
+            <indexterm>
+                <primary>cert_file()</primary>
+            </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
                     <colspec colnum="1" colwidth="80pt"/>
@@ -391,6 +413,9 @@
                 <indexterm type="parameter">
                     <primary>crl-dir()</primary>
                 </indexterm>
+            <indexterm>
+                <primary>crl_dir()</primary>
+            </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
                     <colspec colnum="1" colwidth="80pt"/>
@@ -413,6 +438,9 @@
                 <indexterm type="parameter">
                     <primary>key-file()</primary>
                 </indexterm>
+            <indexterm>
+                <primary>key_file()</primary>
+            </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
                     <colspec colnum="1" colwidth="80pt"/>
@@ -435,6 +463,9 @@
                 <indexterm type="parameter">
                     <primary>peer-verify()</primary>
                 </indexterm>
+            <indexterm>
+                <primary>peer_verify()</primary>
+            </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
                     <colspec colnum="1" colwidth="80pt"/>
@@ -514,9 +545,12 @@
         </simplesect>
         <simplesect>
             <title>trusted-dn()</title>
-                <indexterm type="parameter">
-                    <primary>trusted-dn()</primary>
-                </indexterm>
+            <indexterm type="parameter">
+                <primary>trusted-dn()</primary>
+            </indexterm>
+            <indexterm>
+                <primary>trusted_dn()</primary>
+            </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
                     <colspec colnum="1" colwidth="80pt"/>
@@ -536,8 +570,11 @@
         </simplesect>
         <simplesect>
             <title>trusted-keys()</title>
-                <indexterm type="parameter">
-                    <primary>trusted-keys()</primary>
+            <indexterm type="parameter">
+                <primary>trusted-keys()</primary>
+            </indexterm>
+            <indexterm>
+                <primary>trusted_keys()</primary>
                 </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
