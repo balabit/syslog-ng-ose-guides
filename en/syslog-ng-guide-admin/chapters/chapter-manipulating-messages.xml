@@ -207,7 +207,25 @@ template t_demo_template-without-braces "${ISODATE} ${HOST} ${MSG}\n";
             <synopsis>$(echo "${HOST} ${PROGRAM} ${PID}")</synopsis>
             <para>Template functions can be nested into each other, so the parameter of a template function can be another template function, like:</para>
             <synopsis>$(echo $(echo ${HOST}))</synopsis>
-            <para>For details on using template functions, see the descriptions of the individual template functions in <xref linkend="reference-template-functions"/>.</para>
+            <para>For details on the available template functions, see the descriptions of the individual template functions in <xref linkend="reference-template-functions"/>.</para>
+            <para>You can define your own template function as a regular configuration object (for example, to reuse the same function in different places in your configuration).</para>
+            <formalpara>
+				<title>Declaration:</title>
+				<para/>
+			</formalpara>
+			<synopsis>template-function &lt;name-of-the-template-function&gt; "&lt;template-expression-using-strings-macros-template-functions&gt;";</synopsis>
+			<example>
+				<title>Using custom template functions</title>
+				<para>The following template function can be used to reformat the message. It adds the length of the message to the message template.</para>
+				<synopsis>
+template-function my-template-function "${ISODATE} ${HOST} message-length=$(length "${MSG}") ${MSG}";
+destination d_file {
+	file("/tmp/mylogs.log" template("$(my-template-function)\n")); };</synopsis>
+				<para>You can also refer to existing templates in your template function.</para>
+				<synopsis>
+template my-custom-header-template "${ISODATE} ${HOST_FROM} ${MSGHDR}";
+template-function my-template-function "$(my-custom-header-template) message-length=$(length "${MSG}") ${MSG}";</synopsis>
+			</example>
         </section>
 
         <xi:include href="reference-template-functions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
