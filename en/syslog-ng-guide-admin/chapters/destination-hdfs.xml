@@ -39,8 +39,8 @@
     <synopsis>@module mod-java
 
 java(
-    class_path("/opt/syslog-ng/lib/syslog-ng/java-modules/*.jar:&lt;path-to-preinstalled-hadoop-libraries&gt;")
-    class_name("org.syslog_ng.hdfs.HdfsDestination")
+    class-path("/opt/syslog-ng/lib/syslog-ng/java-modules/*.jar:&lt;path-to-preinstalled-hadoop-libraries&gt;")
+    class-name("org.syslog_ng.hdfs.HdfsDestination")
 
     option("hdfs-uri", "hdfs://NameNode:8020")
     option("hdfs-file", "&lt;path-to-logfile&gt;")
@@ -52,8 +52,8 @@ java(
 
 destination d_hdfs {
     java(
-        class_path("/opt/syslog-ng/lib/syslog-ng/java-modules/*.jar:/opt/hadoop/libs/*.jar")
-        class_name("org.syslog_ng.hdfs.HdfsDestination")
+        class-path("/opt/syslog-ng/lib/syslog-ng/java-modules/*.jar:/opt/hadoop/libs/*.jar")
+        class-name("org.syslog_ng.hdfs.HdfsDestination")
 
         option("hdfs-uri", "hdfs://10.140.32.80:8020")
         option("hdfs-file", "/user/log/logfile.txt")
@@ -67,6 +67,9 @@ destination d_hdfs {
         </listitem>
         <listitem>
             <para>For details on how the <parameter>hdfs</parameter> destination works, see <xref linkend="destination-hdfs-interaction"/>.</para>
+        </listitem>
+        <listitem>
+            <para>For details on using MapR-FS, see <xref linkend="destination-hdfs-maprfs"/>.</para>
         </listitem>
         <listitem>
             <para>For the list of options, see <xref linkend="reference-destination-hdfs"/>.</para>
@@ -126,9 +129,40 @@ destination d_hdfs {
             <para>If the file is closed and you have set an archive directory, &abbrev; moves the file to this directory. If &abbrev; cannot move the file for some reason (for example, &abbrev; cannot connect to the HDFS NameNode), the file remains at its original location, &abbrev; will not try to move it again.</para>
         </step>
     </procedure>
-
+    
+    <procedure xml:id="destination-hdfs-maprfs">
+        <title>Storing messages with MapR-FS</title>
+        <indexterm>
+            <primary>MapR</primary>
+        </indexterm>
+        <indexterm>
+            <primary>MapR-FS</primary>
+        </indexterm>
+        <indexterm>
+            <primary>MapR File System</primary>
+        </indexterm>
+        <para>The &abbrev; application is also compatible with MapR File System (MapR-FS). MapR-FS provides better performance, reliability, efficiency, maintainability, and ease of use compared to the default Hadoop Distributed Files System (HDFS). To use MapR-FS with &abbrev;, complete the following steps:</para>
+        <step>
+            <para>Install MapR libraries. Instead of the official Apache HDFS libraries, MapR uses different libraries.</para>
+            <substeps>
+                <step>
+                    <para>Download the libraries from the <link xmlns:ns1="http://doc.mapr.com/display/MapR3/Maven+Repository+and+Artifacts+for+MapR">Maven Repository and Artifacts for MapR</link> or get it from <link xmlns:ns1="http://doc.mapr.com/display/MapR/Quick+Installation+Guide">an already existing MapR installation</link>.</para>
+                </step>
+                <step>
+                    <para>Install MapR. If you do not know how to install MapR, follow the instructions on the <link xmlns:ns1="https://www.mapr.com/">MapR website</link>.</para>
+                </step>
+            </substeps>
+        </step>
+        <step>
+            <para>In a default MapR installation, the required libraries are installed in the following path: <filename>/opt/mapr/lib</filename>.</para>
+            <para>Enter the path where MapR was installed in the <parameter>class-path</parameter> option of the <parameter>hdfs</parameter> destination, for example:</para>
+            <synopsis>class_path("/opt/mapr/lib/*.jar")</synopsis>
+            <para>If the libraries were downloaded from the Maven Repository, the following additional libraries will be requiered: <filename>commons-collections-3.2.1.jar</filename>, <filename>commons-logging-1.1.3.jar</filename>, <filename>hadoop-auth-2.5.1.jar</filename>, <filename>log4j-1.2.15.jar</filename>, <filename>slf4j-api-1.7.5.jar</filename>, <filename>commons-configuration-1.6.jar</filename>, <filename>guava-13.0.1.jar</filename>, <filename>hadoop-common-2.5.1.jar</filename>, <filename>maprfs-4.0.2-mapr.jar</filename>, <filename>slf4j-log4j12-1.7.5.jar</filename>, <filename>commons-lang-2.5.jar</filename>, <filename>hadoop-0.20.2-dev-core.jar</filename>, <filename>json-20080701.jar</filename>, <filename>protobuf-java-2.5.0.jar</filename>, <filename>zookeeper-3.4.5-mapr-1406.jar</filename>.</para>
+        </step>
+    </procedure>
+    
     <section xml:id="reference-destination-hdfs">
-        <title>hdsf destination options</title>
+        <title>HDSF destination options</title>
         <indexterm>
             <primary>destination drivers</primary>
             <secondary><parameter>java()</parameter> driver</secondary>
