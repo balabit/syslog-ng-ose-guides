@@ -143,7 +143,7 @@ destination d_hdfs {
         </indexterm>
         <para>The &abbrev; application is also compatible with MapR File System (MapR-FS). MapR-FS provides better performance, reliability, efficiency, maintainability, and ease of use compared to the default Hadoop Distributed Files System (HDFS). To use MapR-FS with &abbrev;, complete the following steps:</para>
         <step>
-            <para>Install MapR libraries. Instead of the official Apache HDFS libraries, MapR uses different libraries.</para>
+            <para>Install MapR libraries. Instead of the official Apache HDFS libraries, MapR uses different libraries. The supported version is MapR 4.x.</para>
             <substeps>
                 <step>
                     <para>Download the libraries from the <link xmlns:ns1="http://doc.mapr.com/display/MapR3/Maven+Repository+and+Artifacts+for+MapR">Maven Repository and Artifacts for MapR</link> or get it from <link xmlns:ns1="http://doc.mapr.com/display/MapR/Quick+Installation+Guide">an already existing MapR installation</link>.</para>
@@ -157,7 +157,26 @@ destination d_hdfs {
             <para>In a default MapR installation, the required libraries are installed in the following path: <filename>/opt/mapr/lib</filename>.</para>
             <para>Enter the path where MapR was installed in the <parameter>class-path</parameter> option of the <parameter>hdfs</parameter> destination, for example:</para>
             <synopsis>class_path("/opt/mapr/lib/*.jar")</synopsis>
-            <para>If the libraries were downloaded from the Maven Repository, the following additional libraries will be requiered: <filename>commons-collections-3.2.1.jar</filename>, <filename>commons-logging-1.1.3.jar</filename>, <filename>hadoop-auth-2.5.1.jar</filename>, <filename>log4j-1.2.15.jar</filename>, <filename>slf4j-api-1.7.5.jar</filename>, <filename>commons-configuration-1.6.jar</filename>, <filename>guava-13.0.1.jar</filename>, <filename>hadoop-common-2.5.1.jar</filename>, <filename>maprfs-4.0.2-mapr.jar</filename>, <filename>slf4j-log4j12-1.7.5.jar</filename>, <filename>commons-lang-2.5.jar</filename>, <filename>hadoop-0.20.2-dev-core.jar</filename>, <filename>json-20080701.jar</filename>, <filename>protobuf-java-2.5.0.jar</filename>, <filename>zookeeper-3.4.5-mapr-1406.jar</filename>.</para>
+            <para>If the libraries were downloaded from the Maven Repository, the following additional libraries will be requiered. Note that the version numbers in the filenames can be different in the various Hadoop releases:<filename>commons-collections-3.2.1.jar</filename>, <filename>commons-logging-1.1.3.jar</filename>, <filename>hadoop-auth-2.5.1.jar</filename>, <filename>log4j-1.2.15.jar</filename>, <filename>slf4j-api-1.7.5.jar</filename>, <filename>commons-configuration-1.6.jar</filename>, <filename>guava-13.0.1.jar</filename>, <filename>hadoop-common-2.5.1.jar</filename>, <filename>maprfs-4.0.2-mapr.jar</filename>, <filename>slf4j-log4j12-1.7.5.jar</filename>, <filename>commons-lang-2.5.jar</filename>, <filename>hadoop-0.20.2-dev-core.jar</filename>, <filename>json-20080701.jar</filename>, <filename>protobuf-java-2.5.0.jar</filename>, <filename>zookeeper-3.4.5-mapr-1406.jar</filename>.</para>
+        </step>
+        <step>
+            <para>Configure the <parameter>hdfs</parameter> destination in &abbrev;.</para>
+            <example xml:id="example-destination-hdfs">
+                <title>Storing logfiles with MapR-FS</title>
+                <para>The following example defines an <parameter>hdfs</parameter> destination for MapR-FS using only the required parameters.</para>
+                <synopsis>@module mod-java
+
+destination d_mapr {
+    java(
+        class-path("/opt/syslog-ng/lib/syslog-ng/java-modules/*.jar:/opt/mapr/lib/*.jar")
+        class-name("org.syslog_ng.hdfs.HdfsDestination")
+
+        option("hdfs-uri", "maprfs://10.140.32.80")
+        option("hdfs-file", "/user/log/logfile.txt")
+    );
+};
+</synopsis>
+            </example>
         </step>
     </procedure>
     
@@ -328,7 +347,7 @@ destination d_hdfs {
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The URI of the HDFS NameNode in <userinput>hdfs://IPaddress:port</userinput> or <userinput>hdfs://hostname:port</userinput>format. The IP address of the node can be IPv4 or IPv6. For example, <userinput>option("hdfs-uri", "hdfs://10.140.32.80:8020")</userinput>. The IPv6 address must be enclosed in square brackets (<emphasis>[]</emphasis>) as specified by RFC 2732, for example, <userinput>option("hdfs-uri", "hdfs://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:8020")</userinput>. </para>
+            <para><emphasis role="bold">Description:</emphasis> The URI of the HDFS NameNode is in <userinput>hdfs://IPaddress:port</userinput> or <userinput>hdfs://hostname:port</userinput>format. When using MapR-FS, the URI of the MapR-FS NameNode is in <userinput>maprfs://IPaddress</userinput> or <userinput>maprfs://hostname</userinput>format, for example: <userinput>maprfs://10.140.32.80 </userinput>. The IP address of the node can be IPv4 or IPv6. For example, <userinput>option("hdfs-uri", "hdfs://10.140.32.80:8020")</userinput>. The IPv6 address must be enclosed in square brackets (<emphasis>[]</emphasis>) as specified by RFC 2732, for example, <userinput>option("hdfs-uri", "hdfs://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:8020")</userinput>. </para>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
