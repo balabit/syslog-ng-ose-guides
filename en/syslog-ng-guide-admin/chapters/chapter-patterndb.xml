@@ -476,6 +476,24 @@ while (&lt;&gt;) {
                 <listitem>
                     <para>It is possible to generate a message when the <parameter>context-timeout</parameter> of the original message expires and no new message is added to the context during this time. To accomplish this, include the <userinput>trigger="timeout"</userinput> attribute in the action element:</para>
                     <synopsis>&lt;action trigger="timeout"&gt;</synopsis>
+                    <example xml:id="patterndb-timeout-action">
+                        <title>Sending alert when a client disappears</title>
+                        <para>The following example shows how to combine various features of &abbrev; to send an e-mail alert if a client stops sending messages.</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Configure your clients to send MARK messages periodically. It is enough to configure MARK messages for the destination that forwards your log messages to your &abbrev; server (<userinput>mark-mode(periodical)</userinput>).</para>
+                            </listitem>
+                            <listitem>
+                                <para>On your &abbrev; server, create a pattern database rule that matches on the incoming MARK messages. In the rule, set the <parameter>context-scope</parameter> attribute to <userinput>host</userinput>, and the <parameter>context-timeout</parameter> attribute to a value that is higher than the <parameter>mark-freq</parameter> value set on your clients (by default, <userinput>mark-freq</userinput> is 1200 seconds, so set <userinput>context-timeout</userinput> at least to 1500 seconds, but you might want to use a higher value, depending on your environment).</para>
+                            </listitem>
+                            <listitem>
+                                <para>Add an action to this rule that sends you an e-mail alert if the <userinput>context-timeout</userinput> expires, and the server does not receive a new MARK message (<userinput>&lt;action trigger="timeout"&gt;</userinput>).</para>
+                            </listitem>
+                            <listitem>
+                                <para>On your &abbrev; server, use the pattern database in the log path that handles incoming log messages.</para>
+                            </listitem>
+                        </itemizedlist>
+                    </example>
                 </listitem>
             </itemizedlist>
         </section>
