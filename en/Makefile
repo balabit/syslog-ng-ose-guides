@@ -30,7 +30,6 @@ export SCRIPTDIR
 include $(MAKECONF)
 
 all: $(BUILDERREPO) setup $(PDF_OUTPUTS) $(HTML_OUTPUTS) $(WEBHELP_OUTPUTS) $(MANPAGES)
-		sh $(SCRIPTDIR)/copy-webhelp-to-html.sh out/en/
 
 selfcheck: $(BUILDERREPO) Makefile $(MASTER_MAKEFILE)
 	@if ! diff Makefile $(MASTER_MAKEFILE) 2>&1 >/dev/null; then \
