@@ -31,7 +31,7 @@ java(
     class-path("/opt/syslog-ng/lib/syslog-ng/java-modules/*.jar:&lt;path-to-preinstalled-kafka-libraries&gt;")
     class-name("org.syslog_ng.kafka.KafkaDestination")
 
-    option("kafka-bootstrap-servers", "1.2.3.4:5678,192.168.0.2:5678")
+    option("kafka-bootstrap-servers", "1.2.3.4:9092,192.168.0.2:9092")
     option("topic", "${HOST}")
 
 );</synopsis>
@@ -45,7 +45,7 @@ destination d_kafka {
     class_path("/opt/syslog-ng/lib/syslog-ng/java-modules/KafkaDestination.jar:/usr/share/kafka/lib/*.jar")
     class-name("org.syslog_ng.kafka.KafkaDestination")
 
-    option("kafka-bootstrap-servers", "1.2.3.4:5678,192.168.0.2:5678")
+    option("kafka-bootstrap-servers", "1.2.3.4:9092,192.168.0.2:9092")
     option("topic", "${HOST}")
   );
 };
@@ -86,7 +86,7 @@ destination d_kafka {
 					<para>Delete one of the files (for example, <filename>slf4j-log4j12-&lt;version-number&gt;.jar</filename>).</para>
 				</step>
 				<step>
-					<para>Download a version that matches the version number of the other file from the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.slf4j.org/download.html">official SLF4J distribution</link>.</para>
+					<para>Download a version that matches the version number of the other file (for example, 1.7.6) from the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.slf4j.org/download.html">official SLF4J distribution</link>.</para>
 				</step>
 				<step>
 					<para>Copy the downloaded file into the directory of your Kafka library files (for example, <filename>/opt/kafka/lib/</filename>).</para>
@@ -102,7 +102,7 @@ destination d_kafka {
         <para>The &abbrev; <parameter>kafka</parameter> destination tries to reconnect to the brokers in a tight loop. This can look as spinning, because of a lot of similar debug messages. To decrease the amount of such messages, set a bigger timeout using the following properties:</para>
 <synopsis>retry.backoff.ms=1000
 reconnect.backoff.ms=1000</synopsis>
-		<para>For details on using property files, see <xref linkend="kafka-option-properties-file"/>.</para>
+		<para>For details on using property files, see <xref linkend="kafka-option-properties-file"/>. For details on the properties that you can set in the property file, see the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://kafka.apache.org/documentation.html#newproducerconfigs">Apache Kafka documentation</link>.</para>
     </section>
 
     <section xml:id="reference-destination-kafka">
@@ -158,7 +158,7 @@ reconnect.backoff.ms=1000</synopsis>
 						<row>
 							<entry>Default:
 								<?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-							<entry>127.0.0.1</entry>
+							<entry></entry>
 						</row>
 					</tbody>
 				</tgroup>
@@ -197,6 +197,43 @@ reconnect.backoff.ms=1000</synopsis>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
+        <simplesect xml:id="kafka-option-properties-file">
+            <title>properties-file()</title>
+            <indexterm type="parameter">
+                <primary>properties-file()</primary>
+                <secondary>kafka</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>properties-file</primary>
+                <secondary>resource</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>string (absolute path)</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
+                            <entry>N/A</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The absolute path and filename of the Kafka properties file to load. For example, <userinput>option("properties-file", "/opt/syslog-ng/etc/kafka_dest.properties")</userinput>. The abbrev; application reads this file and passes the properties to the Kafka Producer. If a property is defined both in the &abbrev; configuration file (<filename>syslog-ng.conf</filename>) and in the properties file, then &abbrev; uses the definition from the &abbrev; configuration file.</para>
+            <para>The &abbrev; <parameter>kafka</parameter> destination supports all properties of the official Kafka producer. For details, see the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://kafka.apache.org/documentation.html#newproducerconfigs">Apache Kafka documentation</link>.</para>
+            <para>The <parameter>kafka-bootstrap-servers</parameter> option is translated to the <userinput>bootstrap.servers</userinput> property.</para>
+            <para>For example, the following properties file defines the acknowledgement method and compression:</para>
+            <synopsis>acks=all
+compression.type=snappy</synopsis>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-retries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
         <simplesect xml:id="kafka-option-template">
 			<title>template()</title>
 			<indexterm type="parameter">
@@ -227,43 +264,6 @@ reconnect.backoff.ms=1000</synopsis>
 			<para><emphasis role="bold">Description:</emphasis> The message as published to Apache Kafka. You can use templates and template functions (for example, <parameter>format-json()</parameter>) to format the message, for example, <userinput>option("template", "$(format-json --scope rfc5424 --exclude DATE --key ISODATE)")</userinput>.</para>
 			<para>For details on formatting messages in JSON format, see <xref linkend="template-function-format-json"/>.</para>
 		</simplesect>
-        <simplesect>
-            <xi:include href="../../common/chunk/option-destination-retries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        </simplesect>
-        <simplesect xml:id="kafka-option-properties-file">
-            <title>properties-file()</title>
-            <indexterm type="parameter">
-                <primary>properties-file()</primary>
-                <secondary>kafka</secondary>
-            </indexterm>
-            <indexterm type="parameter">
-                <primary>properties-file</primary>
-                <secondary>resource</secondary>
-            </indexterm>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="2">
-                <colspec colnum="1" colwidth="40pt"/>
-                    <tbody>
-                        <row>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>string</entry>
-                        </row>
-                        <row>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-                            <entry>N/A</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The name of the Kafka properties file to load. For example, <userinput>option("properties-file", "/opt/syslog-ng/etc/kafka_dest.properties")</userinput>. The abbrev; application reads this file and passes the properties to the Kafka Producer. If a property is defined both in the &abbrev; configuration file (<filename>syslog-ng.conf</filename>) and in the properties file, then &abbrev; uses the definition from the  &abbrev; configuration file.</para>
-            <para>The &abbrev; <parameter>kafka</parameter> destination supports all properties of the official Kafka producer.</para>
-            <para>The <parameter>kafka-bootstrap-servers</parameter> option is translated to the <userinput>bootstrap.servers</userinput> property.</para>
-            <para>For example, the following properties file defines the acknowledgement method and compression:</para>
-            <synopsis>acks=all
-compression.type=snappy</synopsis>
-        </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
@@ -323,7 +323,7 @@ compression.type=snappy</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> When <parameter>sync-send</parameter> is set to <userinput>true</userinput>, &abbrev; sends the message reliably: it sends a message to the Kafka Provider, then waits for a reply. In case of failure, &abbrev; repeats sending the message, as set in the <parameter>retries()</parameter> parameter. If sending the message fails for <parameter>retries()</parameter> times, &abbrev; drops the message.</para>
+            <para><emphasis role="bold">Description:</emphasis> When <parameter>sync-send</parameter> is set to <userinput>true</userinput>, &abbrev; sends the message reliably: it sends a message to the Kafka server, then waits for a reply. In case of failure, &abbrev; repeats sending the message, as set in the <parameter>retries()</parameter> parameter. If sending the message fails for <parameter>retries()</parameter> times, &abbrev; drops the message.</para>
 			<para>This method ensures reliable message transfer, but is very slow.</para>
 			<para>When <parameter>sync-send</parameter> is set to <userinput>false</userinput>, &abbrev; sends messages asynchronously, and receives the response asynchronously. In case of a problem, &abbrev; cannot resend the messages.</para>
 			<para>This method is fast, but the transfer is not reliable. Several thousands of messages can be lost before &abbrev; recognizes the error.</para>
