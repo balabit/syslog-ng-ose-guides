@@ -954,5 +954,392 @@
 			</listitem>
 		</itemizedlist>
 	</section>
-	<xi:include href="concepts-value-pairs.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+	
+    <xi:include href="concepts-value-pairs.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    
+    <section>
+        <title>Things to consider when configuring &abbrev;</title>
+        <para>When you send your log messages from a &abbrev; client through the network to a &abbrev; server, you can use different protocols and options. Every combination has its advantages and disadvantages. The most important thing is to use matching protocols and options, so the server handles the incoming log messages properly.</para>
+        <para>In &abbrev; you can change many aspects of the network communication. First of all, there is the structure of the messages itself. Currently, &abbrev; supports two standard syslog protocols: the BSD (RFC3164) and the syslog (RFC5424) message format.</para>
+        <para>This RFCs describe the format and the structure of the log message, and add a (lightweight) framing around the messages. You can set this framing/structure by selecting the appropriate driver in syslog-ng. There are – of course – two drivers you can use: the <parameter>network()</parameter> driver and the <parameter>syslog()</parameter> driver. The <parameter>syslog()</parameter> driver is for the syslog (RFC5424) protocol and the network() driver is for the BSD (RFC3164) protocol.</para>
+        <para>The <parameter>tcp()</parameter> and <parameter>udp()</parameter> drivers are now deprecated, they are essentially equivalent with the network<parameter>(transport(tcp))</parameter> and <parameter>network(transport(udp))</parameter> drivers.</para>
+        <para>In addition to selecting the driver to use, both drivers allow you to use different transport-layer protocols: TCP and UDP, and optionally also higher-level transport protocols: TLS (over TCP), and RLTP (optionally using TLS). To complicate things a bit more, you can configure the <parameter>network()</parameter> driver (corresponding to the BSD (RFC3164) protocol) to send the messages in the syslog (RFC5424) format (but without the framing used in RFC5424) using the <parameter>flag(syslog-protocol)</parameter> option.</para>
+        <para>Because some combination of driver and options are invalid, you can use the following drivers and options as sources and as destinations:</para>
+        <orderedlist>
+            <listitem><para><parameter>syslog(transport(tcp))</parameter></para></listitem>
+            <listitem><para><parameter>syslog(transport(udp))</parameter></para></listitem>
+            <listitem><para><parameter>syslog(transport(rltp))</parameter></para></listitem>
+            <listitem><para><parameter>syslog(transport(tls))</parameter></para></listitem>
+            <listitem><para><parameter>syslog(transport(rltp(tls-required(yes)))</parameter></para></listitem>
+            <listitem><para><parameter>network(transport(tcp))</parameter></para></listitem>
+            <listitem><para><parameter>network(transport(udp))</parameter></para></listitem>
+            <listitem><para><parameter>network(transport(rltp))</parameter></para></listitem>
+            <listitem><para><parameter>network(transport(tls))</parameter></para></listitem>
+            <listitem><para><parameter>network(transport(rltp(tls-required(yes)))</parameter></para></listitem>
+            <listitem><para><parameter>network(transport(tcp) flag(syslog-protocol))</parameter></para></listitem>
+            <listitem><para><parameter>network(transport(udp) flag(syslog-protocol))</parameter></para></listitem>
+            <listitem><para><parameter>network(transport(rltp)flag(syslog-protocol))</parameter></para></listitem>
+            <listitem><para><parameter>network(transport(tls) flag(syslog-protocol))</parameter></para></listitem>
+            <listitem><para><parameter>network(transport(rltp(tls-required(yes)) flag(syslog-protocol))</parameter></para></listitem>
+        </orderedlist>
+        <para>If you use the same driver and options in the destination of your &abbrev; client and the source of your &abbrev; server, everything should work as expected. Unfortunately there are some other combinations, that seems working, but result in losing parts of the messages. The following table show the combinations:</para>
+        <table xml:id="table-syslog-ng-source-destination-combinations">
+            <title>Source-destination driver combinations</title>
+            <tgroup cols="16">
+                <thead>
+                    <row>
+                        <entry>S \ D</entry>
+                        <entry>1</entry>
+                        <entry>2</entry>
+                        <entry>3</entry>
+                        <entry>4</entry>
+                        <entry>5</entry>
+                        <entry>6</entry>
+                        <entry>7</entry>
+                        <entry>8</entry>
+                        <entry>9</entry>
+                        <entry>10</entry>
+                        <entry>11</entry>
+                        <entry>12</entry>
+                        <entry>13</entry>
+                        <entry>14</entry>
+                        <entry>15</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>1</entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>2</entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>3</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>4</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>5</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                    </row>
+                    <row>
+                        <entry>6</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004;? </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>7</entry>
+                        <entry> - </entry>
+                        <entry> &#10004;? </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004;? </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>8</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004;? </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004;? </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>9</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004;? </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>10</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004;? </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004;? </entry>
+                    </row>
+                    <row>
+                        <entry>11</entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>12</entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>13</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>14</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                    </row>
+                    <row>
+                        <entry>15</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <itemizedlist>
+            <listitem><para>- This method does not work. The logs will not get to the server.</para></listitem>
+            <listitem><para>&#10004; This method works.</para></listitem>
+            <listitem><para>! This method has some visible drawbacks. The logs go through, but some of the values are missing/misplaced/and so on.</para></listitem>
+            <listitem><para>&#10004;? This method seems to work, but it is not recommended because this can change in a future release.</para></listitem>
+        </itemizedlist>
+        <para>The configuration options of the syslog-ng Agent for Windows application are much more limited. The configurable elements are:</para>
+        <itemizedlist>
+            <listitem><para>Protocol: (Legacy BSD Syslog Protocol, Syslog Protocol, Snare Protocol)</para></listitem>
+            <listitem><para><guimenu>Use SSL</guimenu> option</para></listitem>
+            <listitem><para><guimenu>Use syslog-ng proprietary Reliable Log Transfer Protocol (RLTP)</guimenu> option</para></listitem>
+        </itemizedlist>
+        <para>The protocol corresponds to the <parameter>network()</parameter> and <parameter>syslog()</parameter> drivers of &abbrev;, except that the &abbrev; server does not support the Snare protocol.</para>
+        <para>The <guimenu>Use syslog-ng proprietary Reliable Log Transfer Protocol (RLTP)</guimenu> option is equivalent to the <parameter>transport(rltp)</parameter> option.</para>
+        <para>The <guimenu>Use SSL</guimenu> option is the Windows equivalent of the <parameter>transport(tls)</parameter> option if RLTP is not set, and to the <parameter>transport(rltp(tls-required(yes))</parameter> otherwise.</para>
+        <para>Therefore with syslog-ng Agent the following cases are possible:</para>
+        <table xml:id="table-syslog-ng-source-destination-combinations-agent">
+            <title>Source-destination driver combinations in syslog-ng Agent for Windows</title>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry>The syslog-ng Agent for Windows setting</entry>
+                        <entry>Corresponding syslog-ng PE server setting</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>Protocol: <guimenu>Syslog Protocol</guimenu></entry>
+                        <entry><parameter>syslog(transport(tcp))</parameter></entry>
+                    </row>
+                    <row>
+                        <entry>Protocol: <guimenu>Syslog Protocol</guimenu>, <guimenu>Use RLTP</guimenu> on</entry>
+                        <entry><parameter>syslog(transport(rltp))</parameter></entry>
+                    </row>
+                    <row>
+                        <entry>Protocol: <guimenu>Syslog Protocol</guimenu>, <guimenu>Use SSL</guimenu> on</entry>
+                        <entry><parameter>syslog(transport(tls))</parameter></entry>
+                    </row>
+                    <row>
+                        <entry>Protocol: <guimenu>Syslog Protocol</guimenu>, <guimenu>Use RLTP</guimenu> on, <guimenu>Use SSL</guimenu> on</entry>
+                        <entry><parameter>syslog(transport(rltp(tls-required(yes)))</parameter></entry>
+                    </row>
+                    <row>
+                        <entry>Protocol: <guimenu>Legacy BSD Syslog Protocol</guimenu></entry>
+                        <entry><parameter>network(transport(tcp))</parameter></entry>
+                    </row>
+                    <row>
+                        <entry>Protocol: <guimenu>Legacy BSD Syslog Protocol</guimenu>, <guimenu>Use RLTP</guimenu> on</entry>
+                        <entry><parameter>network(transport(rltp))</parameter></entry>
+                    </row>
+                    <row>
+                        <entry>Protocol: <guimenu>Legacy BSD Syslog Protocol</guimenu>, <guimenu>Use SSL</guimenu> on</entry>
+                        <entry><parameter>network(transport(tls))</parameter></entry>
+                    </row>
+                    <row>
+                        <entry>Protocol: <guimenu>Legacy BSD Syslog Protocol</guimenu>, <guimenu>Use RLTP</guimenu> on, <guimenu>Use SSL</guimenu> on</entry>
+                        <entry><parameter>network(transport(rltp(tls-required(yes)))</parameter></entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
 </chapter>
