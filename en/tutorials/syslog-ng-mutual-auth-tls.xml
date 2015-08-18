@@ -17,16 +17,16 @@
             </subject>
         </subjectset>
         <xi:include href="../xml-stylesheet/common/common.xml" xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="common_copyright_bb"/>
-        <pubdate><?dbtimestamp?></pubdate>
+        <pubdate>
+<?dbtimestamp?>
+        </pubdate>
         <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../xml-stylesheet/common/common.xml" xpointer="common_logo_bb"/>
     </info>
-
     <section>
         <title>Creating self-signed certificates</title>
         <para>To use mutual authentication in &abbrev;, certificates are required. There are several commercial certificate authorities who can help you, but the process costs both money and time (waiting until the submitted certificate is signed). This guide demonstrates how to create your very own Certificate Authority (CA) for creating self-signed certificates. It does not cover all the details, for example changing expiratory dates, only the minimally required steps to be able to test mutual authentication in &abbrev;.</para>
         <para>There are handy tools, such as CA.pl, which can make certificate creation and signing easier, but they are not available on all platforms, even if it is part of the OpenSSL software suite. On the other hand, the OpenSSL command line tool is available on all Linux distributions and BSD variants, so this tool will be used in the guide.</para>
     </section>
-    
     <procedure>
         <title>Creating a CA</title>
         <formalpara>
@@ -54,7 +54,7 @@
             <para><command>cp /etc/ssl/openssl.cnf openssl.cnf</command></para>
         </step>
         <step>
-            <para>Edit <filename>openssl.conf</filename> in the current directory: </para>
+            <para>Edit <filename>openssl.conf</filename> in the current directory:</para>
             <para><command>vi openssl.cnf</command></para>
         </step>
         <step>
@@ -96,7 +96,6 @@ Common Name (e.g. server FQDN or YOUR name) []:Peter Czanik
 Email Address []:czanik@balabit.hu</synopsis>
         </step>
     </procedure>
-    
     <procedure>
         <title>Creating a server certificate</title>
         <formalpara>
@@ -108,10 +107,13 @@ Email Address []:czanik@balabit.hu</synopsis>
             <title>Steps:</title>
             <para/>
         </formalpara>
-        <step><para>The next step is to create and sign a certificate for your &abbrev; server. The common name should contain the FQDN or IP address of your server, and the e-mail address should be left blank.</para>
-        <para><command>openssl req -nodes -new -x509 -keyout serverkey.pem -out serverreq.pem -days 365 -config openssl.cnf</command></para></step>
-        <step><para>The following will be displayed. Answer the questions as in the example:</para>
-        <synopsis>Generating a 1024 bit RSA private key 
+        <step>
+            <para>The next step is to create and sign a certificate for your &abbrev; server. The common name should contain the FQDN or IP address of your server, and the e-mail address should be left blank.</para>
+            <para><command>openssl req -nodes -new -x509 -keyout serverkey.pem -out serverreq.pem -days 365 -config openssl.cnf</command></para>
+        </step>
+        <step>
+            <para>The following will be displayed. Answer the questions as in the example:</para>
+            <synopsis>Generating a 1024 bit RSA private key 
 ........................................++++++ 
 .++++++ 
 writing new private key to 'serverkey.pem' 
@@ -164,11 +166,13 @@ Sign the certificate? [y/n]:y
 
 1 out of 1 certificate requests certified, commit? [y/n]y 
 Write out database with 1 new entries 
-Data Base Updated </synopsis></step>
-        <step><para>Enter the following:</para>
-        <para><command>rm tmp.pem</command></para></step>
+Data Base Updated </synopsis>
+        </step>
+        <step>
+            <para>Enter the following:</para>
+            <para><command>rm tmp.pem</command></para>
+        </step>
     </procedure>
-    
     <procedure>
         <title>Creating a client certificate</title>
         <formalpara>
@@ -180,10 +184,13 @@ Data Base Updated </synopsis></step>
             <title>Steps:</title>
             <para/>
         </formalpara>
-        <step><para>The steps for the client(s) are very similar, only the file names and the embedded common name (host identifier: FQDN or IP address) are different. If you have multiple clients, make sure that each has the right host identifier.</para>
-        <para><command>openssl req -nodes -new -x509 -keyout clientkey.pem -out clientreq.pem -days 365 -config openssl.cnf</command></para></step>
-        <step><para>The following will be displayed. Answer the questions as in the example:</para>
-        <synopsis>Generating a 1024 bit RSA private key 
+        <step>
+            <para>The steps for the client(s) are very similar, only the file names and the embedded common name (host identifier: FQDN or IP address) are different. If you have multiple clients, make sure that each has the right host identifier.</para>
+            <para><command>openssl req -nodes -new -x509 -keyout clientkey.pem -out clientreq.pem -days 365 -config openssl.cnf</command></para>
+        </step>
+        <step>
+            <para>The following will be displayed. Answer the questions as in the example:</para>
+            <synopsis>Generating a 1024 bit RSA private key 
 .................................................................................++++++ 
 ...............................++++++ 
 writing new private key to 'clientkey.pem' 
@@ -237,15 +244,16 @@ Sign the certificate? [y/n]:y
 
 1 out of 1 certificate requests certified, commit? [y/n]y 
 Write out database with 1 new entries 
-Data Base Updated</synopsis></step>
-        <step><para>Enter the following:</para>
-        <para><command>rm tmp.pem</command></para></step>
+Data Base Updated</synopsis>
+        </step>
+        <step>
+            <para>Enter the following:</para>
+            <para><command>rm tmp.pem</command></para>
+        </step>
     </procedure>
-    
     <section>
         <title>Configuring syslog-ng</title>
         <para>Once you are ready with generating CA, server and client certificates, copy them to the respective machines and configure &abbrev; to use them. In theory, the CA and other certificates could be placed anywhere in the file system. In practice, server applications, such as &abbrev; are often protected by AppArmor, SELinux or other mechanisms, therefore it is recommended to create sub-directories where the <filename>syslog-ng.conf</filename> resides. This way &abbrev; can read them without modifying the related access rules.</para>
-        
         <procedure>
             <title>Server</title>
             <formalpara>
@@ -264,10 +272,10 @@ Data Base Updated</synopsis></step>
             <step>
                 <para>Copy <filename>serverkey.pem</filename> and <filename>servercert.pem</filename> to <filename>cert.d</filename>. Copy <filename>cacert.pem</filename> to <filename>ca.d</filename> and issue the following command on the certificate:</para>
                 <para><command>openssl x509 -noout -hash -in cacert.pem </command></para>
-                <para>The result is a hash (for example 6d2962a8), a series of alphanumeric characters based on the Distinguished Name of the certificate. </para>
+                <para>The result is a hash (for example 6d2962a8), a series of alphanumeric characters based on the Distinguished Name of the certificate.</para>
             </step>
             <step>
-                <para>Issue the following command to create a symbolic link to the certificate that uses the hash returned by the previous command and the <filename>.0</filename> suffix. </para>
+                <para>Issue the following command to create a symbolic link to the certificate that uses the hash returned by the previous command and the <filename>.0</filename> suffix.</para>
                 <para><command>ln -s cacert.pem 6d2962a8.0</command></para>
             </step>
             <step>
@@ -285,7 +293,6 @@ log { source(demo_tls_source); destination(d_local); };</synopsis>
                 <para>Finally, restart &abbrev; for the configuration changes to take effect.</para>
             </step>
         </procedure>
-        
         <procedure>
             <title>Client</title>
             <formalpara>
@@ -304,10 +311,10 @@ log { source(demo_tls_source); destination(d_local); };</synopsis>
             <step>
                 <para>Copy <filename>serverkey.pem</filename> and <filename>servercert.pem</filename> to <filename>cert.d</filename>. Copy <filename>cacert.pem</filename> to <filename>ca.d</filename> and issue the following command on the certificate:</para>
                 <para><command>openssl x509 -noout -hash -in cacert.pem</command></para>
-                <para>The result is a hash (for example 6d2962a8), a series of alphanumeric characters based on the Distinguished Name of the certificate. </para>
+                <para>The result is a hash (for example 6d2962a8), a series of alphanumeric characters based on the Distinguished Name of the certificate.</para>
             </step>
             <step>
-                <para>Issue the following command to create a symbolic link to the certificate that uses the hash returned by the previous command and the <filename>.0</filename> suffix. </para>
+                <para>Issue the following command to create a symbolic link to the certificate that uses the hash returned by the previous command and the <filename>.0</filename> suffix.</para>
                 <para><command>ln -s cacert.pem 6d2962a8.0</command></para>
             </step>
             <step>
@@ -326,7 +333,6 @@ log { source(src); destination(demo_tls_destination); };</synopsis>
             </step>
         </procedure>
     </section>
-    
     <procedure>
         <title>Testing</title>
         <formalpara>
@@ -348,10 +354,18 @@ log { source(src); destination(demo_tls_destination); };</synopsis>
             <synopsis>Jun 26 19:12:06 172.16.177.129 root: This is a test message </synopsis>
             <para>If you cannot see it, check the log file, where the internal messages of syslog-ng are stored, both on the server and the client side. The most common causes of the problem are the following:</para>
             <itemizedlist>
-                <listitem><para>There is no trace of connection at all (internal logs show connection attempts), there is a network / firewall problem, or incorrectly configured destination or listening IP.</para></listitem>
-                <listitem><para>With new certificates an incorrectly configured clock can already cause problems. Check if all of your systems have the same time / time zone.</para></listitem>
-                <listitem><para>Make sure, that the Common Name is set to the correct FQDN or IP address. If you use FQDN, make sure, that your DNS server works correctly.</para></listitem>
-                <listitem><para>Do not include an e-mail address in the client and server certificates.</para></listitem>
+                <listitem>
+                    <para>There is no trace of connection at all (internal logs show connection attempts), there is a network / firewall problem, or incorrectly configured destination or listening IP.</para>
+                </listitem>
+                <listitem>
+                    <para>With new certificates an incorrectly configured clock can already cause problems. Check if all of your systems have the same time / time zone.</para>
+                </listitem>
+                <listitem>
+                    <para>Make sure, that the Common Name is set to the correct FQDN or IP address. If you use FQDN, make sure, that your DNS server works correctly.</para>
+                </listitem>
+                <listitem>
+                    <para>Do not include an e-mail address in the client and server certificates.</para>
+                </listitem>
             </itemizedlist>
         </step>
     </procedure>

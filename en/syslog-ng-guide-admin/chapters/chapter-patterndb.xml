@@ -4,9 +4,9 @@
  %entities;]>
 <chapter xml:id="chapter-patterndb" xmlns="http://docbook.org/ns/docbook" version="5.0">
     <title>Processing message content with a pattern database</title>
-    <!-- FIXME a cim nem az igazi -->
-    <!-- FIXME jumplist -->
-    <!-- FIXME leirni, mennyi mindenre jo a patterndb: message classification and tagging, content extraction, message correlation, ... -->
+<!-- FIXME a cim nem az igazi -->
+<!-- FIXME jumplist -->
+<!-- FIXME leirni, mennyi mindenre jo a patterndb: message classification and tagging, content extraction, message correlation, ... -->
     <section xml:id="concepts-pattern-databases">
         <title>Classifying log messages</title>
         <indexterm>
@@ -19,16 +19,13 @@
         </indexterm>
         <para>The syslog-ng application can compare the contents of the received log messages to predefined message patterns. By comparing the messages to the known patterns, syslog-ng is able to identify the exact type of the messages, and sort them into message classes. The message classes can be used to classify the type of the event described in the log message. The message classes can be customized, and for example can label the messages as user login, application crash, file transfer, and so on events.</para>
         <para>To find the pattern that matches a particular message, syslog-ng uses a method called longest prefix match radix tree. This means that syslog-ng creates a tree structure of the available patterns, where the different characters available in the patterns for a given position are the branches of the tree.</para>
-            <!-- FIXME missing figure -->
+<!-- FIXME missing figure -->
         <para>To classify a message, syslog-ng selects the first character of the message (the text of message, not the header), and selects the patterns starting with this character, other patterns are ignored for the rest of the process. After that, the second character of the message is compared to the second character of the selected patterns. Again, matching patterns are selected, and the others discarded. This process is repeated until a single pattern completely matches the message, or no match is found. In the latter case, the message is classified as unknown, otherwise the class of the matching pattern is assigned to the message.</para>
         <para>To make the message classification more flexible and robust, the patterns can contain pattern parsers: elements that match on a set of characters. For example, the NUMBER parser matches on any integer or hexadecimal number (for example 1, 123, 894054, 0xFFFF, and so on). Other pattern parsers match on various strings and IP addresses. For the details of available pattern parsers, see <xref linkend="syslog-ng-patterndb-using-parsers"/>.</para>
         <para>The functionality of the pattern database is similar to that of the logcheck project, but it is much easier to write and maintain the patterns used by syslog-ng, than the regular expressions used by logcheck. Also, it is much easier to understand syslog-ng pattens than regular expressions.</para>
-        <para>Pattern matching based on regular expressions is computationally very intensive, especially when the number of patterns increases. The solution used by syslog-ng can be performed real-time, and is independent from the number of patterns, so it scales much better. The following patterns describe the same message: <userinput>Accepted password for bazsi from 10.50.0.247 port 42156 ssh2</userinput>
-        </para>
-        <para>A regular expression matching this message from the logcheck project: <userinput>Accepted (gssapi(-with-mic|-keyex)?|rsa|dsa|password|publickey|keyboard-interactive/pam) for [^[:space:]]+ from [^[:space:]]+ port [0-9]+( (ssh|ssh2))?</userinput>
-        </para>
-        <para>A syslog-ng database pattern for this message: <userinput>Accepted @QSTRING:auth_method: @ for@QSTRING:username: @from @QSTRING:client_addr: @port @NUMBER:port:@ ssh2</userinput>
-        </para>
+        <para>Pattern matching based on regular expressions is computationally very intensive, especially when the number of patterns increases. The solution used by syslog-ng can be performed real-time, and is independent from the number of patterns, so it scales much better. The following patterns describe the same message: <userinput>Accepted password for bazsi from 10.50.0.247 port 42156 ssh2</userinput></para>
+        <para>A regular expression matching this message from the logcheck project: <userinput>Accepted (gssapi(-with-mic|-keyex)?|rsa|dsa|password|publickey|keyboard-interactive/pam) for [^[:space:]]+ from [^[:space:]]+ port [0-9]+( (ssh|ssh2))?</userinput></para>
+        <para>A syslog-ng database pattern for this message: <userinput>Accepted @QSTRING:auth_method: @ for@QSTRING:username: @from @QSTRING:client_addr: @port @NUMBER:port:@ ssh2</userinput></para>
         <para>For details on using pattern databases to classify log messages, see <xref linkend="configuring-pattern-databases"/>.</para>
         <xi:include href="../../common/syslog-ng-patterndb-structure.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <xi:include href="../../common/syslog-ng-patterndb-operation.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -39,8 +36,6 @@
             <para>Obviously, for this to work, a large number of message patterns are required. The radix-tree matching method used for message classification is very effective, can be performed very fast, and scales very well; basically the time required to perform a pattern matching is independent from the number of patterns in the database. For sample pattern databases, see <xref linkend="patterndb-download"/>.</para>
         </section>
     </section>
-
-
     <section xml:id="configuring-pattern-databases">
         <title>Using pattern databases</title>
         <indexterm>
@@ -217,7 +212,7 @@
                 </listitem>
             </itemizedlist>
             <para>For legal details, the full text of the license is <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://creativecommons.org/licenses/by-sa/3.0/us/legalcode">available here</link>.</para>
-            <para>If you create patterns that are not available in the GitHub repository, consider sharing them with us and the syslog-ng community, and send them to the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://lists.balabit.hu/mailman/listinfo/syslog-ng/">syslog-ng mailing list</link>, or to the following e-mail address: <email>patterndb@balabit.com</email></para>
+            <para>If you create patterns that are not available in the GitHub repository, consider sharing them with us and the syslog-ng community, and send them to the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://lists.balabit.hu/mailman/listinfo/syslog-ng/">syslog-ng mailing list</link>, or to the following e-mail address:<email>patterndb@balabit.com</email></para>
         </section>
     </section>
     <section xml:id="patterndb-correlation">
@@ -244,7 +239,7 @@
         <para>To correlate log messages, &abbrev; uses the pattern database to add messages into message-groups called contexts. A context consists of a series of log messages that are related to each other in some way, for example, the log messages of an SSH session can belong to the same context. As new messages come in, they may be added to a context. Also, when an incoming message is identified it can trigger actions to be performed, for example, generate a new message that contains all the important information that was stored previously in the context. (For details on triggering actions and generating messages, see <xref linkend="patterndb-triggers-actions"/>.)</para>
         <para>There are two attributes for pattern database rules that determine if a message matching the rule is added to a context: <parameter>context-scope</parameter> and <parameter>context-id</parameter>. The <parameter>context-scope</parameter> attribute acts as an early filter, selecting messages sent by the same process (${HOST}${PROGRAM}${PID} is identical), application (${HOST}${PROGRAM} is identical), or host, while the <parameter>context-id</parameter> actually adds the message to the context specified in the id. The <parameter>context-id</parameter> can be a simple string, or can contain macros or values extracted from the log messages for further filtering. Starting with &abbrev; version <phrase condition="ose">3.5</phrase>, if a message is added to a context, &abbrev; automatically adds the identifier of the context to the <parameter>.classifier.context_id</parameter> macro of the message.</para>
         <note>
-			<para>Message contexts are persistent and are not lost when &abbrev; is reloaded (SIGHUP), but are lost when &abbrev; is restarted.</para>
+            <para>Message contexts are persistent and are not lost when &abbrev; is reloaded (SIGHUP), but are lost when &abbrev; is restarted.</para>
         </note>
         <para>Another parameter of a rule is the <parameter>context-timeout</parameter> attribute, which determines how long a context is stored, that is, how long &abbrev; waits for related messages to arrive. Note the following points about timeout values:</para>
         <itemizedlist>
@@ -254,11 +249,12 @@
             <listitem>
                 <para>When calculating if the timeout has already expired or not, &abbrev; uses the timestamps of the incoming messages, not system time elapsed between receiving the two messages (unless the messages do not include a timestamp, or the <userinput>keep-timestamp(no)</userinput> option is set). That way &abbrev; can be used to process and correlate already existing log messages offline. However, the timestamps of the messages must be in chronological order (that is, a new message cannot be older than the one already processed), and if a message is newer than the current system time (that is, it seems to be coming from the future), &abbrev; will replace its timestamp with the current system time.</para>
                 <example>
-					<title>How &abbrev; calculates <parameter>context-timeout</parameter></title>
-					<para>Consider the following two messages:</para>
-					<synopsis>&lt;38&gt;1990-01-01T14:45:25 customhostname program6[1234]: program6 testmessage
+                    <title>How &abbrev; calculates <parameter>context-timeout</parameter>
+                    </title>
+                    <para>Consider the following two messages:</para>
+                    <synopsis>&lt;38&gt;1990-01-01T14:45:25 customhostname program6[1234]: program6 testmessage
 &lt;38&gt;1990-01-01T14:46:25 customhostname program6[1234]: program6 testmessage</synopsis>
-					<para>If the <parameter>context-timeout</parameter> is 10 seconds and &abbrev; receives the messages within 1 sec, the timeout event will occour immediately, because the difference of the two timestamp (60 sec) is larger than the timeout value (10 sec).</para>
+                    <para>If the <parameter>context-timeout</parameter> is 10 seconds and &abbrev; receives the messages within 1 sec, the timeout event will occour immediately, because the difference of the two timestamp (60 sec) is larger than the timeout value (10 sec).</para>
                 </example>
             </listitem>
             <listitem>
@@ -460,7 +456,7 @@ while (&lt;&gt;) {
                     <para>The &abbrev; application automatically fills the fields for the generated message based on the scope of the context, for example, the HOST and PROGRAM fields if the <parameter>context-scope</parameter> is <userinput>program</userinput>.</para>
                 </listitem>
                 <listitem>
-                    <!-- FIXME most of this para is copied to the colleration section -->
+<!-- FIXME most of this para is copied to the colleration section -->
                     <para>When used together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <userinput>@&lt;distance-of-referenced-message-from-the-current&gt;</userinput> suffix to the macro. For details, see <xref linkend="referencing-previous-messages"/>.</para>
                 </listitem>
                 <listitem>
@@ -519,7 +515,7 @@ while (&lt;&gt;) {
                     <indexterm type="parameter">
                         <primary>patterndb</primary>
                     </indexterm>
-                    <para><emphasis role="bold">&lt;patterndb&gt;</emphasis>: The container element of the pattern database. For example: <synopsis>&lt;patterndb version='4' pub_date='2010-10-25'&gt;</synopsis></para>
+                    <para><emphasis role="bold">&lt;patterndb&gt;</emphasis>: The container element of the pattern database. For example:<synopsis>&lt;patterndb version='4' pub_date='2010-10-25'&gt;</synopsis></para>
                 </listitem>
                 <listitem>
                     <indexterm type="parameter">
@@ -537,7 +533,7 @@ while (&lt;&gt;) {
                     <indexterm type="parameter">
                         <primary>ruleset</primary>
                     </indexterm>
-                    <para><emphasis role="bold">&lt;ruleset&gt;</emphasis>: A container element to group log patterns for an application or program. For example: <synopsis>&lt;ruleset name='su' id='480de478-d4a6-4a7f-bea4-0c0245d361e1'&gt;</synopsis></para>
+                    <para><emphasis role="bold">&lt;ruleset&gt;</emphasis>: A container element to group log patterns for an application or program. For example:<synopsis>&lt;ruleset name='su' id='480de478-d4a6-4a7f-bea4-0c0245d361e1'&gt;</synopsis></para>
                     <para>A <userinput>&lt;patterndb&gt;</userinput> element may contain any number of <userinput>&lt;ruleset&gt;</userinput> elements.</para>
                     <itemizedlist>
                         <listitem>
@@ -589,7 +585,7 @@ while (&lt;&gt;) {
                                 </listitem>
                             </itemizedlist>
                             <note>
-                                <para>If the <userinput>&lt;pattern&gt;</userinput> element of a ruleset is not specified, &abbrev; will use this ruleset as a fallback ruleset: it will apply the ruleset to messages that have an empty PROGRAM header, or if none of the program patterns matched the PROGRAM header of the incoming message. </para>
+                                <para>If the <userinput>&lt;pattern&gt;</userinput> element of a ruleset is not specified, &abbrev; will use this ruleset as a fallback ruleset: it will apply the ruleset to messages that have an empty PROGRAM header, or if none of the program patterns matched the PROGRAM header of the incoming message.</para>
                             </note>
                         </listitem>
                         <listitem xml:id="patterndb-schema-rules">
@@ -603,24 +599,24 @@ while (&lt;&gt;) {
                                         <primary>rule</primary>
                                     </indexterm>
                                     <para><emphasis role="bold">&lt;rule&gt;</emphasis>: An element containing message patterns and how a message that matches these patterns is classified. For example:</para>
-                                        <synopsis>&lt;rule provider='balabit' id='f57196aa-75fd-11dd-9bba-001e6806451b' class='violation'&gt;</synopsis>
+                                    <synopsis>&lt;rule provider='balabit' id='f57196aa-75fd-11dd-9bba-001e6806451b' class='violation'&gt;</synopsis>
                                     <para>The following example specifies attributes for correlating messages as well. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
                                     <synopsis>&lt;rule provider='balabit' id='f57196aa-75fd-11dd-9bba-001e6806451b' class='violation' context-id='same-session' context-scope='process' context-timeout='360'&gt;</synopsis>
                                     <note>
                                         <para>If the following characters appear in the message, they must be escaped in the rule as follows:</para>
                                         <itemizedlist>
-                                          <listitem>
+                                            <listitem>
                                                 <para><userinput>@</userinput>: Use @@, for example <userinput>user@@example.com</userinput></para>
-                                          </listitem>
-                                          <listitem>
+                                            </listitem>
+                                            <listitem>
                                                 <para><emphasis>&lt;</emphasis>: Use <userinput>&amp;lt;</userinput></para>
-                                          </listitem>
-                                          <listitem>
+                                            </listitem>
+                                            <listitem>
                                                 <para><emphasis>&gt;</emphasis>: Use <userinput>&amp;gt;</userinput></para>
-                                          </listitem>
-                                          <listitem>
+                                            </listitem>
+                                            <listitem>
                                                 <para>&amp;: Use <userinput>&amp;amp;</userinput></para>
-                                          </listitem>
+                                            </listitem>
                                         </itemizedlist>
                                     </note>
                                     <para>The <emphasis role="bold">&lt;rules&gt;</emphasis> element may contain any number of <emphasis role="bold">&lt;rule&gt;</emphasis> elements.</para>
@@ -680,7 +676,7 @@ while (&lt;&gt;) {
                                             <indexterm type="parameter">
                                                 <primary>host &mdash; context-scope</primary>
                                             </indexterm>
-                                            <para><emphasis>host</emphasis>: Every message generated by a client belongs to the same context, only the ${HOST} value of the messages must be identical. </para>
+                                            <para><emphasis>host</emphasis>: Every message generated by a client belongs to the same context, only the ${HOST} value of the messages must be identical.</para>
                                         </listitem>
                                         <listitem>
                                             <indexterm type="parameter">
@@ -698,108 +694,108 @@ while (&lt;&gt;) {
                                     <indexterm type="parameter">
                                         <primary>patterns &mdash; rule</primary>
                                     </indexterm>
-                                    <para><emphasis role="bold">&lt;patterns&gt;</emphasis>: An element containing the patterns of the rule. If a <emphasis role="bold">&lt;patterns&gt;</emphasis> element contains multiple <emphasis role="bold">&lt;pattern&gt;</emphasis> elements, the class of the <emphasis role="bold">&lt;rule&gt;</emphasis> is assigned to every syslog message matching any of the patterns. </para>
+                                    <para><emphasis role="bold">&lt;patterns&gt;</emphasis>: An element containing the patterns of the rule. If a <emphasis role="bold">&lt;patterns&gt;</emphasis> element contains multiple <emphasis role="bold">&lt;pattern&gt;</emphasis> elements, the class of the <emphasis role="bold">&lt;rule&gt;</emphasis> is assigned to every syslog message matching any of the patterns.</para>
                                     <itemizedlist>
                                         <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>pattern &mdash; rule</primary>
-                                          </indexterm>
-                                            <para><emphasis role="bold">&lt;pattern&gt;</emphasis>: A pattern describing a log message. This element is also called <userinput>message pattern</userinput>. For example: <synopsis>&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</synopsis></para>
-                                          <note>
-                                              <para>Support for XML entities is limited, you can use only the following entities: <userinput>&amp;amp; &amp;lt; &amp;gt; &amp;quot; &amp;apos;</userinput>. User-defined entities are not supported.</para>
-                                          </note>
+                                            <indexterm type="parameter">
+                                                <primary>pattern &mdash; rule</primary>
+                                            </indexterm>
+                                            <para><emphasis role="bold">&lt;pattern&gt;</emphasis>: A pattern describing a log message. This element is also called <userinput>message pattern</userinput>. For example:<synopsis>&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</synopsis></para>
+                                            <note>
+                                                <para>Support for XML entities is limited, you can use only the following entities: <userinput>&amp;amp; &amp;lt; &amp;gt; &amp;quot; &amp;apos;</userinput>. User-defined entities are not supported.</para>
+                                            </note>
                                         </listitem>
                                         <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>description &mdash; pattern</primary>
-                                          </indexterm>
-                                            <para><emphasis role="bold">description</emphasis>: OPTIONAL &mdash; A description of the pattern or the log message matching the pattern. </para>
+                                            <indexterm type="parameter">
+                                                <primary>description &mdash; pattern</primary>
+                                            </indexterm>
+                                            <para><emphasis role="bold">description</emphasis>: OPTIONAL &mdash; A description of the pattern or the log message matching the pattern.</para>
                                         </listitem>
                                         <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>urls &mdash; pattern</primary>
-                                          </indexterm>
+                                            <indexterm type="parameter">
+                                                <primary>urls &mdash; pattern</primary>
+                                            </indexterm>
                                             <para><emphasis role="bold">urls</emphasis>: OPTIONAL &mdash; An element containing one or more URLs referring to further information about the patterns or the matching log messages.</para>
-                                          <itemizedlist>
-                                          <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>url &mdash; pattern</primary>
-                                          </indexterm>
+                                            <itemizedlist>
+                                                <listitem>
+                                                    <indexterm type="parameter">
+                                                        <primary>url &mdash; pattern</primary>
+                                                    </indexterm>
                                                     <para><emphasis role="bold">url</emphasis>: OPTIONAL &mdash; An URL referring to further information about the patterns or the matching log messages.</para>
-                                          </listitem>
-                                          </itemizedlist>
+                                                </listitem>
+                                            </itemizedlist>
                                         </listitem>
                                         <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>values &mdash; pattern</primary>
-                                          </indexterm>
+                                            <indexterm type="parameter">
+                                                <primary>values &mdash; pattern</primary>
+                                            </indexterm>
                                             <para><emphasis role="bold">values</emphasis>: OPTIONAL &mdash; Name-value pairs that are assigned to messages matching the patterns, for example, the representation of the event in the message according to the Common Event Format (CEF) or Common Event Exchange (CEE). The names can be used as macros to reference the assigned values.</para>
-                                          <itemizedlist>
-                                          <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>value &mdash; pattern</primary>
-                                          </indexterm>
+                                            <itemizedlist>
+                                                <listitem>
+                                                    <indexterm type="parameter">
+                                                        <primary>value &mdash; pattern</primary>
+                                                    </indexterm>
                                                     <para><emphasis role="bold">value</emphasis>: OPTIONAL &mdash; Contains the value of the name-value pair that is assigned to the message. For example:</para>
-                                          <synopsis>&lt;value name=".classifier.outcome"&gt;/Success&lt;/value&gt;</synopsis>
-                                          <para>The &lt;value&gt; element of name-value pairs can include template functions. For details, see <xref linkend="template-functions"/>, for examples, see <xref linkend="template-function-if"/>.</para>
-                                          <para>When used together with message correlation, the &lt;value&gt; element of name-value pairs can include references to the values of earlier messages from the same context. For details, see <xref linkend="patterndb-correlation"/>.</para>
-                                          </listitem>
-                                          <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>name &mdash; pattern value</primary>
-                                          </indexterm>
-                                             <para><emphasis>name</emphasis>: The name of the name-value pair. It can also be used as a macro to reference the assigned value.</para>
-                                          </listitem>
-                                          </itemizedlist>
+                                                    <synopsis>&lt;value name=".classifier.outcome"&gt;/Success&lt;/value&gt;</synopsis>
+                                                    <para>The &lt;value&gt; element of name-value pairs can include template functions. For details, see <xref linkend="template-functions"/>, for examples, see <xref linkend="template-function-if"/>.</para>
+                                                    <para>When used together with message correlation, the &lt;value&gt; element of name-value pairs can include references to the values of earlier messages from the same context. For details, see <xref linkend="patterndb-correlation"/>.</para>
+                                                </listitem>
+                                                <listitem>
+                                                    <indexterm type="parameter">
+                                                        <primary>name &mdash; pattern value</primary>
+                                                    </indexterm>
+                                                    <para><emphasis>name</emphasis>: The name of the name-value pair. It can also be used as a macro to reference the assigned value.</para>
+                                                </listitem>
+                                            </itemizedlist>
                                         </listitem>
                                         <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>examples</primary>
-                                          </indexterm>
+                                            <indexterm type="parameter">
+                                                <primary>examples</primary>
+                                            </indexterm>
                                             <para><emphasis role="bold">examples</emphasis>: OPTIONAL &mdash; A container element for sample log messages that should be recognized by the pattern. These messages can be used also to test the patterns and the parsers.</para>
-                                          <itemizedlist>
-                                          <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>example</primary>
-                                          </indexterm>
-                                            <para><emphasis role="bold">example</emphasis>: OPTIONAL &mdash; A container element for a sample log message. </para>
-                                          <itemizedlist>
-                                          <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>test_message</primary>
-                                          </indexterm>
-                                             <para><emphasis role="bold">test_message</emphasis>: OPTIONAL &mdash; A sample log message that should match this pattern. For example: <synopsis>&lt;test_message program="myapplication"&gt;Content filter has been enabled&lt;/test_message&gt;</synopsis></para>
-                                          <itemizedlist>
-                                            <listitem>
-                                                <para><emphasis>program</emphasis>: The program pattern of the test message. For example: <synopsis>&lt;test_message program="proftpd">ubuntu (::ffff:192.168.2.179[::ffff:192.168.2.179]) - FTP session closed.&lt;/test_message&gt;</synopsis></para>
-                                            </listitem>
-                                          </itemizedlist>
-                                          </listitem>
-                                          <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>test_values</primary>
-                                          </indexterm>
-                                             <para><emphasis role="bold">test_values</emphasis>: OPTIONAL &mdash; A container element to test the results of the parsers used in the pattern.</para>
-                                          <itemizedlist>
-                                          <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>test_value</primary>
-                                          </indexterm>
-                                            <para><emphasis role="bold">test_value</emphasis>: OPTIONAL &mdash; The expected value of the parser when matching the pattern to the test message. For example: <synopsis>&lt;test_value name=".dict.ContentFilter"&gt;enabled&lt;/test_value&gt;</synopsis></para>
-                                          </listitem>
-                                          <listitem>
-                                          <indexterm type="parameter">
-                                            <primary>name &mdash; test_value</primary>
-                                          </indexterm>
-                                              <para><emphasis>name</emphasis>: The name of the parser to test.</para>
-                                          </listitem>
-                                          </itemizedlist>
-                                          </listitem>
-                                          </itemizedlist>
-                                          </listitem>
-                                          </itemizedlist>
+                                            <itemizedlist>
+                                                <listitem>
+                                                    <indexterm type="parameter">
+                                                        <primary>example</primary>
+                                                    </indexterm>
+                                                    <para><emphasis role="bold">example</emphasis>: OPTIONAL &mdash; A container element for a sample log message.</para>
+                                                    <itemizedlist>
+                                                        <listitem>
+                                                            <indexterm type="parameter">
+                                                                <primary>test_message</primary>
+                                                            </indexterm>
+                                                            <para><emphasis role="bold">test_message</emphasis>: OPTIONAL &mdash; A sample log message that should match this pattern. For example:<synopsis>&lt;test_message program="myapplication"&gt;Content filter has been enabled&lt;/test_message&gt;</synopsis></para>
+                                                            <itemizedlist>
+                                                                <listitem>
+                                                                    <para><emphasis>program</emphasis>: The program pattern of the test message. For example:<synopsis>&lt;test_message program="proftpd">ubuntu (::ffff:192.168.2.179[::ffff:192.168.2.179]) - FTP session closed.&lt;/test_message&gt;</synopsis></para>
+                                                                </listitem>
+                                                            </itemizedlist>
+                                                        </listitem>
+                                                        <listitem>
+                                                            <indexterm type="parameter">
+                                                                <primary>test_values</primary>
+                                                            </indexterm>
+                                                            <para><emphasis role="bold">test_values</emphasis>: OPTIONAL &mdash; A container element to test the results of the parsers used in the pattern.</para>
+                                                            <itemizedlist>
+                                                                <listitem>
+                                                                    <indexterm type="parameter">
+                                                                        <primary>test_value</primary>
+                                                                    </indexterm>
+                                                                    <para><emphasis role="bold">test_value</emphasis>: OPTIONAL &mdash; The expected value of the parser when matching the pattern to the test message. For example:<synopsis>&lt;test_value name=".dict.ContentFilter"&gt;enabled&lt;/test_value&gt;</synopsis></para>
+                                                                </listitem>
+                                                                <listitem>
+                                                                    <indexterm type="parameter">
+                                                                        <primary>name &mdash; test_value</primary>
+                                                                    </indexterm>
+                                                                    <para><emphasis>name</emphasis>: The name of the parser to test.</para>
+                                                                </listitem>
+                                                            </itemizedlist>
+                                                        </listitem>
+                                                    </itemizedlist>
+                                                </listitem>
+                                            </itemizedlist>
                                         </listitem>
-                                   </itemizedlist>
+                                    </itemizedlist>
                                 </listitem>
                             </itemizedlist>
                         </listitem>
@@ -893,8 +889,8 @@ while (&lt;&gt;) {
                                         </listitem>
                                     </itemizedlist>
                                 </listitem>
-                              </itemizedlist>
-                            </listitem>
+                            </itemizedlist>
+                        </listitem>
                         <listitem xml:id="patterndb-schema-tags">
                             <indexterm>
                                 <primary>tagging messages</primary>
@@ -911,7 +907,7 @@ while (&lt;&gt;) {
                                     <indexterm type="parameter">
                                         <primary>tag &mdash; rule</primary>
                                     </indexterm>
-                                    <para><emphasis role="bold">tag</emphasis>: OPTIONAL &mdash; A keyword or tags applied to messages matching the rule. For example: <synopsis>&lt;tags&gt;&lt;tag&gt;UserLogin&lt;/tag&gt;&lt;/tags&gt;</synopsis></para>
+                                    <para><emphasis role="bold">tag</emphasis>: OPTIONAL &mdash; A keyword or tags applied to messages matching the rule. For example:<synopsis>&lt;tags&gt;&lt;tag&gt;UserLogin&lt;/tag&gt;&lt;/tags&gt;</synopsis></para>
                                 </listitem>
                             </itemizedlist>
                         </listitem>
@@ -963,7 +959,7 @@ while (&lt;&gt;) {
             &lt;/rules&gt;
     &lt;/ruleset&gt;
 &lt;/patterndb&gt;</synopsis>
-                </example>
-            </section>
+            </example>
         </section>
+    </section>
 </chapter>
