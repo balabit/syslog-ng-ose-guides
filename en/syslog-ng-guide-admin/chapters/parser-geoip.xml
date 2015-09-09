@@ -7,6 +7,10 @@
     <indexterm>
         <primary>geoip</primary>
     </indexterm>
+    <indexterm>
+        <primary>parsers</primary>
+        <secondary>geoip</secondary>
+    </indexterm>
     <para>The &abbrev; application can lookup IP addresses from an offline GeoIP database, and make the retrieved data available in name-value pairs. Depending on the database used, you can access country code, longitude, and latitude information.</para>
     <note>
         <para>To access longitude and latitude information, download the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz">GeoLiteCity</link> database, and unzip it (for example, to the <filename>/usr/share/GeoIP/GeoLiteCity.dat</filename> file). The default databases available on Linux and other platforms usually contain only the country codes.</para>
@@ -51,10 +55,65 @@ log {
 };</synopsis>
         <para>For example, for the <userinput>&lt;38&gt;Jan 1 14:45:22 192.168.1.1 prg00000[1234]: test message</userinput> message the output will look like:</para>
         <synopsis>{"geoip":{"longitude":"47.460704","latitude":"19.049968","country_code":"HU"},"PROGRAM":"prg00000","PRIORITY":"info","PID":"1234","MESSAGE":"test message","HOST":"192.168.1.1","FACILITY":"auth","DATE":"Jan  1 14:45:22"}</synopsis>
+        <para>If you are transferring your log messages into Elasticsearch, use the following rewrite rule to combine the longitude and latitude information into a single value (called <userinput>geoip.location</userinput>), and set the mapping in Elasticsearch accordingly. Do not forget to include the rewrite in your log path.</para>
+        <indexterm>
+            <primary>geoip</primary>
+            <secondary>elasticsearch</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>elasticsearch</primary>
+            <secondary>transferring geoip data</secondary>
+        </indexterm>
+        <synopsis>rewrite r_geoip {
+    set(
+        "${geoip.latitude},${geoip.longitude}",
+        value(
+            "geoip.location"
+        )
+    );
+};</synopsis>
+        <para>In your Elasticsearch configuration, set the appropriate mappings:</para>
+        <synopsis>{
+   "mappings" : {
+      "_default_" : {
+         "properties" : {
+            "geoip" : {
+               "properties" : {
+                  "country_code" : {
+                     "index" : "not_analyzed",
+                     "type" : "string",
+                     "doc_values" : true
+                  },
+                  "latitude" : {
+                     "index" : "not_analyzed",
+                     "type" : "string",
+                     "doc_values" : true
+                  },
+                  "longitude" : {
+                     "type" : "string",
+                     "doc_values" : true,
+                     "index" : "not_analyzed"
+                  },
+                  "location" : {
+                     "type" : "geo_point"
+                  }
+               }
+            }
+         }
+      }
+   }
+}</synopsis>
     </example>
     <section xml:id="geoip-parser-options">
         <title>Options of <userinput>geoip</userinput> parsers</title>
-        <para>The <parameter>geoip</parameter> has the following options.</para>
+        <indexterm>
+            <primary>geoip</primary>
+        </indexterm>
+        <indexterm>
+            <primary>parsers</primary>
+            <secondary>geoip</secondary>
+        </indexterm>
+        <para>The <parameter>geoip</parameter> parser has the following options.</para>
         <simplesect xml:id="geoip-parser-prefix">
             <title>prefix()</title>
             <indexterm>
