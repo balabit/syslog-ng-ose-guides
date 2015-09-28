@@ -61,26 +61,32 @@ In case you have any question, comment, or feedback, you can:
  * Within a text element (for example, &lt;para>), use line wraps instead of line breaks.
  * Use only inline elements within a &lt;para> element. Do not use lists (&lt;itemizedlist>), code blocks (&lt;synopsis>), examples (&lt;example>), or other similar tags within the &lt;para>. Instead, close the &lt;para> first, and add the new block element in the next line. For example:
 
-    &lt;para>This is some text before a list.&lt;/para>
-    &lt;itemizedlist>
-        &lt;listitem>
-            &lt;para>This is a list after the para.&lt;/para>
-        &lt;/listitem>
-    &lt;/itemizedlist>
+```
+<para>This is some text before a list.</para>
+<itemizedlist>
+    <listitem>
+        <para>This is a list after the para.</para>
+    </listitem>
+</itemizedlist>
+```
 
  * To document a code block, for example, a part of a configuration file, use the &lt;synopsis> tag. Do not nest the &lt;synopsis> tag within a &lt;para> element.
  * To refer to a parameter (for example, a syslog-ng destination, or an option of a destination), use the &lt;parameter> tag. To refer to a parameter with example values, use the &lt;userinput> tag. (This distinction is needed because the &parameter> tag is automatically indexed in the build process.) For example:
 
-    &lt;para>Use the &parameter>use-dns()&lt/parameter> to ...&/para>
-    &lt;para>To disable name resolution, use the &lt;userinput>use-dns(no)&lt;/userinput> global option.&/para>
+```
+<para>Use the &parameter>use-dns()&lt/parameter> to ...</para>
+<para>To disable name resolution, use the <userinput>use-dns(no)&lt;/userinput> global option.</para>
+```
 
  * To document a step-by-step procedure, use the &lt;procedure> tag. Do not use &lt;orderedlist> for this purpose.
  * Use the &lt;command> tag to indicate commands, meaning commands to be entered on a command line or a field.
 
-    &lt;example>
-        &lt;title>Example of the resulting output:</title>
-        &lt;para>&lt;command>ping 123.45.6.789</command></para>
-    &lt;/example>
+```
+<example>
+    <title>Example of the resulting output:</title>
+    <para><command>ping 123.45.6.789</command></para>
+</example>
+```
 
  * To refer to syslog-ng in the text, use the &product; or the &abbrev; entity. This will be resolved to syslog-ng Open Source Edition or syslog-ng OSE, respectively.
 
@@ -97,12 +103,16 @@ Use the &lt;xref> tag to insert links pointing to other nodes within the documen
 ## Links between documents in the same document set
 Use the &lt;olinks> tag to insert links pointing to a node of a separate document within the document set (for example, to link to a tutorial from the administrator guide). Use the `targetdoc` attribute to define the target document, and the `targetptr` attribute to define the target node within the target document. For example:
 
-    &lt;olink targetdoc="syslog-ng-ose-guide-admin" targetptr="chapter-install"/&gt;
+```
+<olink targetdoc="syslog-ng-ose-guide-admin" targetptr="chapter-install"/>
+```
 
 ##External links to websites
 Use the &lt;link> tag to insert links pointing to an external website. Use the `ns1:href` attribute to define the target url. Enter a short descriptive phrase about the website between the tags. Use the url of the website between the tags only if the url itself is important. For example:
 
-    &lt;para>Visit the &lt;link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.syslog-ng.org">syslog-ng Open Source Edition website&lt;/link>.
+```
+<para>Visit the &lt;link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.syslog-ng.org">syslog-ng Open Source Edition website</link>.
+```
 
 ## Warnings, notes, tips, examples
 Use the &lt;warning> tag to indicate warnings. Always indicate the harmful outcomes first, when writing warnings. Only use warnings if the actions of the user can result in the following:
@@ -114,9 +124,11 @@ Use the &lt;warning> tag to indicate warnings. Always indicate the harmful outco
 
 For example:
 
-    &lt;warning>
-        &lt;para>Hazard of data loss!&lt;/para>
-    &lt;warning>
+```
+<warning>
+    <para>Hazard of data loss!</para>
+</warning>
+```
 
 Use the &lt;note> tag to indicate notes:
 
@@ -126,27 +138,33 @@ Use the &lt;note> tag to indicate notes:
 
 For example:
 
-    &lt;note>
-        &lt;para>This feature only works on Linux OS.&lt;/para>
-    &lt;/note>
-    &lt;note>
-        &lt;para>Do not adjust or modify the following `foobar` option unless you know exactly what you are doing. Misconfiguration will severely decrease the performance of the product.&lt;/para>
-    &lt;/note>
+```
+<note>
+    <para>This feature only works on Linux OS.</para>
+</note>
+<note>
+    <para>Do not adjust or modify the following `foobar` option unless you know exactly what you are doing. Misconfiguration will severely decrease the performance of the product.</para>
+</note>
+```
 
 Use the &lt;tip> tag to indicate tips (best practices and recommendations).
 
 For example:
 
-    &lt;tip>
-        &lt;para>Save your changes often.&lt;/para>
-    &lt;/tip>
+```
+<tip>
+    <para>Save your changes often.&lt;/para>
+</tip>
+```
 
 Use the &lt;example> tag to add examples to your text.
 
 For example:
 
-    &lt;example>
-        &lt;title>Example of the example&lt;/title>
-        &lt;para>This configuration example does this and that.&lt;/para>
-        &lt;synopsis>Configuration snippet&lt;/synopsis>
-    &lt;/example>
+```
+<example>
+    <title>Example of the example</title>
+    <para>This configuration example does this and that.</para>
+    <synopsis>Configuration snippet</synopsis>
+</example>
+```
