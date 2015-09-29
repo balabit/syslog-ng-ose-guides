@@ -71,11 +71,11 @@ In case you have any question, comment, or feedback, you can:
 ```
 
  * To document a code block, for example, a part of a configuration file, use the &lt;synopsis> tag. Do not nest the &lt;synopsis> tag within a &lt;para> element.
- * To refer to a parameter (for example, a syslog-ng destination, or an option of a destination), use the &lt;parameter> tag. To refer to a parameter with example values, use the &lt;userinput> tag. (This distinction is needed because the &parameter> tag is automatically indexed in the build process.) For example:
+ * To refer to a parameter (for example, a syslog-ng destination, or an option of a destination), use the &lt;parameter> tag. To refer to a parameter with example values, use the &lt;userinput> tag. (This distinction is needed because the &lt;parameter> tag is automatically indexed in the build process.) For example:
 
 ```
-<para>Use the &parameter>use-dns()&lt/parameter> to ...</para>
-<para>To disable name resolution, use the <userinput>use-dns(no)&lt;/userinput> global option.</para>
+<para>Use the <parameter>use-dns()</parameter> to ...</para>
+<para>To disable name resolution, use the <userinput>use-dns(no)</userinput> global option.</para>
 ```
 
  * To document a step-by-step procedure, use the &lt;procedure> tag. Do not use &lt;orderedlist> for this purpose.
@@ -92,13 +92,15 @@ In case you have any question, comment, or feedback, you can:
 
 ## syslog-ng OSE vs. PE
 The syslog-ng application has two flavors: the free and open source syslog-ng Open Source Edition, and the commercial and proprietary syslog-ng Premium Edition.
-The code base of these two flavors have a lot in common, similarly, most parts of their documentation are also common. The differences between the two flavors is marked in the documentation as well. If a feature or description applies only to syslog-ng OSE, add the `condition="ose"` attribute to the particular DocBook element. For example, the descriptions of the destinations that are available only in OSE start with the following tag: `&lt;section condition="ose">`
+The code base of these two flavors have a lot in common, similarly, most parts of their documentation are also common. The differences between the two flavors is marked in the documentation as well. If a feature or description applies only to syslog-ng OSE, add the `condition="ose"` attribute to the particular DocBook element. For example, the descriptions of the destinations that are available only in OSE start with the following tag: `<section condition="ose">`
 Similarly, descriptions that apply only to syslog-ng PE have the `condition="pe"` attribute. When an element has such an attribute, the element and its child elements will be available only in the guide that matches the condition.
 
 ## Internal links within the document
 Use the &lt;xref> tag to insert links pointing to other nodes within the document. Use the xml:id of the referenced node in the `linkend` attribute to define the target node. The link text will include the section number, the section name and the page number. For example:
 
-    For details, see &lt;xref linkend="id-of-the-linked-section"/&gt;
+```
+    For details, see <xref linkend="id-of-the-linked-section"/>
+```
 
 ## Links between documents in the same document set
 Use the &lt;olinks> tag to insert links pointing to a node of a separate document within the document set (for example, to link to a tutorial from the administrator guide). Use the `targetdoc` attribute to define the target document, and the `targetptr` attribute to define the target node within the target document. For example:
@@ -107,11 +109,11 @@ Use the &lt;olinks> tag to insert links pointing to a node of a separate documen
 <olink targetdoc="syslog-ng-ose-guide-admin" targetptr="chapter-install"/>
 ```
 
-##External links to websites
+## External links to websites
 Use the &lt;link> tag to insert links pointing to an external website. Use the `ns1:href` attribute to define the target url. Enter a short descriptive phrase about the website between the tags. Use the url of the website between the tags only if the url itself is important. For example:
 
 ```
-<para>Visit the &lt;link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.syslog-ng.org">syslog-ng Open Source Edition website</link>.
+<para>Visit the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.syslog-ng.org">syslog-ng Open Source Edition website</link>.
 ```
 
 ## Warnings, notes, tips, examples
@@ -153,7 +155,7 @@ For example:
 
 ```
 <tip>
-    <para>Save your changes often.&lt;/para>
+    <para>Save your changes often.</para>
 </tip>
 ```
 
