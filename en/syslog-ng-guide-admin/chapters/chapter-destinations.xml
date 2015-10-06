@@ -60,7 +60,7 @@
         <synopsis>file(filename options());</synopsis>
         <example xml:id="example-destination-file">
             <title>Using the file() driver</title>
-            <synopsis>destination d_file { file("/var/log/messages" ); };</synopsis>
+            <synopsis>destination d_file { file("/var/log/messages"); };</synopsis>
         </example>
         <example xml:id="example-destination-file-macro">
             <title>Using the file() driver with macros in the file name and a template for the message</title>
@@ -491,7 +491,7 @@
   columns("datetime", "host", "program", "pid", "message")
   values("{$R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
   indexes("datetime", "host", "program", "pid", "message"));
-  };</synopsis>
+};</synopsis>
             <para>The following example specifies the type of the database columns as well:</para>
             <synopsis>destination d_sql {
   sql(type(pgsql)
@@ -556,7 +556,7 @@
   columns("datetime varchar(16)", "host varchar(32)", "program varchar(32)", "pid varchar(8)", "message varchar2")
   values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
   indexes("datetime", "host", "program", "pid", "message"));
-  };</synopsis>
+};</synopsis>
                 <para>The Oracle Instant Client retrieves the address of the database server from the <filename>/etc/tnsnames.ora</filename> file. Edit or create this file as needed for your configuration. A sample is provided below.</para>
                 <synopsis>LOGS =
 (DESCRIPTION =
@@ -618,7 +618,7 @@ sql(type(mssql) host("logserver") port("1433")
   "program varchar(32)", "pid varchar(8)", "message varchar(4096)")
   values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
   indexes("datetime", "host", "program", "pid"));
-  };</synopsis>
+};</synopsis>
                 <para>The date format used by the MSSQL database must be explicitly set in the <filename>/etc/locales.conf</filename> file of the syslog-ng server. Edit or create this file as needed for your configuration. A sample is provided below.</para>
                 <synopsis>[default]
 date = "%Y-%m-%d %H:%M:%S"</synopsis>
@@ -931,26 +931,26 @@ dbd-option("null.sleep.query" 5)</synopsis>
                     </indexterm>
                     <para>The <parameter>null()</parameter> parameter of the SQL driver can be used to replace the contents of a column with a special SQL NULL value. To replace every column that contains an empty string with NULL, use the <userinput>null("")</userinput> option, for example</para>
                     <synopsis>destination d_sql {
-                    sql(type(pgsql)
-                    host("logserver") username("syslog-ng") password("password")
-                    database("logs")
-                    table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
-                    columns("datetime", "host", "program", "pid", "message")
-                    values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
-                    indexes("datetime", "host", "program", "pid", "message")
-                    null(""));
-                    };</synopsis>
+    sql(type(pgsql)
+    host("logserver") username("syslog-ng") password("password")
+    database("logs")
+    table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
+    columns("datetime", "host", "program", "pid", "message")
+    values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
+    indexes("datetime", "host", "program", "pid", "message")
+    null(""));
+};</synopsis>
                     <para>To replace only a specific column (for example <parameter>pid</parameter>) if it is empty, assign a default value to the column, and use this default value in the <parameter>null()</parameter> parameter:</para>
                     <synopsis>destination d_sql {
-                    sql(type(pgsql)
-                    host("logserver") username("syslog-ng") password("password")
-                    database("logs")
-                    table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
-                    columns("datetime", "host", "program", "pid", "message")
-                    values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID:-@@NULL@@}", "${MSGONLY}")
-                    indexes("datetime", "host", "program", "pid", "message")
-                    null("@@NULL@@"));
-                    };</synopsis>
+    sql(type(pgsql)
+    host("logserver") username("syslog-ng") password("password")
+    database("logs")
+    table("messages_${HOST}_${R_YEAR}${R_MONTH}${R_DAY}")
+    columns("datetime", "host", "program", "pid", "message")
+    values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID:-@@NULL@@}", "${MSGONLY}")
+    indexes("datetime", "host", "program", "pid", "message")
+    null("@@NULL@@"));
+};</synopsis>
                     <para>Ensure that the default value you use does not appear in the actual log messages, because other occurrences of this string will be replaced with NULL as well.</para>
                 </example>
             </simplesect>
@@ -1110,7 +1110,7 @@ dbd-option("null.sleep.query" 5)</synopsis>
                 <example>
                     <title>Value: default</title>
                     <synopsis>columns("date datetime", "host varchar(32)", "row_id serial")
-	values("${R_DATE}", "${HOST}", default)</synopsis>
+    values("${R_DATE}", "${HOST}", default)</synopsis>
                 </example>
             </simplesect>
         </section>
@@ -1142,15 +1142,17 @@ dbd-option("null.sleep.query" 5)</synopsis>
             <para>If name resolution is configured, the hostname of the target server can be used as well.</para>
             <synopsis>destination d_tcp { syslog("target_host" transport("tcp") port(1999) localport(999)); };</synopsis>
             <para>Send the log messages using TLS encryption and use mutual authentication. For details on the encryption and authentication options, see <xref linkend="tlsoptions"/>.</para>
-            <synopsis>destination d_syslog_tls{
-            syslog("10.100.20.40"
-            transport("tls")
-            port(6514)
-            tls(peer-verify(required-trusted)
+            <synopsis>destination d_syslog_tls {
+    syslog("10.100.20.40"
+        transport("tls")
+        port(6514)
+        tls(peer-verify(required-trusted)
             ca-dir('/opt/syslog-ng/etc/syslog-ng/keys/ca.d/')
             key-file('/opt/syslog-ng/etc/syslog-ng/keys/client_key.pem')
-            cert-file('/opt/syslog-ng/etc/syslog-ng/keys/client_certificate.pem'))
-            );};</synopsis>
+            cert-file('/opt/syslog-ng/etc/syslog-ng/keys/client_certificate.pem')
+        )
+    );
+};</synopsis>
         </example>
         <xi:include href="../../common/wnt/note-formatting-messages.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <section xml:id="reference-destination-syslog-chapter">
