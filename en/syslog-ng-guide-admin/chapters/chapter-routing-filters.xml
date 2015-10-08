@@ -112,35 +112,35 @@
     source(s1); source(s2); ...
 
     optional_element(filter1|parser1|rewrite1);
-    optional_element(filter2|parser2|rewrite2);...
-
+    optional_element(filter2|parser2|rewrite2);
+    ...
     destination(d1); destination(d2); ...
 
     #embedded log statement
-    log
-        {
+    log {
         optional_element(filter1|parser1|rewrite1);
         optional_element(filter2|parser2|rewrite2);
         ...
         destination(d1); destination(d2); ...
+
         #another embedded log statement
-        log
-        {
+        log {
             optional_element(filter1|parser1|rewrite1);
             optional_element(filter2|parser2|rewrite2);
             ...
-            destination(d1); destination(d2); ...};
+            destination(d1); destination(d2); ...
         };
+    };
     #set flags after the embedded log statements
     flags(flag1[, flag2...]);
-        };</synopsis>
+};</synopsis>
                 <example xml:id="example-logpath-embedded">
                     <title>Using embedded log paths</title>
                     <para>The following log path sends every message to the configured destinations: both the <userinput>d_file1</userinput> and the <userinput>d_file2</userinput> destinations receive every message of the source.</para>
                     <synopsis>log { source(s_localhost); destination(d_file1); destination(d_file2); };</synopsis>
                     <para>The next example is equivalent with the one above, but uses an embedded log statement.</para>
                     <synopsis>log { source(s_localhost); destination(d_file1);
-                    log {destination(d_file2); };
+    log { destination(d_file2); };
 };</synopsis>
                     <para>The following example uses two filters:</para>
                     <itemizedlist>
@@ -151,13 +151,13 @@
                             <para>messages coming from the host <userinput>192.168.1.1</userinput> and containing the string <userinput>example</userinput> are sent to the <userinput>d_file2</userinput> destination.</para>
                         </listitem>
                     </itemizedlist>
-                    <synopsis>log { source(s_localhost); host(192.168.1.); destination(d_file1);
-                    log {message("example"); destination(d_file2); };
+                    <synopsis>log { source(s_localhost); host(192.168.1.1); destination(d_file1);
+    log { message("example"); destination(d_file2); };
 };</synopsis>
                     <para>The following example collects logs from multiple source groups and uses the <parameter>source()</parameter> filter in the embedded log statement to select messages of the <userinput>s_network</userinput> source group.</para>
                     <synopsis>log { source(s_localhost); source(s_network); destination(d_file1);
-                    log {source(s_network); destination(d_file2); };
-                    };</synopsis>
+    log { source(s_network); destination(d_file2); };
+};</synopsis>
                 </example>
             </section>
         </section>
@@ -369,10 +369,10 @@
                 <para><emphasis>Soft flow-control:</emphasis> In case of soft flow-control there is no message lost if the destination can accept messages, but it is possible to lose messages if it cannot accept messages (for example non-writeable file destination, or the disk becomes full), and all buffers are full. Soft flow-control cannot be configured, it is automatically available for file <phrase condition="pe"> and logstore </phrase>destinations.</para>
                 <example>
                     <title>Soft flow-control</title>
-                    <synopsis>source s_file {file("/tmp/input_file.log");};
-destination d_file {file("/tmp/output_file.log");};
+                    <synopsis>source s_file { file("/tmp/input_file.log"); };
+destination d_file { file("/tmp/output_file.log"); };
 destination d_tcp { network("127.0.0.1" port(2222) log-fifo-size(1000)); };
-log{ source(s_file); destination(d_file); destination(d_tcp);};
+log { source(s_file); destination(d_file); destination(d_tcp); };
 </synopsis>
                 </example>
                 <warning>
@@ -387,10 +387,10 @@ log{ source(s_file); destination(d_file); destination(d_tcp);};
                 <para><emphasis>Hard flow-control:</emphasis> In case of hard flow-control there is no message lost. To use hard flow-control, enable the <parameter>flow-control</parameter> flag in the log path. Hard flow-control is available for all destinations.</para>
                 <example>
                     <title>Hard flow-control</title>
-                    <synopsis>source s_file {file("/tmp/input_file.log");};
-destination d_file {file("/tmp/output_file.log");};
+                    <synopsis>source s_file { file("/tmp/input_file.log"); };
+destination d_file { file("/tmp/output_file.log"); };
 destination d_tcp { network("127.0.0.1" port(2222) log-fifo-size(1000)); };
-log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow-control);};
+log { source(s_file); destination(d_file); destination(d_tcp); flags(flow-control); };
 </synopsis>
                 </example>
             </listitem>
@@ -473,7 +473,7 @@ log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow-control)
                 <synopsis>source s_localhost {
             network(ip(127.0.0.1) port(1999) max-connections(300)); };
 destination d_tcp {
-            network("10.1.2.3" port(1999); localport(999)); log-fifo-size(30000); };
+            network("10.1.2.3" port(1999) localport(999) log-fifo-size(30000)); };
 log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis>
                 <para>If other sources send messages to this destination, than the output buffer must be further increased. For example, if a network host with maximum <userinput>100</userinput> connections also logs into the destination, than increase the <parameter>log-fifo-size()</parameter> by <userinput>10000</userinput>.</para>
                 <synopsis>source s_localhost {
@@ -481,7 +481,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
 source s_tcp {
             network(ip(192.168.1.5) port(1999) max-connections(100)); };
 destination d_tcp {
-            network("10.1.2.3" port(1999); localport(999)); log-fifo-size(40000); };
+            network("10.1.2.3" port(1999) localport(999) log-fifo-size(40000)); };
 log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis>
             </example>
         </section>
@@ -530,9 +530,9 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
                 <synopsis>filter demo_filter { host("example") and match("deny" value("MESSAGE")) };</synopsis>
                 <para>For the filter to have effect, include it in a log statement:</para>
                 <synopsis>log {
-        source(s1);
-        filter(demo_filter);
-        destination(d1);};</synopsis>
+    source(s1);
+    filter(demo_filter);
+    destination(d1); };</synopsis>
             </example>
         </section>
         <section xml:id="filters-boolean">
@@ -987,7 +987,7 @@ log {
                                     <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                                 </entry>
-                                <entry>in-list("&lt;/path/to/file.list&gt;", value("&lt;field-to-filter&gt;"));</entry>
+                                <entry>in-list("&lt;/path/to/file.list&gt;", value("&lt;field-to-filter&gt;"))</entry>
                             </row>
                         </tbody>
                     </tgroup>
@@ -1015,9 +1015,9 @@ sudo</synopsis>
                     <synopsis>filter f_whitelist { in-list("/etc/syslog-ng/programlist.list", value("PROGRAM")); };</synopsis>
                     <para>Create the appropriate sources and destinations for your environment, then create a log path that uses the previous filter to select only the log messages of the applications you need:</para>
                     <synopsis>log {
-source(s_all);
-filter(f_whitelist);
-destination(d_logserver);};</synopsis>
+    source(s_all);
+    filter(f_whitelist);
+    destination(d_logserver); };</synopsis>
                     <para>To create a blacklist filter, simply negate the <parameter>in-list</parameter> filter:</para>
                     <synopsis>filter f_blacklist { not in-list("/etc/syslog-ng/programlist.list", value("PROGRAM")); };</synopsis>
                 </example>
@@ -1210,15 +1210,15 @@ destination(d_logserver);};</synopsis>
                     <title>Adding tags and filtering messages with tags</title>
                     <synopsis>source s_tcp {
     network(ip(192.168.1.1) port(1514) tags("tcp", "router"));
-    };</synopsis>
+};</synopsis>
                     <para>Use the <parameter>tags()</parameter> option of the filters to select only specific messages:</para>
                     <synopsis>filter f_tcp {
-       tags(".source.s_tcp");
-    };
+    tags(".source.s_tcp");
+};
 
-    filter f_router {
-       tags("router");
-    };</synopsis>
+filter f_router {
+    tags("router");
+};</synopsis>
                 </example>
                 <xi:include href="../../common/wnt/note-patterndb-class-tag.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
