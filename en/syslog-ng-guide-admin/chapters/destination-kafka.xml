@@ -25,27 +25,25 @@
         <para/>
     </formalpara>
     <synopsis>@module mod-java
+@include "scl.conf"
 
-java(
-    class-path("/opt/syslog-ng/lib/syslog-ng/java-modules/*.jar:&lt;path-to-preinstalled-kafka-libraries&gt;")
-    class-name("org.syslog_ng.kafka.KafkaDestination")
-
-    option("kafka-bootstrap-servers", "1.2.3.4:9092,192.168.0.2:9092")
-    option("topic", "${HOST}")
+kafka(
+    client-lib-dir("/opt/syslog-ng/lib/syslog-ng/java-modules/*.jar:&lt;path-to-preinstalled-kafka-libraries&gt;")
+    kafka-bootstrap-servers("1.2.3.4:9092,192.168.0.2:9092")
+    topic("${HOST}")
 
 );</synopsis>
     <example xml:id="example-destination-kafka">
         <title>Sending log data to Apache Kafka</title>
         <para>The following example defines a <parameter>kafka</parameter> destination, using only the required parameters.</para>
         <synopsis>@module mod-java
+@include "scl.conf"
 
 destination d_kafka {
-  java(
-    class_path("/opt/syslog-ng/lib/syslog-ng/java-modules/KafkaDestination.jar:/usr/share/kafka/lib/*.jar")
-    class-name("org.syslog_ng.kafka.KafkaDestination")
-
-    option("kafka-bootstrap-servers", "1.2.3.4:9092,192.168.0.2:9092")
-    option("topic", "${HOST}")
+  kafka(
+    client-lib-dir("/opt/syslog-ng/lib/syslog-ng/java-modules/KafkaDestination.jar:/usr/share/kafka/lib/*.jar")
+    kafka-bootstrap-servers("1.2.3.4:9092,192.168.0.2:9092")
+    topic("${HOST}")
   );
 };</synopsis>
     </example>
@@ -110,22 +108,17 @@ reconnect.backoff.ms=1000</synopsis>
             <primary>destination drivers</primary>
             <secondary><parameter>kafka</parameter></secondary>
         </indexterm>
-        <para>The <parameter>kafka</parameter> destination of &abbrev; can directly publish log messages to the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://http://kafka.apache.org">Apache Kafka</link> message bus, where subscribers can access them. The <parameter>kafka</parameter> destination has the following options. Some of these options are directly used by the Java code underlying the <parameter>kafka</parameter> destination, therefore these options must be specified in the following format:</para>
-        <synopsis>option("&lt;option-name&gt;", "&lt;option-value&gt;")</synopsis>
-        <para>For example, <userinput>option("properties-file", "/opt/syslog-ng/etc/kafka_dest.properties")</userinput>. The exact format to use is indicated in the description of the option.</para>
+        <para>The <parameter>kafka</parameter> destination of &abbrev; can directly publish log messages to the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://http://kafka.apache.org">Apache Kafka</link> message bus, where subscribers can access them. The <parameter>kafka</parameter> destination has the following options.</para>
         <formalpara>
             <title>Required options:</title>
             <para/>
         </formalpara>
-        <para>The following options are required: <parameter>kafka-bootstrap-servers()</parameter>, <parameter>topic()</parameter>. Note that to use <parameter>kafka</parameter>, you must add the following line to the beginning of your &abbrev; configuration:</para>
-        <synopsis>@module mod-java</synopsis>
-        <simplesect>
-            <xi:include href="../../common/chunk/option-destination-java-class-name.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            <para>For the <parameter>kafka</parameter> destination, use this option as <userinput>class-name("org.syslog_ng.kafka.KafkaDestination")</userinput>.</para>
-        </simplesect>
+        <para>The following options are required: <parameter>kafka-bootstrap-servers()</parameter>, <parameter>topic()</parameter>. Note that to use <parameter>kafka</parameter>, you must add the following lines to the beginning of your &abbrev; configuration:</para>
+        <synopsis>@module mod-java
+@include "scl.conf"</synopsis>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-java-class-path.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            <para>For the <parameter>kafka</parameter> destination, include the path to the directory where you copied the required libraries (see <xref linkend="destination-kafka-prerequisites"/>), for example, <userinput>class-path("/opt/syslog-ng/lib/syslog-ng/java-modules/KafkaDestination.jar:/usr/share/kafka/lib/*.jar")</userinput>.</para>
+            <para>For the <parameter>kafka</parameter> destination, include the path to the directory where you copied the required libraries (see <xref linkend="destination-kafka-prerequisites"/>), for example, <userinput>client-lib-dir("/opt/syslog-ng/lib/syslog-ng/java-modules/KafkaDestination.jar:/usr/share/kafka/lib/*.jar")</userinput>.</para>
         </simplesect>
         <simplesect xml:id="kafka-option-kafka-bootstrap-servers">
             <title>kafka-bootstrap-servers()</title>
@@ -162,7 +155,7 @@ reconnect.backoff.ms=1000</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies the hostname or IP address of the Kafka server. When specifying an IP address, IPv4 (for example, <userinput>192.168.0.1</userinput>) or IPv6 (for example, <userinput>[::1]</userinput>) can be used as well. Use a colon (<userinput>:</userinput>) after the address to specify the port number of the server. When specifying multiple addresses, use a comma to separate the addresses, for example, <userinput>option("kafka-bootstrap-servers", "127.0.0.1:2525,remote-server-hostname:6464")</userinput></para>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the hostname or IP address of the Kafka server. When specifying an IP address, IPv4 (for example, <userinput>192.168.0.1</userinput>) or IPv6 (for example, <userinput>[::1]</userinput>) can be used as well. Use a colon (<userinput>:</userinput>) after the address to specify the port number of the server. When specifying multiple addresses, use a comma to separate the addresses, for example, <userinput>kafka-bootstrap-servers("127.0.0.1:2525,remote-server-hostname:6464")</userinput></para>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-frac-digits.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -201,7 +194,7 @@ reconnect.backoff.ms=1000</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The key of the partition under which the message is published. You can use templates to change the topic dynamically based on the source or the content of the message, for example, <userinput>option("key", "${PROGRAM}")</userinput>.</para>
+            <para><emphasis role="bold">Description:</emphasis> The key of the partition under which the message is published. You can use templates to change the topic dynamically based on the source or the content of the message, for example, <userinput>key("${PROGRAM}")</userinput>.</para>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -237,7 +230,7 @@ reconnect.backoff.ms=1000</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The absolute path and filename of the Kafka properties file to load. For example, <userinput>option("properties-file", "/opt/syslog-ng/etc/kafka_dest.properties")</userinput>. The abbrev; application reads this file and passes the properties to the Kafka Producer. If a property is defined both in the &abbrev; configuration file (<filename>syslog-ng.conf</filename>) and in the properties file, then &abbrev; uses the definition from the &abbrev; configuration file.</para>
+            <para><emphasis role="bold">Description:</emphasis> The absolute path and filename of the Kafka properties file to load. For example, <userinput>properties-file("/opt/syslog-ng/etc/kafka_dest.properties")</userinput>. The abbrev; application reads this file and passes the properties to the Kafka Producer. If a property is defined both in the &abbrev; configuration file (<filename>syslog-ng.conf</filename>) and in the properties file, then &abbrev; uses the definition from the &abbrev; configuration file.</para>
             <para>The &abbrev; <parameter>kafka</parameter> destination supports all properties of the official Kafka producer. For details, see the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://kafka.apache.org/documentation.html#newproducerconfigs">Apache Kafka documentation</link>.</para>
             <para>The <parameter>kafka-bootstrap-servers</parameter> option is translated to the <userinput>bootstrap.servers</userinput> property.</para>
             <para>For example, the following properties file defines the acknowledgement method and compression:</para>
@@ -314,7 +307,7 @@ compression.type=snappy</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The message as published to Apache Kafka. You can use templates and template functions (for example, <parameter>format-json()</parameter>) to format the message, for example, <userinput>option("template", "$(format-json --scope rfc5424 --exclude DATE --key ISODATE)")</userinput>.</para>
+            <para><emphasis role="bold">Description:</emphasis> The message as published to Apache Kafka. You can use templates and template functions (for example, <parameter>format-json()</parameter>) to format the message, for example, <userinput>template("$(format-json --scope rfc5424 --exclude DATE --key ISODATE)")</userinput>.</para>
             <para>For details on formatting messages in JSON format, see <xref linkend="template-function-format-json"/>.</para>
         </simplesect>
         <simplesect>
@@ -351,7 +344,7 @@ compression.type=snappy</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The Kafka topic under which the message is published. You can use templates to change the topic dynamically based on the source or the content of the message, for example, <userinput>option("topic", "${HOST}")</userinput>.</para>
+            <para><emphasis role="bold">Description:</emphasis> The Kafka topic under which the message is published. You can use templates to change the topic dynamically based on the source or the content of the message, for example, <userinput>topic("${HOST}")</userinput>.</para>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-timezone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
