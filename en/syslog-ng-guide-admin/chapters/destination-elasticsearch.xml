@@ -32,14 +32,10 @@
     </formalpara>
     <synopsis>@module mod-java
 
-java(
-    class-path("/opt/syslog-ng/lib/syslog-ng/java-modules/*.jar:&lt;path-to-preinstalled-elasticsearch-libraries&gt;")
-    class-name("org.syslog_ng.elasticsearch.ElasticSearchDestination")
-
-    option("index", "syslog-ng_${YEAR}.${MONTH}.${DAY}")
-    option("type", "test")
-    option("cluster", "syslog-ng")
-
+elasticsearch(
+    index("syslog-ng_${YEAR}.${MONTH}.${DAY}")
+    type("test")
+    cluster("syslog-ng")
 );</synopsis>
     <example xml:id="example-destination-elasticsearch">
         <title>Sending log data to Elasticsearch</title>
@@ -47,17 +43,14 @@ java(
         <synopsis>@module mod-java
 
 destination d_elastic {
-  java(
-    class_path("/opt/syslog-ng/lib/syslog-ng/java-modules/elastic.jar:/usr/share/elasticsearch/lib/*.jar")
-    class_name("org.syslog_ng.elasticsearch.ElasticSearchDestination")
-
-    option("index", "syslog-ng_${YEAR}.${MONTH}.${DAY}")
-    option("type", "test")
+  elasticsearch(
+    index("syslog-ng_${YEAR}.${MONTH}.${DAY}")
+    type("test")
   );
 };
 </synopsis>
-		<para>The following example sends 100 messages in a batch, in node mode, and adds a <userinput>@timestamp</userinput> field to the record.</para>
-		<synopsis>@module mod-java
+        <para>The following example sends 10000 messages in a batch, in node mode, and includes a custom unique ID for each message.</para>
+        <synopsis>@module mod-java
 
 options {
   threaded(yes);
@@ -69,16 +62,13 @@ source s_syslog {
 };
 
 destination d_elastic {
-  java(
-    class_path("/opt/syslog-ng/lib/syslog-ng/java-modules/elastic.jar:/usr/share/elasticsearch/lib/*.jar")
-    class_name("org.syslog_ng.elasticsearch.ElasticSearchDestination")
-    option("index", "syslog-ng_${YEAR}.${MONTH}.${DAY}")
-    option("type", "test")
-    option("cluster", "syslog-ng")
-    option("client-mode", "node")
-    option("custom-id", "${UNIQID}")
-    option("message-template", "$(format-json --scope rfc5424 --exclude DATE --key ISODATE @timestamp=${ISODATE})")
-    option("flush-limit", "100")
+  elasticsearch(
+    index("syslog-ng_${YEAR}.${MONTH}.${DAY}")
+    type("test")
+    cluster("syslog-ng")
+    client-mode("node")
+    custom-id("${UNIQID}")
+    flush-limit("10000")
   );
 };
 
@@ -153,9 +143,7 @@ log {
             <primary>destination drivers</primary>
             <secondary><parameter>elasticsearch</parameter></secondary>
         </indexterm>
-        <para>The <parameter>elasticsearch</parameter> destination can directly send log messages to <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.elastic.co/products/elasticsearch/">Elasticsearch</link>, allowing you to search and analyze your data in real time, and visualize it with <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.elastic.co/products/kibana/">Kibana</link>. The <parameter>elasticsearch</parameter> destination has the following options. Some of these options are directly used by the Java code underlying the <parameter>elasticsearch</parameter> destination, therefore these options must be specified in the following format:</para>
-        <synopsis>option("&lt;option-name&gt;", "&lt;option-value&gt;")</synopsis>
-        <para>For example, <userinput>option("resource", "/tmp/elasticsearch.yml")</userinput>. The exact format to use is indicated in the description of the option.</para>
+        <para>The <parameter>elasticsearch</parameter> destination can directly send log messages to <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.elastic.co/products/elasticsearch/">Elasticsearch</link>, allowing you to search and analyze your data in real time, and visualize it with <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.elastic.co/products/kibana/">Kibana</link>. The <parameter>elasticsearch</parameter> destination has the following options.</para>
         <formalpara>
 			<title>Required options:</title>
 			<para/>
@@ -180,28 +168,30 @@ log {
                 <primary>elasticsearch</primary>
                 <secondary>client-mode</secondary>
             </indexterm>
-			<informaltable frame="topbot" colsep="0" rowsep="0">
-				<tgroup cols="2">
-				<colspec colnum="1" colwidth="40pt"/>
-					<tbody>
-						<row>
-							<entry>Type:
-								<?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-							<entry>transport | node</entry>
-						</row>
-						<row>
-							<entry>Default:
-								<?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-							<entry>transport</entry>
-						</row>
-					</tbody>
-				</tgroup>
-			</informaltable>
-			<para><emphasis role="bold">Description:</emphasis> Specifies the client mode used to connect to the Elasticsearch server, for example, <userinput>option("client-mode", "node")</userinput>.</para>
-
-			<xi:include href="../../common/chunk/option-destination-elasticsearch-client-mode-description.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-
-		</simplesect>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+								<?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>transport | node</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+								<?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>node</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the client mode used to connect to the Elasticsearch server, for example, <userinput>option("client-mode", "node")</userinput>.</para>
+            <xi:include href="../../common/chunk/option-destination-elasticsearch-client-mode-description.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
         <simplesect xml:id="elasticsearch-option-elasticsearch-cluster">
 			<title>cluster()</title>
 			<indexterm type="parameter">
@@ -376,7 +366,7 @@ log {
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Name of the Elasticsearch index to store the log messages. You can use macros and templates as well. For example, <userinput>option("index", "syslog-ng_${YEAR}.${MONTH}.${DAY}")</userinput>.</para>
+            <para><emphasis role="bold">Description:</emphasis> Name of the Elasticsearch index to store the log messages. You can use macros and templates as well. For example, <userinput>index("syslog-ng_${YEAR}.${MONTH}.${DAY}")</userinput>.</para>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -446,7 +436,7 @@ log {
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The port number of the Elasticsearch server. This option is used only in transport mode (<userinput>option("client-mode", "transport")</userinput>).</para>
+            <para><emphasis role="bold">Description:</emphasis> The port number of the Elasticsearch server. This option is used only in transport mode: <userinput>client-mode("transport")</userinput></para>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-retries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -478,7 +468,7 @@ log {
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The list of Elasticsearch resources to load, separated by semicolons. For example, <userinput>option("resource", "/home/user/elasticsearch/elasticsearch.yml;/home/user/elasticsearch/elasticsearch2.yml")</userinput>.</para>
+            <para><emphasis role="bold">Description:</emphasis> The list of Elasticsearch resources to load, separated by semicolons. For example, <userinput>resource("/home/user/elasticsearch/elasticsearch.yml;/home/user/elasticsearch/elasticsearch2.yml")</userinput>.</para>
         </simplesect>
         <simplesect xml:id="elasticsearch-option-elasticsearch-server">
 			<title>server()</title>
@@ -490,26 +480,30 @@ log {
                 <primary>elasticsearch</primary>
                 <secondary>server</secondary>
             </indexterm>
-			<informaltable frame="topbot" colsep="0" rowsep="0">
-				<tgroup cols="2">
-				<colspec colnum="1" colwidth="40pt"/>
-					<tbody>
-						<row>
-							<entry>Type:
-								<?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-							<entry>list of hostnames</entry>
-						</row>
-						<row>
-							<entry>Default:
-								<?dbhtml bgcolor="#D4D6EB" ?><?dbfo bgcolor="#D4D6EB" ?></entry>
-							<entry>127.0.0.1</entry>
-						</row>
-					</tbody>
-				</tgroup>
-			</informaltable>
-			<para><emphasis role="bold">Description:</emphasis> Specifies the hostname or IP address of the Elasticsearch server. When specifying an IP address, IPv4 (for example, <userinput>192.168.0.1</userinput>) or IPv6 (for example, <userinput>[::1]</userinput>) can be used as well. When specifying multiple addresses, use space to separate the addresses, for example, <userinput>option("server", "127.0.0.1 remote-server-hostname1 remote-server-hostname2")</userinput></para>
-			<para>This option is used only in transport mode (<userinput>option("client-mode", "transport")</userinput>).</para>
-		</simplesect>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+								<?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>list of hostnames</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+								<?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>127.0.0.1</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the hostname or IP address of the Elasticsearch server. When specifying an IP address, IPv4 (for example, <userinput>192.168.0.1</userinput>) or IPv6 (for example, <userinput>[::1]</userinput>) can be used as well. When specifying multiple addresses, use space to separate the addresses, for example, <userinput>server("127.0.0.1 remote-server-hostname1 remote-server-hostname2")</userinput></para>
+            <para>This option is used only in transport mode: <userinput>client-mode("transport")</userinput></para>
+        </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
@@ -546,7 +540,7 @@ log {
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The type of the index. For example, <userinput>option("type", "test")</userinput>.</para>
+            <para><emphasis role="bold">Description:</emphasis> The type of the index. For example, <userinput>type("test")</userinput>.</para>
         </simplesect>
     </section>
 </section>
