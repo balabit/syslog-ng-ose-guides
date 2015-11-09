@@ -356,12 +356,31 @@ source s_example {
   s_logfile(filename("logfile.log"));
 };</synopsis>
                 </example>
+                <indexterm>
+                    <primary>block arguments</primary>
+                    <secondary>dynamical</secondary>
+                </indexterm>
+                <indexterm>
+                    <primary>dynamical block arguments</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>configuration snippets</primary>
+                    <secondary>dynamical block arguments</secondary>
+                </indexterm>
+                <para>If you reference the block with more arguments then specified in its definition, you can use these additional arguments as a single argument-list within the block. That way, use a variable number of optional arguments in your block. This can be useful when passing arguments to a template, or optional arguments to an underlying driver. To reference this argument-list, insert the <userinput>`__VARARGS__`</userinput> to the place in the block where you want to insert the argument-list. Note that you can use this only once in a block. The following definition extends the previous logfile block, and passes the optional arguments (<userinput>follow-freq(1) flags(no-parse)</userinput>) to the <userinput>file()</userinput> source.</para>
+                <synopsis>block source s_logfile (filename("messages")) {
+  file("/var/log/`filename`" `__VARARGS__`);
+};
+
+source s_example {
+  s_logfile(filename("logfile.log") follow-freq(1) flags(no-parse));
+};</synopsis>
                 <example condition="ose">
                     <title>Using arguments in blocks</title>
                     <para>The following example is the code of the <link linkend="configuring-source-pacct"><parameter>pacct()</parameter> source driver</link>, which is actually a block that can optionally receive two arguments.</para>
                     <synopsis>block source pacct(file("/var/log/account/pacct") follow-freq(1)) {
 @module pacctformat
-        file("`file`" follow-freq(`follow-freq`) format("pacct") tags(".pacct"));
+        file("`file`" follow-freq(`follow-freq`) format("pacct") tags(".pacct") `__VARARGS__`);
 };</synopsis>
                 </example>
             </section>
