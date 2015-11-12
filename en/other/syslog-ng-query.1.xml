@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE reference
+[
+<!ENTITY % entities SYSTEM "../common/syslog-ng-entities.ent">
+  %entities;
+  ]>
+<reference xml:id="syslog-ng-query-man-page" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <info>
+        <productname>&product;</productname>
+        <title>The syslog-ng-query tool manual page</title>
+    </info>
+    <refentry xml:id="syslog-ng-query.1">
+        <refmeta>
+            <refentrytitle>syslog-ng-query</refentrytitle>
+            <manvolnum>1</manvolnum>
+            <refmiscinfo class="version">&version;</refmiscinfo>
+            <refmiscinfo class="source">&product;</refmiscinfo>
+        </refmeta>
+        <refnamediv>
+            <refname>syslog-ng-query</refname>
+            <refpurpose>Query metrics and statistic data from a running &product; instance</refpurpose>
+        </refnamediv>
+        <refsynopsisdiv>
+            <cmdsynopsis>
+                <command>syslog-ng-query</command>
+                <arg>command</arg>
+                <arg>options</arg>
+            </cmdsynopsis>
+        </refsynopsisdiv>
+        <refsection xml:id="syslog-ng-query-mandescription">
+            <title>Description</title>
+            <para>NOTE: The syslog-ng-query application is distributed with the &product; system logging application, and is usually part of the syslog-ng package. The latest version of the syslog-ng application is available at <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/network-security/syslog-ng/">the official syslog-ng website</link>.</para>
+            <para>This manual page is only an abstract; for the complete documentation of syslog-ng, see <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/support/documentation/">The syslog-ng Administrator Guide</link>.</para>
+            <para>The <command>syslog-ng-query</command> application is a utility that can be used to query metrics and statistic data from a running &product; instance.</para>
+            <para>The &abbrev; application stores various data, metrics, and statistics in a hierarchical data structure tree (<userinput>syslog-ng</userinput> is the root node of the tree). The nodes of the tree can contain properties (but not every node contains properties). Every property has a name and a value. For example:</para>
+            <synopsis>[syslog-ng]
+|
+|_[destinations]-[network]-[tcp]->[stats]->{received:12;dropped:2}
+|
+|_[sources]-[sql]-[stats]->{reveived:501;dropped:0}</synopsis>
+            <para>You can query the nodes of this tree, and also use filters to select the information you need. A query is actually a path in the tree. You can also use the <userinput>?</userinput> and <userinput>*</userinput> wildcards. For example:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Select every property: <userinput>*</userinput></para>
+                </listitem>
+                <listitem>
+                    <para>Select all <userinput>dropped</userinput> value from every <userinput>stats</userinput> node: <userinput>*.stats.dropped</userinput></para>
+                </listitem>
+            </itemizedlist>
+            <para>The nodes and properties available in the tree depend on your &abbrev; configuration (that is, the sources, destinations, and other objects you have configured), and also on your <parameter>stats-level()</parameter> settings.</para>
+        </refsection>
+        <refsection xml:id="syslog-ng-query-list">
+            <title>The list command</title>
+            <cmdsynopsis>
+                <command>syslog-ng-query list</command>
+            </cmdsynopsis>
+            <para>Use the <command>syslog-ng-query list</command> command to display the list of metrics that &abbrev; collects about the processed messages. For details about the displayed metrics, see <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/support/documentation/">The syslog-ng Administrator Guide</link> <xref linkend="chapter-log-statistics"/>.</para>
+            <para>An example output:</para>
+            <synopsis>stats
+center.received.stats.processed
+center.queued.stats.processed
+destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.dropped
+destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.processed
+destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.stored
+destination.d_elastic.stats.processed
+source.s_tcp.stats.processed
+source.severity.7.stats.processed
+source.severity.0.stats.processed
+source.severity.1.stats.processed
+source.severity.2.stats.processed
+source.severity.3.stats.processed
+source.severity.4.stats.processed
+source.severity.5.stats.processed
+source.severity.6.stats.processed
+source.facility.7.stats.processed
+source.facility.16.stats.processed
+source.facility.8.stats.processed
+source.facility.17.stats.processed
+source.facility.9.stats.processed
+source.facility.18.stats.processed
+source.facility.19.stats.processed
+source.facility.20.stats.processed
+source.facility.0.stats.processed
+source.facility.21.stats.processed
+source.facility.1.stats.processed
+source.facility.10.stats.processed
+source.facility.22.stats.processed
+source.facility.2.stats.processed
+source.facility.11.stats.processed
+source.facility.23.stats.processed
+source.facility.3.stats.processed
+source.facility.12.stats.processed
+source.facility.4.stats.processed
+source.facility.13.stats.processed
+source.facility.5.stats.processed
+source.facility.14.stats.processed
+source.facility.6.stats.processed
+source.facility.15.stats.processed
+source.facility.other.stats.processed
+global.payload_reallocs.stats.processed
+global.msg_clones.stats.processed
+global.sdata_updates.stats.processed
+tag..source.s_tcp.stats.processed</synopsis>
+        </refsection>
+        <refsection xml:id="syslog-ng-query-sum">
+            <title>Displaying metrics and statistics</title>
+            <cmdsynopsis>
+                <command>syslog-ng-query sum</command>
+                <arg>options</arg>
+            </cmdsynopsis>
+            <para>The <command>syslog-ng-query sum &lt;query&gt;</command> command lists the nodes that match the query, and their values. For example, the <command>syslog-ng-query sum "destination*"</command> command lists the configured destinations, and the metrics related to each destination. An example output:</para>
+            <synopsis>destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.dropped: 0
+destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.processed: 0
+destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.stored: 0
+destination.d_elastic.stats.processed: 0</synopsis>
+            <para>The <command>syslog-ng-query sum</command> command has the following options:</para>
+            <variablelist>
+                <varlistentry>
+                    <term><command>--aggregate</command></term>
+                    <listitem>
+                        <para>Add up the result of each matching node and return only a single number.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+            <para>For example, the <command>syslog-ng-query sum --aggregate "destination*.dropped"</command> command displays the number of messages dropped by the &abbrev; instance.</para>
+        </refsection>
+        <refsection>
+            <title>Files</title>
+            <para>
+                <filename>/opt/syslog-ng/sbin/syslog-ng-query</filename>
+            </para>
+        </refsection>
+        <refsection>
+            <title>See also</title>
+            <para>
+              <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://www.balabit.com/support/documentation/">
+              <command>The syslog-ng Administrator Guide</command>
+              </link>
+            </para>
+            <para>
+                <link linkend="syslog-ng.conf.5">
+                    <command>syslog-ng.conf</command>(5)</link>
+            </para>
+            <para>
+                <link linkend="syslog-ng.8">
+                    <command>syslog-ng</command>(8)</link>
+            </para>
+            <xi:include href="manpage-see-also.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </refsection>
+        <xi:include href="manpage-author.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="manpage-copyright.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    </refentry>
+</reference>
