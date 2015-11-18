@@ -57,7 +57,7 @@ In case you have any question, comment, or feedback, you can:
 
 ## General notes
  * Indent subordinate tags by 4 spaces.
- * Do not use &lt;sect1>, &lt;sect2>, or similar tags, use <section> instead.
+ * Do not use &lt;sect1>, &lt;sect2>, or similar tags, use &lt;section> instead.
  * Within a text element (for example, &lt;para>), use line wraps instead of line breaks.
  * Use only inline elements within a &lt;para> element. Do not use lists (&lt;itemizedlist>), code blocks (&lt;synopsis>), examples (&lt;example>), or other similar tags within the &lt;para>. Instead, close the &lt;para> first, and add the new block element in the next line. For example:
 
