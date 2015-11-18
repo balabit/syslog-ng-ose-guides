@@ -32,14 +32,14 @@
 };</synopsis>
     <example>
         <title>Using the <parameter>linux-audit-parser()</parameter> parser</title>
-        <para>In the following example, the source is a log file created by auditd. The parser inserts "<userinput>.auditd.</userinput>" prefix before all extracted name-value pairs. The destination is a file, that uses the <parameter>format-json</parameter> template function. Every name-value pair that begins with a dot ("<userinput>.</userinput>") character will be written to the file (<userinput>dot-nv-pairs</userinput>). The log line connects the source, the destination, and the parser.</para>
+        <para>In the following example, the source is a log file created by auditd. Since the audit log format is not a syslog format, the syslog parser is disabled, so that &abbrev; does not parse the message: <userinput>flags(no-parse)</userinput>. The parser inserts "<userinput>.auditd.</userinput>" prefix before all extracted name-value pairs. The destination is a file, that uses the <parameter>format-json</parameter> template function. Every name-value pair that begins with a dot ("<userinput>.</userinput>") character will be written to the file (<userinput>dot-nv-pairs</userinput>). The log line connects the source, the destination, and the parser.</para>
         <synopsis>source s_auditd {
-    file(/var/log/audit/audit.log);
+    file(/var/log/audit/audit.log flags(no-parse));
 };
 
 destination d_json {
     file("/tmp/test.json"
-        template("$(format-json --scope dot-nv-pairs)\n"));
+        template("$(format-json .auditd.*)\n"));
 };
 
 parser p_auditd {
@@ -58,7 +58,7 @@ log {
 
 destination d_json {
     file("/tmp/test.json"
-        template("$(format-json --scope dot-nv-pairs)\n"));
+        template("$(format-json .auditd.*)\n"));
 };
 
 log {
