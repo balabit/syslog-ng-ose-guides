@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="linux-audit-parser" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>The Linux Audit Parser</title>
+    <indexterm>
+        <primary>segmenting messages</primary>
+    </indexterm>
+    <indexterm>
+        <primary>Linux Audit Parser</primary>
+    </indexterm>
+    <indexterm>
+        <primary>auditd</primary>
+    </indexterm>
+    <indexterm>
+        <primary>parsers</primary>
+        <secondary>linux-audit-parser</secondary>
+    </indexterm>
+    <para>The Linux Audit Parser can parse the log messages of the Linux Audit subsystem (<userinput>auditd</userinput>). The &abbrev; application can separate these log messages to name-value pairs. For details on using value-pairs in &abbrev; see <xref linkend="concepts-value-pairs"/>.</para>
+    <para>Some fields in the audit log are encoded in hexadecimal format if they contain space or non-printable characters. The &abbrev; application will automatically decode these fields, and also the a hard-coded pattern <userinput>(a[:digits:]*</userinput>. The &abbrev; application will extract the following fields: <userinput>name</userinput>, <userinput>proctitle</userinput>, <userinput>path</userinput>, <userinput>dir</userinput>, <userinput>comm</userinput>, <userinput>ocomm</userinput>, <userinput>data</userinput>, <userinput>old</userinput>, <userinput>new</userinput>.</para>
+    <para>To parse the log messages of the Linux Audit subsystem, define a parser that has the <parameter>linux-audit-parser()</parameter> option. By default, the parser will process the <userinput>${MESSAGE}</userinput> part of the log message. To process other parts of a log message, use the <parameter>template()</parameter> option. You can also define the parser inline in the log path.</para>
+    <formalpara>
+        <title>Declaration:</title>
+        <para/>
+    </formalpara>
+    <synopsis>parser parser_name {
+    linux-audit-parser(
+        prefix()
+        template()
+    );
+};</synopsis>
+    <example>
+        <title>Using the <paramater>linux-audit-parser()</paramater> parser</title>
+        <para>In the following example, the source is a log file created by auditd. The parser inserts "<userinput>.auditd.</userinput>" prefix before all extracted name-value pairs. The destination is a file, that uses the <parameter>format-json</parameter> template function. Every name-value pair that begins with a dot ("<userinput>.</userinput>") character will be written to the file (<userinput>dot-nv-pairs</userinput>). The log line connects the source, the destination, and the parser.</para>
+        <synopsis>source s_auditd {
+    file(/var/log/audit/audit.log);
+};
+
+destination d_json {
+    file("/tmp/test.json"
+        template("$(format-json --scope dot-nv-pairs)\n"));
+};
+
+parser p_auditd {
+    linux-audit-parser (prefix(".auditd."));
+};
+
+log {
+    source(s_auditd);
+    parser(p_auditd);
+    destination(d_json);
+};</synopsis>
+        <para>You can also define the parser inline in the log path.</para>
+        <synopsis>source s_auditd {
+    file(/var/log/audit/audit.log);
+};
+
+destination d_json {
+    file("/tmp/test.json"
+        template("$(format-json --scope dot-nv-pairs)\n"));
+};
+
+log {
+    source(s_auditd);
+    parser p_auditd {
+        linux-audit-parser (prefix(".auditd."));
+    };
+    destination(d_json);
+};</synopsis>
+    </example>
+    <section xml:id="linux-audit-parser-options">
+        <title>Options of <parameter>linux-audit-parser()</parameter> parsers</title>
+        <para>The <parameter>linux-audit-parser()</parameter> has the following options.</para>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-parser-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-parser-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+    </section>
+</section>
