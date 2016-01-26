@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="syslog-ng-patterndb-scheme" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>The syslog-ng pattern database format</title>
+    <indexterm>
+        <primary>pattern database</primary>
+    </indexterm>
+    <indexterm>
+        <primary>classifying messages</primary>
+        <secondary>creating databases</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>message</primary>
+        <secondary>classification</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>pattern database</primary>
+        <secondary>schema</secondary>
+    </indexterm>
+    <para>Pattern databases are XML files that contain rules describing the message patterns. For sample pattern databases, see <xref linkend="patterndb-download"/>.</para>
+    <para>The following scheme describes the V4 format of the pattern database. This format is used by &abbrev; <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.2</phrase> and later, and is backwards-compatible with the earlier V3 format.</para>
+    <para>For a sample database containing only a single pattern, see <xref linkend="example-pattern-database-v4-su"/>.</para>
+    <tip>
+        <para>Use the <command>pdbtool</command> utility that is bundled with syslog-ng to test message patterns and convert existing databases to the latest format. For details, see <xref linkend="pdbtool.1"/>.</para>
+        <para>To automatically create an initial pattern database from an existing log file, use the <command>pdbtool patternize</command> command. For details, see <xref linkend="pdbtool-patternize"/>.</para>
+    </tip>
+    <section xml:id="element-patterndb-patterndb">
+        <title>Element: patterndb</title>
+        <simplesect>
+            <title>Location</title>
+            <para>/<emphasis role="bold">patterndb</emphasis></para>
+        </simplesect>
+        <simplesect>
+            <title>Description</title>
+            <para>The container element of the pattern database.</para>
+        </simplesect>
+        <simplesect>
+            <title>Children</title>
+            <itemizedlist>
+                <listitem><para><link linkend="element-patterndb-ruleset"><emphasis role="bold">ruleset</emphasis></link></para></listitem>
+            </itemizedlist>
+        </simplesect>
+        <simplesect>
+            <title>Attributes</title>
+            <itemizedlist>
+                <listitem><para><emphasis role="bold">version</emphasis>: The schema version of the pattern database. The current version is <userinput>4</userinput>.</para></listitem>
+                <listitem><para><emphasis role="bold">pubdate</emphasis>: The publication date of the XML file.</para></listitem>
+            </itemizedlist>
+        </simplesect>
+        <simplesect>
+            <title>Use</title>
+            <para>Required</para>
+        </simplesect>
+        <simplesect>
+            <title>Example</title>
+            <synopsis>&lt;patterndb version='4' pub_date='2010-10-25'&gt;</synopsis>
+        </simplesect>
+    </section>
+    <section xml:id="element-patterndb-ruleset">
+        <title>Element: ruleset</title>
+        <simplesect>
+            <title>Location</title>
+            <para>/<link linkend="element-patterndb-patterndb">patterndb</link>/<link linkend="element-patterndb-ruleset"><emphasis role="bold">ruleset</emphasis></link></para>
+        </simplesect>
+        <simplesect>
+            <title>Description</title>
+            <para>A container element to group log patterns for an application or program.</para>
+        </simplesect>
+        <simplesect>
+            <title>Children</title>
+            <itemizedlist>
+                <listitem><para><link linkend="element-patterndb-patterns"><emphasis role="bold">patterns</emphasis></link></para></listitem>
+                <listitem><para><link linkend="element-patterndb-ruleset"><emphasis role="bold">rules</emphasis></link></para></listitem>
+                <listitem><para><link linkend="element-patterndb-ruleset"><emphasis role="bold">actions</emphasis></link></para></listitem>
+                <listitem><para><link linkend="element-patterndb-ruleset"><emphasis role="bold">tags</emphasis></link></para></listitem>
+            </itemizedlist>
+        </simplesect>
+        <simplesect>
+            <title>Attributes</title>
+            <itemizedlist>
+                <listitem><para><emphasis role="bold">name</emphasis>: The name of the application. Note that the function of this attribute is to make the database more readable, syslog-ng uses the <userinput>&lt;pattern&gt;</userinput> element to identify the applications sending log messages.</para></listitem>
+                <listitem><para><emphasis role="bold">id</emphasis>: A unique ID of the application, for example, the md5 sum of the <userinput>name</userinput> attribute.</para></listitem>
+                <listitem><para><emphasis role="bold">description</emphasis>: OPTIONAL &mdash; A description of the ruleset or the application.</para></listitem>
+                <listitem><para><emphasis role="bold">url</emphasis>: OPTIONAL &mdash; An URL referring to further information about the ruleset or the application.</para></listitem>
+            </itemizedlist>
+        </simplesect>
+        <simplesect>
+            <title>Use</title>
+            <para>Required</para>
+        </simplesect>
+        <simplesect>
+            <title>Example</title>
+            <synopsis>&lt;ruleset name='su' id='480de478-d4a6-4a7f-bea4-0c0245d361e1'&gt;</synopsis>
+        </simplesect>
+    </section>
+    <section xml:id="element-patterndb-patterns">
+        <title>Element: patterns</title>
+        <simplesect>
+            <title>Location</title>
+            <para>/<link linkend="element-patterndb-patterndb">patterndb</link>/<link linkend="element-patterndb-patterndb">ruleset</link>/<link linkend="element-patterndb-ruleset"><emphasis role="bold">patterns</emphasis></link></para>
+        </simplesect>
+        <simplesect>
+            <title>Description</title>
+            <para>A container element. A <userinput>&lt;patterns&gt;</userinput> element may contain any number of <userinput>&lt;pattern&gt;</userinput> elements.</para>
+        </simplesect>
+        <simplesect>
+            <title>Children</title>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis role="bold">pattern</emphasis>: The name of the application &mdash; syslog-ng matches this value to the ${PROGRAM} header of the syslog message to find the rulesets applicable to the syslog message.</para>
+                    <para>Specifying multiple patterns is useful if two or more applications have different names (that is, different ${PROGRAM} fields), but otherwise send identical log messages.</para>
+                    <para>It is not necessary to use multiple patterns if only the end of the ${PROGRAM} fields is different, use only the beginning of the ${PROGRAM} field as the <userinput>pattern</userinput>. For example, the Postfix e-mail server sends messages using different process names, but all of them begin with the <userinput>postfix</userinput> string.</para>
+                    <note>
+                        <para>If the <userinput>&lt;pattern&gt;</userinput> element of a ruleset is not specified, &abbrev; will use this ruleset as a fallback ruleset: it will apply the ruleset to messages that have an empty PROGRAM header, or if none of the program patterns matched the PROGRAM header of the incoming message.</para>
+                    </note>
+                </listitem>
+            </itemizedlist>
+        </simplesect>
+        <simplesect>
+            <title>Attributes</title>
+            <para>N/A</para>
+        </simplesect>
+        <simplesect>
+            <title>Use</title>
+            <para>Required</para>
+        </simplesect>
+        <simplesect>
+            <title>Example</title>
+            <synopsis>&lt;patterns&gt;
+    &lt;pattern&gt;firstapplication&lt;/pattern&gt;
+    &lt;pattern&gt;otherapplication&lt;/pattern&gt;
+&lt;/patterns&gt;</synopsis>
+        </simplesect>
+    </section>
+</section>
