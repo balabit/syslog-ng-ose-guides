@@ -21,11 +21,57 @@
     </indexterm>
     <para>Pattern databases are XML files that contain rules describing the message patterns. For sample pattern databases, see <xref linkend="patterndb-download"/>.</para>
     <para>The following scheme describes the V4 format of the pattern database. This format is used by &abbrev; <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.2</phrase> and later, and is backwards-compatible with the earlier V3 format.</para>
-    <para>For a sample database containing only a single pattern, see <xref linkend="example-pattern-database-v4-su"/>.</para>
+    <para>For a sample database containing only a single pattern, see <xref linkend="example-pattern-database-v-4-su"/>.</para>
     <tip>
         <para>Use the <command>pdbtool</command> utility that is bundled with syslog-ng to test message patterns and convert existing databases to the latest format. For details, see <xref linkend="pdbtool.1"/>.</para>
         <para>To automatically create an initial pattern database from an existing log file, use the <command>pdbtool patternize</command> command. For details, see <xref linkend="pdbtool-patternize"/>.</para>
     </tip>
+    <example xml:id="example-pattern-database-v-4-su">
+        <title>A V4 pattern database containing a single rule</title>
+        <indexterm>
+            <primary>pattern database</primary>
+        </indexterm>
+        <para>The following pattern database contains a single rule that matches a log message of the <userinput>ssh</userinput> application. A sample log message looks like:</para>
+        <synopsis>Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2</synopsis>
+        <para>The following is a simple pattern database containing a matching rule.</para>
+        <synopsis>&lt;patterndb version='4' pub_date='2010-10-17'&gt;
+    &lt;ruleset name='ssh' id='123456678'&gt;
+        &lt;pattern&gt;ssh&lt;/pattern&gt;
+            &lt;rules&gt;
+                &lt;rule provider='me' id='182437592347598' class='system'&gt;
+                    &lt;patterns&gt;
+                        &lt;pattern&gt;Accepted @QSTRING:SSH.AUTH_METHOD: @ for@QSTRING:SSH_USERNAME: @from\ @QSTRING:SSH_CLIENT_ADDRESS: @port @NUMBER:SSH_PORT_NUMBER:@ ssh2&lt;/pattern&gt;
+                    &lt;/patterns&gt;
+                &lt;/rule&gt;
+            &lt;/rules&gt;
+    &lt;/ruleset&gt;
+&lt;/patterndb&gt;</synopsis>
+        <para>Note that the rule uses macros that refer to parts of the message, for example, you can use the <userinput>${SSH_USERNAME}</userinput> macro refer to the username used in the connection.</para>
+        <para>The following is the same example, but with a test message and test values for the parsers.</para>
+        <synopsis>&lt;patterndb version='4' pub_date='2010-10-17'&gt;
+    &lt;ruleset name='ssh' id='123456678'&gt;
+        &lt;pattern&gt;ssh&lt;/pattern&gt;
+            &lt;rules&gt;
+                &lt;rule provider='me' id='182437592347598' class='system'&gt;
+                    &lt;patterns&gt;
+                        &lt;pattern&gt;Accepted @QSTRING:SSH.AUTH_METHOD: @ for@QSTRING:SSH_USERNAME: @from\ @QSTRING:SSH_CLIENT_ADDRESS: @port @NUMBER:SSH_PORT_NUMBER:@ ssh2&lt;/pattern&gt;
+                    &lt;/patterns&gt;
+                    &lt;examples&gt;
+                        &lt;example&gt;
+                            &lt;test_message&gt;Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2&lt;/test_message&gt;
+                            &lt;test_values&gt;
+                                &lt;test_value name="SSH.AUTH_METHOD"&gt;password&lt;/test_value&gt;
+                                &lt;test_value name="SSH_USERNAME"&gt;sampleuser&lt;/test_value&gt;
+                                &lt;test_value name="SSH_CLIENT_ADDRESS"&gt;10.50.0.247&lt;/test_value&gt;
+                                &lt;test_value name="SSH_PORT_NUMBER"&gt;42156&lt;/test_value&gt;
+                            &lt;/test_values&gt;
+                       &lt;/example&gt;
+                    &lt;/examples&gt;
+                &lt;/rule&gt;
+            &lt;/rules&gt;
+    &lt;/ruleset&gt;
+&lt;/patterndb&gt;</synopsis>
+    </example>
     <section xml:id="element-patterndb-patterndb">
         <title>Element: patterndb</title>
         <simplesect>
