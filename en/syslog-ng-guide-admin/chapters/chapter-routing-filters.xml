@@ -506,7 +506,10 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         <para>Every such destination uses a separate disk buffer (similarly to the output buffers controlled by <parameter>log-fifo-size()</parameter>). The hard disk space is not pre-allocated, so ensure that there is always enough free space to store the disk buffers even when the disk buffers are full.</para>
         <para>If &abbrev; is restarted (using the <command>/etc/init.d/syslog-ng restart</command> command), it automatically saves any unsent messages of the disk buffer and the output queue. After the restart, &abbrev; sends the saved messages to the server. In other words, the disk buffer is persistent. The disk buffer is also resistant to &abbrev; crashes.</para>
         <para>The &abbrev; application supports two types of disk buffering: reliable and normal. For details, see <xref linkend="configuring-diskbuffer-reliable"/> and <xref linkend="configuring-diskbuffer-normal"/>, respectively.</para>
-        <para>The &abbrev; application handles outgoing messages the following way:</para>
+        <formalpara>
+            <title>Message handling and normal disk-based buffering</title>
+            <para>When you use disk-based buffering, and the <parameter>reliable()</parameter> option is set to <userinput>no</userinput>, &abbrev; handles outgoing messages the following way:</para>
+        </formalpara>
         <figure>
             <title>Handling outgoing messages in &abbrev;</title>
             <mediaobject>
@@ -530,7 +533,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
                     <primary>disk queue</primary>
                     <see>disk buffer</see>
                 </indexterm>
-                <para><emphasis>Disk buffer</emphasis>: If the output queue is full and disk-buffering is enabled, syslog-ng puts the outgoing messages into the disk buffer of the destination. The disk buffer is enabled if the <parameter>log-disk-fifo-size()</parameter> parameter of the destination is larger than <userinput>0</userinput>; the size of the disk buffer is specified in bytes.</para>
+                <para><emphasis>Disk buffer</emphasis>: If the output queue is full, disk-buffering is enabled, and <parameter>reliable()</parameter> is set to <userinput>no</userinput>, syslog-ng puts the outgoing messages into the disk buffer of the destination. The disk buffer is enabled if the <parameter>log-disk-fifo-size()</parameter> parameter of the destination is larger than <userinput>0</userinput>; the size of the disk buffer is specified in bytes.</para>
             </listitem>
             <listitem>
                 <indexterm>
@@ -543,6 +546,12 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         <note>
             <para>Using disk buffer can significantly decrease performance.</para>
         </note>
+        <formalpara>
+            <title>Message handling and reliable disk-based buffering</title>
+            <para>When you use disk-based buffering, and the <parameter>reliable()</parameter> option is set to <userinput>yes</userinput>, &abbrev; handles outgoing messages the following way.</para>
+        </formalpara>
+        <!-- FIXME figure/low-chart needed -->
+        <para>The <parameter>mem-buf-size()</parameter> option determines when flow-control is triggered. All messages arriving to the log path that includes the destination using the disk-buffer are written into the disk-buffer, until the size of the disk-buffer reaches (<parameter>disk-buf-size()</parameter> minus <parameter>mem-buf-size()</parameter>). Above that size, messages are written into both the disk-buffer and the memory-buffer, indicating that flow-control needs to slow down the message source. These messages are not taken out from the control window (governed by <parameter>log-iw-size()</parameter>), causing the control window to fill up. If the control window is full, the flow-control completely stops reading incoming messages from the source. (As a result, <parameter>mem-buf-size()</parameter> must be at least as large as <parameter>log-iw-size()</parameter>.)</para>
         <section xml:id="configuring-diskbuffer-reliable">
             <title>Enabling reliable disk-based buffering</title>
             <xi:include href="../../common/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
