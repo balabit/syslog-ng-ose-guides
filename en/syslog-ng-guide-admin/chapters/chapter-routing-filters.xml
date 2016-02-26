@@ -33,22 +33,7 @@
         <indexterm>
             <primary>flags</primary>
         </indexterm>
-        <para>This default behavior can be changed using the <parameter>flags()</parameter> parameter. Flags apply to individual log paths; they are not global options. The following flags available in syslog-ng:</para>
-        <itemizedlist>
-            <listitem>
-                <para><emphasis>final</emphasis>: Do not send the messages processed by this log path to any further destination.</para>
-            </listitem>
-            <listitem>
-                <para><emphasis>fallback</emphasis>: Process messages that were not processed by other log paths.</para>
-            </listitem>
-            <listitem>
-                <para><emphasis>catchall</emphasis>: Process every message, regardless of its source or if it was already processed by other log paths.</para>
-            </listitem>
-            <listitem>
-                <para><emphasis>flow-control</emphasis>: Stop reading messages from the source if the destination cannot accept them. For details, see <xref linkend="concepts-flow-control"/>.</para>
-            </listitem>
-        </itemizedlist>
-        <para>For details on the individual flags, see <xref linkend="reference-logflags"/>. The effect and use of the <parameter>flow-control</parameter> flag is detailed in <xref linkend="concepts-flow-control"/>.</para>
+        <para>This default behavior can be changed using the <parameter>flags()</parameter> parameter. Flags apply to individual log paths; they are not global options. For details and examples on the available flags, see <xref linkend="reference-logflags"/>. The effect and use of the <parameter>flow-control</parameter> flag is detailed in <xref linkend="concepts-flow-control"/>.</para>
         <section xml:id="concepts-embedded-logpaths">
             <title>Embedded log statements</title>
             <indexterm>
@@ -87,7 +72,7 @@
                     <para>Embedded log statements can include several levels of log statements (that is, a top-level log statement can include a log statement that includes another log statement, and so on).</para>
                 </listitem>
                 <listitem>
-                    <para>After an embedded log statement, you can write either another log statement, or the <parameter>flags()</parameter> option of the original log statement. You cannot use filters or other configuration objects.</para>
+                    <para>After an embedded log statement, you can write either another log statement, or the <parameter>flags()</parameter> option of the original log statement. You cannot use filters or other configuration objects. This also means that flags (except for the <parameter>flow-control</parameter> flag) apply to the entire log statement, you cannot use them only for the embedded log statement.</para>
                 </listitem>
                 <listitem>
                     <para>Embedded log statements that are on the same level receive the same messages from the higher-level log statement. For example, if the top-level log statement includes a filter, the lower-level log statements receive only the messages that pass the filter.</para>
@@ -190,21 +175,28 @@
                                     <primary>catchall</primary>
                                 </indexterm>
                             </entry>
-                            <entry>This flag means that the source of the message is ignored, only the filters are taken into account when matching messages. A log statement using the <parameter>catchall</parameter> flag processes every message that arrives to any of the defined sources.</entry>
+                            <entry>This flag means that the source of the message is ignored, only the filters of the log path are taken into account when matching messages. A log statement using the <parameter>catchall</parameter> flag processes every message that arrives to any of the defined sources.</entry>
                         </row>
                         <row>
                             <entry>fallback <indexterm type="parameter">
                                     <primary>fallback</primary>
                                 </indexterm>
                             </entry>
-                            <entry>This flag makes a log statement 'fallback'. Fallback log statements process messages that were not processed by other, 'non-fallback' log statements. </entry>
+                            <!-- FIXME figure/illustration/flow charts needed -->
+                            <entry>
+                                <para>This flag makes a log statement 'fallback'. Fallback log statements process messages that were not processed by other, 'non-fallback' log statements.</para>
+                                <xi:include href="../../common/chunk/para-flags-processed.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                            </entry>
                         </row>
                         <row>
                             <entry>final <indexterm type="parameter">
                                     <primary>final</primary>
                                 </indexterm>
                             </entry>
-                            <entry>This flag means that the processing of log messages processed by the log statement ends here, other log statements appearing later in the configuration file will not process the messages processed by the log statement labeled as 'final'. Note that this does not necessarily mean that matching messages will be stored only once, as there can be matching log statements processed prior the current one. </entry>
+                            <entry>
+                                <para>This flag means that the processing of log messages processed by the log statement ends here, other log statements appearing later in the configuration file will not process the messages processed by the log statement labeled as 'final'. Note that this does not necessarily mean that matching messages will be stored only once, as there can be matching log statements processed before the current one (&abbrev; evaluates log statements in the order they appear in the configuration file).</para>
+                                <xi:include href="../../common/chunk/para-flags-processed.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                            </entry>
                         </row>
                         <row>
                             <entry>flow-control <indexterm type="parameter">
@@ -253,6 +245,28 @@
                         <synopsis>log { source(s_localhost); destination(d_file); flags(catchall); };</synopsis>
                     </listitem>
                 </itemizedlist>
+                <para>The following example shows a scenario that can result in message loss. Do NOT use such a configuration, unless you know exactly what you are doing. The problem is if a message matches the filters in the first part of the first log path, &abbrev; treats the message as 'processed'. Since the first log path includes the <parameter>final</parameter> flag, &abbrev; will not pass the message to the second log path (the one with the <parameter>fallback</parameter> flag). As a result, &abbrev; drops messages that do not match the filter of the embedded log path.</para>
+                <synopsis># Do not use such a configuration, unless you know exactly what you are doing.
+log {
+    source(s_network);
+    # Filters in the external log path.
+    # If a message matches this filter, it is treated as 'processed'
+    filter(f_program);
+    filter(f_message);
+    log {
+        # Filter in the embedded log path.
+        # If a message does not match this filter, it is lost, it will not be processed by the 'fallback' log path
+        filter(f_host);
+        destination(d_file1);
+    };
+    flags(final);
+};
+
+log {
+    source(s_network);
+    destination(d_file2);
+    flags(fallback);
+};</synopsis>
             </example>
         </section>
     </section>
