@@ -32,7 +32,7 @@
         <section xml:id="concepts-artificial-ignorance">
             <title>Artificial ignorance</title>
             <para>Artificial ignorance is a method to detect anomalies. When applied to log analysis, it means that you ignore the regular, common log messages - these are the result of the regular behavior of your system, and therefore are not too interesting. However, new messages that have not appeared in the logs before can sign important events, and should be therefore investigated. "By definition, something we have never seen before is anomalous" (Marcus J. Ranum). </para>
-            <para>The syslog-ng application can classify messages using a pattern database: messages that do not match any pattern are classified as unknown. This provides a way to use artificial ignorance to review your log messages. You can periodically review the unknown messages &mdash; syslog-ng can send them to a separate destination - and add patterns for them to the pattern database. By reviewing and manually classifying the unknown messages, you can iteratively classify more and more messages, until the only the really anomalous messages show up as unknown.</para>
+            <para>The syslog-ng application can classify messages using a pattern database: messages that do not match any pattern are classified as unknown. This provides a way to use artificial ignorance to review your log messages. You can periodically review the unknown messages &mdash; syslog-ng can send them to a separate destination - and add patterns for them to the pattern database. By reviewing and manually classifying the unknown messages, you can iteratively classify more and more messages, until only the really anomalous messages show up as unknown.</para>
             <para>Obviously, for this to work, a large number of message patterns are required. The radix-tree matching method used for message classification is very effective, can be performed very fast, and scales very well; basically the time required to perform a pattern matching is independent from the number of patterns in the database. For sample pattern databases, see <xref linkend="patterndb-download"/>.</para>
         </section>
     </section>
@@ -80,7 +80,7 @@
         };</synopsis>
         </example>
         <note>
-            <para>The default location of the pattern database file is <filename>/opt/syslog-ng/var/run/patterndb.xml</filename>. The <parameter>file</parameter> option of the <parameter>db-parser</parameter> statement can be used to specify a different file, thus different db-parser statements can use different pattern databases. Later versions of syslog-ng will be able to dynamically generate a main database from separate pattern database files.</para>
+            <para>The default location of the pattern database file is <filename>/opt/syslog-ng/var/run/patterndb.xml</filename>. The <parameter>file</parameter> option of the <parameter>db-parser()</parameter> statement can be used to specify a different file, thus different db-parser statements can use different pattern databases. Later versions of syslog-ng will be able to dynamically generate a main database from separate pattern database files.</para>
         </note>
         <example>
             <title>Using classification results</title>
@@ -585,11 +585,57 @@ while (&lt;&gt;) {
             </indexterm>
             <para>Pattern databases are XML files that contain rules describing the message patterns. For sample pattern databases, see <xref linkend="patterndb-download"/>.</para>
             <para>The following scheme describes the V4 format of the pattern database. This format is used by &abbrev; <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.2</phrase> and later, and is backwards-compatible with the earlier V3 format.</para>
-            <para>For a sample database containing only a single pattern, see <xref linkend="example-pattern-database-v4-su"/>.</para>
+            <para>For a sample database containing only a single pattern, see <xref linkend="example-pattern-database-v4"/>.</para>
             <tip>
                 <para>Use the <command>pdbtool</command> utility that is bundled with syslog-ng to test message patterns and convert existing databases to the latest format. For details, see <xref linkend="pdbtool.1"/>.</para>
                 <para>To automatically create an initial pattern database from an existing log file, use the <command>pdbtool patternize</command> command. For details, see <xref linkend="pdbtool-patternize"/>.</para>
             </tip>
+            <example xml:id="example-pattern-database-v4">
+                <title>A V4 pattern database containing a single rule</title>
+                <indexterm>
+                    <primary>pattern database</primary>
+                </indexterm>
+                <para>The following pattern database contains a single rule that matches a log message of the <userinput>ssh</userinput> application. A sample log message looks like:</para>
+                <synopsis>Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2</synopsis>
+                <para>The following is a simple pattern database containing a matching rule.</para>
+                <synopsis>&lt;patterndb version='4' pub_date='2010-10-17'&gt;
+    &lt;ruleset name='ssh' id='123456678'&gt;
+        &lt;pattern&gt;ssh&lt;/pattern&gt;
+            &lt;rules&gt;
+                &lt;rule provider='me' id='182437592347598' class='system'&gt;
+                    &lt;patterns&gt;
+                        &lt;pattern&gt;Accepted @QSTRING:SSH.AUTH_METHOD: @ for@QSTRING:SSH_USERNAME: @from\ @QSTRING:SSH_CLIENT_ADDRESS: @port @NUMBER:SSH_PORT_NUMBER:@ ssh2&lt;/pattern&gt;
+                    &lt;/patterns&gt;
+                &lt;/rule&gt;
+            &lt;/rules&gt;
+    &lt;/ruleset&gt;
+&lt;/patterndb&gt;</synopsis>
+                <para>Note that the rule uses macros that refer to parts of the message, for example, you can use the <userinput>${SSH_USERNAME}</userinput> macro refer to the username used in the connection.</para>
+                <para>The following is the same example, but with a test message and test values for the parsers.</para>
+                <synopsis>&lt;patterndb version='4' pub_date='2010-10-17'&gt;
+    &lt;ruleset name='ssh' id='123456678'&gt;
+        &lt;pattern&gt;ssh&lt;/pattern&gt;
+            &lt;rules&gt;
+                &lt;rule provider='me' id='182437592347598' class='system'&gt;
+                    &lt;patterns&gt;
+                        &lt;pattern&gt;Accepted @QSTRING:SSH.AUTH_METHOD: @ for@QSTRING:SSH_USERNAME: @from\ @QSTRING:SSH_CLIENT_ADDRESS: @port @NUMBER:SSH_PORT_NUMBER:@ ssh2&lt;/pattern&gt;
+                    &lt;/patterns&gt;
+                    &lt;examples&gt;
+                        &lt;example&gt;
+                            &lt;test_message&gt;Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2&lt;/test_message&gt;
+                            &lt;test_values&gt;
+                                &lt;test_value name="SSH.AUTH_METHOD"&gt;password&lt;/test_value&gt;
+                                &lt;test_value name="SSH_USERNAME"&gt;sampleuser&lt;/test_value&gt;
+                                &lt;test_value name="SSH_CLIENT_ADDRESS"&gt;10.50.0.247&lt;/test_value&gt;
+                                &lt;test_value name="SSH_PORT_NUMBER"&gt;42156&lt;/test_value&gt;
+                            &lt;/test_values&gt;
+                       &lt;/example&gt;
+                    &lt;/examples&gt;
+                &lt;/rule&gt;
+            &lt;/rules&gt;
+    &lt;/ruleset&gt;
+&lt;/patterndb&gt;</synopsis>
+            </example>
             <itemizedlist xml:id="reference-patterndb-scheme-v4">
                 <listitem>
                     <indexterm type="parameter">
@@ -996,52 +1042,6 @@ while (&lt;&gt;) {
                     </itemizedlist>
                 </listitem>
             </itemizedlist>
-            <example xml:id="example-pattern-database-v4-su">
-                <title>A V4 pattern database containing a single rule</title>
-                <indexterm>
-                    <primary>pattern database</primary>
-                </indexterm>
-                <para>The following pattern database contains a single rule that matches a log message of the <userinput>ssh</userinput> application. A sample log message looks like:</para>
-                <synopsis>Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2</synopsis>
-                <para>The following is a simple pattern database containing a matching rule.</para>
-                <synopsis>&lt;patterndb version='4' pub_date='2010-10-17'&gt;
-    &lt;ruleset name='ssh' id='123456678'&gt;
-        &lt;pattern&gt;ssh&lt;/pattern&gt;
-            &lt;rules&gt;
-                &lt;rule provider='me' id='182437592347598' class='system'&gt;
-                    &lt;patterns&gt;
-                        &lt;pattern&gt;Accepted @QSTRING:SSH.AUTH_METHOD: @ for@QSTRING:SSH_USERNAME: @from\ @QSTRING:SSH_CLIENT_ADDRESS: @port @NUMBER:SSH_PORT_NUMBER:@ ssh2&lt;/pattern&gt;
-                    &lt;/patterns&gt;
-                &lt;/rule&gt;
-            &lt;/rules&gt;
-    &lt;/ruleset&gt;
-&lt;/patterndb&gt;</synopsis>
-                <para>Note that the rule uses macros that refer to parts of the message, for example, you can use the <userinput>${SSH_USERNAME}</userinput> macro refer to the username used in the connection.</para>
-                <para>The following is the same example, but with a test message and test values for the parsers.</para>
-                <synopsis>&lt;patterndb version='4' pub_date='2010-10-17'&gt;
-    &lt;ruleset name='ssh' id='123456678'&gt;
-        &lt;pattern&gt;ssh&lt;/pattern&gt;
-            &lt;rules&gt;
-                &lt;rule provider='me' id='182437592347598' class='system'&gt;
-                    &lt;patterns&gt;
-                        &lt;pattern&gt;Accepted @QSTRING:SSH.AUTH_METHOD: @ for@QSTRING:SSH_USERNAME: @from\ @QSTRING:SSH_CLIENT_ADDRESS: @port @NUMBER:SSH_PORT_NUMBER:@ ssh2&lt;/pattern&gt;
-                    &lt;/patterns&gt;
-                    &lt;examples&gt;
-                        &lt;example&gt;
-                            &lt;test_message&gt;Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2&lt;/test_message&gt;
-                            &lt;test_values&gt;
-                                &lt;test_value name="SSH.AUTH_METHOD"&gt;password&lt;/test_value&gt;
-                                &lt;test_value name="SSH_USERNAME"&gt;sampleuser&lt;/test_value&gt;
-                                &lt;test_value name="SSH_CLIENT_ADDRESS"&gt;10.50.0.247&lt;/test_value&gt;
-                                &lt;test_value name="SSH_PORT_NUMBER"&gt;42156&lt;/test_value&gt;
-                            &lt;/test_values&gt;
-                       &lt;/example&gt;
-                    &lt;/examples&gt;
-                &lt;/rule&gt;
-            &lt;/rules&gt;
-    &lt;/ruleset&gt;
-&lt;/patterndb&gt;</synopsis>
-            </example>
         </section>
     </section>
 </chapter>
