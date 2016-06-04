@@ -218,7 +218,7 @@
         </section>
     </section>
     <section xml:id="patterndb-correlation">
-        <title>Correlating log messages</title>
+        <title>Correlating log messages using pattern databases</title>
         <indexterm>
             <primary>message correlation</primary>
         </indexterm>
@@ -235,34 +235,19 @@
         <indexterm>
             <primary>context of messages</primary>
         </indexterm>
-        <para>The &abbrev; application is able to correlate log messages identified using pattern databases.</para>
-        <para>Log messages are supposed to describe events, but applications often separate information about a single event into different log messages. For example, the Postfix e-mail server logs the sender and recipient addresses into separate log messages, or in case of an unsuccessful login attempt, the OpenSSH server sends a log message about the authentication failure, and the reason of the failure in the next message.</para>
-        <para>Of course, messages that are not so directly related can be correlated as well, for example, login-logout messages, and so on.</para>
-        <para>To correlate log messages, &abbrev; uses the pattern database to add messages into message-groups called contexts. A context consists of a series of log messages that are related to each other in some way, for example, the log messages of an SSH session can belong to the same context. As new messages come in, they may be added to a context. Also, when an incoming message is identified it can trigger actions to be performed, for example, generate a new message that contains all the important information that was stored previously in the context. (For details on triggering actions and generating messages, see <xref linkend="patterndb-triggers-actions"/>.)</para>
+        <para>The &abbrev; application is able to correlate log messages identified using pattern databases. Alternatively, you can also correlate log messages using the <parameter>grouping-by()</parameter> parser. For details, see <xref linkend="grouping-by-parser"/>.</para>
+
+        <xi:include href="../../common/chunk/correlation-intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        <para>(For details on triggering actions and generating messages, see <xref linkend="patterndb-triggers-actions"/>.)</para>
         <para>There are two attributes for pattern database rules that determine if a message matching the rule is added to a context: <parameter>context-scope</parameter> and <parameter>context-id</parameter>. The <parameter>context-scope</parameter> attribute acts as an early filter, selecting messages sent by the same process (${HOST}${PROGRAM}${PID} is identical), application (${HOST}${PROGRAM} is identical), or host, while the <parameter>context-id</parameter> actually adds the message to the context specified in the id. The <parameter>context-id</parameter> can be a simple string, or can contain macros or values extracted from the log messages for further filtering. Starting with &abbrev; version <phrase condition="ose">3.5</phrase>, if a message is added to a context, &abbrev; automatically adds the identifier of the context to the <parameter>.classifier.context_id</parameter> macro of the message.</para>
-        <note>
-            <para>Message contexts are persistent and are not lost when &abbrev; is reloaded (SIGHUP), but are lost when &abbrev; is restarted.</para>
-        </note>
-        <para>Another parameter of a rule is the <parameter>context-timeout</parameter> attribute, which determines how long a context is stored, that is, how long &abbrev; waits for related messages to arrive. Note the following points about timeout values:</para>
-        <itemizedlist>
-            <listitem>
-                <para>When a new message is added to a context, &abbrev; will restart the timeout using the <parameter>context-timeout</parameter> set for the new message.</para>
-            </listitem>
-            <listitem>
-                <para>When calculating if the timeout has already expired or not, &abbrev; uses the timestamps of the incoming messages, not system time elapsed between receiving the two messages (unless the messages do not include a timestamp, or the <userinput>keep-timestamp(no)</userinput> option is set). That way &abbrev; can be used to process and correlate already existing log messages offline. However, the timestamps of the messages must be in chronological order (that is, a new message cannot be older than the one already processed), and if a message is newer than the current system time (that is, it seems to be coming from the future), &abbrev; will replace its timestamp with the current system time.</para>
-                <example>
-                    <title>How &abbrev; calculates <parameter>context-timeout</parameter>
-                    </title>
-                    <para>Consider the following two messages:</para>
-                    <synopsis>&lt;38&gt;1990-01-01T14:45:25 customhostname program6[1234]: program6 testmessage
-&lt;38&gt;1990-01-01T14:46:25 customhostname program6[1234]: program6 testmessage</synopsis>
-                    <para>If the <parameter>context-timeout</parameter> is 10 seconds and &abbrev; receives the messages within 1 sec, the timeout event will occour immediately, because the difference of the two timestamp (60 sec) is larger than the timeout value (10 sec).</para>
-                </example>
-            </listitem>
-            <listitem>
-                <para>Avoid using unnecessarily long timeout values on high-traffic systems, as storing the contexts for many messages can require considerable memory. For example, if two related messages usually arrive within seconds, it is not needed to set the timeout to several hours.</para>
-            </listitem>
-        </itemizedlist>
+
+        <xi:include href="../../common/wnt/note-message-context.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        <para>Another parameter of a rule is the <parameter>context-timeout</parameter> attribute, which determines how long a context is stored, that is, how long &abbrev; waits for related messages to arrive.</para>
+
+        <xi:include href="../../common/chunk/correlation-context-timeout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
         <example>
             <title>Using message correlation</title>
             <synopsis>&lt;rule xml:id="..." context-id="ssh-session" context-timeout="86400" context-scope="process"&gt;
