@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="grouping-by-parser" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>Correlating messages using the <userinput>grouping-by()</userinput> parser</title>
+    <indexterm>
+        <primary>correlating messages</primary>
+    </indexterm>
+    <indexterm>
+        <primary>correlate messages</primary>
+    </indexterm>
+    <indexterm>
+        <primary>parsers</primary>
+        <secondary>correlating</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>parsers</primary>
+        <secondary>grouping-by()</secondary>
+    </indexterm>
+    <para>The &abbrev; application is able to correlate log messages that match a set of filters. Alternatively, you can also correlate log messages using pattern databases. For details, see <xref linkend="patterndb-correlation"/>.</para>
+
+    <xi:include href="../../common/chunk/correlation-intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+    <para>The <parameter>grouping-by()</parameter> parser has two options that determine if a message is added to a context: <parameter>scope()</parameter> and <parameter>key()</parameter>. The <parameter>scope()</parameter> option acts as an early filter, selecting messages sent by the same process (<userinput>${HOST}${PROGRAM}${PID}</userinput> is identical), application (<userinput>${HOST}${PROGRAM}</userinput> is identical), or host, while the <parameter>key()</parameter> actually adds matching messages to the context.</para>
+
+    <xi:include href="../../common/wnt/note-message-context.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+    <para>The <parameter>timeout()</parameter> option determines how long a context is stored, that is, how long &abbrev; waits for related messages to arrive.</para>
+
+    <xi:include href="../../common/chunk/correlation-context-timeout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    
+    <formalpara>
+        <title>Declaration:</title>
+        <para/>
+    </formalpara>
+    <synopsis>parser parser_name {
+    grouping-by(
+        
+    );
+};</synopsis>
+
+<!-- FIXME declaration, examples -->
+
+    <section xml:id="grouping-by-parser-options">
+        <title>Options of <userinput>grouping-by</userinput> parsers</title>
+        <para>The <parameter>grouping-by</parameter> has the following options.</para>
+<!--
+    Some of these attributes should match the names of the similar patterndb elements, for example,
+    scope > context-scope
+    timeout > context-timeout
+    aggregate > message or action
+    ...
+    * scope-ban mukodik a program ertek is? patterndb-ben van olyan is
+    * We could illustrate how this works on a flowchart, for example:
+        - does it match the scope? if yes,
+        - does it match the key?
+        ...
+        - does it match trigger? if yes, or 
+        - has the timeout elapsed? > send aggregate
+-->
+        <simplesect xml:id="grouping-by-parser-aggregate">
+            <title>aggregate()</title>
+            <indexterm>
+              <primary>aggregate()</primary>
+            </indexterm>
+            <indexterm>
+              <primary>grouping-by()</primary>
+              <secondary>aggregate()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+              <tgroup cols="2">
+                  <colspec colnum="1" colwidth="50pt"/>
+                  <tbody>
+                      <row>
+                          <entry>Synopsis:
+                            <?dbhtml bgcolor="#D4D6EB" ?>
+                            <?dbfo bgcolor="#D4D6EB" ?>
+                          </entry>
+                          <entry>aggregate()</entry>
+                      </row>
+                  </tbody>
+              </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the message that &abbrev; generates when the context is closed. Note that the <parameter>aggregate()</parameter> option has access to every message of the context, and has the following options:</para>
+            <itemizedlist>
+                <listitem>
+                    <indexterm type="parameter">
+                        <primary>inherit-mode()</primary>
+                    </indexterm>
+                    <para><emphasis>inherit-mode</emphasis>: </para>
+                    <!-- FIXME xinclude -->
+                </listitem>
+                <listitem>
+                    <indexterm type="parameter">
+                        <primary>tags()</primary>
+                    </indexterm>
+                    <para><emphasis>tags</emphasis>: </para>
+                </listitem>
+                <listitem>
+                    <indexterm type="parameter">
+                        <primary>value()</primary>
+                    </indexterm>
+                    <para><emphasis>value</emphasis>: The text of the generated message. You can include text, macros, template functions, and you can also reference every message of the context.</para>
+                    <!-- FIXME referring earlier messages xinclude -->
+                </listitem>
+            </itemizedlist>
+        </simplesect>
+        <simplesect xml:id="grouping-by-parser-having">
+            <title>having()</title>
+            <indexterm>
+              <primary>having()</primary>
+            </indexterm>
+            <indexterm>
+              <primary>grouping-by()</primary>
+              <secondary>having()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+              <tgroup cols="2">
+                  <colspec colnum="1" colwidth="50pt"/>
+                  <tbody>
+                      <row>
+                          <entry>Synopsis:
+                            <?dbhtml bgcolor="#D4D6EB" ?>
+                            <?dbfo bgcolor="#D4D6EB" ?>
+                          </entry>
+                          <entry>having()</entry>
+                      </row>
+                  </tbody>
+              </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies a filter: &abbrev; generates the aggregate message only if the result of the filter expression is true. Note that the <parameter>having()</parameter> filter has access to every message of the context.</para>
+            <!-- FIXME referring earlier messages xinclude -->
+        </simplesect>
+        <simplesect xml:id="grouping-by-parser-inject-mode">
+            <title>inject-mode()</title>
+            <indexterm>
+              <primary>inject-mode()</primary>
+            </indexterm>
+            <indexterm>
+              <primary>grouping-by()</primary>
+              <secondary>inject-mode()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+              <tgroup cols="2">
+                  <colspec colnum="1" colwidth="50pt"/>
+                  <tbody>
+                      <row>
+                          <entry>Synopsis:
+                            <?dbhtml bgcolor="#D4D6EB" ?>
+                            <?dbfo bgcolor="#D4D6EB" ?>
+                          </entry>
+                          <entry>inject-mode()</entry>
+                      </row>
+                  </tbody>
+              </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> By default, the aggregated message that &abbrev; generates is injected into the same place where the <parameter>grouping-by()</parameter> statement is referenced in the log path. To post the generated message into the <parameter>internal()</parameter> source instead, use the <parameter>inject-mode()</parameter> option in the definition of the parser.</para>
+            <example>
+                <title>Sending triggered messages to the <parameter>internal()</parameter> source</title>
+                <para>To send the generated messages to the <parameter>internal</parameter> source, use the <userinput>inject-mode(internal)</userinput> option:</para>
+                <synopsis>parser p_grouping-by {grouping-by(
+    ...
+    inject-mode(internal)
+);};</synopsis>
+                <para>To inject the generated messages where the parser is referenced, use the <userinput>inject-mode(pass-through)</userinput> option:</para>
+                <synopsis>parser p_grouping-by {grouping-by(
+    ...
+    inject-mode(pass-through)
+);};</synopsis>
+            </example>
+            <para>The generated message must be configured in the pattern database rule. It is possible to create an entire message, use macros and values extracted from the original message with pattern database, and so on.</para>
+        </simplesect>
+        <simplesect xml:id="grouping-by-parser-key">
+            <title>key()</title>
+            <indexterm>
+              <primary>key()</primary>
+            </indexterm>
+            <indexterm>
+              <primary>grouping-by()</primary>
+              <secondary>key()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+              <tgroup cols="2">
+                  <colspec colnum="1" colwidth="50pt"/>
+                  <tbody>
+                      <row>
+                          <entry>Synopsis:
+                            <?dbhtml bgcolor="#D4D6EB" ?>
+                            <?dbfo bgcolor="#D4D6EB" ?>
+                          </entry>
+                          <entry>key()</entry>
+                      </row>
+                  </tbody>
+              </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the key that every message must have to be added to the context. The value of the key must be the same for every message of the context. For example, this can be a session-id parsed from firewall messages, and so on.</para>
+        </simplesect>
+        <simplesect xml:id="grouping-by-parser-scope">
+            <title>scope()</title>
+            <indexterm>
+              <primary>scope()</primary>
+            </indexterm>
+            <indexterm>
+              <primary>grouping-by()</primary>
+              <secondary>scope()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+              <tgroup cols="2">
+                  <colspec colnum="1" colwidth="50pt"/>
+                  <tbody>
+                      <row>
+                          <entry>Synopsis:
+                            <?dbhtml bgcolor="#D4D6EB" ?>
+                            <?dbfo bgcolor="#D4D6EB" ?>
+                          </entry>
+                          <entry>scope()</entry>
+                      </row>
+                  </tbody>
+              </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies which messages belong to the same context. The following values are available:</para>
+            
+            <xi:include href="../../common/chunk/correlation-context-scope.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            
+        </simplesect>
+        <simplesect xml:id="grouping-by-parser-trigger">
+            <title>timeout()</title>
+            <indexterm>
+              <primary>timeout()</primary>
+            </indexterm>
+            <indexterm>
+              <primary>grouping-by()</primary>
+              <secondary>timeout()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+              <tgroup cols="2">
+                  <colspec colnum="1" colwidth="50pt"/>
+                  <tbody>
+                      <row>
+                          <entry>Synopsis:
+                            <?dbhtml bgcolor="#D4D6EB" ?>
+                            <?dbfo bgcolor="#D4D6EB" ?>
+                          </entry>
+                          <entry>timeout()</entry>
+                      </row>
+                  </tbody>
+              </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the maximum time to wait for all messages of the context to arrive. After this time, the context is assumed to be complete and &abbrev; generates and sends the triggered message (specified in the <link linkend="grouping-by-parser-aggregate">aggregate()</link> option), and clears the context.</para>
+        </simplesect>
+        <simplesect xml:id="grouping-by-parser-trigger">
+            <title>trigger()</title>
+            <indexterm>
+              <primary>trigger()</primary>
+            </indexterm>
+            <indexterm>
+              <primary>grouping-by()</primary>
+              <secondary>trigger()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+              <tgroup cols="2">
+                  <colspec colnum="1" colwidth="50pt"/>
+                  <tbody>
+                      <row>
+                          <entry>Synopsis:
+                            <?dbhtml bgcolor="#D4D6EB" ?>
+                            <?dbfo bgcolor="#D4D6EB" ?>
+                          </entry>
+                          <entry>trigger()</entry>
+                      </row>
+                  </tbody>
+              </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> A filter that specifies the final message of the context. If the filter matches the incoming message, &abbrev; generates and sends the triggered message (specified in the <link linkend="grouping-by-parser-aggregate">aggregate()</link> option), and clears the context.</para>
+        </simplesect>
+        <simplesect xml:id="grouping-by-parser-where">
+            <title>where()</title>
+            <indexterm>
+              <primary>where()</primary>
+            </indexterm>
+            <indexterm>
+              <primary>grouping-by()</primary>
+              <secondary>where()</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+              <tgroup cols="2">
+                  <colspec colnum="1" colwidth="50pt"/>
+                  <tbody>
+                      <row>
+                          <entry>Synopsis:
+                            <?dbhtml bgcolor="#D4D6EB" ?>
+                            <?dbfo bgcolor="#D4D6EB" ?>
+                          </entry>
+                          <entry>where()</entry>
+                      </row>
+                  </tbody>
+              </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies a filter condition. Messages not matching the filter will not be added to the context. Note that the <parameter>where()</parameter> filter has access only to the current message.</para>
+        </simplesect>
+    </section>
+</section>
