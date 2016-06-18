@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="configuring-destinations-http-nonjava" condition="ose" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>Posting messages over HTTP without Java</title>
+    <indexterm>
+        <primary>destination drivers</primary>
+        <secondary><parameter>http()</parameter> driver</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>destination drivers</primary>
+        <secondary><parameter>http</parameter></secondary>
+    </indexterm>
+    <para>Version <phrase condition="ose">3.8</phrase> of &abbrev; can directly post log messages to web services using the HTTP protocol, without having to use Java. The current implementation has the following limitations:</para>
+    <itemizedlist>
+        <listitem>
+            <para>Only HTTP connections are supported, HTTPS is not.</para>
+<!--
+            FIXME which types of authentication do we support? redirect handling?
+-->
+        </listitem>
+        <listitem>
+            <para>Only the PUT and the POST methods are supported.</para>
+        </listitem>
+    </itemizedlist>
+    <formalpara>
+        <title>Declaration:</title>
+        <para/>
+    </formalpara>
+<!--
+    FIXME remove options that have usable defaults
+-->
+    <synopsis>destination d_http {
+    http(
+        url("http://127.0.0.1:8000")
+        method("PUT")
+        user_agent("syslog-ng User Agent")
+        user("user")
+        password("password")
+        headers("HEADER1: header1", "HEADER2: header2")
+        body("${ISODATE} ${MSG}")
+    );
+};</synopsis>
+    <example xml:id="example-destination-http-nonjava">
+        <title>Sending log data to a web service</title>
+        <para>The following example defines an <parameter>http</parameter> destination.</para>
+        <synopsis>destination d_http {
+    http(url("http://127.0.0.1:8000")
+        method("PUT")
+        user_agent("syslog-ng User Agent")
+        user("user")
+        password("password")
+        headers("HEADER1: header1", "HEADER2: header2")
+        body("${ISODATE} ${MSG}")
+    );
+};
+
+log
+    { source(s_file); destination(d_http); flags(flow-control); };
+</synopsis>
+    </example>
+    <section xml:id="reference-destination-http-nonjava">
+        <title>HTTP destination options</title>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary><parameter>http</parameter></secondary>
+        </indexterm>
+        <para>The <parameter>http</parameter> destination of &abbrev; can directly post log messages to web services using the HTTP protocol. The <parameter>http</parameter> destination has the following options.</para>
+        <formalpara>
+            <title>Required options:</title>
+            <para/>
+        </formalpara>
+        <para>The following options are required: <parameter>url()</parameter>.</para>
+<!--
+        FIXME What common options are supported?
+        FIXME Default values/required options?
+-->
+        <simplesect>
+            <title>body()</title>
+            <indexterm type="parameter">
+                <primary>body()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>string or template</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+<!--
+            FIXME can it be empty?
+-->
+            <para><emphasis role="bold">Description:</emphasis> The body of the HTTP request, for example, <userinput>body("${ISODATE} ${MSG}")</userinput>.</para>
+        </simplesect>
+        <simplesect>
+            <title>headers()</title>
+            <indexterm type="parameter">
+                <primary>headers()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>string list</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+<!--
+            FIXME can you use templates/macros in the header names/values?
+-->
+            <para><emphasis role="bold">Description:</emphasis> Custom HTTP headers to include in the request, for example, <userinput>headers("HEADER1: header1", "HEADER2: header2")</userinput></para>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect xml:id="http-option-method">
+            <title>method()</title>
+            <indexterm type="parameter">
+                <primary>method()</primary>
+                <secondary>http</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>http</primary>
+                <secondary>method</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+								<?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>POST | PUT</entry>
+                        </row>
+                        <row>
+                            <entry>Default: POST
+								<?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the HTTP method to use when sending the message to the server.</para>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-retries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <title>password()</title>
+            <indexterm type="parameter">
+                <primary>password()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The password that &abbrev; uses to authenticate on the server where it sends the messages.</para>
+        </simplesect>
+        <simplesect xml:id="http-option-url">
+            <title>url()</title>
+            <indexterm type="parameter">
+                <primary>url()</primary>
+                <secondary>http</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>http</primary>
+                <secondary>url</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+								<?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>URL</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+								<?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the hostname or IP address and optionally the port number of the web service that can receive log data via HTTP. Use a colon (<userinput>:</userinput>) after the address to specify the port number of the server. For example: <userinput>http://127.0.0.1:8000</userinput></para>
+        </simplesect>
+        <simplesect>
+            <title>user-agent()</title>
+            <indexterm type="parameter">
+                <primary>user-agent()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The value of the USER-AGENT header in the messages sent to the server.</para>
+        </simplesect>
+        <simplesect>
+            <title>username()</title>
+            <indexterm type="parameter">
+                <primary>username()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The username that &abbrev; uses to authenticate on the server where it sends the messages.</para>
+        </simplesect>
+    </section>
+</section>
