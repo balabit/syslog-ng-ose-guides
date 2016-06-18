@@ -17,7 +17,7 @@
         <primary>parsers</primary>
         <secondary>kv-parser</secondary>
     </indexterm>
-    <para>The &abbrev; application can separate a message consisting of whitespace or comma-separated <userinput>key=value</userinput> pairs (for example, Postfix log messages) into name-value pairs. For details on using value-pairs in &abbrev; see <xref linkend="concepts-value-pairs"/>.</para>
+    <para>The &abbrev; application can separate a message consisting of whitespace or comma-separated <userinput>key=value</userinput> pairs (for example, Postfix log messages) into name-value pairs. You can also specify other separator character instead of the equal sign, for example, colon (<userinput>:</userinput>) to parse MySQL log messages. For details on using value-pairs in &abbrev; see <xref linkend="concepts-value-pairs"/>.</para>
     <para>You can refer to the separated parts of the message using the key of the value as a macro. For example, if the message contains <userinput>KEY1=value1,KEY2=value2</userinput>, you can refer to the values as <userinput>${KEY1}</userinput> and <userinput>${KEY2}</userinput>.</para>
     <warning>
         <para>If the names of keys in the message is the same as the names of &abbrev; soft macros, the value from the parsed message will overwrite the value of the macro. For example, the <userinput>PROGRAM=value1, MESSAGE=value2</userinput> content will overwrite the <userinput>${PROGRAM}</userinput> and <userinput>${MESSAGE}</userinput> macros. To avoid overwriting such macros, use the <parameter>prefix()</parameter> option.</para>
@@ -74,6 +74,9 @@ log {
     };
     destination(d_json);
 };</synopsis>
+    <para>You can set the separator character between the key and the value to parse for example <userinput>key:value</userinput> pairs, like MySQL logs:</para>
+    <synopsis>Mar  7 12:39:25 myhost MysqlClient[20824]: SYSTEM_USER:'oscar', MYSQL_USER:'my_oscar', CONNECTION_ID:23, DB_SERVER:'127.0.0.1', DB:'--', QUERY:'USE test;'</synopsis>
+    <synopsis>parser p_mysql { kv-parser(value-separator(":") prefix(".mysql."));</synopsis>
     </example>
     <section xml:id="kv-parser-options">
         <title>Options of <userinput>key=value</userinput> parsers</title>
@@ -84,6 +87,28 @@ log {
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-parser-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <title>value-separator()</title>
+            <indexterm>
+              <primary>value-separator()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+              <tgroup cols="2">
+                  <colspec colnum="1" colwidth="50pt"/>
+                  <tbody>
+                      <row>
+                          <entry>Synopsis:
+                            <?dbhtml bgcolor="#D4D6EB" ?>
+                            <?dbfo bgcolor="#D4D6EB" ?>
+                          </entry>
+                          <entry>value-separator()</entry>
+                      </row>
+                  </tbody>
+              </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the character that separates the keys from the values. Default value: <userinput>=</userinput></para>
+            <para>For example, to parse <userinput>key:value</userinput> pairs, use <userinput>kv-parser(value-separator(":"));</userinput></para>
         </simplesect>
     </section>
 </section>
