@@ -318,7 +318,7 @@
             <primary>destination drivers</primary>
             <secondary><parameter>program()</parameter> driver</secondary>
         </indexterm>
-        <para>The <parameter>program()</parameter> driver starts an external application or script and sends the log messages to its standard input (<parameter>stdin</parameter>).</para>
+        <para>The <parameter>program()</parameter> driver starts an external application or script and sends the log messages to its standard input (<parameter>stdin</parameter>). Usually, every message is a single line (ending with a newline character), which your script can process. Make sure that your script runs in a loop and keeps reading the standard input &mdash; it should not exit. (If your script exits, &abbrev; tries to restart it.)</para>
         <para>The <parameter>program()</parameter> driver has a single required parameter, specifying a program name to start. The program is executed with the help of the current shell, so the command may include both file patterns and I/O redirections. For the list of available optional parameters, see <xref linkend="reference-destination-program"/>.</para>
         <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <formalpara>
@@ -347,8 +347,14 @@
         </note>
         <example xml:id="example-destination-program">
             <title>Using the program() destination driver</title>
-            <para>The message format does not include the priority and facility values by default. To add these values, specify a template for the program destination, as shown in the following example.</para>
+            <para>The message format does not include the priority and facility values by default. To add these values, specify a template for the program destination, as shown in the following example. Make sure to end your template with a newline character (<userinput>\n</userinput>).</para>
             <synopsis>destination d_prog { program("/bin/script" template("&lt;${PRI}&gt;${DATE} ${HOST} ${MSG}\n") ); };</synopsis>
+            <para>The following shell script writes the incoming messages into the <filename>/tmp/testlog</filename> file.</para>
+            <synopsis>#!/bin/bash
+while read line ; do
+echo $line >> /tmp/testlog
+done
+</synopsis>
         </example>
         <section xml:id="reference-destination-program">
             <title>program() destination options</title>
@@ -414,6 +420,7 @@
             </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                <para>Make sure to end your template with a newline character (<userinput>\n</userinput>).</para>
             </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-destination-template-escape.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
