@@ -22,11 +22,47 @@
 
     <xi:include href="../../common/chunk/correlation-intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
-    <para>The <parameter>grouping-by()</parameter> parser has two options that determine if a message is added to a context: <parameter>scope()</parameter> and <parameter>key()</parameter>. The <parameter>scope()</parameter> option acts as an early filter, selecting messages sent by the same process (<userinput>${HOST}${PROGRAM}${PID}</userinput> is identical), application (<userinput>${HOST}${PROGRAM}</userinput> is identical), or host, while the <parameter>key()</parameter> actually adds matching messages to the context.</para>
+    <formalpara>
+        <title>How the grouping-by() parser works</title>
+        <para/>
+    </formalpara>
+    <synopsis>
+    +--------------------+
+    |Incoming log message|
+    +--------------------+
+              |
+              |
+              |
+              |
+              V
+    +-------------------------------------------+    No
+    |Does it match key(), scope(), and where()? +----------> Ignore message
+    +-------------------------------------------+
+              |
+              |
+              V
+    Add message to context
+              |
+              |
+              v                    No
+    Is it a trigger() message or --------> Wait until timeout() or a new message
+    has the timeout() expired?
+             +
+             |
+             |
+             v                              No
+    Does the context match having()? +-------------> Close the context
+            +                                         and do nothing
+            |
+            |
+            v
+    Inject the aggregate() log message and close the context
+    </synopsis>
+    <para>The <parameter>grouping-by()</parameter> parser has three options that determine if a message is added to a context: <parameter>scope()</parameter> and <parameter>key()</parameter>. The <parameter>scope()</parameter> option acts as an early filter, selecting messages sent by the same process (<userinput>${HOST}${PROGRAM}${PID}</userinput> is identical), application (<userinput>${HOST}${PROGRAM}</userinput> is identical), or host, while the <parameter>key()</parameter> actually adds matching messages to the context. To use a filter to further limit the messages that are added to the context, you can user the <parameter>where()</parameter> option.</para>
+    <para>The <parameter>timeout()</parameter> option determines how long a context is stored, that is, how long &abbrev; waits for related messages to arrive. If the group has a specific log message that ends the context (for example, a logout message), you can specify it using the <parameter>trigger()</parameter> option.</para>
+    <para>When the context is closed, and the messages match the filter set in the <parameter>having()</parameter> option (or the <parameter>having()</parameter> option is not set), &abbrev; generates and sends the message set in the <parameter>aggregate()</parameter> option.</para>
 
     <xi:include href="../../common/wnt/note-message-context.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-
-    <para>The <parameter>timeout()</parameter> option determines how long a context is stored, that is, how long &abbrev; waits for related messages to arrive.</para>
 
     <xi:include href="../../common/chunk/correlation-context-timeout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
@@ -36,11 +72,17 @@
     </formalpara>
     <synopsis>parser parser_name {
     grouping-by(
-
+        key()
+        having()
+        aggregate()
+        timeout()
     );
 };</synopsis>
 
-<!-- FIXME declaration, which parameters are required? -->
+    <para>For the parser to work, you must set at least the following options: <parameter>key()</parameter>, <parameter>having()</parameter>, <parameter>aggregate()</parameter>, and either <parameter>timeout()</parameter> or <parameter>trigger()</parameter>.</para>
+
+    <xi:include href="../../common/chunk/correlation-context-timeout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
     <example>
         <title>Correlating Linux Audit logs</title>
         <para>Linux audit logs tend to be broken into several log messages (generated as a list of lines). Usually, the related lines are close to each other in time, but multiple events can be logged at around the same time, which get mixed up in the output. The example below is the audit log for running <command>ntpdate</command>:</para>
@@ -50,8 +92,16 @@ type=CWD msg=audit(1440927434.124:40347):  cwd="/"
 type=PATH msg=audit(1440927434.124:40347): item=0 name="/usr/sbin/ntpdate" inode=2006003 dev=08:01 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL
 type=PATH msg=audit(1440927434.124:40347): item=1 name="/lib64/ld-linux-x86-64.so.2" inode=5243184 dev=08:01 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL
 type=PROCTITLE msg=audit(1440927434.124:40347): proctitle=2F62696E2F7368002F7573722F7362696E2F6E7470646174652D64656269616E002D73</synopsis>
-        <para>These lines are connected by their second field: <userinput>msg=audit(1440927434.124:40347)</userinput>. You can parse such messages using the <link linkend="linux-audit-parser">Linux Audit Parser of &abbrev;</link>, and then use the parsed <userinput>msg</userinput> field to group the messages.</para>
-        <!-- FIXME add a sample config for this scenario -->
+        <para>These lines are connected by their second field: <userinput>msg=audit(1440927434.124:40347)</userinput>. You can parse such messages using the <link linkend="linux-audit-parser">Linux Audit Parser of &abbrev;</link>, and then use the parsed <userinput>.auditd.msg</userinput> field to group the messages.</para>
+        <synopsis>parser auditd_groupingby {
+    grouping-by(
+        key(".auditd.msg")
+        aggregate(
+            value($(format-json .auditd.*))
+            )
+        timeout(10)
+    );
+};</synopsis>
     </example>
 
     <section xml:id="referencing-previous-messages-grouping-by">
@@ -72,14 +122,6 @@ type=PROCTITLE msg=audit(1440927434.124:40347): proctitle=2F62696E2F7368002F7573
     <section xml:id="grouping-by-parser-options">
         <title>Options of <userinput>grouping-by</userinput> parsers</title>
         <para>The <parameter>grouping-by</parameter> has the following options.</para>
-<!--
-    * FIXME We could illustrate how this works on a flowchart, for example:
-        - does it match the scope? if yes,
-        - does it match the key?
-        ...
-        - does it match trigger? if yes, or
-        - has the timeout elapsed? > send aggregate
--->
         <simplesect xml:id="grouping-by-parser-aggregate">
             <title>aggregate()</title>
             <indexterm>
@@ -124,7 +166,7 @@ type=PROCTITLE msg=audit(1440927434.124:40347): proctitle=2F62696E2F7368002F7573
                     <indexterm type="parameter">
                         <primary>value()</primary>
                     </indexterm>
-                    <para><emphasis>value</emphasis>: The text of the generated message. You can include text, macros, template functions, and you can also reference every message of the context. For details on accessing other messages of the context, see <xref linkend="referencing-previous-messages-grouping-by-parser"/>.</para>
+                    <para><emphasis>value</emphasis>: The text of the generated message. You can include text, macros, template functions, and you can also reference every message of the context. For details on accessing other messages of the context, see <xref linkend="referencing-previous-messages-grouping-by"/>.</para>
                 </listitem>
             </itemizedlist>
         </simplesect>
@@ -151,7 +193,7 @@ type=PROCTITLE msg=audit(1440927434.124:40347): proctitle=2F62696E2F7368002F7573
                   </tbody>
               </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies a filter: &abbrev; generates the aggregate message only if the result of the filter expression is true. Note that the <parameter>having()</parameter> filter has access to every message of the context. For details on accessing other messages of the context, see <xref linkend="referencing-previous-messages-grouping-by-parser"/>.</para>
+            <para><emphasis role="bold">Description:</emphasis> Specifies a filter: &abbrev; generates the aggregate message only if the result of the filter expression is true. Note that the <parameter>having()</parameter> filter has access to every message of the context. For details on accessing other messages of the context, see <xref linkend="referencing-previous-messages-grouping-by"/>.</para>
         </simplesect>
         <simplesect xml:id="grouping-by-parser-inject-mode">
             <title>inject-mode()</title>
@@ -215,7 +257,7 @@ type=PROCTITLE msg=audit(1440927434.124:40347): proctitle=2F62696E2F7368002F7573
                   </tbody>
               </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies the key that every message must have to be added to the context. The value of the key must be the same for every message of the context. For example, this can be a session-id parsed from firewall messages, and so on.</para>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the key (that is, the name of a name-value pair) that every message must have to be added to the context. The value of the key must be the same for every message of the context. For example, this can be a session-id parsed from firewall messages, and so on.</para>
         </simplesect>
         <simplesect xml:id="grouping-by-parser-scope">
             <title>scope()</title>
@@ -263,12 +305,12 @@ type=PROCTITLE msg=audit(1440927434.124:40347): proctitle=2F62696E2F7368002F7573
                             <?dbhtml bgcolor="#D4D6EB" ?>
                             <?dbfo bgcolor="#D4D6EB" ?>
                           </entry>
-                          <entry>timeout()</entry>
+                          <entry>timeout([seconds])</entry>
                       </row>
                   </tbody>
               </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies the maximum time to wait for all messages of the context to arrive. After this time, the context is assumed to be complete and &abbrev; generates and sends the triggered message (specified in the <link linkend="grouping-by-parser-aggregate">aggregate()</link> option), and clears the context.</para>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the maximum time to wait for all messages of the context to arrive. If no new message is added to the context during this period, the context is assumed to be complete and &abbrev; generates and sends the triggered message (specified in the <link linkend="grouping-by-parser-aggregate">aggregate()</link> option), and clears the context. If a new message is added to the context, the timeout period is restarted.</para>
         </simplesect>
         <simplesect xml:id="grouping-by-parser-trigger">
             <title>trigger()</title>
