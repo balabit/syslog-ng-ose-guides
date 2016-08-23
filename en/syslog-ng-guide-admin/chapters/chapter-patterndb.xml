@@ -235,7 +235,7 @@
         <indexterm>
             <primary>context of messages</primary>
         </indexterm>
-        <para>The &abbrev; application is able to correlate log messages identified using pattern databases. Alternatively, you can also correlate log messages using the <parameter>grouping-by()</parameter> parser. For details, see <xref linkend="grouping-by-parser"/>.</para>
+        <para>The &abbrev; application can correlate log messages identified using <link linkend="chapter-patterndb">pattern databases</link>. Alternatively, you can also correlate log messages using the <parameter>grouping-by()</parameter> parser. For details, see <xref linkend="grouping-by-parser"/>.</para>
 
         <xi:include href="../../common/chunk/correlation-intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
@@ -257,7 +257,7 @@
 ...
 &lt;/rule&gt;</synopsis>
         </example>
-        <para>For details on configuring message correlation, see the description of the <link linkend="patterndb-schema-context-id">context-id</link>, <link linkend="patterndb-schema-context-timeout">context-timeout</link>, and <link linkend="patterndb-schema-context-scope">context-scope</link> attributes of pattern database rules.</para>
+        <para>For details on configuring message correlation, see the <link linkend="element-patterndb-rule-attributes">context-id, context-timeout, and context-scope</link> attributes of pattern database rules.</para>
         <section xml:id="referencing-previous-messages">
             <title>Referencing earlier messages of the context</title>
             <indexterm type="parameter">
@@ -509,6 +509,22 @@ while (&lt;&gt;) {
         <title>Creating pattern databases</title>
 
         <xi:include href="../../common/syslog-ng-patterndb-using-parsers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        <section xml:id="what-is-new-patterndb-v5">
+            <title>What's new in the syslog-ng pattern database format V5</title>
+            <para>The V5 database format has the following differences compared to the V4 format:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>The &lt;ruleset&gt; element can now store multiple reference URLs using the new &lt;rule_urls&gt; element. For details, see <xref linkend="element-patterndb-ruleset"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>In an &lt;action&gt;, you can now initialize a new context. As a result, the &lt;message&gt; element is not required. For details, see <xref linkend="element-patterndb-create-context"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>The <parameter>inherit-properties</parameter> attribute is deprecated, use the <parameter>inherit-mode</parameter> attribute instead. For details, see <xref linkend="element-patterndb-action"/>.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
 
         <section xml:id="reference-patterndb-schemes">
             <title>The syslog-ng pattern database format</title>
@@ -763,11 +779,11 @@ while (&lt;&gt;) {
                     </note>
                     <para>The <emphasis role="bold">&lt;rules&gt;</emphasis> element may contain any number of <emphasis role="bold">&lt;rule&gt;</emphasis> elements.</para>
                 </simplesect>
-                <simplesect>
+                <simplesect xml:id="element-patterndb-rule-attributes" xreflabel="Attributes of the rule element">
                     <title>Attributes</title>
                     <itemizedlist>
                         <listitem>
-                            <para><emphasis role="bold">provider</emphasis>: The provider of the rule. This is used to distinguish between who supplied the rule; that is, if it has been created by BalaBit, or added to the XML by a local user.</para>
+                            <para><emphasis role="bold">provider</emphasis>: The provider of the rule. This is used to distinguish between who supplied the rule; that is, if it has been created by &vendor;, or added to the XML by a local user.</para>
                         </listitem>
                         <listitem>
                             <para><emphasis role="bold">id</emphasis>: The globally unique ID of the rule.</para>
@@ -775,25 +791,9 @@ while (&lt;&gt;) {
                         <listitem>
                             <para><emphasis role="bold">class</emphasis>: The class of the rule &mdash; syslog-ng assigns this class to the messages matching a pattern of this rule.</para>
                         </listitem>
-                        <listitem>
-                            <para xml:id="patterndb-schema-context-id"><emphasis role="bold">context-id</emphasis>: OPTIONAL &mdash; An identifier to group related log messages when using the pattern database to correlate events. The ID can be a descriptive string describing the events related to the log message (for example, <userinput>ssh-sessions</userinput> for log messages related to SSH traffic), but can also contain macros to generate IDs dynamically. When using macros in IDs, see also the <link linkend="patterndb-schema-context-scope"><parameter>context-scope</parameter></link> attribute. Starting with &abbrev; version <phrase condition="ose">3.5</phrase>, if a message is added to a context, &abbrev; automatically adds the identifier of the context to the <parameter>.classifier.context_id</parameter> macro of the message. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
-                            <note>
-                                <para>The &abbrev; application determines the context of the message <emphasis>after</emphasis> the pattern matching is completed. This means that macros and name-value pairs created by the matching pattern database rule can be used as context-id macros.</para>
-                            </note>
-                        </listitem>
-                        <listitem>
-                            <para xml:id="patterndb-schema-context-timeout"><emphasis role="bold">context-timeout</emphasis>: OPTIONAL &mdash; The number of seconds the context is stored. Note that for high-traffic log servers, storing open contexts for long time can require significant amount of memory. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
-                        </listitem>
-                        <listitem>
-                            <para xml:id="patterndb-schema-context-scope"><emphasis role="bold">context-scope</emphasis>: OPTIONAL &mdash; Specifies which messages belong to the same context. This attribute is used to determine the context of the message if the <link linkend="patterndb-schema-context-id"><parameter>context-id</parameter></link> does not specify any macros. Usually, <parameter>context-scope</parameter> acts a filter for the context, with <parameter>context-id</parameter> refining the filtering if needed. The following values are available:</para>
 
-                            <xi:include href="../../common/chunk/correlation-context-scope.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                            
-                            <note>
-                                <para>Using the <parameter>context-scope</parameter> attribute is significantly faster than using macros in the <parameter>context-id</parameter> attribute.</para>
-                            </note>
-                            <para>For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
-                        </listitem>
+                         <xi:include href="../../common/chunk/patterndb-context-attributes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
                     </itemizedlist>
                 </simplesect>
                 <simplesect>
@@ -1100,7 +1100,7 @@ while (&lt;&gt;) {
                                     <indexterm type="parameter">
                                         <primary>timeout</primary>
                                     </indexterm>
-                                    <para><emphasis>timeout</emphasis>: Execute the action when the correlation timer (<link linkend="patterndb-schema-context-timeout"><parameter>context-timeout</parameter></link>) expires. This is available only if actions are used together with correlating messages.</para>
+                                    <para><emphasis>timeout</emphasis>: Execute the action when the correlation timer (<link linkend="element-patterndb-rule-attributes"><parameter>context-timeout</parameter></link>) of the pattern database rule expires. This is available only if actions are used together with correlating messages.</para>
                                 </listitem>
                             </itemizedlist>
                         </listitem>
@@ -1110,6 +1110,9 @@ while (&lt;&gt;) {
                     <title>Children</title>
                     <itemizedlist>
                         <listitem>
+                            <para><link linkend="element-patterndb-create-context"><emphasis role="bold">create-context</emphasis></link></para>
+                        </listitem>
+                        <listitem>
                             <indexterm type="parameter">
                                 <primary>message</primary>
                             </indexterm>
@@ -1117,11 +1120,23 @@ while (&lt;&gt;) {
                             <itemizedlist>
                                 <listitem>
                                     <indexterm type="parameter">
-                                        <primary>inherit-properties</primary>
+                                        <primary>inherit-mode</primary>
                                     </indexterm>
 
                                     <xi:include href="../../common/chunk/option-inherit-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
+                                    <para>For details on the message context, see <xref linkend="patterndb-correlation"/> and <xref linkend="patterndb-actions-correlation"/>. For details on triggering messages, see <xref linkend="patterndb-triggers-actions"/></para>
+                                    <para condition="ose">This option is available in &abbrev; 3.8 and later.</para>
+                                </listitem>
+                            </itemizedlist>
+                            <itemizedlist>
+                                <listitem>
+                                    <indexterm type="parameter">
+                                        <primary>inherit-properties</primary>
+                                    </indexterm>
+                                    <para><emphasis>inherit-properties</emphasis>: This attribute is deprecated. Use the <parameter>inherit-mode</parameter> attribute instead.</para>
+                                    <para>If set to <userinput>TRUE</userinput>, the original message that triggered the action is cloned, including its name-value pairs and tags.</para>
+                                    <para>If set to <parameter>context</parameter>, &abbrev; collects every name-value pair from each message stored in the context, and includes them in the generated message. If a name-value pair appears in multiple messages of the context, the value in the latest message will be used. Note that tags are not merged, the generated message will inherit the tags assigned to the last message of the context.</para>
                                     <para>For details on the message context, see <xref linkend="patterndb-correlation"/> and <xref linkend="patterndb-actions-correlation"/>. For details on triggering messages, see <xref linkend="patterndb-triggers-actions"/></para>
                                     <para condition="pe">This option is available in &abbrev; 5.3.2 and later.</para>
                                 </listitem>
@@ -1157,6 +1172,77 @@ while (&lt;&gt;) {
 
                     <xi:include href="../../common/chunk/example-patterndb-actions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
+                </simplesect>
+            </section>
+            <section xml:id="element-patterndb-create-context">
+                <title>Element: create-context</title>
+                <simplesect>
+                    <title>Location</title>
+                    <para>/<link linkend="element-patterndb-patterndb">patterndb</link>/<link linkend="element-patterndb-ruleset">ruleset</link>/<link linkend="patterndb-schema-actions">actions</link>/<link linkend="patterndb-schema-action">action</link>/<emphasis role="bold">create-context</emphasis></para>
+                </simplesect>
+                <simplesect>
+                    <title>Description</title>
+                    <para>OPTIONAL &mdash; Creates a new correlation context from the current message and its associated context. This can be used to "split" a context.</para>
+                    <para>Available in &abbrev; version <phrase condition="ose">3.8</phrase><phrase condition="pe">7</phrase> and later.</para>
+                </simplesect>
+                <simplesect>
+                    <title>Attributes</title>
+                    <indexterm type="parameter">
+                        <primary>context-id</primary>
+                    </indexterm>
+                    <indexterm type="parameter">
+                        <primary>context-scope</primary>
+                    </indexterm>
+                    <indexterm type="parameter">
+                        <primary>context-timeout</primary>
+                    </indexterm>
+                    <itemizedlist>
+
+                        <xi:include href="../../common/chunk/patterndb-context-attributes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+                    </itemizedlist>
+                </simplesect>
+                <simplesect>
+                    <title>Children</title>
+                    <itemizedlist>
+                        <listitem>
+                            <indexterm type="parameter">
+                                <primary>message</primary>
+                            </indexterm>
+                             <para><emphasis role="bold">message</emphasis>: A container element storing the message that is added to the new context when the action is executed.</para>
+                            <itemizedlist>
+                                <listitem>
+                                    <indexterm type="parameter">
+                                        <primary>inherit-mode</primary>
+                                    </indexterm>
+
+                                    <xi:include href="../../common/chunk/option-inherit-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+                                    <para>For details on the message context, see <xref linkend="patterndb-correlation"/> and <xref linkend="patterndb-actions-correlation"/>. For details on triggering messages, see <xref linkend="patterndb-triggers-actions"/></para>
+                                </listitem>
+                            </itemizedlist>
+                        </listitem>
+                    </itemizedlist>
+                </simplesect>
+                <simplesect>
+                    <title>Example</title>
+                    <para>The following example creates a new context whenever the rule matches. The new context receives <userinput>1000</userinput> as ID, and <userinput>program</userinput> as scope, and the content set in the <userinput>&lt;message&gt;</userinput> element of the <parameter>&lt;create-context&gt;</parameter> element.</para>
+                    <synopsis>&lt;rule provider='test' id='12' class='violation'&gt;
+  &lt;patterns&gt;
+    &lt;pattern&gt;simple-message-with-action-to-create-context&lt;/pattern&gt;
+  &lt;/patterns&gt;
+  &lt;actions&gt;
+    &lt;action trigger='match'&gt;
+      &lt;create-context context-id='1000' context-timeout='60' context-scope='program'&gt;
+        &lt;message inherit-properties='context'&gt;
+          &lt;values&gt;
+            &lt;value name='MESSAGE'&gt;context message&lt;/value&gt;
+          &lt;/values&gt;
+        &lt;/message&gt;
+      &lt;/create-context&gt;
+    &lt;/action&gt;
+  &lt;/actions&gt;
+&lt;/rule&gt;</synopsis>
                 </simplesect>
             </section>
             <section xml:id="element-patterndb-tags">
