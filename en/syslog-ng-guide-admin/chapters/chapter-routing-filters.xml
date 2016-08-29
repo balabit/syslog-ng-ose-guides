@@ -512,13 +512,13 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
             <secondary>log-disk-fifo-size()</secondary>
         </indexterm>
 <!-- FIXME should be merged/streamlined with the flow control section -->
-        <para>The &product; application can store messages on the local hard disk if the central log server or the network connection to the server becomes unavailable. The &abbrev; application automatically sends the stored messages to the server when the connection is reestablished. The disk buffer is used as a queue: when the connection to the server is reestablished, &abbrev; sends the messages to the server in the order they were received.</para>
+        <para>The &product; application can store messages on the local hard disk if the destination (for example, the central log server) or the network connection to the destination becomes unavailable. The &abbrev; application automatically sends the stored messages to the destination when the connection is reestablished. The disk buffer is used as a queue: when the connection to the destination is reestablished, &abbrev; sends the messages to the destination in the order they were received.</para>
         <note>
             <para>Disk-based buffering can be used in conjunction with flow-control. For details on flow-control, see <xref linkend="concepts-flow-control"/>.</para>
         </note>
         <xi:include href="../../common/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <para>Every such destination uses a separate disk buffer (similarly to the output buffers controlled by <parameter>log-fifo-size()</parameter>). The hard disk space is not pre-allocated, so ensure that there is always enough free space to store the disk buffers even when the disk buffers are full.</para>
-        <para>If &abbrev; is restarted (using the <command>/etc/init.d/syslog-ng restart</command> command), it automatically saves any unsent messages of the disk buffer and the output queue. After the restart, &abbrev; sends the saved messages to the server. In other words, the disk buffer is persistent. The disk buffer is also resistant to &abbrev; crashes.</para>
+        <para>If &abbrev; is restarted (using the <command>/etc/init.d/syslog-ng restart</command> command, or another appropriate command on your platform), it automatically saves any unsent messages from the disk buffer and the output queue. After the restart, &abbrev; sends the saved messages to the destination. In other words, the disk buffer is persistent. The disk buffer is also resistant to &abbrev; crashes.</para>
         <para>The &abbrev; application supports two types of disk buffering: reliable and normal. For details, see <xref linkend="configuring-diskbuffer-reliable"/> and <xref linkend="configuring-diskbuffer-normal"/>, respectively.</para>
         <formalpara>
             <title>Message handling and normal disk-based buffering</title>
@@ -540,21 +540,21 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
                 <indexterm>
                     <primary>output queue</primary>
                 </indexterm>
-                <para><emphasis>Output queue</emphasis>: Messages from the output queue are sent to the target syslog-ng server. The syslog-ng application puts the outgoing messages directly into the output queue, unless the output queue is full. The output queue can hold 64 messages, this is a fixed value and cannot be modified.</para>
+                <para><emphasis>Output queue</emphasis>: Messages from the output queue are sent to the destination (for example, your central log server). The &abbrev; application puts the outgoing messages directly into the output queue, unless the output queue is full. By default, the output queue can hold 64 messages (you can adjust it using the <parameter>quot-size()</parameter> option).</para>
             </listitem>
             <listitem>
                 <indexterm>
                     <primary>disk queue</primary>
                     <see>disk buffer</see>
                 </indexterm>
-                <para><emphasis>Disk buffer</emphasis>: If the output queue is full, disk-buffering is enabled, and <parameter>reliable()</parameter> is set to <userinput>no</userinput>, syslog-ng puts the outgoing messages into the disk buffer of the destination. The disk buffer is enabled if the <parameter>log-disk-fifo-size()</parameter> parameter of the destination is larger than <userinput>0</userinput>; the size of the disk buffer is specified in bytes.</para>
+                <para><emphasis>Disk buffer</emphasis>: If the output queue is full, disk-buffering is enabled, and <parameter>reliable()</parameter> is set to <userinput>no</userinput>, &abbrev; puts the outgoing messages into the disk buffer of the destination. (The disk buffer is enabled if the <parameter>log-disk-fifo-size()</parameter> parameter of the destination is larger than <userinput>0</userinput>. This option specifies the size of the disk buffer in bytes.)</para>
             </listitem>
             <listitem>
                 <indexterm>
                     <primary>overflow queue</primary>
                     <see>output buffer</see>
                 </indexterm>
-                <para><emphasis>Overflow queue</emphasis>: If the output queue is full and the disk buffer is disabled or full, syslog-ng puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <parameter>log-fifo-size()</parameter> parameter specifies the number of messages stored in the overflow queue. For details on sizing the <parameter>log-fifo-size()</parameter> parameter, see also <xref linkend="concepts-flow-control"/>.</para>
+                <para><emphasis>Overflow queue</emphasis>: If the output queue is full and the disk buffer is disabled or full, &abbrev; puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <parameter>log-fifo-size()</parameter> parameter specifies the number of messages stored in the overflow queue. For details on sizing the <parameter>log-fifo-size()</parameter> parameter, see also <xref linkend="concepts-flow-control"/>.</para>
             </listitem>
         </itemizedlist>
         <note>
