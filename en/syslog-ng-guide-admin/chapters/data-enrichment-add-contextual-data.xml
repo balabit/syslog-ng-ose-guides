@@ -2,15 +2,15 @@
 <!DOCTYPE section
  [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
  %entities;]>
-<section xml:id="data-enrichment-add-context-data" condition="ose" xmlns="http://docbook.org/ns/docbook" version="5.0">
+<section xml:id="data-enrichment-add-contextual-data" condition="ose" xmlns="http://docbook.org/ns/docbook" version="5.0">
     <title>Adding metadata from an external file</title>
     <indexterm>
         <primary>data enrichment</primary>
-        <secondary><parameter>add-context-data()</parameter></secondary>
+        <secondary><parameter>add-contextual-data()</parameter></secondary>
     </indexterm>
     <indexterm>
         <primary>enriching data</primary>
-        <secondary><parameter>add-context-data()</parameter></secondary>
+        <secondary><parameter>add-contextual-data()</parameter></secondary>
     </indexterm>
     <para>In &abbrev; version <phrase condition="ose">3.8</phrase><phrase condition="pe">7</phrase> and later, you can use an external database file to add additional metadata to your log messages. For example, you can create a database (or export it from an existing tool) that contains a list of hostnames or IP addresses, and the department of your organization that the host belongs to, the role of the host (mailserver, webserver, and so on), or similar contextual information.</para>
     <para>The database file is a simple text file in comma-separated value (CSV) format, where each line contains the following information:</para>
@@ -29,7 +29,7 @@
     <synopsis>192.168.1.1,host-role,webserver
 192.168.2.1,host-role,firewall
 192.168.3.1,host-role,mailserver</synopsis>
-    <para>The CSV-parser of the &abbrev; <parameter>add-context-data</parameter> supports the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://tools.ietf.org/html/rfc4180">RFC4180 CSV format</link>, with the following exceptions and limitations:</para>
+    <para>The CSV-parser of the &abbrev; <parameter>add-contextual-data</parameter> supports the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://tools.ietf.org/html/rfc4180">RFC4180 CSV format</link>, with the following exceptions and limitations:</para>
     <itemizedlist>
         <listitem>
             <para>You the values of the CSV-file cannot contain line-breaks</para>
@@ -42,13 +42,13 @@
     <synopsis>192.168.1.1,host-role,webserver
 192.168.1.1,contact-person,"John Doe"
 192.168.1.1,contact-email,johndoe@example.com</synopsis>
-    <para>Technically, <parameter>add-context-data()</parameter> is a parser in &abbrev; so you have to define it as a parser object.</para>
+    <para>Technically, <parameter>add-contextual-data()</parameter> is a parser in &abbrev; so you have to define it as a parser object.</para>
     <formalpara>
         <title>Declaration:</title>
         <para/>
     </formalpara>
     <synopsis>parser p_add_context_data {
-    add-context-data(
+    add-contextual-data(
         selector("$HOST"),
         database("context-info-db.csv"),
     );
@@ -70,7 +70,7 @@ destination d_local {
     template("$MSG Additional metadata:[${.metadata.host-role}]")};
 
 parser p_add_context_data {
-    add-context-data(selector("$SOURCEIP"), database("context-info-db.csv"), default-selector("unknown"), prefix(".metadata."));
+    add-contextual-data(selector("$SOURCEIP"), database("context-info-db.csv"), default-selector("unknown"), prefix(".metadata."));
 };
 
 log {
@@ -83,30 +83,30 @@ log {
 192.168.3.1,host-role,mailserver
 unknown,host-role,unknown</synopsis>
     </example>
-    <section xml:id="reference-add-context-data-options">
-        <title>Options add-context-data()</title>
+    <section xml:id="reference-add-contextual-data-options">
+        <title>Options add-contextual-data()</title>
         <indexterm>
             <primary>data enrichment</primary>
-            <secondary><parameter>add-context-data()</parameter></secondary>
+            <secondary><parameter>add-contextual-data()</parameter></secondary>
         </indexterm>
         <indexterm>
             <primary>enriching data</primary>
-            <secondary><parameter>add-context-data()</parameter></secondary>
+            <secondary><parameter>add-contextual-data()</parameter></secondary>
         </indexterm>
-        <para>The <parameter>add-context-data()</parameter> has the following options.</para>
+        <para>The <parameter>add-contextual-data()</parameter> has the following options.</para>
         <formalpara>
             <title>Required options:</title>
             <para/>
         </formalpara>
         <para>The following options are required: <parameter>selector()</parameter>, <parameter>database()</parameter>.</para>
-        <simplesect xml:id="add-context-data-option-database">
+        <simplesect xml:id="add-contextual-data-option-database">
             <title>database()</title>
             <indexterm type="parameter">
-                <primary>add-context-data()</primary>
+                <primary>add-contextual-data()</primary>
                 <secondary>database</secondary>
             </indexterm>
             <indexterm type="parameter">
-                <primary>add-context-data()</primary>
+                <primary>add-contextual-data()</primary>
                 <secondary>database</secondary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -154,7 +154,7 @@ unknown,host-role,unknown</synopsis>
             <para><emphasis role="bold">Description:</emphasis> Specifies the ID of the entry (line) that is corresponds to log messages that do not have a selector that matches an entry in the database. For example, if you add name-value pairs from the database based on the hostname from the log message (<userinput>selector("${HOST}")</userinput>), then you can include a line for unknown hosts in the database, and set <parameter>default-selector()</parameter> to the ID of the line for unknown hosts. In the CSV file:</para>
             <synopsis>unknown-hostname,host-role,unknown</synopsis>
             <para>In the &abbrev; configuration file:</para>
-            <synopsis>add-context-data(
+            <synopsis>add-contextual-data(
     selector("$HOST")
     database("context-info-db.csv")
     default-selector("unknown-hostname")
