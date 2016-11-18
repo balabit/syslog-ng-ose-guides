@@ -50,10 +50,8 @@
             <xi:include href="../../common/chunk/para-initializing-sources-destinations.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </warning>
         <para>To collect log messages on a specific platform, it is important to know how the native <parameter>syslogd</parameter> communicates on that platform. The following table summarizes the operation methods of <parameter>syslogd</parameter> on some of the tested platforms:</para>
-<!-- FIXME belevenni a hianyzo, de tamogatott platformokat, es forrasokat pl. AIX, HP-UX, ...
-        osszegyujteni, hogy az egyes platformokon milyen forrasokat kell felvenni ahhoz,
-            hogy a syslog-ng a nativ syslog funkcionalitasat tudja
-        -->
+<!-- FIXME check if any platform is missing, and update this list
+        collect a list of sources that are needed on a platform to cover the functionality of the native syslog solution -->
         <table>
             <title>Communication methods used between the applications and syslogd</title>
             <indexterm>
@@ -84,16 +82,11 @@
                         <entry>Solaris (2.6 or above)</entry>
                         <entry>In addition to the <parameter>STREAMS</parameter> device used in earlier versions, 2.6 uses a new multithreaded IPC method called door. By default the door used by <parameter>syslogd</parameter> is <filename>/etc/.syslog_door</filename>. </entry>
                     </row>
-                    <row condition="pe">
-                        <entry>Windows</entry>
-                        <entry>Special Eventlog containers that can be accessed using the proprietary API of Microsoft.</entry>
-                    </row>
                     <row>
                         <entry>HP-UX 11 or later</entry>
                         <entry>HP-UX uses a named pipe called <filename>/dev/log</filename> that is padded to 2048 bytes, for example <userinput>source s_hp-ux {pipe ("/dev/log" pad-size(2048)}</userinput>.</entry>
                     </row>
                     <row>
-<!-- FIXME -->
                         <entry>AIX 5.2 and 5.3</entry>
                         <entry>A <parameter>SOCK_STREAM</parameter> or <parameter>SOCK_DGRAM</parameter> unix socket called <filename>/dev/log</filename>.</entry>
                     </row>
@@ -123,7 +116,6 @@
         <para>The following table lists the source drivers available in syslog-ng.</para>
         <xi:include href="../../common/chunk/table-source-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     </section>
-    <xi:include href="source-eventlog.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <section xml:id="configuring-sources-internal">
         <title>Collecting internal messages</title>
         <indexterm>
@@ -168,9 +160,6 @@
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-tags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-source-use-syslogng-pid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
         </section>
     </section>
     <section xml:id="configuring-sources-file">
@@ -186,28 +175,16 @@
             <title>Declaration:</title>
             <para/>
         </formalpara>
-        <synopsis>file("filename");</synopsis>
-        <indexterm condition="pe">
-            <primary>wildcards</primary>
-            <secondary>in file sources</secondary>
-        </indexterm>
-        <para xml:id="reference-file-wildcard" condition="pe">In &abbrev;, the filename (but not the pathname) may include wildcard characters (for example <userinput>*</userinput>). Note that when using wildcards in filenames, always set how often syslog-ng should check the file for new messages using the <parameter>follow-freq()</parameter> parameter.</para>
-        <para xml:id="reference-file-wildcard-inotify" condition="pe">When using wildcards, syslog-ng PE monitors every matching file, and can receive new log messages from any of the files. However, monitoring (polling) many files (that is, more than ten) has a significant overhead and may affect performance. On Linux this overhead is not so significant, because &abbrev; uses the inotify feature of the kernel.</para>
+        <synopsis>file(filename);</synopsis>
         <example xml:id="example-source-file">
             <title>Using the file() driver</title>
             <synopsis>source s_file { file("/var/log/messages"); };</synopsis>
-            <xi:include href="../../common/wnt/note-windows-filenames.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </example>
         <example>
             <title>Tailing files</title>
             <para>The following source checks the <filename>access.log</filename> file every second for new messages.</para>
             <synopsis>source s_tail { file("/var/log/apache/access.log"
             follow-freq(1) flags(no-parse)); };</synopsis>
-        </example>
-        <example xml:id="example-source-file-wildcard" condition="pe">
-            <title>Using wildcards in the filename</title>
-            <para>The following example monitors every file with the <filename>.log</filename> extension in the <filename>/var/application</filename> directory for log messages. Note that only syslog-ng PE supports wildcards in the file and pathnames.</para>
-            <synopsis>source s_file { file("/var/application/*.log" follow-freq(1));};</synopsis>
         </example>
         <note>
             <para>If the message does not have a proper syslog header, syslog-ng treats messages received from files as sent by the <parameter>kern</parameter> facility. Use the <parameter>default-facility()</parameter> and <parameter>default-priority()</parameter> options in the source definition to assign a different facility if needed.</para>
@@ -237,24 +214,25 @@
                 </listitem>
             </itemizedlist>
         </section>
+<!-- FIXME check if this applies to OSE as well, or only to the PE/agent
         <section xml:id="file-source-and-syslog-destination">
-            <title>File sources and the RFC5424 message format</title>
-            <indexterm>
-                <primary>file@18372.4</primary>
-            </indexterm>
-            <indexterm>
-                <primary>SDATA</primary>
-                <secondary>file@18372.4</secondary>
-            </indexterm>
-            <indexterm>
-                <primary>file information</primary>
-                <secondary>file@18372.4</secondary>
-            </indexterm>
-            <indexterm>
-                <primary>including filename in messages</primary>
-            </indexterm>
+			<title>File sources and the RFC5424 message format</title>
+			<indexterm>
+				<primary>file@18372.4</primary>
+			</indexterm>
+			<indexterm>
+				<primary>SDATA</primary>
+				<secondary>file@18372.4</secondary>
+			</indexterm>
+			<indexterm>
+				<primary>file information</primary>
+				<secondary>file@18372.4</secondary>
+			</indexterm>
+			<indexterm>
+				<primary>including filename in messages</primary>
+			</indexterm>
             <para>When reading messages from a file and forwarding them in IETF-syslog (RFC5424) format, &abbrev; automatically adds all file-related information to the <userinput>file@18372.4</userinput> SDATA block. When the source is file and the transport protocol is syslog or syslog-protocol flags were used in the destination side, the message will contain the following source file-related information:</para>
-            <itemizedlist>
+			<itemizedlist>
                 <listitem>
                     <para><emphasis>size</emphasis>: size of the file</para>
                 </listitem>
@@ -262,14 +240,15 @@
                     <para><emphasis>position</emphasis>: file position the message was read from</para>
                 </listitem>
                 <listitem>
-                    <para><emphasis>name</emphasis>: name of the file</para>
+                    <para><emphasis>name</emphasis>: name of the file </para>
                 </listitem>
-            </itemizedlist>
-            <example>
-                <title>File-related information in message</title>
-                <para><synopsis>309 &lt;38&gt;1 2010-10-19T15:50:45.018203+02:00 server1 localprg 1234 - [timeQuality isSynced="0" tzKnown="0"][file@18372.4 size="184567" pos="1024" name="/var/tmp/msg.txt"] seq: 0000000001, runid: 1287496244, stamp: 2010-10-19T15:50:45 messagetext</synopsis></para>
-            </example>
-        </section>
+			</itemizedlist>
+			<example>
+				<title>File-related information in message</title>
+				<para><synopsis>309 &lt;38&gt;1 2010-10-19T15:50:45.018203+02:00 server1 localprg 1234 - [timeQuality isSynced="0" tzKnown="0"][file@18372.4 size="184567" pos="1024" name="/var/tmp/msg.txt"] seq: 0000000001, runid: 1287496244, stamp: 2010-10-19T15:50:45 messagetext</synopsis></para>
+			</example>
+		</section>
+-->
         <section xml:id="reference-source-file">
             <title>file() source options</title>
             <indexterm>
@@ -279,10 +258,35 @@
             <para>The <parameter>file()</parameter> driver has the following options:</para>
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-default-facility.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                <para condition="pe"><emphasis role="bold">Description:</emphasis> This parameter assigns a facility value to the messages received from the file source, if the message does not specify one.</para>
             </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-default-priority.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
+                <title>file()</title>
+                <indexterm type="parameter">
+                    <primary>file()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                                </entry>
+                                <entry>filename with path</entry>
+                            </row>
+                            <row>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                                </entry>
+                                <entry/>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </informaltable>
+                <para><emphasis role="bold">Description:</emphasis> The file to read messages from, including the path.</para>
             </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-encoding.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -311,7 +315,10 @@
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-multi-line-garbage.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
-            <simplesect condition="pe">
+            <simplesect condition="ose">
+                <xi:include href="../../common/chunk/option-source-multi-line-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
                 <xi:include href="../../common/chunk/option-source-multi-line-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
@@ -324,81 +331,16 @@
                 <xi:include href="../../common/chunk/option-source-program-override.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
-                <title>read-old-records()</title>
-                <indexterm>
-                    <primary>read-old-records()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>read_old_records()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>yes|no</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>yes</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> If set to <userinput>yes</userinput>, &abbrev; will start reading the records from the beginning of the file, if the file has not been read yet. If set to <userinput>no</userinput>, &abbrev; will read only the new records. If the source has a state in the persist file, this option will have no effect.</para>
-            </simplesect>
-            <simplesect xml:id="source-file-recursive" condition="pe">
-                <title>recursive</title>
-                <indexterm>
-                    <primary>recursive</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>yes or no</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>no</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> When enabled, &abbrev; monitors every subdirectory of the directory set in the path of the <parameter>file</parameter> parameter, and reads log messages from files with the set filename. The <parameter>recursive</parameter> option can be used together with wildcards in the filename.</para>
-                <example xml:id="example-source-file-recursive">
-                    <title>Monitoring multiple directories</title>
-                    <para>The following example reads files having the <filename>.log</filename> extension from the <filename>/var/application/</filename> directory and its subdirectories. Note that only syslog-ng PE supports recursive directory handling and wildcards in the file and pathnames.</para>
-                    <synopsis>source s_file_subdirectories { file("/var/application/*.log"
-                    recursive(yes)
-                    follow-freq(1)
-                    log-fetch-limit(100)
-                    );};</synopsis>
-                </example>
-            </simplesect>
-            <simplesect>
                 <xi:include href="../../common/chunk/option-source-tags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-time-zone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-source-use-syslogng-pid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
         </section>
     </section>
     <xi:include href="source-network.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="source-nodejs.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="source-mbox.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <section xml:id="configuring-sources-pipe">
         <title>Collecting messages from named pipes</title>
         <indexterm>
@@ -407,7 +349,6 @@
         </indexterm>
         <para>The pipe driver opens a named pipe with the specified name and listens for messages. It is used as the native message delivery protocol on HP-UX.</para>
         <para>The pipe driver has a single required parameter, specifying the filename of the pipe to open. For the list of available optional parameters, see <xref linkend="reference-source-pipe"/>.</para>
-        <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <formalpara>
             <title>Declaration:</title>
             <para/>
@@ -437,7 +378,6 @@
                 <primary>source drivers</primary>
                 <secondary><parameter>pipe()</parameter> driver</secondary>
             </indexterm>
-            <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <para>The <parameter>pipe</parameter> driver has the following options:</para>
             <simplesect xml:id="pipe-source-option-flag">
                 <xi:include href="../../common/chunk/option-source-flags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -460,14 +400,15 @@
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-log-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
-<!--
-            <simplesect condition="pe">
-            <xi:include href="../../common/chunk/option-source-multi-line-garbage.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <simplesect>
+                <xi:include href="../../common/chunk/option-source-multi-line-garbage.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
-            <simplesect condition="pe">
-            <xi:include href="../../common/chunk/option-source-multi-line-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <simplesect condition="ose">
+                <xi:include href="../../common/chunk/option-source-multi-line-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
--->
+            <simplesect>
+                <xi:include href="../../common/chunk/option-source-multi-line-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-optional.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
@@ -476,7 +417,7 @@
             </simplesect>
             <simplesect>
                 <title>pipe()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>pipe()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -509,9 +450,6 @@
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-time-zone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-source-use-syslogng-pid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
         </section>
     </section>
     <section xml:id="configuring-source-pacct" condition="ose">
@@ -522,7 +460,7 @@
         <indexterm>
             <primary>pacct()</primary>
         </indexterm>
-        <indexterm>
+        <indexterm type="parameter">
             <primary>pacct()</primary>
         </indexterm>
         <indexterm>
@@ -539,7 +477,7 @@
                 <para>The <parameter>pacctformat</parameter> plugin must be loaded. By default, &abbrev; automatically loads the available modules.</para>
             </listitem>
             <listitem>
-                <para>The <filename>scl.conf</filename> file must be included in your syslog-ng configuration:<synopsis>@include "scl.conf"</synopsis></para>
+                <para>The <filename>scl.conf</filename> file must be included in your syslog-ng configuration: <synopsis>@include "scl.conf"</synopsis></para>
             </listitem>
             <listitem>
                 <para>Process accounting must be running on the host. You can enable it with the <command>accton</command> command.</para>
@@ -552,17 +490,13 @@
 source s_pacct { pacct(); };
 ...
 log { source(s_pacct); destination(...); };</synopsis>
-<!--
-        <note>
-            <para>The <parameter>pacct()</parameter> driver is actually an element of the syslog-ng <link linkend="source-configuration-library">Source Configuration Library (SCL)</link>, a reusable configuration snippet tailored to handle process accounting logs. For details on using or writing SCLs, see <xref linkend="config-blocks"/>.</para>
-        </note>
--->
+        <para>The <parameter>pacct()</parameter> driver is actually a reusable configuration snippet configured to handle Linux accounting logs. For details on using or writing such configuration snippets, see <xref linkend="config-blocks"/>. You can find the source of the pacct configuration snippet on <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://github.com/balabit/syslog-ng/blob/master/scl/pacct/plugin.conf">GitHub</link>.</para>
         <section xml:id="reference-source-pacct">
             <title>pacct() options</title>
             <para>The <parameter>pacct()</parameter> driver has the following options:</para>
             <simplesect>
                 <title>file()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>file()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -603,7 +537,6 @@ log { source(s_pacct); destination(...); };</synopsis>
         </indexterm>
         <para>The program driver starts an external application and reads messages from the standard output (stdout) of the application. It is mainly useful to receive log messages from daemons that accept incoming messages and convert them to log messages.</para>
         <para>The program driver has a single required parameter, specifying the name of the application to start.</para>
-        <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <formalpara>
             <title>Declaration:</title>
             <para/>
@@ -618,8 +551,7 @@ log { source(s_pacct); destination(...); };</synopsis>
         </note>
         <section xml:id="reference-source-program">
             <title>program() source options</title>
-            <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            <para>The <parameter>program()</parameter> driver has the following options:</para>
+            <para>The <parameter>program</parameter> driver has the following options:</para>
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-flags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
@@ -630,6 +562,9 @@ log { source(s_pacct); destination(...); };</synopsis>
                 <xi:include href="../../common/chunk/option-source-log-fetch-limit.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
+                <xi:include href="../../common/chunk/option-inherit-environment.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
                 <xi:include href="../../common/chunk/option-source-log-iw-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
@@ -638,14 +573,6 @@ log { source(s_pacct); destination(...); };</synopsis>
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-log-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
-<!--
-            <simplesect condition="pe">
-            <xi:include href="../../common/chunk/option-source-multi-line-garbage.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect condition="pe">
-            <xi:include href="../../common/chunk/option-source-multi-line-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
--->
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-optional.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
@@ -654,7 +581,7 @@ log { source(s_pacct); destination(...); };</synopsis>
             </simplesect>
             <simplesect>
                 <title>program()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>program()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -687,1102 +614,6 @@ log { source(s_pacct); destination(...); };</synopsis>
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-time-zone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-source-use-syslogng-pid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-        </section>
-    </section>
-    <section xml:id="configuring-sources-sql" condition="pe">
-        <title>Collecting messages from tables or relational database</title>
-        <indexterm>
-            <primary>source drivers</primary>
-            <secondary><parameter>sql()</parameter> driver</secondary>
-        </indexterm>
-        <indexterm>
-            <primary>reading messages</primary>
-            <secondary>from database tables</secondary>
-        </indexterm>
-        <indexterm>
-            <primary>sql sources</primary>
-        </indexterm>
-        <para>The <parameter>sql()</parameter> driver collects messages from an SQL database. Currently the Microsoft SQL (MSSQL), MySQL, Oracle and PostgreSQL databases are supported.</para>
-        <para>The <parameter>sql()</parameter> driver has the following required parameters: <link linkend="sql-source-option-database"><parameter>database()</parameter></link>, <link linkend="sql-source-option-host"><parameter>host()</parameter></link>, <link linkend="sql-source-option-table"><parameter>table()</parameter></link>, <link linkend="sql-source-option-type"><parameter>type()</parameter></link>, <link linkend="sql-source-option-uid-column"><parameter>uid-column()</parameter></link>, <link linkend="sql-source-option-datetime-column"><parameter>datetime-column()</parameter></link> or <link linkend="sql-source-option-date-column"><parameter>date-column()</parameter></link> and <link linkend="sql-source-option-time-column"><parameter>time-column()</parameter></link>.</para>
-        <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <formalpara>
-            <title>Declaration:</title>
-            <para/>
-        </formalpara>
-        <synopsis>sql(options);</synopsis>
-        <para>Note that the <parameter>sql()</parameter> source driver has the following restrictions and limitations:</para>
-        <indexterm>
-            <primary>sql sources</primary>
-            <secondary>limitations of</secondary>
-        </indexterm>
-        <itemizedlist>
-            <listitem>
-                <para>The <parameter>sql()</parameter> source driver does not monitor rotated tables. Therefore, every source can follow only one table.</para>
-            </listitem>
-            <listitem>
-                <para>Timestamps columns with timezone are not supported. The &abbrev; application will retrieve the timestamp from these columns, but without the timezone information.</para>
-            </listitem>
-            <listitem>
-                <para>The <parameter>sql()</parameter> source driver ignores the <parameter>log-msg-size()</parameter> option, that is, messages read from the SQL database can be longer than the maximal message length set in the <parameter>log-msg-size()</parameter> option.</para>
-            </listitem>
-            <listitem>
-                <para>There is an ID column that is the monotonically increasing unique ID of the monitored table. It is not possible to use more than one ID column as complex ID.</para>
-            </listitem>
-        </itemizedlist>
-        <example>
-            <title>Using a MySQL source</title>
-            <para>With the following configuration, &abbrev; reads the records from the <parameter>test_log</parameter> table ordered by the <userinput>id</userinput> column.</para>
-            <para>The <parameter>test_log</parameter> table has the following structure:</para>
-            <synopsis>CREATE TABLE “test_log” (
-  “id” BIGINT NOT NULL AUTO_INCREMENT,
-  “timestamp” TIMESTAMP NOT NULL,
-  “host” VARCHAR(64) NOT NULL,
-  “program” VARCHAR(64) NOT NULL,
-  “log” VARCHAR(1024) NOT NULL
-  );</synopsis>
-            <para>The matching &abbrev; configuration that reads this table is the following:</para>
-            <synopsis>source s_mysql { sql(
-                type("mysql")
-                host("10.140.32.29")
-                username("user")
-                password("secret")
-                database("test_db")
-                table("test_log")
-                datetime-column("timestamp")
-                uid-column("id")
-                message-template("${.sql.id} ${.sql.log}")
-                program-template("${.sql.program}")
-                host-template("${.sql.host}")
-                fast-follow-mode(yes)
-
-);};</synopsis>
-        </example>
-        <section xml:id="sql-source-supported-platforms">
-            <title>Supported SQL sources by platform</title>
-            <indexterm>
-                <primary>supported sql sources</primary>
-            </indexterm>
-            <note>
-                <para>If a particular database is not supported on a platform you are using it, use the <parameter>sql()</parameter> source on a different &abbrev; host to retrieve the records remotely.</para>
-            </note>
-            <table xml:id="table-supported-sql-source-types">
-                <title>Supported SQL sources by platform</title>
-                <tgroup cols="5">
-                    <thead>
-                        <row>
-                            <entry>Platform \ Database</entry>
-                            <entry>MSSQL</entry>
-                            <entry>MySQL</entry>
-                            <entry>PgSQL</entry>
-                            <entry>Oracle</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>AIX</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                        </row>
-                        <row>
-                            <entry>FreeBSD 8</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                        </row>
-                        <row>
-                            <entry>FreeBSD 9</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                        </row>
-                        <row>
-                            <entry>FreeBSD 10</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                        </row>
-                        <row>
-                            <entry>HP-UX 11v2_on IA64</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                            <entry> - </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): CentOS 5</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): CentOS 6</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): CentOS 7</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Debian 7</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): openSUSE 11</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Oracle Linux 5</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Oracle Linux 6</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Oracle Linux 7</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): SLES 11</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Red Hat EL 5</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Red Hat EL 6</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Red Hat EL 7</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Ubuntu 12.04</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Ubuntu 14.04</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Solaris 10 on SPARC and SPARC64</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Solaris 111 on SPARC and SPARC64</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Solaris 10 on x86_64</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Solaris 11 on x86_64</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
-        </section>
-        <section xml:id="reference-source-sql">
-            <title>sql() source options</title>
-            <indexterm>
-                <primary>source drivers</primary>
-                <secondary><parameter>sql()</parameter> driver</secondary>
-            </indexterm>
-            <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            <para>The <parameter>sql()</parameter> driver has the following options.</para>
-            <simplesect>
-                <title>archive-query()</title>
-                <indexterm>
-                    <primary>archive-query()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>archive_query()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The SQL-like statement which is executed after &abbrev; has queried a batch of records (as set in the <parameter>log-fetch-limit()</parameter> option). This statement can be used for example to archive or delete the records processed by &abbrev;. Note that the user account that &abbrev; uses to access the database requires the appropriate privileges to execute the statement. If executing the statement fails, &abbrev; will log the error message returned by the database, and continue processing the other records.</para>
-                <para>For details on customizing queries, see <xref linkend="sql-source-customized-queries"/>.</para>
-                <xi:include href="../../common/wnt/warning-source-sql-customized-queries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                <example>
-                    <title>A sample archive query</title>
-                    <para>The following statement deletes the records already retreived from the database if the table is read from the beginning.</para>
-                    <synopsis>archive-query("DELETE FROM test_logs WHERE id &lt;= $last_read_uid")</synopsis>
-                </example>
-            </simplesect>
-            <simplesect>
-                <title>columns()</title>
-                <indexterm>
-                    <primary>columns()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string list</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>empty</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The list of the name of the columns that will be queried. The default value is empty, meaning that all of the columns will be queried.</para>
-                <example>
-                    <title>SQL source option columns</title>
-                    <para>columns("id","date","message")</para>
-                </example>
-            </simplesect>
-            <simplesect>
-                <title>connect-query()</title>
-                <indexterm>
-                    <primary>connect-query()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>connect_query()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The SQL-like statement which is executed after &abbrev; has successfully connected to the database.</para>
-                <para>For details on customizing queries, see <xref linkend="sql-source-customized-queries"/>.</para>
-                <xi:include href="../../common/wnt/warning-source-sql-customized-queries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                <example>
-                    <title>A sample connect query</title>
-                    <synopsis>connect-query("SET COLLATION_CONNECTION='utf8_general_ci'")</synopsis>
-                </example>
-            </simplesect>
-            <simplesect xml:id="sql-source-option-database">
-                <xi:include href="../../common/chunk/option-sql-database.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect xml:id="sql-source-option-date-column">
-                <title>date-column(col_name, [format])</title>
-                <indexterm>
-                    <primary>date-column()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>date_column()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>date, string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The column containing the date of the logrecord. The format value has to be in <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://linux.die.net/man/3/strptime">strptime format</link>. For details, see the strptime manual page (<command>man strptime</command>).</para>
-                <note>
-                    <para>If the type of the column is string, this is a required parameter.</para>
-                </note>
-            </simplesect>
-            <simplesect xml:id="sql-source-option-datetime-column">
-                <title>datetime-column(col_name, [format])</title>
-                <indexterm>
-                    <primary>datetime-column()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>datetime_column()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para>The following column types are supported:</para>
-                <itemizedlist>
-                    <listitem>
-                        <para><emphasis>MySQL</emphasis>: timestamp, datetime, int</para>
-                    </listitem>
-                    <listitem>
-                        <para><emphasis>PostgreSQL</emphasis>: timestamp, int</para>
-                    </listitem>
-                    <listitem>
-                        <para><emphasis>Oracle</emphasis>: timestamp, int</para>
-                    </listitem>
-                    <listitem>
-                        <para><emphasis>MSSQL</emphasis>: datetime, int</para>
-                    </listitem>
-                </itemizedlist>
-                <para><emphasis role="bold">Description:</emphasis> The column containing the timestamp. If the type is int, it is considered to contain a UNIX timestamp. The format value is required if the type is string, and has to be in <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://linux.die.net/man/3/strptime">strptime format</link>. For details, see the strptime manual page (<command>man strptime</command>).</para>
-                <example>
-                    <title>SQL source option datetime-column(col_name, [format])</title>
-                    <para><userinput>datetime("timestampcol", "%Y-%m-%d")</userinput></para>
-                </example>
-            </simplesect>
-            <simplesect>
-                <title>default-facility()</title>
-                <indexterm>
-                    <primary>default-facility()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>default_facility()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>facility string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>local0</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> This parameter assigns a facility value to the messages received from the sql source.</para>
-            </simplesect>
-            <simplesect>
-                <title>default-priority()</title>
-                <indexterm>
-                    <primary>default-priority()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>default_priority()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>priority string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>info</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> This parameter assigns an emergency level to the messages received from the sql source.</para>
-            </simplesect>
-            <simplesect>
-                <title>fast-follow-mode()</title>
-                <indexterm>
-                    <primary>fast-follow-mode()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>fast_follow_mode()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>yes|no</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>yes</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> If set to <userinput>yes</userinput>, &abbrev; reads the database table as fast as possible, until it reaches the last record. After this, it will execute only one query in <parameter>follow-freq()</parameter> time. If it is set to <userinput>no</userinput>, &abbrev; executes only one query in <parameter>follow-freq()</parameter> time.</para>
-            </simplesect>
-            <simplesect>
-                <title>fetch-query()</title>
-                <indexterm>
-                    <primary>fetch-query()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>fetch_query()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>Default value is generated in running time of syslog-ng</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The SQL-like statement used to collect the records from the database.</para>
-                <note>
-                    <para>If this parameter is defined, &abbrev; does not check or validate it whether it is correct. Ensure that the customized statements are correct.</para>
-                </note>
-                <para>For details on customizing queries, see <xref linkend="sql-source-customized-queries"/>.</para>
-                <xi:include href="../../common/wnt/warning-source-sql-customized-queries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                <example>
-                    <title>A sample fetch query</title>
-                    <synopsis>fetch-query("SELECT * FROM $table WHERE id > $last_read_uid AND test_logs.log LIKE '%ERROR%' ORDER BY $uid")</synopsis>
-                </example>
-                <para>The default fetch queries are the following:</para>
-                <indexterm>
-                    <primary>sql sources</primary>
-                    <secondary>default queries</secondary>
-                </indexterm>
-                <itemizedlist>
-                    <listitem>
-                        <para><emphasis>MSSQL</emphasis>:<synopsis>SELECT TOP $fetch_limit $columns FROM $table WHERE $uid > '$last_read_uid' ORDER BY $uid </synopsis></para>
-                    </listitem>
-                    <listitem>
-                        <para><emphasis>MySQL</emphasis>:</para>
-                        <synopsis>SELECT $columns FROM $table WHERE $uid > '$last_read_uid' ORDER BY $uid LIMIT 0,$fetch_limit </synopsis>
-                    </listitem>
-                    <listitem>
-                        <para><emphasis>Oracle</emphasis>:<synopsis>SELECT $columns FROM (SELECT $table.*, Row_Number() OVER (ORDER BY $uid) FetchRow FROM $table WHERE $uid > '$last_read_uid' ) WHERE FetchRow BETWEEN 0 AND $fetch_limit </synopsis></para>
-                    </listitem>
-                    <listitem>
-                        <para><emphasis>PostgreSQL</emphasis>:<synopsis>SELECT $columns FROM $table WHERE $uid > '$last_read_uid' ORDER BY $uid LIMIT $fetch_limit </synopsis></para>
-                    </listitem>
-                </itemizedlist>
-            </simplesect>
-            <simplesect>
-                <title>follow-freq()</title>
-                <indexterm>
-                    <primary>follow-freq()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>follow_freq()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>number (seconds)</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>10</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para>Indicates that the source should be checked periodically. This is useful for SQL sources which always indicate readability, even though no new records were appended. If this value is higher than zero, syslog-ng will not attempt to use <parameter>poll()</parameter> on the SQL source, but checks whether the SQL source changed every time the <parameter>follow-freq()</parameter> interval (in seconds) has elapsed. Floating-point numbers (for example <userinput>1.5</userinput>) can be used as well.</para>
-            </simplesect>
-            <simplesect xml:id="sql-source-option-host">
-                <xi:include href="../../common/chunk/option-sql-host.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect>
-                <title>host-template()</title>
-                <indexterm>
-                    <primary>host-template()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>host_template()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>Empty string</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The template for defining the HOST part of the message. If the <parameter>host-template()</parameter> option is not specified, the value of the <parameter>host()</parameter> option will be used in the HOST part of the message.</para>
-                <note>
-                    <para>This option requires the option <parameter>keep-hostname()</parameter> to be enabled: <userinput>keep-hostname(yes)</userinput>.</para>
-                </note>
-            </simplesect>
-            <simplesect>
-                <title>log-fetch-limit()</title>
-                <indexterm>
-                    <primary>log-fetch-limit()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>log_fetch_limit()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>100</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <xi:include href="../../common/chunk/option-description-source-log-fetch-limit.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-source-log-iw-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect>
-                <title>message-template()</title>
-                <indexterm>
-                    <primary>message-template()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>message_template()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para>The alias of the <parameter>template()</parameter> parameter.</para>
-            </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-sql-password.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-sql-port.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect>
-                <title>prefix()</title>
-                <indexterm>
-                    <primary>prefix()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>".sql"</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> This prefix will be added to the name of the macros created from the database columns.</para>
-                <example>
-                    <title>SQL source option prefix()</title>
-                    <para>If a database column is called <userinput>column1</userinput>, and the prefix option is set as <userinput>prefix("customprefix.")</userinput>, the macro for the column will be called <userinput>customprefix.column1</userinput>.</para>
-                </example>
-            </simplesect>
-            <simplesect>
-                <title>program-template()</title>
-                <indexterm>
-                    <primary>program-template()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>program_template()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>Empty string</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The template for defining the PROGRAM part of the message. If not specified, the <parameter>PROGRAM</parameter> message part will be empty.</para>
-            </simplesect>
-            <simplesect>
-                <title>read-old-records()</title>
-                <indexterm>
-                    <primary>read-old-records()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>read_old_records()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>yes|no</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>no</entry>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> If set to <userinput>yes</userinput>, &abbrev; will start reading the records from the beginning of the table, if the table has not been read yet. If set to <userinput>no</userinput>, &abbrev; will read only the new records.</para>
-            </simplesect>
-            <simplesect xml:id="sql-source-option-table">
-                <title>table()</title>
-                <indexterm>
-                    <primary>table()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The name of the monitored table. Only a single literal name is accepted, macros cannot be used in the name of the table. Monitoring rotated tables is not supported.</para>
-            </simplesect>
-            <simplesect>
-                <title>table-init-query()</title>
-                <indexterm>
-                    <primary>table-init-query()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>table_init_query()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The SQL-like statement which is executed before fetching the first batch of records.</para>
-                <para>For details on customizing queries, see <xref linkend="sql-source-customized-queries"/>.</para>
-                <xi:include href="../../common/wnt/warning-source-sql-customized-queries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-source-tags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect>
-                <title>template()</title>
-                <indexterm>
-                    <primary>template()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>format-welf()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>WELF</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>WebTrends Enhanced Log file Format</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The template of the message (<parameter>${MSG}</parameter>) to be generated. If not specified, the following template will be used: <userinput>"$(format-welf --key &lt;prefix&gt;*)")</userinput> where &lt;prefix&gt; is the value of the <parameter>prefix()</parameter> option. This template converts the retrieved records into the WebTrends Enhanced Log file Format (WELF).</para>
-                <itemizedlist>
-                    <listitem>
-                        <para>For details on the WELF format, see <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www3.trustwave.com/support/kb/article.aspx?id=10899">https://www3.trustwave.com/support/kb/article.aspx?id=10899</link>.</para>
-                    </listitem>
-                    <listitem>
-                        <para>For details on the <parameter>format-welf()</parameter> template function, see <xref linkend="template-function-format-welf"/>.</para>
-                    </listitem>
-                </itemizedlist>
-                <note>
-                    <para>The <parameter>format-welf</parameter> function does not keep the order of columns between queries.</para>
-                </note>
-                <example>
-                    <title>SQL source option template()</title>
-                    <para>Using the default template for a table that has two columns (<userinput>id</userinput> and <userinput>message</userinput>) The result of the first query is the following: <userinput>'.sql.id=12 .sql.message="test message"'</userinput>, whereas the result of the second query can be: <userinput>'.sql.message="test message" .sql.id=12 '</userinput></para>
-                </example>
-            </simplesect>
-            <simplesect xml:id="sql-source-option-time-column">
-                <title>time-column(col_name, [format])</title>
-                <indexterm>
-                    <primary>time-column(col_name, [format])</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>time_column(col_name, [format])</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>time, string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The column containing the time of the logrecord. The format value has to be in <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://linux.die.net/man/3/strptime">strptime format</link>.</para>
-                <note>
-                    <para>If the type of the column is string, this is a required parameter.</para>
-                </note>
-            </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-source-time-reopen.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect xml:id="source-commonoption-time-zone">
-                <title>time-zone()</title>
-                <indexterm>
-                    <primary>time-zone()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>time_zone()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>timezone in +/-HH:MM format</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The default timezone, if set. If this option is not set, the default timezone is the local timezone.</para>
-            </simplesect>
-            <simplesect xml:id="sql-source-option-type">
-                <title>type()</title>
-                <indexterm>
-                    <primary>type()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>mssql, mysql, oracle, or pgsql</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <xi:include href="../../common/chunk/option-description-sql-type.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect xml:id="sql-source-option-uid-column">
-                <title>uid-column()</title>
-                <indexterm>
-                    <primary>uid-column()</primary>
-                </indexterm>
-                <indexterm>
-                    <primary>uid_column()</primary>
-                </indexterm>
-                <informaltable frame="topbot" colsep="0" rowsep="0">
-                    <tgroup cols="2">
-                        <colspec colnum="1" colwidth="40pt"/>
-                        <tbody>
-                            <row>
-                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry>string</entry>
-                            </row>
-                            <row>
-                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                                </entry>
-                                <entry/>
-                            </row>
-                        </tbody>
-                    </tgroup>
-                </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> The monotonically increasing unique ID of the monitored table (for example auto_increment). This column must be a type where the greater (>) operation is interpreted.</para>
-                <note>
-                    <para>The value of the first record of this column should not be 0: &abbrev; will skip this value.</para>
-                </note>
-            </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-source-use-syslogng-pid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-sql-username.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-        </section>
-        <section xml:id="sql-source-customized-queries">
-            <title>Customizing SQL queries</title>
-            <indexterm>
-                <primary>sql sources</primary>
-                <secondary>customized queries</secondary>
-            </indexterm>
-            <para>Every query executed by the SQL source can be customized. These customized queries are similar to SQL statements, but in can also refer to &abbrev;-specific variables with the prefix <userinput>$</userinput>. For example, <parameter>$table</parameter> is the name of the table.</para>
-            <xi:include href="../../common/wnt/warning-source-sql-customized-queries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            <para>The available variables are the following:</para>
-            <indexterm>
-                <primary>sql sources</primary>
-                <secondary>variables</secondary>
-            </indexterm>
-            <indexterm>
-                <primary>variables</primary>
-                <secondary>in sql queries</secondary>
-            </indexterm>
-            <note>
-                <para>The variables in the statement are not macro references.</para>
-            </note>
-            <itemizedlist>
-                <listitem>
-                    <para><parameter>$uid</parameter>: The name of the <parameter>uid-column()</parameter>.</para>
-                </listitem>
-                <listitem>
-                    <para><parameter>$table</parameter>: The name of the <parameter>table()</parameter> option.</para>
-                </listitem>
-                <listitem>
-                    <para><parameter>$last_read_uid</parameter>: The uid value of the last read record.</para>
-                </listitem>
-                <listitem>
-                    <para><parameter>$columns</parameter>: Reach the <parameter>columns()</parameter> option of the SQL source (the default is <userinput>*</userinput>). If columns is defined in the configuration (for example <userinput>columns("id" "message")</userinput>), then the value of this variable will be a comma separated list (for example <userinput>"id,message"</userinput>).</para>
-                </listitem>
-                <listitem>
-                    <para><parameter>$fetch_limit</parameter>: Reach the value of the <parameter>log-fetch-limit()</parameter> option.</para>
-                </listitem>
-            </itemizedlist>
-            <example>
-                <title>SQL source fetch-query</title>
-                <para>The following queries records that are older than the last record:</para>
-                <synopsis>SELECT * FROM $table WHERE $table.$uid > $last_read_uid ORDER BY $table.$uid</synopsis>
-            </example>
         </section>
     </section>
     <section xml:id="configuring-sources-sunstreams">
@@ -1796,7 +627,7 @@ log { source(s_pacct); destination(...); };</synopsis>
             <para>The <parameter>sun-streams()</parameter> driver must be enabled when the syslog-ng application is compiled (see <command>./configure --help</command>).</para>
         </note>
         <para>The <parameter>sun-streams()</parameter> driver has a single required argument specifying the <parameter>STREAMS</parameter> device to open, and the <parameter>door()</parameter> option. For the list of available optional parameters, see <xref linkend="reference-source-sunstreams"/>.</para>
-        <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="../../common/wnt/note-solaris-msgid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <formalpara>
             <title>Declaration:</title>
             <para/>
@@ -1812,11 +643,10 @@ log { source(s_pacct); destination(...); };</synopsis>
                 <primary>source drivers</primary>
                 <secondary><parameter>sun-streams()</parameter> driver</secondary>
             </indexterm>
-            <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <para>The <parameter>sun-streams()</parameter> driver has the following options.</para>
             <simplesect>
                 <title>door()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>door()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1876,9 +706,6 @@ log { source(s_pacct); destination(...); };</synopsis>
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-time-zone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-source-use-syslogng-pid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
         </section>
     </section>
     <section xml:id="configuring-sources-syslog">
@@ -1896,7 +723,7 @@ log { source(s_pacct); destination(...); };</synopsis>
             <primary>TLS</primary>
         </indexterm>
         <para>For the list of available optional parameters, see <xref linkend="reference-source-syslog-chapter"/>.</para>
-<!-- FIXME mi a kotelezo parameter? -->
+<!-- FIXME which parameters are required? -->
         <formalpara>
             <title>Declaration:</title>
             <para/>
@@ -1936,7 +763,7 @@ log { source(s_pacct); destination(...); };</synopsis>
     </section>
     <section xml:id="configuring-source-system">
         <title>Collecting the system-specific log messages of a platform</title>
-        <indexterm>
+        <indexterm type="parameter">
             <primary>system()</primary>
         </indexterm>
         <indexterm>
@@ -1951,10 +778,24 @@ log { source(s_pacct); destination(...); };</synopsis>
         <note>
             <para>&abbrev; versions <phrase condition="pe">4.1-5.0</phrase><phrase condition="ose">3.2-3.3</phrase> used an external script to generate the <parameter>system()</parameter> source, but this was problematic in certain situations, for example, when the host used a strict AppArmor profile. Therefore, the <parameter>system()</parameter> source is now generated internally in &abbrev;.</para>
         </note>
-        <para>The <parameter>system()</parameter> driver is also used in the default configuration file of &abbrev;. For details on the default configuration file, see <xref linkend="example-defaultconfig"/>.</para>
+        <para>The <parameter>system()</parameter> driver is also used in the default configuration file of &abbrev;. For details on the default configuration file, see <xref linkend="example-defaultconfig"/>. Starting with &abbrev; version <phrase condition="ose">3.6</phrase>, you can use the <command>system-expand</command> command-line utility (which is a shell script, located in the <filename>modules/system-source/</filename> directory) to display the configuration that the <parameter>system()</parameter> source will use.</para>
         <warning>
             <para>If &abbrev; does not recognize the platform it is installed on, it does not add any sources.</para>
         </warning>
+        <para>Starting with version <phrase condition="ose">3.6</phrase>, &abbrev; parses messages complying with the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://docs.splunk.com/Documentation/CIM/latest/User/Overview">Splunk Common Information Model (CIM)</link> and marked with <userinput>@cim</userinput> as JSON messages (for example, the ulogd from the netfilter project can emit such messages). That way, you can forward such messages without losing any information to CIM-aware applications (for example, Splunk).</para>
+        <indexterm>
+            <primary>Common Information Model (CIM)</primary>
+        </indexterm>
+        <indexterm>
+            <primary>JSON</primary>
+            <secondary>Common Information Model (CIM)</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>CIM</primary>
+        </indexterm>
+        <indexterm>
+            <primary>@cim</primary>
+        </indexterm>
         <table>
             <title>Sources automatically added by &product;</title>
             <tgroup cols="2">
@@ -1981,6 +822,16 @@ log { source(s_pacct); destination(...); };</synopsis>
                             <synopsis>unix-dgram("/var/run/log");</synopsis>
                             <synopsis>unix-dgram("/var/run/logpriv" perm(0600));</synopsis>
                             <synopsis>file("/dev/klog" follow-freq(0) program-override("kernel") flags(no-parse));</synopsis>
+                            <para>For FreeBSD versions earlier than 9.1, <parameter>follow-freq(1)</parameter> is used.</para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>GNU/kFreeBSD</entry>
+                        <entry>
+<?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            <synopsis>unix-dgram("/var/run/log");</synopsis>
+                            <synopsis>file("/dev/klog" follow-freq(0) program-override("kernel"));</synopsis>
                         </entry>
                     </row>
                     <row>
@@ -1998,6 +849,20 @@ log { source(s_pacct); destination(...); };</synopsis>
 <?dbfo bgcolor="#D4D6EB" ?>
                             <synopsis>unix-dgram("/dev/log");</synopsis>
                             <synopsis>file("/proc/kmsg" program-override("kernel") flags(kernel));</synopsis>
+                            <para>Note that on Linux, the <parameter>so-rcvbuf()</parameter> option of the <parameter>system()</parameter> source is automatically set to 8192.</para>
+                            <indexterm>
+                                <primary>systemd</primary>
+                            </indexterm>
+                            <para>If the host is running under systemd, &abbrev; reads directly from the systemd journal file using the <parameter>systemd-journal()</parameter> source.</para>
+                            <indexterm>
+                                <primary>multiline</primary>
+                                <secondary>indented-multiline</secondary>
+                            </indexterm>
+                            <indexterm>
+                                <primary>kmsg</primary>
+                            </indexterm>
+                            <para>If the kernel of the host is version 3.5 or newer, and <filename>/dev/kmsg</filename> is seekable, &abbrev; will use that instead of <filename>/proc/kmsg</filename>, using the <parameter>multi-line-mode(indented)</parameter>, <parameter>keep-timestamp(no)</parameter>, and the <parameter>format(linux-kmsg)</parameter> options.</para>
+                            <para>If &abbrev; is running in a jail or a Linux Container (LXC), it will not read from the <filename>/dev/kmsg</filename> or <filename>/proc/kmsg</filename> files.</para>
                         </entry>
                     </row>
                     <row>
@@ -2006,6 +871,7 @@ log { source(s_pacct); destination(...); };</synopsis>
 <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             <synopsis>sun-streams("/dev/log");</synopsis>
+                            <xi:include href="../../common/wnt/note-solaris-msgid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                         </entry>
                     </row>
                     <row>
@@ -2014,6 +880,7 @@ log { source(s_pacct); destination(...); };</synopsis>
 <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             <synopsis>sun-streams("/dev/log" door("/etc/.syslog_door"));</synopsis>
+                            <xi:include href="../../common/wnt/note-solaris-msgid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                         </entry>
                     </row>
                     <row>
@@ -2022,16 +889,12 @@ log { source(s_pacct); destination(...); };</synopsis>
 <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             <synopsis>sun-streams("/dev/log" door("/var/run/syslog_door"));</synopsis>
+                            <xi:include href="../../common/wnt/note-solaris-msgid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                         </entry>
                     </row>
                 </tbody>
             </tgroup>
         </table>
-<!--
-        <note>
-            <para>The <parameter>system()</parameter> driver is actually an element of the syslog-ng <link linkend="source-configuration-library">Source Configuration Library (SCL)</link>, a reusable configuration snippet tailored to handle process accounting logs. For details on using or writing SCLs, see <xref linkend="config-blocks"/>.</para>
-        </note>
--->
     </section>
     <xi:include href="source-journal.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="source-systemd-syslog.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -2041,7 +904,6 @@ log { source(s_pacct); destination(...); };</synopsis>
         <para>The <parameter>unix-stream()</parameter> and <parameter>unix-dgram()</parameter> drivers open an <parameter>AF_UNIX</parameter> socket and start listening on it for messages. The <parameter>unix-stream()</parameter> driver is primarily used on Linux and uses <parameter>SOCK_STREAM</parameter> semantics (connection oriented, no messages are lost); while <parameter>unix-dgram()</parameter> is used on BSDs and uses <parameter>SOCK_DGRAM</parameter> semantics: this may result in lost local messages if the system is overloaded.</para>
         <para>To avoid denial of service attacks when using connection-oriented protocols, the number of simultaneously accepted connections should be limited. This can be achieved using the <parameter>max-connections()</parameter> parameter. The default value of this parameter is quite strict, you might have to increase it on a busy system.</para>
         <para>Both unix-stream and unix-dgram have a single required argument that specifies the filename of the socket to create. For the list of available optional parameters, see <xref linkend="reference-source-unixstream"/></para>
-        <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <formalpara>
             <title>Declaration:</title>
             <para/>
@@ -2109,8 +971,8 @@ unix-dgram(filename [options]);</synopsis>
             </table>
         </section>
 <!-- FIXME a correct comparison should be added, based on info from Geller Sanyi:
-        a unix-dgram nagyjabol minden szempontbol jobb:
-        (nem kell 1 fd per kliens, a tevhittel ellentetben nem veszit uzeneteket, blokkolodik a hivo ugyanugy, mint a stream eseteben, megtartja az uzenetek sorrendjet tobb kuldo kozott, 1 read() eleg egy teljes uzenet beolvasasahoz)
+        unix-dgram is superiot to unix-stream:
+        (it does not need 1 fd per client, does not lose messages, blocks the sender just like in stream, keeps the order of messages, and 1 read() is enough to read a complete message)
 
         <para>The difference between the unix-stream and unix-dgram drivers is similar to the
             difference between the TCP and UDP network protocols. Use the following guidelines
@@ -2151,7 +1013,6 @@ unix-dgram(filename [options]);</synopsis>
                 <primary>source drivers</primary>
                 <secondary><parameter>unix-dgram()</parameter> driver</secondary>
             </indexterm>
-            <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <para>These two drivers behave similarly: they open an <parameter>AF_UNIX</parameter> socket and start listening on it for messages. The following options can be specified for these drivers:</para>
             <simplesect>
                 <title>create-dirs()</title>
@@ -2164,13 +1025,13 @@ unix-dgram(filename [options]);</synopsis>
                         <tbody>
                             <row>
                                 <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
+            <?dbfo bgcolor="#D4D6EB" ?>
                                 </entry>
                                 <entry>yes or no</entry>
                             </row>
                             <row>
                                 <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
+            <?dbfo bgcolor="#D4D6EB" ?>
                                 </entry>
                                 <entry>no</entry>
                             </row>
@@ -2187,7 +1048,7 @@ unix-dgram(filename [options]);</synopsis>
             </simplesect>
             <simplesect>
                 <title>group()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>group()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -2216,7 +1077,7 @@ unix-dgram(filename [options]);</synopsis>
             </simplesect>
             <simplesect>
                 <title>keep-alive()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>keep-alive()</primary>
                 </indexterm>
                 <indexterm>
@@ -2260,7 +1121,7 @@ unix-dgram(filename [options]);</synopsis>
             </simplesect>
             <simplesect>
                 <title>max-connections()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>max-connections()</primary>
                 </indexterm>
                 <indexterm>
@@ -2287,20 +1148,12 @@ unix-dgram(filename [options]);</synopsis>
                 </informaltable>
                 <para><emphasis role="bold">Description:</emphasis> Limits the number of simultaneously open connections. Cannot be used with <parameter>unix-dgram()</parameter>.</para>
             </simplesect>
-            <simplesect condition="pe">
-                <xi:include href="../../common/chunk/option-source-multi-line-garbage.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                <para>This option is not available for the <parameter>unix-dgram</parameter> driver.</para>
-            </simplesect>
-            <simplesect condition="pe">
-                <xi:include href="../../common/chunk/option-source-multi-line-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                <para>This option is not available for the <parameter>unix-dgram</parameter> driver.</para>
-            </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-optional.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
                 <title>owner()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>owner()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -2329,7 +1182,7 @@ unix-dgram(filename [options]);</synopsis>
             </simplesect>
             <simplesect>
                 <title>perm()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>perm()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -2367,9 +1220,6 @@ unix-dgram(filename [options]);</synopsis>
             </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-source-time-zone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </simplesect>
-            <simplesect>
-                <xi:include href="../../common/chunk/option-source-use-syslogng-pid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
         </section>
     </section>

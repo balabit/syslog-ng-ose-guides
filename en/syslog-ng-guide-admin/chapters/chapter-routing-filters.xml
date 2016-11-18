@@ -94,12 +94,11 @@
                 <title>Using embedded log statements</title>
                 <para>Embedded log statements (for details, see <xref linkend="concepts-embedded-logpaths"/>) re-use the results of processing messages (for example the results of filtering or rewriting) to create complex log paths. Embedded log statements use the same syntax as regular log statements, but they cannot contain additional sources. To define embedded log statements, use the following syntax:</para>
                 <synopsis xml:id="log-path-synopsis-embedded">log {
-    source(s1); source(s2);...
+    source(s1); source(s2); ...
 
     optional_element(filter1|parser1|rewrite1);
     optional_element(filter2|parser2|rewrite2);
     ...
-
     destination(d1); destination(d2); ...
 
     #embedded log statement
@@ -108,13 +107,13 @@
         optional_element(filter2|parser2|rewrite2);
         ...
         destination(d1); destination(d2); ...
+
         #another embedded log statement
         log {
             optional_element(filter1|parser1|rewrite1);
             optional_element(filter2|parser2|rewrite2);
             ...
-            destination(d1); destination(d2);
-            ...
+            destination(d1); destination(d2); ...
         };
     };
     #set flags after the embedded log statements
@@ -126,7 +125,7 @@
                     <synopsis>log { source(s_localhost); destination(d_file1); destination(d_file2); };</synopsis>
                     <para>The next example is equivalent with the one above, but uses an embedded log statement.</para>
                     <synopsis>log { source(s_localhost); destination(d_file1);
-    log {destination(d_file2); };
+    log { destination(d_file2); };
 };</synopsis>
                     <para>The following example uses two filters:</para>
                     <itemizedlist>
@@ -137,16 +136,17 @@
                             <para>messages coming from the host <userinput>192.168.1.1</userinput> and containing the string <userinput>example</userinput> are sent to the <userinput>d_file2</userinput> destination.</para>
                         </listitem>
                     </itemizedlist>
-                    <synopsis>log { source(s_localhost); host(192.168.1.); destination(d_file1);
-    log {message("example"); destination(d_file2); };
+                    <synopsis>log { source(s_localhost); host(192.168.1.1); destination(d_file1);
+    log { message("example"); destination(d_file2); };
 };</synopsis>
                     <para>The following example collects logs from multiple source groups and uses the <parameter>source()</parameter> filter in the embedded log statement to select messages of the <userinput>s_network</userinput> source group.</para>
                     <synopsis>log { source(s_localhost); source(s_network); destination(d_file1);
-    log {source(s_network); destination(d_file2); };
+    log { source(s_network); destination(d_file2); };
 };</synopsis>
                 </example>
             </section>
         </section>
+        <xi:include href="junctions-channels.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <section xml:id="reference-logflags">
             <title>Log path flags</title>
             <para>Flags influence the behavior of syslog-ng, and the way it processes messages. The following flags may be used in the log paths, as described in <xref linkend="logpath"/>.</para>
@@ -159,7 +159,7 @@
                 <indexterm>
                     <primary>flags</primary>
                 </indexterm>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>flags</primary>
                 </indexterm>
                 <tgroup cols="2">
@@ -172,14 +172,16 @@
                     </thead>
                     <tbody>
                         <row>
-                            <entry>catchall <indexterm>
+                            <entry>catchall
+                                <indexterm type="parameter">
                                     <primary>catchall</primary>
                                 </indexterm>
                             </entry>
                             <entry>This flag means that the source of the message is ignored, only the filters of the log path are taken into account when matching messages. A log statement using the <parameter>catchall</parameter> flag processes every message that arrives to any of the defined sources.</entry>
                         </row>
                         <row>
-                            <entry>fallback <indexterm>
+                            <entry>fallback
+                                <indexterm type="parameter">
                                     <primary>fallback</primary>
                                 </indexterm>
                             </entry>
@@ -190,7 +192,8 @@
                             </entry>
                         </row>
                         <row>
-                            <entry>final <indexterm>
+                            <entry>final
+                                <indexterm type="parameter">
                                     <primary>final</primary>
                                 </indexterm>
                             </entry>
@@ -200,7 +203,8 @@
                             </entry>
                         </row>
                         <row>
-                            <entry>flow-control <indexterm>
+                            <entry>flow-control
+                                <indexterm type="parameter">
                                     <primary>flow-control</primary>
                                 </indexterm>
                             </entry>
@@ -306,9 +310,6 @@ log {
                 </imageobject>
             </mediaobject>
         </figure>
-        <note>
-            <para>The <parameter>log-fetch-limit()</parameter> parameter can be set as a global option, or for every source individually.</para>
-        </note>
         <indexterm>
             <primary>output buffer</primary>
         </indexterm>
@@ -382,10 +383,10 @@ log {
                 <para><emphasis>Soft flow-control:</emphasis> In case of soft flow-control there is no message lost if the destination can accept messages, but it is possible to lose messages if it cannot accept messages (for example non-writeable file destination, or the disk becomes full), and all buffers are full. Soft flow-control cannot be configured, it is automatically available for file <phrase condition="pe"> and logstore </phrase>destinations.</para>
                 <example>
                     <title>Soft flow-control</title>
-                    <synopsis>source s_file {file("/tmp/input_file.log");};
-destination d_file {file("/tmp/output_file.log");};
+                    <synopsis>source s_file { file("/tmp/input_file.log"); };
+destination d_file { file("/tmp/output_file.log"); };
 destination d_tcp { network("127.0.0.1" port(2222) log-fifo-size(1000)); };
-log{ source(s_file); destination(d_file); destination(d_tcp);};
+log { source(s_file); destination(d_file); destination(d_tcp); };
 </synopsis>
                 </example>
                 <warning>
@@ -400,10 +401,10 @@ log{ source(s_file); destination(d_file); destination(d_tcp);};
                 <para><emphasis>Hard flow-control:</emphasis> In case of hard flow-control there is no message lost. To use hard flow-control, enable the <parameter>flow-control</parameter> flag in the log path. Hard flow-control is available for all destinations.</para>
                 <example>
                     <title>Hard flow-control</title>
-                    <synopsis>source s_file {file("/tmp/input_file.log");};
-destination d_file {file("/tmp/output_file.log");};
+                    <synopsis>source s_file { file("/tmp/input_file.log"); };
+destination d_file { file("/tmp/output_file.log"); };
 destination d_tcp { network("127.0.0.1" port(2222) log-fifo-size(1000)); };
-log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow-control);};
+log { source(s_file); destination(d_file); destination(d_tcp); flags(flow-control); };
 </synopsis>
                 </example>
             </listitem>
@@ -486,7 +487,7 @@ log{ source(s_file); destination(d_file); destination(d_tcp) flags(flow-control)
                 <synopsis>source s_localhost {
             network(ip(127.0.0.1) port(1999) max-connections(300)); };
 destination d_tcp {
-            network("10.1.2.3" port(1999); localport(999)); log-fifo-size(30000); };
+            network("10.1.2.3" port(1999) localport(999) log-fifo-size(30000)); };
 log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis>
                 <para>If other sources send messages to this destination, than the output buffer must be further increased. For example, if a network host with maximum <userinput>100</userinput> connections also logs into the destination, than increase the <parameter>log-fifo-size()</parameter> by <userinput>10000</userinput>.</para>
                 <synopsis>source s_localhost {
@@ -494,7 +495,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
 source s_tcp {
             network(ip(192.168.1.5) port(1999) max-connections(100)); };
 destination d_tcp {
-            network("10.1.2.3" port(1999); localport(999)); log-fifo-size(40000); };
+            network("10.1.2.3" port(1999) localport(999) log-fifo-size(40000)); };
 log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis>
             </example>
         </section>
@@ -630,39 +631,6 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
             </example>
         </section>
     </section>
-    <section xml:id="concepts-failover" condition="pe">
-        <title>Client-side failover</title>
-        <indexterm>
-            <primary>secondary servers</primary>
-        </indexterm>
-        <indexterm>
-            <primary>failover servers</primary>
-        </indexterm>
-        <indexterm>
-            <primary>fail-over servers</primary>
-        </indexterm>
-        <indexterm>
-            <primary>tcp failover</primary>
-        </indexterm>
-        <indexterm>
-            <primary>fail-over</primary>
-        </indexterm>
-        <indexterm>
-            <primary>client-side failover</primary>
-        </indexterm>
-        <indexterm>
-            <primary>FailoverSyslogServer</primary>
-        </indexterm>
-        <para>&abbrev; can detect if the remote server of a network destination becomes unaccessible, and start sending messages to a secondary server. Multiple failover servers can be configured; so if the secondary server becomes unaccessible as well, &abbrev; will switch to the third server in the list, and so on. If there are no more failover servers left, &abbrev; returns to the beginning of a list and attempts to connect to the primary server.</para>
-        <para>When &abbrev; starts up, it will always try to connect to the primary server first, but once it fails over to a secondary server, it will not automatically attempt to return to the primary server even if it becomes available. If &abbrev; is restarted, it will attempt to connect the primary server. Reloading the configuration of &abbrev; will not cause &abbrev; to return to the primary server, unless the configuration of the destination has changed.</para>
-        <para>If &abbrev; uses TLS-encryption to communicate with the remote server, &abbrev; checks the certificate of the failover server as well. The certificates of the failover servers should match their domain names or IP addresses &mdash; for details, see <xref linkend="tls-serverauth"/>. Note that when mutual authentication is used, the &abbrev; client sends the same certificate to every server.</para>
-        <para>The primary server and the failover servers must be accessible with the same communication method: it is not possible to use different destination drivers or options for the different servers.</para>
-        <note>
-            <para>Client-side failover works only for TCP-based connections (including TLS-encrypted connections), that is, the <parameter>syslog()</parameter> and <parameter>network()</parameter> destination drivers (excluding UDP transport).</para>
-            <para>Client-side failover is not supported in the <parameter>sql()</parameter> driver, even though it may use a TCP connection to access a remote database.</para>
-        </note>
-        <para>For details on configuring failover servers, see <xref linkend="reference-destination-network-chapter"/> and <xref linkend="reference-destination-syslog-chapter"/>.</para>
-    </section>
     <section xml:id="filters">
         <title>Filters</title>
         <indexterm significance="preferred">
@@ -707,9 +675,9 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
                 <synopsis>filter demo_filter { host("example") and match("deny" value("MESSAGE")) };</synopsis>
                 <para>For the filter to have effect, include it in a log statement:</para>
                 <synopsis>log {
-        source(s1);
-        filter(demo_filter);
-        destination(d1);};</synopsis>
+    source(s1);
+    filter(demo_filter);
+    destination(d1); };</synopsis>
             </example>
         </section>
         <section xml:id="filters-boolean">
@@ -725,13 +693,13 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
             <indexterm>
                 <primary>boolean operators</primary>
             </indexterm>
-            <indexterm>
+            <indexterm type="parameter">
                 <primary>AND</primary>
             </indexterm>
-            <indexterm>
+            <indexterm type="parameter">
                 <primary>OR</primary>
             </indexterm>
-            <indexterm>
+            <indexterm type="parameter">
                 <primary>NOT</primary>
             </indexterm>
             <para>When a log statement includes multiple filter statements, syslog-ng sends a message to the destination only if all filters are true for the message. In other words, the filters are connected with the logical <userinput>AND</userinput> operator. In the following example, no message arrives to the destination, because the filters are exclusive (the hostname of a client cannot be <userinput>example1</userinput> and <userinput>example2</userinput> at the same time):</para>
@@ -767,22 +735,22 @@ log {
                 <primary>filters</primary>
                 <secondary>comparing values</secondary>
             </indexterm>
-            <indexterm>
+            <indexterm type="parameter">
                 <primary>ge</primary>
             </indexterm>
-            <indexterm>
+            <indexterm type="parameter">
                 <primary>gt</primary>
             </indexterm>
-            <indexterm>
+            <indexterm type="parameter">
                 <primary>eq</primary>
             </indexterm>
-            <indexterm>
+            <indexterm type="parameter">
                 <primary>ne</primary>
             </indexterm>
-            <indexterm>
+            <indexterm type="parameter">
                 <primary>le</primary>
             </indexterm>
-            <indexterm>
+            <indexterm type="parameter">
                 <primary>lt</primary>
             </indexterm>
             <indexterm>
@@ -809,10 +777,6 @@ log {
                 <synopsis>filter f_pid {"${HOST}${PID}" eq "${HOST}"};</synopsis>
                 <para>The following example selects messages with priority level 4 or higher.</para>
                 <synopsis>filter f_level {"${LEVEL_NUM}" &gt; "5"};</synopsis>
-                <para>The following filter selects messages which have the collector word in the soc@0.device structured data field.</para>
-                <synopsis>filter f_fwd_collectors {"${.SDATA.soc@0.device}" eq "collector"};</synopsis>
-                <para>This filter expresison selects messages, which has the FW string in the soc@0.class structured data field.</para>
-                <synopsis>filter f_debug { match("FW" value(".SDATA.soc@0.class") type("string")); };</synopsis>
             </example>
             <para>Note that:</para>
             <itemizedlist>
@@ -833,7 +797,7 @@ log {
                 </listitem>
                 <listitem>
                     <para>You can use boolean operators to combine comparison expressions.</para>
-<!-- FIXME tenyleg? ha igen, peldat is!-->
+<!-- FIXME add a working example-->
                 </listitem>
             </itemizedlist>
             <para>The following operators are available:</para>
@@ -889,7 +853,8 @@ log {
                 <primary>regular expressions</primary>
                 <secondary>posix</secondary>
             </indexterm>
-            <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and <parameter>program()</parameter> filter functions accept regular expressions as parameters. The exact type of the regular expression to use can be specified with the <parameter>type()</parameter> option. By default, &abbrev; uses POSIX regular expressions.</para><para>To use other expression types, add the <emphasis role="italic"><parameter>type()</parameter></emphasis> option after the regular expression. For example:</para><synopsis>message("^(.+)\\1$" type("pcre"))</synopsis>
+            <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and <parameter>program()</parameter> filter functions accept regular expressions as parameters. The exact type of the regular expression to use can be specified with the <parameter>type()</parameter> option. By default, &abbrev; uses PCRE regular expressions.</para>
+            <para>To use other expression types, add the <emphasis role="italic"><parameter>type()</parameter></emphasis> option after the regular expression. For example:</para><synopsis>message("^(.+)\\1$" type("posix"))</synopsis>
             <indexterm>
                 <primary>filters</primary>
                 <secondary>wildcards</secondary>
@@ -901,7 +866,7 @@ log {
                 <para>The following filter matches on hostnames starting with the <userinput>myhost</userinput> string, for example, on <userinput>myhost-1</userinput>, <userinput>myhost-2</userinput>, and so on.</para>
                 <synopsis>filter f_wildcard {host("myhost*" type(glob));};</synopsis>
             </example>
-            <para>For details on using regular expressions in &abbrev;, see <xref linkend="regular-expressions"/>.</para>
+            <para>For details on using regular expressions in &abbrev;, see <xref linkend="regular-expr"/>.</para>
             <indexterm>
                 <primary>filters</primary>
                 <secondary>control characters</secondary>
@@ -928,6 +893,9 @@ log {
                 </listitem>
                 <listitem>
                     <para>when the message matches a pattern in the pattern database. For details on using the pattern database, see <xref linkend="configuring-pattern-databases"/>, for details on creating tags in the pattern database, see <xref linkend="reference-patterndb-schemes"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>Tags can be also added and deleted using rewrite rules. For details, see <xref linkend="rewrite-tags"/>.</para>
                 </listitem>
             </itemizedlist>
             <para>When syslog-ng receives a message, it automatically adds the <userinput>.source.&lt;id_of_the_source_statement&gt;</userinput> tag to the message. Use the <parameter>tags()</parameter> option of the source to add custom tags, and the <parameter>tags()</parameter> option of the filters to select only specific messages.</para>
@@ -956,7 +924,7 @@ log {
             <xi:include href="../../common/chunk/table-filter-functions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <simplesect xml:id="filter-facility">
                 <title>facility()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>facility()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -999,8 +967,7 @@ log {
                         <primary>facilities</primary>
                     </indexterm>
                     <indexterm>
-                        <primary>message </primary>
-                        <secondary>facilities</secondary>
+                        <primary>message facilities</primary>
                     </indexterm>
                     <tgroup cols="3">
                         <thead>
@@ -1102,7 +1069,7 @@ log {
             </simplesect>
             <simplesect xml:id="filter-filter">
                 <title>filter()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>filter()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1122,7 +1089,7 @@ log {
             </simplesect>
             <simplesect xml:id="filter-host">
                 <title>host()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>host()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1166,7 +1133,7 @@ log {
                                     <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                                 </entry>
-                                <entry>in-list("&lt;/path/to/file.list&gt;", value("&lt;field-to-filter&gt;"));</entry>
+                                <entry>in-list("&lt;/path/to/file.list&gt;", value("&lt;field-to-filter&gt;"))</entry>
                             </row>
                         </tbody>
                     </tgroup>
@@ -1194,16 +1161,16 @@ sudo</synopsis>
                     <synopsis>filter f_whitelist { in-list("/etc/syslog-ng/programlist.list", value("PROGRAM")); };</synopsis>
                     <para>Create the appropriate sources and destinations for your environment, then create a log path that uses the previous filter to select only the log messages of the applications you need:</para>
                     <synopsis>log {
-source(s_all);
-filter(f_whitelist);
-destination(d_logserver);};</synopsis>
+    source(s_all);
+    filter(f_whitelist);
+    destination(d_logserver); };</synopsis>
                     <para>To create a blacklist filter, simply negate the <parameter>in-list</parameter> filter:</para>
                     <synopsis>filter f_blacklist { not in-list("/etc/syslog-ng/programlist.list", value("PROGRAM")); };</synopsis>
                 </example>
             </simplesect>
             <simplesect xml:id="filter-priority">
                 <title>level() or priority()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>level() or priority()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1235,7 +1202,7 @@ destination(d_logserver);};</synopsis>
             </simplesect>
             <simplesect xml:id="reference-filters-match">
                 <title>match()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>match()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1252,7 +1219,7 @@ destination(d_logserver);};</synopsis>
                     </tgroup>
                 </informaltable>
                 <para><emphasis role="bold">Description:</emphasis> Match a regular expression to the headers and the message itself (that is, the values returned by the <parameter>MSGHDR</parameter> and <parameter>MSG</parameter> macros). Note that in syslog-ng version 2.1 and earlier, the <parameter>match()</parameter> filter was applied only to the text of the message, excluding the headers. This functionality has been moved to the <parameter>message()</parameter> filter.</para>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>value()</primary>
                 </indexterm>
                 <para>To limit the scope of the match to a specific part of the message (identified with a macro), use the <userinput>match(regexp value("MACRO"))</userinput> syntax. Do not include the $ sign in the parameter of the <parameter>value()</parameter> option.</para>
@@ -1260,7 +1227,7 @@ destination(d_logserver);};</synopsis>
             </simplesect>
             <simplesect xml:id="filter-message">
                 <title>message()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>message()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1280,7 +1247,7 @@ destination(d_logserver);};</synopsis>
             </simplesect>
             <simplesect xml:id="filter-netmask">
                 <title>netmask()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>netmask()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1328,7 +1295,7 @@ destination(d_logserver);};</synopsis>
             </simplesect>
             <simplesect xml:id="filter-program">
                 <title>program()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>program()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1348,7 +1315,7 @@ destination(d_logserver);};</synopsis>
             </simplesect>
             <simplesect xml:id="filter-source">
                 <title>source()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>source()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1368,7 +1335,7 @@ destination(d_logserver);};</synopsis>
             </simplesect>
             <simplesect xml:id="filter-tags">
                 <title>tags()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>tags()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1389,15 +1356,15 @@ destination(d_logserver);};</synopsis>
                     <title>Adding tags and filtering messages with tags</title>
                     <synopsis>source s_tcp {
     network(ip(192.168.1.1) port(1514) tags("tcp", "router"));
-    };</synopsis>
+};</synopsis>
                     <para>Use the <parameter>tags()</parameter> option of the filters to select only specific messages:</para>
                     <synopsis>filter f_tcp {
-       tags(".source.s_tcp");
-    };
+    tags(".source.s_tcp");
+};
 
-    filter f_router {
-       tags("router");
-    };</synopsis>
+filter f_router {
+    tags("router");
+};</synopsis>
                 </example>
                 <xi:include href="../../common/wnt/note-patterndb-class-tag.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>

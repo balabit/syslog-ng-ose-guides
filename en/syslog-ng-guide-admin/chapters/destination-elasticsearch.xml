@@ -3,7 +3,7 @@
  [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
  %entities;]>
 <section xml:id="configuring-destinations-elasticsearch" xmlns="http://docbook.org/ns/docbook" version="5.0">
-    <title>Sending messages directly to Elasticsearch</title>
+    <title>Sending messages directly to Elasticsearch version 1.x</title>
     <indexterm>
         <primary>destination drivers</primary>
         <secondary><parameter>java()</parameter> driver</secondary>
@@ -13,12 +13,14 @@
         <secondary><parameter>elasticsearch</parameter></secondary>
     </indexterm>
     <para>Starting with version <phrase condition="pe">5.6</phrase><phrase condition="ose">3.7</phrase> of &abbrev; can directly send log messages to <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.elastic.co/products/elasticsearch">Elasticsearch</link>, allowing you to search and analyze your data in real time, and visualize it with <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.elastic.co/products/kibana">Kibana</link>.</para>
-    <xi:include href="../../common/wnt/note-server-mode-only.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <para>Note the following limitations when using the &abbrev; <parameter>elasticsearch</parameter> destination:</para>
     <itemizedlist>
         <xi:include href="../../common/chunk/listitem-java-supported-platforms.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <listitem>
             <para>Since &abbrev; uses the official Java Elasticsearch libraries, the <parameter>elasticsearch</parameter> destination has significant memory usage.</para>
+        </listitem>
+        <listitem>
+            <para>Sending messages over the HTTP REST API is supported only using the <parameter>elastic2()</parameter> destination. Note that in HTTP mode, the <parameter>elasticsearch2</parameter> destination can send log messages to Elasticsearch version 1.x and newer. For details, see <xref linkend="configuring-destinations-elasticsearch2"/>.</para>
         </listitem>
         <xi:include href="../../common/chunk/listitem-java-internal-messages.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     </itemizedlist>
@@ -35,8 +37,8 @@ elasticsearch(
     cluster("syslog-ng")
 );</synopsis>
     <example xml:id="example-destination-elasticsearch">
-        <title>Sending log data to Elasticsearch</title>
-        <para>The following example defines an <parameter>elasticsearch</parameter> destination that sends messages in transport mode to an Elasticsearch server running on the localhost, using only the required parameters.</para>
+        <title>Sending log data to Elasticsearch version 1.x</title>
+        <para>The following example defines an <parameter>elasticsearch</parameter> destination that sends messages in transport mode to an Elasticsearch server version 1.x running on the localhost, using only the required parameters.</para>
         <synopsis>@module mod-java
 @include "scl.conf"
 
@@ -47,13 +49,13 @@ destination d_elastic {
   );
 };
 </synopsis>
-        <para>The following example sends 10000 messages in a batch, in node mode, and includes a custom unique ID for each message.</para>
+        <para>The following example sends 10000 messages in a batch, in transport mode, and includes a custom unique ID for each message.</para>
         <synopsis>@module mod-java
 @include "scl.conf"
 
 options {
   threaded(yes);
-  use_uniqid(yes);
+  use-uniqid(yes);
 };
 
 source s_syslog {
@@ -65,8 +67,8 @@ destination d_elastic {
     index("syslog-ng_${YEAR}.${MONTH}.${DAY}")
     type("test")
     cluster("syslog-ng")
-    client_mode("node")
-    custom_id("${UNIQID}")
+    client-mode("transport")
+    custom-id("${UNIQID}")
     flush-limit("10000")
   );
 };
@@ -88,6 +90,7 @@ log {
             <para>For the list of options, see <xref linkend="reference-destination-elasticsearch"/>.</para>
         </listitem>
     </itemizedlist>
+    <para condition="ose">The <parameter>elasticsearch()</parameter> driver is actually a reusable configuration snippet configured to receive log messages using the Java language-binding of &abbrev;. For details on using or writing such configuration snippets, see <xref linkend="config-blocks"/>. You can find the source of the elasticsearch configuration snippet on <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://github.com/balabit/syslog-ng/blob/master/scl/elasticsearch/plugin.conf">GitHub</link>. For details on extending &abbrev; in Java, see the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://syslog-ng.gitbooks.io/getting-started/content/chapters/chapter_5/section_2.html">Getting started with syslog-ng development</link> guide.</para>
     <procedure xml:id="destination-elasticsearch-prerequisites">
         <title>Prerequisites</title>
         <para>To send messages from &abbrev; to Elasticsearch, complete the following steps.</para>
@@ -96,15 +99,15 @@ log {
             <para/>
         </formalpara>
         <step>
-            <para>Download and install the Java Runtime Environment (JRE), 1.7 (or newer). The &abbrev; <parameter>elasticsearch</parameter> destination is tested and supported when using the Oracle implementation of Java. Other implementations are untested and unsupported, they may or may not work as expected.</para>
+            <xi:include href="../../common/chunk/para-java-requirements.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </step>
         <step>
-            <para>Download the Elasticsearch libraries, version 1.5 or newer from the 1.x line from <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.elastic.co/downloads/elasticsearch">https://www.elastic.co/downloads/elasticsearch</link>. To use 2.x, use the <parameter>elasticsearch2()</parameter> destination (see <xref linkend="configuring-destinations-elasticsearch2"/>).</para>
+            <para>Download the Elasticsearch libraries version 1.5 or newer from the 1.x line from <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.elastic.co/downloads/elasticsearch">https://www.elastic.co/downloads/elasticsearch</link>. To use Elasticsearch 2.x or newer, use the <parameter>elasticsearch2()</parameter> destination (see <xref linkend="configuring-destinations-elasticsearch2"/>).</para>
         </step>
         <step>
             <para>Extract the Elasticsearch libraries into a temporary directory, then collect the various <filename>.jar</filename> files into a single directory (for example, <filename>/opt/elasticsearch/lib/</filename>) where &abbrev; can access them. You must specify this directory in the &abbrev; configuration file. The files are located in the <filename>lib</filename> directory and its subdirectories of the Elasticsearch release package.</para>
         </step>
-<!-- The java home must be given at installation time for the PE installer. FIXME: include it in the PE installer description!  -->
+
     </procedure>
     <section xml:id="destination-elasticsearch-interaction">
         <title>How &abbrev; interacts with Elasticsearch</title>
@@ -122,7 +125,23 @@ log {
     <section xml:id="destination-elasticsearch-client-modes">
         <title>Client modes</title>
         <para>The &abbrev; application can interact with Elasticsearch in transport mode or node mode.</para>
-        <xi:include href="../../common/chunk/option-destination-elasticsearch-client-mode-description.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <itemizedlist xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <listitem>
+        <formalpara>
+            <title>Transport mode</title>
+            <para>The &abbrev; application uses the transport client API of Elasticsearch, and uses the <parameter>server()</parameter>, <parameter>port()</parameter>, and <parameter>cluster()</parameter> options from the &abbrev; configuration file.</para>
+        </formalpara>
+    </listitem>
+    <listitem>
+        <formalpara>
+            <title>Node mode</title>
+            <para>The &abbrev; application acts as an Elasticsearch node (client no-data), using the node client API of Elasticsearch. Further options for the node can be describe in an Elasticsearch configuration file specified in the <parameter>resource()</parameter> option.</para>
+        </formalpara>
+        <note>
+            <para>In Node mode, it is required to define the home of the elasticsearch installation with the <parameter>path.home</parameter> paramter in the <filename>.yml</filename> file. For example: <userinput>path.home: /usr/share/elasticsearch</userinput>.</para>
+        </note>
+    </listitem>
+</itemizedlist>
     </section>
     <section xml:id="reference-destination-elasticsearch">
         <title>Elasticsearch destination options</title>
@@ -139,37 +158,35 @@ log {
             <title>Required options:</title>
             <para/>
         </formalpara>
-        <para>The following options are required: <parameter>index()</parameter>, <parameter>type()</parameter>. In node mode, either the <parameter>cluster()</parameter> or the <parameter>resource()</parameter> option is required as well. Note that to use <parameter>elasticsearch</parameter>, you must add the following lines to the beginning of your &abbrev; configuration:</para>
+        <para>The following options are required: <parameter>index()</parameter>, <parameter>type()</parameter>. In node mode, the <parameter>cluster()</parameter> and the <parameter>resource()</parameter> options are required as well. Note that to use <parameter>elasticsearch</parameter>, you must add the following lines to the beginning of your &abbrev; configuration:</para>
         <synopsis>@module mod-java
 @include "scl.conf"</synopsis>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-java-class-path.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            <para><emphasis role="bold">Description:</emphasis> Include the path to the directory where you copied the required libraries (see <xref linkend="destination-elasticsearch-prerequisites"/>), for example, <userinput>client_lib_dir(/user/share/elasticsearch-2.2.0/lib)</userinput>.</para>
+            <para>For the <parameter>elasticsearch</parameter> destination, include the path to the directory where you copied the required libraries (see <xref linkend="destination-elasticsearch-prerequisites"/>), for example, <userinput>client_lib_dir("/opt/elasticsearch/libs")</userinput>.</para>
         </simplesect>
         <simplesect xml:id="elasticsearch-option-elasticsearch-client-mode">
-            <title>client_mode()</title>
+            <title>client-mode()</title>
             <indexterm type="parameter">
-                <primary>client_mode()</primary>
+                <primary>client-mode()</primary>
                 <secondary>elasticsearch</secondary>
             </indexterm>
             <indexterm type="parameter">
                 <primary>elasticsearch</primary>
-                <secondary>client_mode</secondary>
+                <secondary>client-mode</secondary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-								<?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>transport | node | shield</entry>
                         </row>
                         <row>
-                            <entry>Default:
-								<?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>node</entry>
@@ -177,7 +194,7 @@ log {
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies the client mode used to connect to the Elasticsearch server, for example, <userinput>option("client-mode", "transport")</userinput>.</para>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the client mode used to connect to the Elasticsearch server, for example, <userinput>client-mode("node")</userinput>.</para>
             <xi:include href="../../common/chunk/option-destination-elasticsearch-client-mode-description.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <note>
                 <para>In Node mode, it is required to define the home of the elasticsearch installation with the <parameter>path.home</parameter> paramter in the <filename>.yml</filename> file. For example: <userinput>path.home: /usr/share/elasticsearch</userinput>.</para>
@@ -212,15 +229,13 @@ shield.ssl.keystore.password: mypassword
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-								<?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>string</entry>
                         </row>
                         <row>
-                            <entry>Default:
-								<?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>N/A</entry>
@@ -230,29 +245,30 @@ shield.ssl.keystore.password: mypassword
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> Specifies the name or the Elasticsearch cluster, for example, <userinput>cluster("my-elasticsearch-cluster")</userinput>. Optionally, you can specify the name of the cluster in the Elasticsearch resource file. For details, see <xref linkend="elasticsearch-option-elasticsearch-resource"/>.</para>
         </simplesect>
+        <simplesect xml:id="elasticsearch-option-elasticsearch-cluster-url">
+            <xi:include href="../../common/chunk/option-destination-elasticsearch-cluster-url.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
         <simplesect xml:id="elasticsearch-option-elasticsearch-concurrent-requests">
-            <title>concurrent_requests()</title>
+            <title>concurrent-requests()</title>
             <indexterm type="parameter">
-                <primary>concurrent_requests()</primary>
+                <primary>concurrent-requests()</primary>
                 <secondary>elasticsearch</secondary>
             </indexterm>
             <indexterm type="parameter">
                 <primary>elasticsearch</primary>
-                <secondary>concurrent_requests</secondary>
+                <secondary>concurrent-requests</secondary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>number</entry>
                         </row>
                         <row>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>0</entry>
                         </row>
@@ -263,35 +279,33 @@ shield.ssl.keystore.password: mypassword
                 <primary>elasticsearch</primary>
                 <secondary>performance</secondary>
             </indexterm>
-            <para><emphasis role="bold">Description:</emphasis> The number of concurrent (simultaneous) requests that &abbrev; sends to the Elasticsearch server. Set this option to 1 or higher to increase performance. When using the <parameter>concurrent_requests()</parameter> option, make sure that the <parameter>flush-limit()</parameter> option is higher than one, otherwise it will not have any noticeable effect. For details, see <xref linkend="elasticsearch-option-elasticsearch-flush-limit"/>.</para>
+            <para><emphasis role="bold">Description:</emphasis> The number of concurrent (simultaneous) requests that &abbrev; sends to the Elasticsearch server. Set this option to 1 or higher to increase performance. When using the <parameter>concurrent-requests()</parameter> option, make sure that the <parameter>flush-limit()</parameter> option is higher than one, otherwise it will not have any noticeable effect. For details, see <xref linkend="elasticsearch-option-elasticsearch-flush-limit"/>.</para>
             <warning>
                 <para>Hazard of data loss! Using the <parameter>concurrent-requests()</parameter> option increases the number of messages lost in case the Elasticsearch server becomes unaccessible.</para>
             </warning>
         </simplesect>
         <simplesect xml:id="elasticsearch-option-elasticsearch-custom-id">
-            <title>custom_id()</title>
+            <title>custom-id()</title>
             <indexterm type="parameter">
-                <primary>custom_id()</primary>
+                <primary>custom-id()</primary>
                 <secondary>elasticsearch</secondary>
             </indexterm>
             <indexterm type="parameter">
                 <primary>elasticsearch</primary>
-                <secondary>custom_id</secondary>
+                <secondary>custom-id</secondary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-								<?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>template or template function</entry>
                         </row>
                         <row>
-                            <entry>Default:
-								<?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>N/A</entry>
@@ -305,7 +319,7 @@ shield.ssl.keystore.password: mypassword
             <xi:include href="../../common/chunk/option-destination-diskbuffer.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
         <simplesect xml:id="elasticsearch-option-elasticsearch-flush-limit">
-            <title>flush_limit()</title>
+            <title>flush-limit()</title>
             <indexterm type="parameter">
                 <primary>flush-limit()</primary>
                 <secondary>elasticsearch</secondary>
@@ -319,15 +333,13 @@ shield.ssl.keystore.password: mypassword
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>number</entry>
                         </row>
                         <row>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>5000</entry>
@@ -360,15 +372,13 @@ shield.ssl.keystore.password: mypassword
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>string</entry>
                         </row>
                         <row>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>N/A</entry>
@@ -399,15 +409,13 @@ shield.ssl.keystore.password: mypassword
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>number</entry>
                         </row>
                         <row>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>9300</entry>
@@ -435,15 +443,13 @@ shield.ssl.keystore.password: mypassword
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-                                <?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>string</entry>
                         </row>
                         <row>
-                            <entry>Default:
-                                <?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>N/A</entry>
@@ -468,15 +474,13 @@ shield.ssl.keystore.password: mypassword
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-								<?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>list of hostnames</entry>
                         </row>
                         <row>
-                            <entry>Default:
-								<?dbhtml bgcolor="#D4D6EB" ?>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>127.0.0.1</entry>

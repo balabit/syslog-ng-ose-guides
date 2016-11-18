@@ -18,7 +18,7 @@
         <primary>destinations</primary>
         <secondary>defining</secondary>
     </indexterm><synopsis>destination &lt;identifier&gt; {
-                destination-driver(params); destination-driver(params); ... };</synopsis></para>
+            destination-driver(params); destination-driver(params); ... };</synopsis></para>
     <example>
         <title>A simple destination statement</title>
         <para>The following destination statement sends messages to the TCP port <userinput>1999</userinput> of the <userinput>10.1.2.3</userinput> host.</para>
@@ -39,8 +39,9 @@
             </listitem>
         </itemizedlist>
     </warning>
-    <para>The following table lists the destination drivers available in syslog-ng.</para>
+    <para>The following table lists the destination drivers available in &abbrev;.<phrase condition="ose"> If these destinations do not satisfy your needs, you can extend &abbrev; and write your own destination, for example, in C, Java, or Python. For details, see <xref linkend="reference-destination-custom"/>.</phrase></para>
     <xi:include href="../../common/chunk/table-destination-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="destination-amqp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="destination-elasticsearch.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="destination-elasticsearch2.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
@@ -62,24 +63,16 @@
         <example xml:id="example-destination-file">
             <title>Using the file() driver</title>
             <synopsis>destination d_file { file("/var/log/messages"); };</synopsis>
-            <xi:include href="../../common/wnt/note-windows-filenames.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </example>
         <example xml:id="example-destination-file-macro">
             <title>Using the file() driver with macros in the file name and a template for the message</title>
             <synopsis>destination d_file {
         file("/var/log/${YEAR}.${MONTH}.${DAY}/messages"
-             template("${HOUR}:${MIN}:${SEC} ${TZ} ${HOST} [${LEVEL}] ${MSG} ${MSG}\n")
+             template("${HOUR}:${MIN}:${SEC} ${TZ} ${HOST} [${LEVEL}] ${MSG}\n")
              template-escape(no));
 };</synopsis>
         </example>
         <xi:include href="../../common/wnt/note-logrotate.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <note condition="pe">
-            <indexterm>
-                <primary>line-breaks</primary>
-                <secondary>on Windows</secondary>
-            </indexterm>
-            <para>The &abbrev; application uses UNIX-style line-breaks. This means that on Windows, the end of the line is marked with LF instead of CRLF.</para>
-        </note>
         <warning>
             <para>Since the state of each created file must be tracked by syslog-ng, it consumes some memory for each file. If no new messages are written to a file within 60 seconds (controlled by the <parameter>time-reap()</parameter> global option), it is closed, and its state is freed.</para>
             <para>Exploiting this, a DoS attack can be mounted against the system. If the number of possible destination files and its needed memory is more than the amount available on the syslog-ng server.</para>
@@ -107,10 +100,13 @@
                 <xi:include href="../../common/chunk/option-destination-dir-perm.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
+                <xi:include href="../../common/chunk/option-destination-diskbuffer.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
                 <xi:include href="../../common/chunk/option-destination-flags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 <itemizedlist>
                     <listitem>
-                        <indexterm>
+                        <indexterm type="parameter">
                             <primary>threaded</primary>
                         </indexterm>
                         <para><emphasis>threaded</emphasis>: The <parameter>threaded</parameter> flag enables multithreading for the destination. For details on multithreading, see <xref linkend="chapter-multithreading"/>.</para>
@@ -149,7 +145,7 @@
             </simplesect>
             <simplesect>
                 <title>overwrite-if-older()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>overwrite-if-older()</primary>
                 </indexterm>
                 <indexterm>
@@ -163,7 +159,7 @@
                                 <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                                 </entry>
-                                <entry>number (seconds)</entry>
+                                <entry>number</entry>
                             </row>
                             <row>
                                 <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
@@ -202,9 +198,13 @@
             </simplesect>
         </section>
     </section>
+    <xi:include href="destination-graphite.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="destination-hdfs.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="destination-http.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="destination-http-nonjava.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="destination-kafka.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-    <xi:include href="destination-logstore.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="destination-loggly.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="destination-logmatic.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="destination-mongodb.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="destination-network.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <section xml:id="configuring-destinations-pipe">
@@ -215,7 +215,6 @@
         </indexterm>
         <para>The <parameter>pipe()</parameter> driver sends messages to a named pipe like <filename>/dev/xconsole</filename>.</para>
         <para>The pipe driver has a single required parameter, specifying the filename of the pipe to open. The filename can include macros. For the list of available optional parameters, see <xref linkend="reference-destination-pipe"/>.</para>
-        <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <formalpara>
             <title>Declaration:</title>
             <para/>
@@ -234,7 +233,6 @@
                 <primary>destination drivers</primary>
                 <secondary><parameter>pipe()</parameter> driver</secondary>
             </indexterm>
-            <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <para>This driver sends messages to a named pipe like <filename>/dev/xconsole</filename>.</para>
             <para>The <parameter>pipe()</parameter> destination has the following options:</para>
             <simplesect>
@@ -269,7 +267,7 @@
             </simplesect>
             <simplesect>
                 <title>perm()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>perm()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -291,7 +289,7 @@
                         </tbody>
                     </tgroup>
                 </informaltable>
-                <para><emphasis role="bold">Description:</emphasis>The permission mask of the pipe. For octal numbers prefix the number with '0', for example: use 0755 for rwxr-xr-x.</para>
+                <para><emphasis role="bold">Description:</emphasis> The permission mask of the pipe. For octal numbers prefix the number with '0', for example: use 0755 for rwxr-xr-x.</para>
             </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-destination-suppress.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -321,7 +319,6 @@
         </indexterm>
         <para>The <parameter>program()</parameter> driver starts an external application or script and sends the log messages to its standard input (<parameter>stdin</parameter>). Usually, every message is a single line (ending with a newline character), which your script can process. Make sure that your script runs in a loop and keeps reading the standard input &mdash; it should not exit. (If your script exits, &abbrev; tries to restart it.)</para>
         <para>The <parameter>program()</parameter> driver has a single required parameter, specifying a program name to start. The program is executed with the help of the current shell, so the command may include both file patterns and I/O redirections. For the list of available optional parameters, see <xref linkend="reference-destination-program"/>.</para>
-        <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <formalpara>
             <title>Declaration:</title>
             <para/>
@@ -363,7 +360,6 @@ done
                 <primary>destination drivers</primary>
                 <secondary><parameter>program()</parameter> driver</secondary>
             </indexterm>
-            <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <para>This driver starts an external application or script and sends the log messages to its standard input (<parameter>stdin</parameter>).</para>
             <para>The <parameter>program()</parameter> destination has the following options:</para>
             <simplesect>
@@ -385,6 +381,9 @@ done
                 <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect>
+                <xi:include href="../../common/chunk/option-inherit-environment.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+            <simplesect>
                 <title>keep-alive()</title>
                 <indexterm type="parameter">
                     <primary>keep-alive()</primary>
@@ -395,13 +394,13 @@ done
                         <tbody>
                             <row>
                                 <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
+            <?dbfo bgcolor="#D4D6EB" ?>
                                 </entry>
                                 <entry>yes or no</entry>
                             </row>
                             <row>
                                 <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
+            <?dbfo bgcolor="#D4D6EB" ?>
                                 </entry>
                                 <entry>no</entry>
                             </row>
@@ -415,6 +414,7 @@ done
             </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-destination-mark-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                <para>Note that in earlier versions of &abbrev;, the default for the mark-mode of the <parameter>program</parameter> destination was <userinput>none</userinput>. Now it defaults to the global setting, so the <parameter>program</parameter> destination will emit a MARK message every <userinput>mark-freq</userinput> interval. To avoid such messages, set the <parameter>mark-mode()</parameter> option of the destination to <userinput>none</userinput>.</para>
             </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-destination-suppress.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -437,8 +437,59 @@ done
             </simplesect>
         </section>
     </section>
+    <section xml:id="configuring-destination-pseudofile">
+        <title>pseudofile()</title>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary><parameter>pseudofile()</parameter> driver</secondary>
+        </indexterm>
+        <para>The <parameter>pseudofile()</parameter> destination driver is a very simple driver, aimed at delivering messages to special files such as files in the <filename>/proc</filename>, <filename>/dev</filename> or <filename>/sys</filename> directories. It opens and closes the file after each write operation, instead of keeping it open. It does not append further data. It does not support templates in the filename, and does not have a queue, processing is performed immediately as read by the source. Therefore, no loss is possible, but it takes CPU time from the source, so it is not adequate in high traffic situations.</para>
+        <formalpara>
+            <title>Declaration:</title>
+            <para/>
+        </formalpara>
+        <synopsis>pseudofile(filename options());</synopsis>
+        <section xml:id="reference-destination-pseudofile">
+            <title>pseudofile() destination options</title>
+            <indexterm>
+                <primary>destination drivers</primary>
+                <secondary><parameter>pseudofile()</parameter> driver</secondary>
+            </indexterm>
+            <para>The <parameter>pseudofile()</parameter> destination has the following options:</para>
+            <simplesect>
+                <title>file()</title>
+                <indexterm type="parameter">
+                    <primary>file()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                                </entry>
+                                <entry>filename with path</entry>
+                            </row>
+                            <row>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                                </entry>
+                                <entry/>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </informaltable>
+                <para><emphasis role="bold">Description:</emphasis> The file to write messages to, including the path.</para>
+            </simplesect>
+            <simplesect>
+                <xi:include href="../../common/chunk/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </simplesect>
+        </section>
+    </section>
+    <xi:include href="destination-redis.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="destination-riemann.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="destination-smtp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-    <xi:include href="destination-snmp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <section xml:id="configuring-destinations-sql">
         <title>Storing messages in an SQL database</title>
         <indexterm>
@@ -453,8 +504,6 @@ done
             <primary>sql destinations</primary>
         </indexterm>
         <para>The <parameter>sql()</parameter> driver sends messages into an SQL database. Currently the Microsoft SQL (MSSQL), MySQL, Oracle, PostgreSQL, and SQLite databases are supported.</para>
-        <xi:include href="../../common/wnt/note-server-mode-only.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <formalpara>
             <title>Declaration:</title>
             <para/>
@@ -524,7 +573,7 @@ done
                     <para>As certain database versions limit the maximum length of table names, macros in the table names should be used with care.</para>
                 </listitem>
                 <listitem>
-<!-- FIXME kiszedni, ha megjavul -->
+<!-- FIXME delete when solved -->
                     <para>In the current version of &abbrev;, the types of database columns must be explicitly set for the Oracle destination. The column used to store the text part of the syslog messages should be able to store messages as long as the longest message permitted by syslog-ng, therefore it is usually recommended to use the <userinput>varchar2</userinput> or <userinput>clob</userinput> column type. (The maximum length of the messages can be set using the <parameter>log-msg-size()</parameter> option.) For details, see the following example.</para>
                 </listitem>
                 <listitem>
@@ -692,8 +741,8 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                     <para>The &abbrev; application will close the connection to database before shutting down.</para>
                 </listitem>
             </itemizedlist>
-            <para><emphasis>Possibility of losing logs:</emphasis></para>
-            <itemizedlist>
+            <para condition="pe"><emphasis>Possibility of losing logs:</emphasis></para>
+            <itemizedlist condition="pe">
                 <listitem>
                     <para>The &abbrev; application cannot lose logs during shutting down if disk buffer was given and it is not full yet.</para>
                 </listitem>
@@ -716,224 +765,16 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             </formalpara>
             <para>The value of ${SEQNUM} macro will be overrided by sql driver regardless of local or relayed incoming message.</para>
             <para>It will be grown continously.</para>
-        </section>
-        <section>
-            <title>MySQL-specific interaction methods</title>
-            <para>To specify the socket to use, set and export the <parameter>MYSQL_UNIX_PORT</parameter> environment variable, for example <userinput>MYSQL_UNIX_PORT=/var/lib/mysql/mysql.sock; export MYSQL_UNIX_PORT</userinput>.</para>
-        </section>
-        <section>
-            <title>MsSQL-specific interaction methods</title>
-            <para>In SQL Server 2005 this restriction is lifted - kind of. The total length of all key columns in an index cannot exceed 900 bytes.</para>
-            <para>If you are using <parameter>null()</parameter> in your configuration, be sure that the columns allow <parameter>NULL</parameter> to insert. Give the column as the following example: <userinput>"datetime varchar(16) NULL"</userinput>.</para>
-            <para>The date format used by the MSSQL database must be explicitly set in the <filename>/etc/locales.conf</filename> file of the syslog-ng server. <userinput>[default] date = "%Y-%m-%d %H:%M:%S"</userinput>.</para>
-        </section>
-        <section xml:id="sql-destination-supported-platforms">
-            <title>Supported SQL destinations by platform</title>
-            <indexterm>
-                <primary>supported sql destinations</primary>
-            </indexterm>
-            <table xml:id="table-supported-sql-destination-types">
-                <title>Supported SQL destinations by platform</title>
-                <tgroup cols="6">
-                    <colspec colnum="1" colwidth="2*"/>
-                    <thead>
-                        <row>
-                            <entry>Platform \ Database</entry>
-                            <entry>MSSQL</entry>
-                            <entry>MySQL</entry>
-                            <entry>PgSQL</entry>
-                            <entry>SQLite</entry>
-                            <entry>Oracle</entry>
-                        </row>
-                    </thead>
-                    <tbody>
-                        <row>
-                            <entry>AIX</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): CentOS 5</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): CentOS 6</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): CentOS 7</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Debian 7</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): openSUSE 11</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Oracle Linux 5</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Oracle Linux 6</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Oracle Linux 7</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): SLES 11</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Red Hat EL 5</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Red Hat EL 6</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Red Hat EL 7</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Ubuntu 12.04</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Linux (linux_glibc236): Ubuntu 14.04</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>FreeBSD 8</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                        </row>
-                        <row>
-                            <entry>FreeBSD 9</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                        </row>
-                        <row>
-                            <entry>FreeBSD 10</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                        </row>
-                        <row>
-                            <entry>HP-UX 11v2_on IA64</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Solaris 10 on SPARC and SPARC64</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Solaris 11 on SPARC and SPARC64</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Solaris 10 on x86_64</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                        <row>
-                            <entry>Solaris 11 on x86_64</entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                            <entry> - </entry>
-                            <entry> &#10004; </entry>
-                            <entry> &#10004; </entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </table>
+            <section>
+                <title>MySQL-specific interaction methods</title>
+                <para>To specify the socket to use, set and export the <parameter>MYSQL_UNIX_PORT</parameter> environment variable, for example <userinput>MYSQL_UNIX_PORT=/var/lib/mysql/mysql.sock; export MYSQL_UNIX_PORT</userinput>.</para>
+            </section>
+            <section>
+                <title>MsSQL-specific interaction methods</title>
+                <para>In SQL Server 2005 this restriction is lifted - kind of. The total length of all key columns in an index cannot exceed 900 bytes.</para>
+                <para>If you are using <parameter>null()</parameter> in your configuration, be sure that the columns allow <parameter>NULL</parameter> to insert. Give the column as the following example: <userinput>"datetime varchar(16) NULL"</userinput>.</para>
+                <para>The date format used by the MSSQL database must be explicitly set in the <filename>/etc/locales.conf</filename> file of the syslog-ng server. <userinput>[default] date = "%Y-%m-%d %H:%M:%S"</userinput>.</para>
+            </section>
         </section>
         <section xml:id="reference-destination-sql">
             <title>sql() destination options</title>
@@ -945,12 +786,10 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                 <primary>destination drivers</primary>
                 <secondary>database driver</secondary>
             </indexterm>
-            <xi:include href="../../common/wnt/note-server-mode-only.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <para>This driver sends messages into an SQL database. The <parameter>sql()</parameter> destination has the following options:</para>
             <simplesect xml:id="sql-option-columns">
                 <title>columns()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>columns()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -978,12 +817,42 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             <simplesect xml:id="sql-option-database">
                 <xi:include href="../../common/chunk/option-sql-database.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
+            <simplesect xml:id="sql-option-dbd-option" condition="ose">
+                <title>dbd-option()</title>
+                <indexterm type="parameter">
+                    <primary>dbd-option()</primary>
+                </indexterm>
+                <informaltable frame="topbot" colsep="0" rowsep="0">
+                    <tgroup cols="2">
+                        <colspec colnum="1" colwidth="40pt"/>
+                        <tbody>
+                            <row>
+                                <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                                </entry>
+                                <entry>string</entry>
+                            </row>
+                            <row>
+                                <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                                </entry>
+                                <entry>empty string</entry>
+                            </row>
+                        </tbody>
+                    </tgroup>
+                </informaltable>
+                <para><emphasis role="bold">Description:</emphasis> Specify database options that are set whenever &abbrev; connects to the database server. Consult the documentation of your database server for details on the available options. Syntax:</para>
+                <synopsis>dbd-option(OPTION_NAME VALUE)</synopsis>
+                <para>OPTION_NAME is always a string, VALUE is a string or a number. For example:</para>
+                <synopsis>dbd-option("null.sleep.connect" 1)
+dbd-option("null.sleep.query" 5)</synopsis>
+            </simplesect>
             <simplesect>
                 <xi:include href="../../common/chunk/option-destination-diskbuffer.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect xml:id="sql-option-flags">
                 <title>flags()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>flags()</primary>
                     <secondary>for SQL destinations</secondary>
                 </indexterm>
@@ -1010,13 +879,13 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                 <itemizedlist>
                     <listitem>
                         <para><emphasis>dont-create-tables</emphasis>: Enable this flag to prevent &abbrev; from creating non-existing database tables automatically. The &abbrev; application typically has to create tables if you use macros in the table names. Available in &abbrev; version <phrase condition="ose">3.2</phrase><phrase condition="pe">4.0</phrase> and later.</para>
-                        <indexterm>
+                        <indexterm type="parameter">
                             <primary>dont-create-tables</primary>
                         </indexterm>
                     </listitem>
                     <listitem>
-                        <para><emphasis>explicit-commits</emphasis>: By default, &abbrev; commits every log message to the target database individually. When the <parameter>explicit-commits</parameter> option is enabled, messages are committed in batches. This improves the performance, but results in some latency, as the messages are not immediately sent to the database. The size and frequency of batched commits can be set using the <parameter>flush-lines()</parameter> parameter. The <parameter>explicit-commits</parameter> option is available in &abbrev; version <phrase condition="ose">3.2</phrase><phrase condition="pe">4.0</phrase> and later.</para>
-                        <indexterm>
+                        <para><emphasis>explicit-commits</emphasis>: By default, &abbrev; commits every log message to the target database individually. When the <parameter>explicit-commits</parameter> option is enabled, messages are committed in batches. This improves the performance, but results in some latency, as the messages are not immediately sent to the database. The size and frequency of batched commits can be set using the <parameter>flush-lines()</parameter> and <parameter>flush-timeout()</parameter> parameters. The <parameter>explicit-commits</parameter> option is available in &abbrev; version <phrase condition="ose">3.2</phrase><phrase condition="pe">4.0</phrase> and later.</para>
+                        <indexterm type="parameter">
                             <primary>explicit-commits</primary>
                         </indexterm>
                     </listitem>
@@ -1041,7 +910,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             </simplesect>
             <simplesect xml:id="sql-option-indexes">
                 <title>indexes()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>indexes()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1082,7 +951,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             </simplesect>
             <simplesect xml:id="sql-option-null">
                 <title>null()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>null()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1146,13 +1015,13 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                 <xi:include href="../../common/chunk/option-sql-port.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
             <simplesect xml:id="sql-option-retry-sql-inserts">
-                <title>retries</title>
-                <indexterm>
+                <title>retries()</title>
+                <indexterm type="parameter">
                     <primary>retry_sql_inserts</primary>
 <!-- This is an alias used in older documentation releases -->
                 </indexterm>
-                <indexterm>
-                    <primary>retries</primary>
+                <indexterm type="parameter">
+                    <primary>retries()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
@@ -1177,7 +1046,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             </simplesect>
             <simplesect xml:id="sql-option-session-statements">
                 <title>session-statements()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>session-statements()</primary>
                 </indexterm>
                 <indexterm>
@@ -1210,7 +1079,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             </simplesect>
             <simplesect xml:id="sql-option-table">
                 <title>table()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>table()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1239,7 +1108,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             </simplesect>
             <simplesect xml:id="sql-option-type">
                 <title>type()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>type()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1268,7 +1137,7 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
             </simplesect>
             <simplesect xml:id="sql-option-values">
                 <title>values()</title>
-                <indexterm>
+                <indexterm type="parameter">
                     <primary>values()</primary>
                 </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
@@ -1295,13 +1164,14 @@ date = "%Y-%m-%d %H:%M:%S"</synopsis>
                 <example>
                     <title>Value: default</title>
                     <synopsis>columns("date datetime", "host varchar(32)", "row_id serial")
-values("${R_DATE}", "${HOST}", default)</synopsis>
+    values("${R_DATE}", "${HOST}", default)</synopsis>
                 </example>
             </simplesect>
         </section>
     </section>
+    <xi:include href="destination-stomp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <section xml:id="configuring-destinations-syslog">
-        <title>Sending messages to a remote log server using the IETF-syslog protocol</title>
+        <title>Sending messages to a remote logserver using the IETF-syslog protocol</title>
         <indexterm>
             <primary>destination drivers</primary>
             <secondary><parameter>syslog()</parameter> driver</secondary>
@@ -1326,7 +1196,7 @@ values("${R_DATE}", "${HOST}", default)</synopsis>
             <para>If name resolution is configured, the hostname of the target server can be used as well.</para>
             <synopsis>destination d_tcp { syslog("target_host" transport("tcp") port(1999) localport(999)); };</synopsis>
             <para>Send the log messages using TLS encryption and use mutual authentication. For details on the encryption and authentication options, see <xref linkend="tlsoptions"/>.</para>
-            <synopsis>destination d_syslog_tls{
+            <synopsis>destination d_syslog_tls {
     syslog("10.100.20.40"
         transport("tls")
         port(6514)
@@ -1363,7 +1233,6 @@ values("${R_DATE}", "${HOST}", default)</synopsis>
         </indexterm>
         <para>The <parameter>unix-stream()</parameter> and <parameter>unix-dgram()</parameter> drivers send messages to a UNIX domain socket in either <parameter>SOCK_STREAM</parameter> or <parameter>SOCK_DGRAM</parameter> mode.</para>
         <para>Both drivers have a single required argument specifying the name of the socket to connect to. For the list of available optional parameters, see <xref linkend="reference-destination-unixstream"/>.</para>
-        <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <formalpara>
             <title>Declaration:</title>
             <para/>
@@ -1384,8 +1253,7 @@ unix-dgram(filename [options]);</synopsis>
                 <primary>destination drivers</primary>
                 <secondary><parameter>unix-dgram()</parameter> driver</secondary>
             </indexterm>
-            <para>These drivers send messages to a unix socket in either <parameter>SOCK_STREAM</parameter> or <parameter>SOCK_DGRAM</parameter> mode. The <parameter>unix-stream()</parameter> and <parameter>unix-dgram()</parameter> destinations have the following options.</para>
-            <xi:include href="../../common/wnt/warning-not-on-windows.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <para>These drivers send messages to a unix socket in either <parameter>SOCK_STREAM</parameter> or <parameter>SOCK_DGRAM</parameter> mode. The <parameter>unix-stream()</parameter> and <parameter>unix-dgram()</parameter> destinations have the following options:</para>
             <simplesect>
                 <xi:include href="../../common/chunk/option-destination-diskbuffer.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
@@ -1463,5 +1331,25 @@ unix-dgram(filename [options]);</synopsis>
             <title>Using the usertty() driver</title>
             <synopsis>destination d_usertty { usertty("root"); };</synopsis>
         </example>
+    </section>
+    <section xml:id="reference-destination-custom" condition="ose">
+        <title>Write your own custom destination in Java or Python</title>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary>custom</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary>C</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary>Java</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>destination drivers</primary>
+            <secondary>Python</secondary>
+        </indexterm>
+        <para>The &abbrev; application is open source, so if you have the necessary programming skills, you can extend it if its features are not adequate for your particular environment or needs. You can write destinations and other extensions to &abbrev; in C (the main language of &abbrev;), or using its language bindings, for example, Java or Python. For details on extending &abbrev;, see the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.gitbook.com/book/syslog-ng/getting-started/details">&abbrev; Developer Guide</link>.</para>
     </section>
 </chapter>

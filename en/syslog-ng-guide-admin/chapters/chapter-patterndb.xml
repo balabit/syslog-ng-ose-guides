@@ -4,9 +4,8 @@
  %entities;]>
 <chapter xml:id="chapter-patterndb" xmlns="http://docbook.org/ns/docbook" version="5.0">
     <title>Processing message content with a pattern database</title>
-<!-- FIXME a cim nem az igazi -->
-<!-- FIXME jumplist -->
-<!-- FIXME leirni, mennyi mindenre jo a patterndb: message classification and tagging, content extraction, message correlation, ... -->
+<!-- FIXME find a better title -->
+<!-- FIXME describe the various ways patterndb can be used: message classification and tagging, content extraction, message correlation, ... -->
     <section xml:id="concepts-pattern-databases">
         <title>Classifying log messages</title>
         <indexterm>
@@ -42,8 +41,7 @@
             <primary>parsers</primary>
         </indexterm>
         <indexterm>
-            <primary>message</primary>
-            <secondary>parsing</secondary>
+            <primary>message parsing</primary>
         </indexterm>
         <indexterm>
             <primary>parsing messages</primary>
@@ -56,8 +54,7 @@
             <secondary>configuration</secondary>
         </indexterm>
         <indexterm>
-            <primary>message</primary>
-            <secondary>classification</secondary>
+            <primary>message classification</primary>
         </indexterm>
         <para>To classify messages using a pattern database, include a <parameter>db-parser()</parameter> statement in your syslog-ng configuration file using the following syntax:</para>
         <formalpara>
@@ -113,8 +110,7 @@
                 <primary>parsers</primary>
             </indexterm>
             <indexterm>
-                <primary>message</primary>
-                <secondary>parsing</secondary>
+                <primary>message parsing</primary>
             </indexterm>
             <indexterm>
                 <primary>parsing messages</primary>
@@ -127,8 +123,7 @@
                 <secondary>filtering</secondary>
             </indexterm>
             <indexterm>
-                <primary>message</primary>
-                <secondary>classification</secondary>
+                <primary>message classification</primary>
             </indexterm>
             <para>The results of message classification and parsing can be used in custom filters and templates, for example, in file and database templates. The following built-in macros allow you to use the results of the classification:</para>
             <itemizedlist>
@@ -137,6 +132,9 @@
                 </listitem>
                 <listitem>
                     <para>The <parameter>.classifier.rule_id</parameter> macro contains the identifier of the message pattern that matched the message.</para>
+                </listitem>
+                <listitem>
+                    <para>The <parameter>.classifier.context_id</parameter> macro contains the identifier of the context for messages that were correlated. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
                 </listitem>
             </itemizedlist>
             <indexterm>
@@ -172,7 +170,7 @@
                     };</synopsis>
             </example>
             <para>Pattern database rules can assign tags to messages. These tags can be used to select tagged messages using the <parameter>tags()</parameter> filter function.</para>
-            <indexterm>
+            <indexterm type="parameter">
                 <primary>tags()</primary>
             </indexterm>
             <xi:include href="../../common/wnt/note-patterndb-class-tag.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -215,58 +213,41 @@
                     <para>if you redistribute the pattern databases, you must make it obvious that the source of the original syslog-ng pattern databases is the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://github.com/balabit/syslog-ng-patterndb/">BalaBit GitHub page</link>.</para>
                 </listitem>
             </itemizedlist>
-            <para>For legal details, the full text of the license is <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://creativecommons.org//licenses/by-sa/3.0/us/legalcode">available here</link>.</para>
+            <para>For legal details, the full text of the license is <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://creativecommons.org/licenses/by-sa/3.0/us/legalcode">available here</link>.</para>
             <para>If you create patterns that are not available in the GitHub repository, consider sharing them with us and the syslog-ng community, and send them to the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://lists.balabit.hu/mailman/listinfo/syslog-ng/">syslog-ng mailing list</link>, or to the following e-mail address:<email>patterndb@balabit.com</email></para>
         </section>
     </section>
     <section xml:id="patterndb-correlation">
-        <title>Correlating log messages</title>
+        <title>Correlating log messages using pattern databases</title>
         <indexterm>
-            <primary>message</primary>
-            <secondary>correlation</secondary>
+            <primary>message correlation</primary>
         </indexterm>
         <indexterm>
             <primary>correlating messages</primary>
         </indexterm>
         <indexterm>
-            <primary>pattern database</primary>
+            <primary>pattern databases</primary>
             <secondary>correlating messages</secondary>
         </indexterm>
         <indexterm>
-            <primary>message</primary>
-            <secondary>context</secondary>
+            <primary>message context</primary>
         </indexterm>
         <indexterm>
             <primary>context of messages</primary>
         </indexterm>
-        <para>The &abbrev; application is able to correlate log messages identified using pattern databases.</para>
-        <para>Log messages are supposed to describe events, but applications often separate information about a single event into different log messages. For example, the Postfix e-mail server logs the sender and recipient addresses into separate log messages, or in case of an unsuccessful login attempt, the OpenSSH server sends a log message about the authentication failure, and the reason of the failure in the next message.</para>
-        <para>Of course, messages that are not so directly related can be correlated as well, for example, login-logout messages, and so on.</para>
-        <para>To correlate log messages, &abbrev; uses the pattern database to add messages into message-groups called contexts. A context consists of a series of log messages that are related to each other in some way, for example, the log messages of an SSH session can belong to the same context. As new messages come in, they may be added to a context. Also, when an incoming message is identified it can trigger actions to be performed, for example, generate a new message that contains all the important information that was stored previously in the context. (For details on triggering actions and generating messages, see <xref linkend="patterndb-triggers-actions"/>.)</para>
-        <para>There are two attributes for pattern database rules that determine if a message matching the rule is added to a context: <parameter>context-scope</parameter> and <parameter>context-id</parameter>. The <parameter>context-scope</parameter> attribute acts as an early filter, selecting messages sent by the same process (${HOST}${PROGRAM}${PID} is identical), application (${HOST}${PROGRAM} is identical), or host, while the <parameter>context-id</parameter> actually adds the message to the context specified in the id. The <parameter>context-id</parameter> can be a simple string, or can contain macros or values extracted from the log messages for further filtering.</para>
-        <note>
-            <para>Message contexts are persistent and are not lost when &abbrev; is reloaded (SIGHUP), but are lost when &abbrev; is restarted.</para>
-        </note>
-        <para>Another parameter of a rule is the <parameter>context-timeout</parameter> attribute, which determines how long a context is stored, that is, how long &abbrev; waits for related messages to arrive. Note the following points about timeout values:</para>
-        <itemizedlist>
-            <listitem>
-                <para>When a new message is added to a context, &abbrev; will restart the timeout using the <parameter>context-timeout</parameter> set for the new message.</para>
-            </listitem>
-            <listitem>
-                <para>When calculating if the timeout has already expired or not, &abbrev; uses the timestamps of the incoming messages, not system time elapsed between receiving the two messages (unless the messages do not include a timestamp, or the <userinput>keep-timestamp(no)</userinput> option is set). That way &abbrev; can be used to process and correlate already existing log messages offline. However, the timestamps of the messages must be in chronological order (that is, a new message cannot be older than the one already processed), and if a message is newer than the current system time (that is, it seems to be coming from the future), &abbrev; will replace its timestamp with the current system time.</para>
-                <example>
-                    <title>How &abbrev; calculates <parameter>context-timeout</parameter>
-                    </title>
-                    <para>Consider the following two messages:</para>
-                    <synopsis>&lt;38&gt;1990-01-01T14:45:25 customhostname program6[1234]: program6 testmessage
-&lt;38&gt;1990-01-01T14:46:25 customhostname program6[1234]: program6 testmessage</synopsis>
-                    <para>If the <parameter>context-timeout</parameter> is 10 seconds and &abbrev; receives the messages within 1 sec, the timeout event will occour immediately, because the difference of the two timestamp (60 sec) is larger than the timeout value (10 sec).</para>
-                </example>
-            </listitem>
-            <listitem>
-                <para>Avoid using unnecessarily long timeout values on high-traffic systems, as storing the contexts for many messages can require considerable memory. For example, if two related messages usually arrive within seconds, it is not needed to set the timeout to several hours.</para>
-            </listitem>
-        </itemizedlist>
+        <para>The &abbrev; application can correlate log messages identified using <link linkend="chapter-patterndb">pattern databases</link>. Alternatively, you can also correlate log messages using the <parameter>grouping-by()</parameter> parser. For details, see <xref linkend="grouping-by-parser"/>.</para>
+
+        <xi:include href="../../common/chunk/correlation-intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        <para>(For details on triggering actions and generating messages, see <xref linkend="patterndb-triggers-actions"/>.)</para>
+        <para>There are two attributes for pattern database rules that determine if a message matching the rule is added to a context: <parameter>context-scope</parameter> and <parameter>context-id</parameter>. The <parameter>context-scope</parameter> attribute acts as an early filter, selecting messages sent by the same process (${HOST}${PROGRAM}${PID} is identical), application (${HOST}${PROGRAM} is identical), or host, while the <parameter>context-id</parameter> actually adds the message to the context specified in the id. The <parameter>context-id</parameter> can be a simple string, or can contain macros or values extracted from the log messages for further filtering. Starting with &abbrev; version <phrase condition="ose">3.5</phrase>, if a message is added to a context, &abbrev; automatically adds the identifier of the context to the <parameter>.classifier.context_id</parameter> macro of the message.</para>
+
+        <xi:include href="../../common/wnt/note-message-context.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        <para>Another parameter of a rule is the <parameter>context-timeout</parameter> attribute, which determines how long a context is stored, that is, how long &abbrev; waits for related messages to arrive.</para>
+
+        <xi:include href="../../common/chunk/correlation-context-timeout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
         <example>
             <title>Using message correlation</title>
             <synopsis>&lt;rule xml:id="..." context-id="ssh-session" context-timeout="86400" context-scope="process"&gt;
@@ -276,10 +257,10 @@
 ...
 &lt;/rule&gt;</synopsis>
         </example>
-        <para>For details on configuring message correlation, see the description of the <link linkend="patterndb-schema-context-id">context-id</link>, <link linkend="patterndb-schema-context-timeout">context-timeout</link>, and <link linkend="patterndb-schema-context-id">context-scope</link> attributes of pattern database rules.</para>
+        <para>For details on configuring message correlation, see the <link linkend="element-patterndb-rule-attributes">context-id, context-timeout, and context-scope</link> attributes of pattern database rules.</para>
         <section xml:id="referencing-previous-messages">
             <title>Referencing earlier messages of the context</title>
-            <indexterm>
+            <indexterm type="parameter">
                 <primary>@distance</primary>
             </indexterm>
             <para>When using the <userinput>&lt;value&gt;</userinput> element in pattern database rules together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <userinput>@&lt;distance-of-referenced-message-from-the-current&gt;</userinput> suffix to the macro. For example, if there are three log messages in a context, and you are creating a generated message for the third log message, the <userinput>${HOST}@1</userinput> expression refers to the host field of the current (third) message in the context, the <userinput>${HOST}@2</userinput> expression refers to the host field of the previous (second) message in the context, <userinput>${PID}@3</userinput> to the PID of the first message, and so on. For example, the following message can be created from SSH login/logout messages (for details on generating new messages, see <xref linkend="patterndb-triggers-actions"/>): <userinput>An SSH session for ${SSH_USERNAME}@1 from ${SSH_CLIENT_ADDRESS}@2 closed. Session lasted from ${DATE}@2 to ${DATE}</userinput>.</para>
@@ -288,6 +269,9 @@
             </warning>
             <xi:include href="../../common/wnt/note-escape-at.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <xi:include href="../../common/chunk/example-patterndb-referencing-earlier-values.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <para>If you do not know in which message of the context contains the information you need, you can use the <parameter>grep</parameter> template function. For details, see <xref linkend="template-function-grep"/>.</para>
+            <xi:include href="../../common/chunk/example-grep-template-function.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <para>To perform calculations on fields that have numerical values, see <xref linkend="template-function-numerical"/>.</para>
         </section>
     </section>
     <section xml:id="patterndb-triggers-actions">
@@ -311,10 +295,9 @@
             <primary>triggered messages</primary>
         </indexterm>
         <indexterm>
-            <primary>message</primary>
-            <secondary>triggers</secondary>
+            <primary>message triggers</primary>
         </indexterm>
-        <para>The &abbrev; application is able to generate (trigger) messages automatically if certain events occur, for example, a specific log message is received, or the correlation timeout of a message expires. Basically, you can define messages for every pattern database rule that are emitted when a message matching the rule is received. Triggering messages is often used together with message correlation, but can also be used separately.</para>
+        <para>The &abbrev; application can generate (trigger) messages automatically if certain events occur, for example, a specific log message is received, or the correlation timeout of a message expires. Basically, you can define messages for every pattern database rule that are emitted when a message matching the rule is received. Triggering messages is often used together with message correlation, but can also be used separately. When used together with message correlation, you can also create a new correlation context when a new message is received.</para>
         <indexterm type="parameter">
             <primary>inject-mode</primary>
         </indexterm>
@@ -335,6 +318,14 @@
         <para>The generated message must be configured in the pattern database rule. It is possible to create an entire message, use macros and values extracted from the original message with pattern database, and so on.</para>
 
         <xi:include href="../../common/chunk/example-patterndb-actions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        <example>
+            <title>Creating a new context from an action</title>
+            <para>In &abbrev; version <phrase condition="ose">3.8</phrase><phrase condition="pe">7</phrase> and newer, you can create a new context as an action. For details, see <xref linkend="element-patterndb-create-context"/>.</para>
+
+            <xi:include href="../../common/chunk/example-create-context-action.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        </example>
 
         <para>For details on configuring actions, see the description of the <link linkend="patterndb-schema-actions">pattern database format</link>.</para>
         <section xml:id="patterndb-actions-conditional">
@@ -360,7 +351,7 @@
                 <title>Actions based on the number of messages</title>
                 <indexterm>
                     <primary>actions</primary>
-                    <secondary/>
+                    <secondary></secondary>
                 </indexterm>
                 <indexterm type="parameter">
                     <primary>$(context-length)</primary>
@@ -413,7 +404,7 @@
                         <synopsis>filter f_triggers {match("yes" value ("TRIGGER") type(string));};</synopsis>
                     </listitem>
                     <listitem>
-                        <para>Create a log path that selects the triggered messages from the internal source and sends them to the script:</para>
+                        <para>Create a logpath that selects the triggered messages from the internal source and sends them to the script:</para>
                         <synopsis>log { source(s_local); filter(f_triggers); destination(d_triggers); };</synopsis>
                     </listitem>
                     <listitem>
@@ -527,6 +518,22 @@ while (&lt;&gt;) {
 
         <xi:include href="../../common/syslog-ng-patterndb-using-parsers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
+        <section xml:id="what-is-new-patterndb-v5">
+            <title>What's new in the syslog-ng pattern database format V5</title>
+            <para>The V5 database format has the following differences compared to the V4 format:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>The &lt;ruleset&gt; element can now store multiple reference URLs using the new &lt;rule_urls&gt; element. For details, see <xref linkend="element-patterndb-ruleset"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>In an &lt;action&gt;, you can now initialize a new context. As a result, the &lt;message&gt; element is not required. For details, see <xref linkend="element-patterndb-create-context"/>.</para>
+                </listitem>
+                <listitem>
+                    <para>The <parameter>inherit-properties</parameter> attribute is deprecated, use the <parameter>inherit-mode</parameter> attribute instead. For details, see <xref linkend="element-patterndb-action"/>.</para>
+                </listitem>
+            </itemizedlist>
+        </section>
+
         <section xml:id="reference-patterndb-schemes">
             <title>The syslog-ng pattern database format</title>
             <indexterm>
@@ -537,12 +544,10 @@ while (&lt;&gt;) {
                 <secondary>creating databases</secondary>
             </indexterm>
             <indexterm>
-                <primary>message</primary>
-                <secondary>classification</secondary>
+                <primary>message classification</primary>
             </indexterm>
             <indexterm>
-                <primary>pattern database</primary>
-                <secondary>schema</secondary>
+                <primary>pattern database schema</primary>
             </indexterm>
             <para>Pattern databases are XML files that contain rules describing the message patterns. For sample pattern databases, see <xref linkend="patterndb-download"/>.</para>
             <para>The following scheme describes the V4 format of the pattern database. This format is used by &abbrev; <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.2</phrase> and later, and is backwards-compatible with the earlier V3 format.</para>
@@ -650,12 +655,6 @@ while (&lt;&gt;) {
                         <listitem>
                             <para><emphasis role="bold">id</emphasis>: A unique ID of the application, for example, the md5 sum of the <userinput>name</userinput> attribute.</para>
                         </listitem>
-                        <listitem>
-                            <para><emphasis role="bold">description</emphasis>: OPTIONAL &mdash; A description of the ruleset or the application.</para>
-                        </listitem>
-                        <listitem>
-                            <para><emphasis role="bold">url</emphasis>: OPTIONAL &mdash; An URL referring to further information about the ruleset or the application.</para>
-                        </listitem>
                     </itemizedlist>
                 </simplesect>
                 <simplesect>
@@ -672,6 +671,15 @@ while (&lt;&gt;) {
                         </listitem>
                         <listitem>
                             <para><link linkend="element-patterndb-tags"><emphasis role="bold">tags</emphasis></link></para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis role="bold">description</emphasis>: OPTIONAL &mdash; A description of the ruleset or the application.</para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis role="bold">url</emphasis>: OPTIONAL &mdash; An URL referring to further information about the ruleset or the application.</para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis role="bold">rule_urls</emphasis>: OPTIONAL &mdash; To list multiple URLs referring to further information about the ruleset or the application, enclose the &lt;url&gt; elements into an &lt;urls&gt; element.</para>
                         </listitem>
                     </itemizedlist>
                 </simplesect>
@@ -701,6 +709,7 @@ while (&lt;&gt;) {
                             <para><emphasis role="bold">pattern</emphasis>: The name of the application &mdash; syslog-ng matches this value to the ${PROGRAM} header of the syslog message to find the rulesets applicable to the syslog message.</para>
                             <para>Specifying multiple patterns is useful if two or more applications have different names (that is, different ${PROGRAM} fields), but otherwise send identical log messages.</para>
                             <para>It is not necessary to use multiple patterns if only the end of the ${PROGRAM} fields is different, use only the beginning of the ${PROGRAM} field as the <userinput>pattern</userinput>. For example, the Postfix e-mail server sends messages using different process names, but all of them begin with the <userinput>postfix</userinput> string.</para>
+                            <para>You can also use parsers in the program pattern if needed, and use the parsed results later. For example: <parameter>&lt;pattern&gt;postfix\@ESTRING:.postfix.component:[@&lt;/pattern&gt;</parameter></para>
                             <note>
                                 <para>If the <userinput>&lt;pattern&gt;</userinput> element of a ruleset is not specified, &abbrev; will use this ruleset as a fallback ruleset: it will apply the ruleset to messages that have an empty PROGRAM header, or if none of the program patterns matched the PROGRAM header of the incoming message.</para>
                             </note>
@@ -713,6 +722,8 @@ while (&lt;&gt;) {
     &lt;pattern&gt;firstapplication&lt;/pattern&gt;
     &lt;pattern&gt;otherapplication&lt;/pattern&gt;
 &lt;/patterns&gt;</synopsis>
+                    <para>Using parsers in the program pattern:</para>
+                    <synopsis>&lt;pattern&gt;postfix\@ESTRING:.postfix.component:[@&lt;/pattern&gt;</synopsis>
                 </simplesect>
             </section>
             <section xml:id="element-patterndb-rules">
@@ -776,11 +787,11 @@ while (&lt;&gt;) {
                     </note>
                     <para>The <emphasis role="bold">&lt;rules&gt;</emphasis> element may contain any number of <emphasis role="bold">&lt;rule&gt;</emphasis> elements.</para>
                 </simplesect>
-                <simplesect>
+                <simplesect xml:id="element-patterndb-rule-attributes" xreflabel="Attributes of the rule element">
                     <title>Attributes</title>
                     <itemizedlist>
                         <listitem>
-                            <para><emphasis role="bold">provider</emphasis>: The provider of the rule. This is used to distinguish between who supplied the rule; that is, if it has been created by BalaBit, or added to the XML by a local user.</para>
+                            <para><emphasis role="bold">provider</emphasis>: The provider of the rule. This is used to distinguish between who supplied the rule; that is, if it has been created by &vendor;, or added to the XML by a local user.</para>
                         </listitem>
                         <listitem>
                             <para><emphasis role="bold">id</emphasis>: The globally unique ID of the rule.</para>
@@ -788,48 +799,9 @@ while (&lt;&gt;) {
                         <listitem>
                             <para><emphasis role="bold">class</emphasis>: The class of the rule &mdash; syslog-ng assigns this class to the messages matching a pattern of this rule.</para>
                         </listitem>
-                        <listitem>
-                            <para xml:id="patterndb-schema-context-id"><emphasis role="bold">context-id</emphasis>: OPTIONAL &mdash; An identifier to group related log messages when using the pattern database to correlate events. The ID can be a descriptive string describing the events related to the log message (for example, <userinput>ssh-sessions</userinput> for log messages related to SSH traffic), but can also contain macros to generate IDs dynamically. When using macros in IDs, see also the <link linkend="patterndb-schema-context-scope"><parameter>context-scope</parameter></link> attribute. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
-                            <note>
-                                <para>The &abbrev; application determines the context of the message <emphasis>after</emphasis> the pattern matching is completed. This means that macros and name-value pairs created by the matching pattern database rule can be used as context-id macros.</para>
-                            </note>
-                        </listitem>
-                        <listitem>
-                            <para xml:id="patterndb-schema-context-timeout"><emphasis role="bold">context-timeout</emphasis>: OPTIONAL &mdash; The number of seconds the context is stored. Note that for high-traffic log servers, storing open contexts for long time can require significant amount of memory. For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
-                        </listitem>
-                        <listitem>
-                            <para xml:id="patterndb-schema-context-scope"><emphasis role="bold">context-scope</emphasis>: OPTIONAL &mdash; Specifies which messages belong to the same context. This attribute is used to determine the context of the message if the <link linkend="patterndb-schema-context-id"><parameter>context-id</parameter></link> does not specify any macros. Usually, <parameter>context-scope</parameter> acts a filter for the context, with <parameter>context-id</parameter> refining the filtering if needed. The <parameter>context-scope</parameter> attribute has the following possible values:</para>
-                            <itemizedlist>
-                                <listitem>
-                                    <indexterm type="parameter">
-                                        <primary>process &mdash; context-scope</primary>
-                                    </indexterm>
-                                    <para><emphasis>process</emphasis>: Only messages that are generated by the same process of a client belong to the same context, that is, messages that have identical ${HOST}, ${PROGRAM} and ${PID} values. This is the default behavior of &abbrev; if <parameter>context-scope</parameter> is not specified.</para>
-                                </listitem>
-                                <listitem>
-                                    <indexterm type="parameter">
-                                        <primary>program &mdash; context-scope</primary>
-                                    </indexterm>
-                                    <para><emphasis>program</emphasis>: Messages that are generated by the same application of a client belong to the same context, that is, messages that have identical ${HOST} and ${PROGRAM} values.</para>
-                                </listitem>
-                                <listitem>
-                                    <indexterm type="parameter">
-                                        <primary>host &mdash; context-scope</primary>
-                                    </indexterm>
-                                    <para><emphasis>host</emphasis>: Every message generated by a client belongs to the same context, only the ${HOST} value of the messages must be identical.</para>
-                                </listitem>
-                                <listitem>
-                                    <indexterm type="parameter">
-                                        <primary>global &mdash; context-scope</primary>
-                                    </indexterm>
-                                    <para><emphasis>global</emphasis>: Every message belongs to the same context.</para>
-                                </listitem>
-                            </itemizedlist>
-                            <note>
-                                <para>Using the <parameter>context-scope</parameter> attribute is significantly faster than using macros in the <parameter>context-id</parameter> attribute.</para>
-                            </note>
-                            <para>For details on correlating messages, see <xref linkend="patterndb-correlation"/>.</para>
-                        </listitem>
+
+                         <xi:include href="../../common/chunk/patterndb-context-attributes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
                     </itemizedlist>
                 </simplesect>
                 <simplesect>
@@ -939,12 +911,12 @@ while (&lt;&gt;) {
                             <para><emphasis role="bold">value</emphasis>: OPTIONAL &mdash; Contains the value of the name-value pair that is assigned to the message.</para>
                             <para>The &lt;value&gt; element of name-value pairs can include template functions. For details, see <xref linkend="template-functions"/>, for examples, see <xref linkend="template-function-if"/>.</para>
                             <para>When used together with message correlation, the &lt;value&gt; element of name-value pairs can include references to the values of earlier messages from the same context. For details, see <xref linkend="patterndb-correlation"/>.</para>
-                                                </listitem>
-                                <listitem>
-                                    <indexterm type="parameter">
-                                        <primary>name &mdash; pattern value</primary>
-                                    </indexterm>
-                                    <para><emphasis>name</emphasis>: The name of the name-value pair. It can also be used as a macro to reference the assigned value.</para>
+                        </listitem>
+                        <listitem>
+                            <indexterm type="parameter">
+                                <primary>name &mdash; pattern value</primary>
+                            </indexterm>
+                            <para><emphasis>name</emphasis>: The name of the name-value pair. It can also be used as a macro to reference the assigned value.</para>
                         </listitem>
                     </itemizedlist>
                 </simplesect>
@@ -1105,7 +1077,14 @@ while (&lt;&gt;) {
                             <indexterm type="parameter">
                                 <primary>condition</primary>
                             </indexterm>
-                            <para><emphasis>condition</emphasis>: A syslog-ng filter expression. The action is performed only if the message matches the filter. The filter can include macros and name-value pairs extracted from the message.</para>
+                            <indexterm type="parameter">
+                                <primary>$(context-length)</primary>
+                            </indexterm>
+                            <indexterm>
+                                <primary>actions</primary>
+                                <secondary>context-length</secondary>
+                            </indexterm>
+                            <para><emphasis>condition</emphasis>: A syslog-ng filter expression. The action is performed only if the message matches the filter. The filter can include macros and name-value pairs extracted from the message. When using actions together with message-correlation, you can also use the <parameter>$(context-length)</parameter> macro, which returns the number of messages in the current context. For example, this can be used to determine if the expected number of messages has arrived to the context: <parameter>condition='"$(context-length)" >= "5"'</parameter></para>
                         </listitem>
                         <listitem>
                             <indexterm type="parameter">
@@ -1129,7 +1108,7 @@ while (&lt;&gt;) {
                                     <indexterm type="parameter">
                                         <primary>timeout</primary>
                                     </indexterm>
-                                    <para><emphasis>timeout</emphasis>: Execute the action when the correlation timer (<link linkend="patterndb-schema-context-timeout"><parameter>context-timeout</parameter></link>) expires. This is available only if actions are used together with correlating messages.</para>
+                                    <para><emphasis>timeout</emphasis>: Execute the action when the correlation timer (<link linkend="element-patterndb-rule-attributes"><parameter>context-timeout</parameter></link>) of the pattern database rule expires. This is available only if actions are used together with correlating messages.</para>
                                 </listitem>
                             </itemizedlist>
                         </listitem>
@@ -1139,6 +1118,9 @@ while (&lt;&gt;) {
                     <title>Children</title>
                     <itemizedlist>
                         <listitem>
+                            <para><link linkend="element-patterndb-create-context"><emphasis role="bold">create-context</emphasis></link></para>
+                        </listitem>
+                        <listitem>
                             <indexterm type="parameter">
                                 <primary>message</primary>
                             </indexterm>
@@ -1146,10 +1128,24 @@ while (&lt;&gt;) {
                             <itemizedlist>
                                 <listitem>
                                     <indexterm type="parameter">
+                                        <primary>inherit-mode</primary>
+                                    </indexterm>
+
+                                    <xi:include href="../../common/chunk/option-inherit-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+                                    <para>For details on the message context, see <xref linkend="patterndb-correlation"/> and <xref linkend="patterndb-actions-correlation"/>. For details on triggering messages, see <xref linkend="patterndb-triggers-actions"/></para>
+                                    <para condition="ose">This option is available in &abbrev; 3.8 and later.</para>
+                                </listitem>
+                            </itemizedlist>
+                            <itemizedlist>
+                                <listitem>
+                                    <indexterm type="parameter">
                                         <primary>inherit-properties</primary>
                                     </indexterm>
-                                    <para><emphasis>inherit-properties</emphasis>: If set to <userinput>TRUE</userinput>, the original message that triggered the action is cloned, including its name-value pairs and tags. For details, see <xref linkend="patterndb-triggers-actions"/>.</para>
-                                    <para>If set to <parameter>context</parameter>, &abbrev; collects every name-value pair from each message stored in the context, and includes them in the generated message. If a name-value pair appears in multiple messages of the context, the value in the latest message will be used. Note that tags are not merged, the generated message will inherit the tags assigned to the last message of the context. For details on the message context, see <xref linkend="patterndb-correlation"/> and <xref linkend="patterndb-actions-correlation"/>.</para>
+                                    <para><emphasis>inherit-properties</emphasis>: This attribute is deprecated. Use the <parameter>inherit-mode</parameter> attribute instead.</para>
+                                    <para>If set to <userinput>TRUE</userinput>, the original message that triggered the action is cloned, including its name-value pairs and tags.</para>
+                                    <para>If set to <parameter>context</parameter>, &abbrev; collects every name-value pair from each message stored in the context, and includes them in the generated message. If a name-value pair appears in multiple messages of the context, the value in the latest message will be used. Note that tags are not merged, the generated message will inherit the tags assigned to the last message of the context.</para>
+                                    <para>For details on the message context, see <xref linkend="patterndb-correlation"/> and <xref linkend="patterndb-actions-correlation"/>. For details on triggering messages, see <xref linkend="patterndb-triggers-actions"/></para>
                                     <para condition="pe">This option is available in &abbrev; 5.3.2 and later.</para>
                                 </listitem>
                             </itemizedlist>
@@ -1184,6 +1180,61 @@ while (&lt;&gt;) {
 
                     <xi:include href="../../common/chunk/example-patterndb-actions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
+                </simplesect>
+            </section>
+            <section xml:id="element-patterndb-create-context">
+                <title>Element: create-context</title>
+                <simplesect>
+                    <title>Location</title>
+                    <para>/<link linkend="element-patterndb-patterndb">patterndb</link>/<link linkend="element-patterndb-ruleset">ruleset</link>/<link linkend="patterndb-schema-actions">actions</link>/<link linkend="element-patterndb-action">action</link>/<emphasis role="bold">create-context</emphasis></para>
+                </simplesect>
+                <simplesect>
+                    <title>Description</title>
+                    <para>OPTIONAL &mdash; Creates a new correlation context from the current message and its associated context. This can be used to "split" a context.</para>
+                    <para>Available in &abbrev; version <phrase condition="ose">3.8</phrase><phrase condition="pe">7</phrase> and later.</para>
+                </simplesect>
+                <simplesect>
+                    <title>Attributes</title>
+                    <indexterm type="parameter">
+                        <primary>context-id</primary>
+                    </indexterm>
+                    <indexterm type="parameter">
+                        <primary>context-scope</primary>
+                    </indexterm>
+                    <indexterm type="parameter">
+                        <primary>context-timeout</primary>
+                    </indexterm>
+                    <itemizedlist>
+
+                        <xi:include href="../../common/chunk/patterndb-context-attributes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+                    </itemizedlist>
+                </simplesect>
+                <simplesect>
+                    <title>Children</title>
+                    <itemizedlist>
+                        <listitem>
+                            <indexterm type="parameter">
+                                <primary>message</primary>
+                            </indexterm>
+                             <para><emphasis role="bold">message</emphasis>: A container element storing the message that is added to the new context when the action is executed.</para>
+                            <itemizedlist>
+                                <listitem>
+                                    <indexterm type="parameter">
+                                        <primary>inherit-mode</primary>
+                                    </indexterm>
+
+                                    <xi:include href="../../common/chunk/option-inherit-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+                                    <para>For details on the message context, see <xref linkend="patterndb-correlation"/> and <xref linkend="patterndb-actions-correlation"/>. For details on triggering messages, see <xref linkend="patterndb-triggers-actions"/></para>
+                                </listitem>
+                            </itemizedlist>
+                        </listitem>
+                    </itemizedlist>
+                </simplesect>
+                <simplesect>
+                    <title>Example</title>
+                     <xi:include href="../../common/chunk/example-create-context-action.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
                 </simplesect>
             </section>
             <section xml:id="element-patterndb-tags">

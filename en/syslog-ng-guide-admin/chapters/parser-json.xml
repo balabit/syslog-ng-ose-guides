@@ -13,6 +13,10 @@
     <indexterm>
         <primary>splitting messages</primary>
     </indexterm>
+    <indexterm>
+        <primary>parsers</primary>
+        <secondary>json-parser</secondary>
+    </indexterm>
     <para>JavaScript Object Notation (JSON) is a text-based open standard designed for human-readable data interchange. It is used primarily to transmit data between a server and web application, serving as an alternative to XML. It is described in <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://tools.ietf.org/html/rfc4627">RFC 4627</link>. The &abbrev; application can separate parts of incoming JSON-encoded log messages to name-value pairs. For details on using value-pairs in &abbrev; see <xref linkend="concepts-value-pairs"/>.</para>
     <para>You can refer to the separated parts of the JSON message using the key of the JSON object as a macro. For example, if the JSON contains <userinput>{"KEY1":"value1","KEY2":"value2"}</userinput>, you can refer to the values as <userinput>${KEY1}</userinput> and <userinput>${KEY2}</userinput>. If the JSON content is structured, &abbrev; converts it to dot-notation-format. For example, to access the value of the following structure <userinput>{"KEY1": {"KEY2": "VALUE"}}</userinput>, use the <userinput>${KEY1.KEY2}</userinput> macro.</para>
     <warning>
@@ -30,8 +34,8 @@
     </formalpara>
     <synopsis>parser parser_name {
     json-parser(
-    marker()
-    prefix()
+        marker()
+        prefix()
     );
 };</synopsis>
     <example>
@@ -67,7 +71,7 @@ destination d_json {
 
 log {
     source(s_json);
-    parser p_json {
+    parser {
         json-parser (prefix(".json."));
     };
     destination(d_json);
@@ -100,11 +104,28 @@ log {
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> Extract only the specified subtree from the JSON message. Use the dot-notation to specify the subtree. The rest of the message will be ignored. For example, assuming that the incoming object is named <userinput>msg</userinput>, the <userinput>json-parser(extract-prefix("foo.bar[5]"));</userinput> &abbrev; parser is equivalent to the <userinput>msg.foo.bar[5]</userinput> javascript code. Note that the resulting expression must be a JSON object, so that &abbrev; can extract its members into name-value pairs.</para>
             <para>This feature also works when the top-level object is an array, because you can use an array index at the first indirection level, for example: <userinput>json-parser(extract-prefix("[5]"))</userinput>, which is equivalent to <userinput>msg[5]</userinput>.</para>
+            <para>In addition to alphanumeric characters, the key of the JSON object can contain the following characters: <userinput>!"#$%&amp;'()*+,-/:;&lt;=&gt;?@\^_`{|}~</userinput></para>
+            <para>It cannot contain the following characters: <userinput>.[]</userinput></para>
+            <example>
+                <title>Convert logstash eventlog format v0 to v1</title>
+                <para>The following parser converts messages in the logstash eventlog v0 format to the v1 format.</para>
+                <synopsis>parser p_jsoneventv0 {
+  channel {
+    parser { json-parser(extract-prefix("@fields")); };
+    parser { json-parser(prefix(".json.")); };
+    rewrite {
+      set("1" value("@version"));
+      set("${.json.@timestamp}" value("@timestamp"));
+      set("${.json.@message}" value("message"));
+    };
+  };
+};</synopsis>
+            </example>
         </simplesect>
         <simplesect xml:id="json-parser-marker">
-            <title>marker()</title>
-            <indexterm>
-                <primary>marker()</primary>
+            <title>marker</title>
+            <indexterm type="parameter">
+                <primary>marker</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -134,45 +155,10 @@ log {
             </example>
         </simplesect>
         <simplesect xml:id="json-parser-prefix">
-            <title>prefix()</title>
-            <indexterm>
-                <primary>prefix()</primary>
-            </indexterm>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="2">
-                    <colspec colnum="1" colwidth="50pt"/>
-                    <tbody>
-                        <row>
-                            <entry>Synopsis:
-									<?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                            </entry>
-                            <entry>prefix()</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Insert a prefix before the name part of the name-value pairs to help further processing. For example, if you forward the parsed messages using the IETF-syslog protocol, you can insert all the parsed data into the SDATA part of the message using the <userinput>prefix(.SDATA.json.)</userinput> .</para>
+            <xi:include href="../../common/chunk/option-parser-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
         <simplesect>
-            <title>template()</title>
-            <indexterm>
-                <primary>template()</primary>
-            </indexterm>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="2">
-                    <colspec colnum="1" colwidth="50pt"/>
-                    <tbody>
-                        <row>
-                            <entry>Synopsis: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                            </entry>
-                            <entry>template("${&lt;macroname&gt;}")</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The macro that contains the part of the message that the parser will process. It can also be a macro created by a previous parser of the log path. By default, this is empty and the parser processes the entire message (<userinput>${MESSAGE}</userinput>).</para>
+            <xi:include href="../../common/chunk/option-parser-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
     </section>
 </section>

@@ -13,7 +13,6 @@
         <secondary><parameter>elasticsearch2</parameter></secondary>
     </indexterm>
     <para>Starting with version <phrase condition="pe">5.6</phrase><phrase condition="ose">3.7</phrase> of &abbrev; can directly send log messages to <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.elastic.co/products/elasticsearch">Elasticsearch</link>, allowing you to search and analyze your data in real time, and visualize it with <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.elastic.co/products/kibana">Kibana</link>.</para>
-    <xi:include href="../../common/wnt/note-server-mode-only.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <para>Note the following limitations when using the &abbrev; <parameter>elasticsearch2</parameter> destination:</para>
     <itemizedlist>
         <xi:include href="../../common/chunk/listitem-java-supported-platforms.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -47,13 +46,13 @@ destination d_elastic {
   );
 };
 </synopsis>
-        <para>The following example sends 10000 messages in a batch, in node mode, and includes a custom unique ID for each message.</para>
+        <para>The following example sends 10000 messages in a batch, in transport mode, and includes a custom unique ID for each message.</para>
         <synopsis>@module mod-java
 @include "scl.conf"
 
 options {
   threaded(yes);
-  use_uniqid(yes);
+  use-uniqid(yes);
 };
 
 source s_syslog {
@@ -65,8 +64,8 @@ destination d_elastic {
     index("syslog-ng_${YEAR}.${MONTH}.${DAY}")
     type("test")
     cluster("syslog-ng")
-    client_mode("node")
-    custom_id("${UNIQID}")
+    client-mode("transport")
+    custom-id("${UNIQID}")
     flush-limit("10000")
   );
 };
@@ -75,6 +74,29 @@ log {
   source(s_syslog);
   destination(d_elastic);
   flags(flow-control);
+};</synopsis>
+    <para>The following example send messages to Elasticsearch over HTTP using its REST API:</para>
+    <synopsis>@include "scl.conf"
+
+source s_network {
+    network(port(5555));
+};
+
+destination d_elastic {
+    elasticsearch2(
+        client-mode("http")
+        cluster("es-syslog-ng")
+        index("x201")
+        cluster-url("http://192.168.33.10:9200")
+        type("slng_test_type")
+        flush-limit("0")
+    );
+};
+
+log {
+   source(s_network);
+   destination(d_elastic);
+   flags(flow-control);
 };</synopsis>
     </example>
     <itemizedlist>
@@ -88,6 +110,7 @@ log {
             <para>For the list of options, see <xref linkend="reference-destination-elasticsearch2"/>.</para>
         </listitem>
     </itemizedlist>
+    <para condition="ose">The <parameter>elasticsearch2()</parameter> driver is actually a reusable configuration snippet configured to receive log messages using the Java language-binding of &abbrev;. For details on using or writing such configuration snippets, see <xref linkend="config-blocks"/>. You can find the source of the elasticsearch configuration snippet on <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://github.com/balabit/syslog-ng/blob/master/scl/elasticsearch/plugin.conf">GitHub</link>. For details on extending &abbrev; in Java, see the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://syslog-ng.gitbooks.io/getting-started/content/chapters/chapter_5/section_2.html">Getting started with syslog-ng development</link> guide.</para>
     <procedure xml:id="destination-elasticsearch2-prerequisites">
         <title>Prerequisites</title>
         <para>To send messages from &abbrev; to Elasticsearch, complete the following steps.</para>
@@ -121,7 +144,7 @@ log {
     </section>
     <section xml:id="destination-elasticsearch2-client-modes">
         <title>Client modes</title>
-        <para>The &abbrev; application can interact with Elasticsearch in transport mode or node mode.</para>
+        <para>The &abbrev; application can interact with Elasticsearch in the following modes of operation: http, node, shield, and transport.</para>
         <xi:include href="../../common/chunk/option-destination-elasticsearch-client-mode-description.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     </section>
     <section xml:id="reference-destination-elasticsearch2">
@@ -147,14 +170,14 @@ log {
             <para><emphasis role="bold">Description:</emphasis> Include the path to the directory where you copied the required libraries (see <xref linkend="destination-elasticsearch2-prerequisites"/>), for example, <userinput>client_lib_dir(/user/share/elasticsearch-2.2.0/lib)</userinput>.</para>
         </simplesect>
         <simplesect xml:id="elasticsearch2-option-elasticsearch2-client-mode">
-            <title>client_mode()</title>
+            <title>client-mode()</title>
             <indexterm type="parameter">
-                <primary>client_mode()</primary>
+                <primary>client-mode()</primary>
                 <secondary>elasticsearch2</secondary>
             </indexterm>
             <indexterm type="parameter">
                 <primary>elasticsearch2</primary>
-                <secondary>client_mode</secondary>
+                <secondary>client-mode</secondary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -164,7 +187,7 @@ log {
                             <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
-                            <entry>transport | node | shield</entry>
+                            <entry>http| transport | node | shield</entry>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
@@ -175,8 +198,11 @@ log {
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies the client mode used to connect to the Elasticsearch server, for example, <userinput>client_mode("node")</userinput>.</para>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the client mode used to connect to the Elasticsearch server, for example, <userinput>client-mode("node")</userinput>.</para>
             <xi:include href="../../common/chunk/option-destination-elasticsearch-client-mode-description.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <note>
+                <para>In Node mode, it is required to define the home of the elasticsearch installation with the <parameter>path.home</parameter> paramter in the <filename>.yml</filename> file. For example: <userinput>path.home: /usr/share/elasticsearch</userinput>.</para>
+            </note>
             <itemizedlist>
                 <listitem>
                     <para>To use this mode, add the Shield .jar file (shield-x.x.x.jar) to the same directory where your Elasticsearch .jar files are located. You can download the Shield distribution and extract the .jar file manually, or you can get it from the Elasticsearch Maven repository.</para>
@@ -223,15 +249,18 @@ shield.ssl.keystore.password: mypassword
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> Specifies the name or the Elasticsearch cluster, for example, <userinput>cluster("my-elasticsearch-cluster")</userinput>. Optionally, you can specify the name of the cluster in the Elasticsearch resource file. For details, see <xref linkend="elasticsearch2-option-elasticsearch2-resource"/>.</para>
         </simplesect>
+        <simplesect xml:id="elasticsearch2-option-elasticsearch2-cluster-url">
+            <xi:include href="../../common/chunk/option-destination-elasticsearch-cluster-url.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
         <simplesect xml:id="elasticsearch2-option-elasticsearch2-concurrent-requests">
-            <title>concurrent_requests()</title>
+            <title>concurrent-requests()</title>
             <indexterm type="parameter">
-                <primary>concurrent_requests()</primary>
+                <primary>concurrent-requests()</primary>
                 <secondary>elasticsearch2</secondary>
             </indexterm>
             <indexterm type="parameter">
                 <primary>elasticsearch2</primary>
-                <secondary>concurrent_requests</secondary>
+                <secondary>concurrent-requests</secondary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -254,20 +283,20 @@ shield.ssl.keystore.password: mypassword
                 <primary>elasticsearch2</primary>
                 <secondary>performance</secondary>
             </indexterm>
-            <para><emphasis role="bold">Description:</emphasis> The number of concurrent (simultaneous) requests that &abbrev; sends to the Elasticsearch server. Set this option to 1 or higher to increase performance. When using the <parameter>concurrent_requests()</parameter> option, make sure that the <parameter>flush-limit()</parameter> option is higher than one, otherwise it will not have any noticeable effect. For details, see <xref linkend="elasticsearch2-option-elasticsearch2-flush-limit"/>.</para>
+            <para><emphasis role="bold">Description:</emphasis> The number of concurrent (simultaneous) requests that &abbrev; sends to the Elasticsearch server. Set this option to 1 or higher to increase performance. When using the <parameter>concurrent-requests()</parameter> option, make sure that the <parameter>flush-limit()</parameter> option is higher than one, otherwise it will not have any noticeable effect. For details, see <xref linkend="elasticsearch2-option-elasticsearch2-flush-limit"/>.</para>
             <warning>
                 <para>Hazard of data loss! Using the <parameter>concurrent-requests()</parameter> option increases the number of messages lost in case the Elasticsearch server becomes unaccessible.</para>
             </warning>
         </simplesect>
         <simplesect xml:id="elasticsearch2-option-elasticsearch2-custom-id">
-            <title>custom_id()</title>
+            <title>custom-id()</title>
             <indexterm type="parameter">
-                <primary>custom_id()</primary>
+                <primary>custom-id()</primary>
                 <secondary>elasticsearch2</secondary>
             </indexterm>
             <indexterm type="parameter">
                 <primary>elasticsearch2</primary>
-                <secondary>custom_id</secondary>
+                <secondary>custom-id</secondary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -290,11 +319,11 @@ shield.ssl.keystore.password: mypassword
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> Use this option to specify a custom ID for the records inserted into Elasticsearch. If this option is not set, the Elasticsearch server automatically generates and ID for the message. For example: <userinput>custom_id(${UNIQID})</userinput> (Note that to use the <userinput>${UNIQID}</userinput> macro, the <parameter>use-uniqid()</parameter> global option must be enabled. For details, see <xref linkend="global-use-uniqid"/>.)</para>
         </simplesect>
-        <simplesect condition="pe">
+        <simplesect>
             <xi:include href="../../common/chunk/option-destination-diskbuffer.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
         <simplesect xml:id="elasticsearch2-option-elasticsearch2-flush-limit">
-            <title>flush_limit()</title>
+            <title>flush-limit()</title>
             <indexterm type="parameter">
                 <primary>flush-limit()</primary>
                 <secondary>elasticsearch2</secondary>
@@ -398,7 +427,7 @@ shield.ssl.keystore.password: mypassword
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The port number of the Elasticsearch server. This option is used only in transport mode: <userinput>client_mode("transport")</userinput></para>
+            <para><emphasis role="bold">Description:</emphasis> The port number of the Elasticsearch server. This option is used only in transport mode: <userinput>client-mode("transport")</userinput></para>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-retries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -465,6 +494,37 @@ shield.ssl.keystore.password: mypassword
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> Specifies the hostname or IP address of the Elasticsearch server. When specifying an IP address, IPv4 (for example, <userinput>192.168.0.1</userinput>) or IPv6 (for example, <userinput>[::1]</userinput>) can be used as well. When specifying multiple addresses, use space to separate the addresses, for example, <userinput>server("127.0.0.1 remote-server-hostname1 remote-server-hostname2")</userinput></para>
             <para>This option is used only in transport mode: <userinput>client_mode("transport")</userinput></para>
+        </simplesect>
+        <simplesect xml:id="elasticsearch2-option-elasticsearch2-skip-cluster-health-check">
+            <title>skip-cluster-health-check()</title>
+            <indexterm type="parameter">
+                <primary>skip-cluster-health-check()</primary>
+                <secondary>elasticsearch2</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>elasticsearch2</primary>
+                <secondary>skip-cluster-health-check</secondary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>yes|no</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>no</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> By default, when connecting to an Elasticsearch cluster, &abbrev; checks the state of the cluster. If the primary shards of the cluster are not active, &abbrev; will not send messages, but wait for them to become active. To disable this health check and send the messages to Elasticsearch anyway, use the <userinput>skip-cluster-health-check(yes)</userinput> option in your configuration.</para>
         </simplesect>
         <simplesect xml:id="elasticsearch2-option-elasticsearch2-template">
             <title>template()</title>
