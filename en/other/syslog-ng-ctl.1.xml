@@ -39,7 +39,10 @@
                     <para>display statistics about the processed messages;</para>
                 </listitem>
                 <listitem>
-                    <para>reload the configuration of &abbrev;.</para>
+                    <para>reload the configuration of &abbrev;;</para>
+                </listitem>
+                <listitem>
+                    <para>stop &abbrev;.</para>
                 </listitem>
             </itemizedlist>
         </refsection>
@@ -128,12 +131,89 @@ destination;df_kern;;a;processed;70
 center;;queued;a;processed;0
 destination;df_facility_dot_err;;a;processed;0</synopsis>
         </refsection>
+        <refsection xml:id="syslog-ng-ctl-show-license-info" condition="pe">
+            <title>Displaying license-related information</title>
+            <cmdsynopsis><command>syslog-ng-ctl show-license-info</command>
+                <arg>options</arg>
+            </cmdsynopsis>
+            <para>The &abbrev; application uses a license in server mode to determine the maximum number of hosts that are allowed to connect. Use the <command>syslog-ng-ctl show-license-info</command> command to display license-related information the number of hosts currently logging to your server. This helps you to plan your capacity, to check your license usage, and to detect client misconfiguration that can result in a license miscount anomaly. Note that in client or relay mode, &abbrev; does not require a license.</para>
+            <para>The <command>syslog-ng-ctl show-license-info</command> command displays the following information. In case of an unlimited license, or in client or relay mode, only the license type is displayed:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>License Type: none, limited, unlimited</para>
+                </listitem>
+                <listitem>
+                    <para>Host Limit: the maximum number of hosts that are allowed to connect.</para>
+                </listitem>
+                <listitem>
+                    <para>Currently Used Slots: the number of currently used host slots</para>
+                </listitem>
+                <listitem>
+                    <para>Usage: the percent of used host slots</para>
+                </listitem>
+                <listitem>
+                    <para>Licensed Clients: the list of hostnames that are stored in the license module</para>
+                </listitem>
+            </itemizedlist>
+            <para>The <command>syslog-ng-ctl show-license-info</command> command has the following options:</para>
+            <variablelist>
+                <varlistentry>
+                    <term><command>--json</command> or <command>-J</command>
+                    </term>
+                    <listitem>
+                        <para>Print license-related information in JSON format.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+            <para>Example:<synopsis>syslog-ng-ctl show-license-info</synopsis></para>
+            <para>An example output:</para>
+            <synopsis>License-Type: limited
+Host-Limit: 10
+Currently-Used-Slots: 7
+Usage: 70%
+Licensed-Clients:
+    192.168.0.1
+    192.168.0.2
+    192.168.0.3
+    192.168.1.4
+    192.168.1.5</synopsis>
+            <para>Example:<synopsis>syslog-ng-ctl show-license-info --json</synopsis></para>
+            <para>An example output:</para>
+            <synopsis>{
+    "license_type": "limited",
+    "host_limit": 10,
+    "currently_used_slots": 7,
+    "usage": "70%",
+    "licensed_clients": [
+        "xy.testdomain",
+        "testhost",
+        "192.168.0.3",
+        "test_host",
+        "192.168.1.5"
+    ]
+}</synopsis>
+            <para>Example:<synopsis>syslog-ng-ctl show-license-info</synopsis>in case of an unlimited license</para>
+            <para>An example output:</para>
+            <synopsis>$ syslog-ng-ctl show-license-info
+License-Type: unlimited</synopsis>
+            <para>Example:<synopsis>syslog-ng-ctl show-license-info</synopsis>if &abbrev; is in client or relay mode</para>
+            <para>An example output:</para>
+            <synopsis>$ syslog-ng-ctl show-license-info
+License-Type: none</synopsis>
+        </refsection>
         <refsection xml:id="syslog-ng-ctl-reload">
             <title>Reloading the configuration</title>
             <cmdsynopsis><command>syslog-ng-ctl reload</command>
                 <arg>options</arg>
             </cmdsynopsis>
-            <para>Use the <command>syslog-ng-ctl reload</command> command to reload the configuration file of &abbrev; without having to restart the &abbrev; application. The <command>syslog-ng-ctl reload</command> works like a SIGHUP.</para>
+            <para>Use the <command>syslog-ng-ctl reload</command> command to reload the configuration file of &abbrev; without having to restart the &abbrev; application. The <command>syslog-ng-ctl reload</command> works like a SIGHUP (-1).<phrase condition="pe"> On Microsoft Windows, this is the only way to reload the configuration of &abbrev;.</phrase></para>
+        </refsection>
+        <refsection xml:id="syslog-ng-ctl-stop">
+            <title>Stopping &abbrev;</title>
+            <cmdsynopsis><command>syslog-ng-ctl stop</command>
+                <arg>options</arg>
+            </cmdsynopsis>
+            <para>Use the <command>syslog-ng-ctl stop</command> command to stop the &abbrev; application. The <command>syslog-ng-ctl stop</command> works like a SIGHUP (-15) on Linux and Unix systems.<phrase condition="pe"> On Microsoft Windows, this is the only way to gracefully stop &abbrev; if it is running in the foreground.</phrase></para>
         </refsection>
         <refsection>
             <title>Files</title>
