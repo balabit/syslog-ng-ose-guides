@@ -244,11 +244,11 @@
             <primary>CentOS</primary>
             <secondary>installing syslog-ng</secondary>
         </indexterm>
-        <indexterm>
+        <indexterm condition="pe6">
             <primary>installing syslog-ng</primary>
             <secondary>on AIX</secondary>
         </indexterm>
-        <indexterm>
+        <indexterm condition="pe6">
             <primary>AIX</primary>
             <secondary>installing syslog-ng</secondary>
         </indexterm>
@@ -266,10 +266,10 @@
         </formalpara>
         <para>To install &abbrev; on operating systems that use the Red Hat Package Manager (RPM), complete the following steps. Installing &abbrev; automatically replaces the original syslog service. The following supported operating systems use RPM:</para>
         <itemizedlist condition="pe">
-            <listitem>
+            <listitem condition="pe6">
                 <para>CentOS</para>
             </listitem>
-            <listitem>
+            <listitem condition="pe6">
                 <para>openSUSE</para>
             </listitem>
             <listitem>
@@ -331,7 +331,7 @@
         <step>
             <para><emphasis>Optional step for &selinux;-enabled systems</emphasis>: Complete <xref linkend="selinux-support"/>.</para>
         </step>
-        <step>
+        <step condition="pe6">
             <para><indexterm>
                 <primary>AIX</primary>
                 <secondary>redirecting errorlog to syslog-ng</secondary>
@@ -361,6 +361,15 @@ en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTA
             </listitem>
             <listitem>
                 <para>Debian Jessie</para>
+            </listitem>
+            <listitem>
+                <para>Ubuntu 12.04 LTS (Precise Pangolin)</para>
+            </listitem>
+            <listitem>
+                <para>Ubuntu 14.04 LTS (Trusty Tahr)</para>
+            </listitem>
+            <listitem>
+                <para>Ubuntu 16.04 LTS (Xenial Xerus)</para>
             </listitem>
         </itemizedlist>
         <xi:include href="../../common/wnt/warning-install-pid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -395,7 +404,7 @@ en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTA
                     AppArmor.</para>
             </step>-->
     </procedure>
-    <section xml:id="install-pkg" condition="pe">
+    <section xml:id="install-pkg" condition="pe6">
         <title>Installing &abbrev; using .pkg installer</title>
         <para>The &abbrev; application can be installed with user-interaction or in silent mode.</para>
         <para>The generic syslog service of the operating system is stopped and deregistered automatically by the installer before installation.</para>
@@ -538,10 +547,7 @@ en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTA
             <para>Upgrading is supported from the following &abbrev; versions:</para>
             <itemizedlist>
                 <listitem>
-                    <para>&abbrev; 5 LTS (5.0.x)</para>
-                </listitem>
-                <listitem>
-                    <para>&abbrev; 5 F6 (5.6.x)</para>
+                    <para>&abbrev; 6 LTS (6.0.x)</para>
                 </listitem>
             </itemizedlist>
             <para>To upgrade an existing &abbrev; installation, see <xref linkend="procedure-upgrading-to-pe"/>.</para>
@@ -558,78 +564,25 @@ en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTA
                 <para/>
             </formalpara>
             <step>
-                <para>Download the new installer package. Use the same package type as you used for the installation (for example, use the <filename>.run</filename> package for the upgrade if you have originally installed &abbrev; using a <filename>.run</filename> installer).</para>
+                <para>Download the new installer package from &mybalabit;. Use the same package type as you used for the installation (for example, use the <filename>.run</filename> package for the upgrade if you have originally installed &abbrev; using a <filename>.run</filename> installer).</para>
+            </step>
+            <step>
+                <para>Download the new license file from &mybalabit;.</para>
             </step>
             <step>
                 <para>Install &abbrev; and check the warnings. Upgrade the respective parts of your configuration if needed.</para>
+            </step>
+            <step>
+                <para>On the host where you are running &abbrev; in <link linkend="concepts-server-mode">server mode</link>, replace the old license file with the new one.</para>
                 <warning>
-                    <para>When upgrading &abbrev; 5 F3 to 5 F4, if you are using the <parameter>hdfs</parameter> destination and disk-based buffering, the persist file of &abbrev; must be manually updated using the <command>persist-tool</command> utility. In this case, contact the BalaBit Support Team (<xref linkend="common-preface-contact-support"/>).</para>
+                    <para>Hazard of data loss! Without the new license file, &abbrev; will run in relay mode, and will not store the incoming messages locally.</para>
                 </warning>
             </step>
             <step>
                 <para>Set the version of the configuration file to &techversion;.</para>
             </step>
         </procedure>
-<!--
-        <procedure xml:id="upgrading-to-lts">
-            <title>Upgrading to &abbrev; 5 LTS</title>
-            <formalpara>
-                <title>Purpose:</title>
-                <para/>
-            </formalpara>
-            <para>To upgrade to &abbrev; 5 LTS, complete the following steps:</para>
-            <formalpara>
-                <title>Steps:</title>
-                <para/>
-            </formalpara>
-            <step>
-                <para>Download the new license file.</para>
-            </step>
-            <step>
-                <para>Download the new installer package.</para>
-            </step>
-            <step>
-                <para>Install &abbrev; and check the warnings. Upgrade the respective parts of your configuration.</para>
-                <warning>
-                    <para>Prior to version 5.0.2 the identifiers (that is, table and column names) in the SQL queries and statements of the SQL sources used to be case insensitive. In the SQL sources starting with version 5.0.2, syslog-ng uses delimited identifiers (usually quoted identifiers) that are case sensitive. Therefore, to use your existing configuration files, you may need to modify them. Check the list of changes to be made to your configuration files for different database management systems:</para>
-                    <para>Oracle:</para>
-                    <itemizedlist>
-                        <listitem>
-                            <para>Change the non quoted table and column names to their upper-case equivalents.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Remove the surrounding quotes around the table and column names if you have any. For example, instead of table("test_log") use table("TEST_LOG").</para>
-                        </listitem>
-                    </itemizedlist>
-                    <para>PostgreSQL:</para>
-                    <itemizedlist>
-                        <listitem>
-                            <para>Change the non quoted table and column names to their lower-case equivalents.</para>
-                        </listitem>
-                        <listitem>
-                            <para>Remove the surrounding quotes around the table and column names if you have any. For example, instead of table("TEST_LOG") use table("test_log").</para>
-                        </listitem>
-                    </itemizedlist>
-                    <para>Microsoft SQL Server:</para>
-                    <itemizedlist>
-                        <listitem>
-                            <para>Remove the surrounding quotes and brackets around the table and column names if you have any. For example, instead of table("[test_log]") use table("test_log").</para>
-                        </listitem>
-                    </itemizedlist>
-                    <para>MySQL:</para>
-                    <itemizedlist>
-                        <listitem>
-                            <para>Remove the surrounding quotes around the table and column names if you have any. For example, instead of table("`test_log`") use table("test_log").</para>
-                        </listitem>
-                    </itemizedlist>
-                </warning>
-                <xi:include href="../../common/wnt/warning-ca-dir-layout.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </step>
-            <step>
-                <para>Set the version of the configuration file to 5.0.</para>
-            </step>
-        </procedure>
--->
+
         <section xml:id="upgrading-pe-mixing-packages">
             <title>Upgrading &abbrev; to other package versions</title>
             <formalpara>
