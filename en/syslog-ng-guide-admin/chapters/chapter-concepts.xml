@@ -863,4 +863,258 @@
         </itemizedlist>
     </section>
     <xi:include href="concepts-value-pairs.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <section xml:id="concepts-things-to-consider">
+        <title>Things to consider when forwarding messages between &abbrev; hosts</title>
+        <para>When you send your log messages from a &abbrev; client through the network to a &abbrev; server, you can use different protocols and options. Every combination has its advantages and disadvantages. The most important thing is to use matching protocols and options, so the server handles the incoming log messages properly.</para>
+        <para>In &abbrev; you can change many aspects of the network communication. First of all, there is the structure of the messages itself. Currently, &abbrev; supports two standard syslog protocols: the BSD (RFC3164) and the syslog (RFC5424) message format.</para>
+        <para>These RFCs describe the format and the structure of the log message, and add a (lightweight) framing around the messages. You can set this framing/structure by selecting the appropriate driver in &abbrev;. There are two drivers you can use: the <parameter>network()</parameter> driver and the <parameter>syslog()</parameter> driver. The <parameter>syslog()</parameter> driver is for the syslog (RFC5424) protocol and the network() driver is for the BSD (RFC3164) protocol.</para>
+        <para>The <parameter>tcp()</parameter> and <parameter>udp()</parameter> drivers are now deprecated, they are essentially equivalent with the <parameter>network(transport(tcp))</parameter> and <parameter>network(transport(udp))</parameter> drivers.</para>
+        <para>In addition to selecting the driver to use, both drivers allow you to use different transport-layer protocols: TCP and UDP, and optionally also higher-level transport protocols: TLS (over TCP<phrase condition="pe">, and RLTP (optionally using TLS)</phrase>. To complicate things a bit more, you can configure the <parameter>network()</parameter> driver (corresponding to the BSD (RFC3164) protocol) to send the messages in the syslog (RFC5424) format (but without the framing used in RFC5424) using the <parameter>flag(syslog-protocol)</parameter> option.</para>
+        <para>Because some combination of drivers and options are invalid, you can use the following drivers and options as sources and as destinations:</para>
+        <orderedlist>
+            <listitem>
+                <para><parameter>syslog(transport(tcp))</parameter></para>
+            </listitem>
+            <listitem>
+                <para><parameter>syslog(transport(udp))</parameter></para>
+            </listitem>
+            <listitem condition="pe6">
+                <para><parameter>syslog(transport(rltp))</parameter></para>
+            </listitem>
+            <listitem>
+                <para><parameter>syslog(transport(tls))</parameter></para>
+            </listitem>
+            <listitem condition="pe6">
+                <para><parameter>syslog(transport(rltp(tls-required(yes)))</parameter></para>
+            </listitem>
+            <listitem>
+                <para><parameter>network(transport(tcp))</parameter></para>
+            </listitem>
+            <listitem>
+                <para><parameter>network(transport(udp))</parameter></para>
+            </listitem>
+            <listitem condition="pe6">
+                <para><parameter>network(transport(rltp))</parameter></para>
+            </listitem>
+            <listitem>
+                <para><parameter>network(transport(tls))</parameter></para>
+            </listitem>
+            <listitem condition="pe6">
+                <para><parameter>network(transport(rltp(tls-required(yes)))</parameter></para>
+            </listitem>
+            <listitem>
+                <para><parameter>network(transport(tcp) flag(syslog-protocol))</parameter></para>
+            </listitem>
+            <listitem>
+                <para><parameter>network(transport(udp) flag(syslog-protocol))</parameter></para>
+            </listitem>
+            <listitem condition="pe6">
+                <para><parameter>network(transport(rltp)flag(syslog-protocol))</parameter></para>
+            </listitem>
+            <listitem>
+                <para><parameter>network(transport(tls) flag(syslog-protocol))</parameter></para>
+            </listitem>
+            <listitem condition="pe6">
+                <para><parameter>network(transport(rltp(tls-required(yes)) flag(syslog-protocol))</parameter></para>
+            </listitem>
+        </orderedlist>
+        <para>If you use the same driver and options in the destination of your &abbrev; client and the source of your &abbrev; server, everything should work as expected. Unfortunately there are some other combinations, that seem to work, but result in losing parts of the messages. The following table show the combinations:</para>
+        <table xml:id="table-syslog-ng-source-destination-combinations" condition="pe">
+            <title>Source-destination driver combinations</title>
+            <tgroup cols="10">
+                <thead>
+                    <row>
+                        <entry>Source \ Destination</entry>
+                        <entry>syslog/tcp</entry>
+                        <entry>syslog/udp</entry>
+                        <entry>syslog/tls</entry>
+                        <entry>network/tcp</entry>
+                        <entry>network/udp</entry>
+                        <entry>network/tls</entry>
+                        <entry>network/tcp/flag</entry>
+                        <entry>network/udp/flag</entry>
+                        <entry>network/tls/flag</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>syslog/tcp</entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                    </row>
+                    <row>
+                        <entry>syslog/udp</entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                    </row>
+                    <row>
+                        <entry>syslog/tls</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> ! </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> ! </entry>
+                        <entry condition="pe6"> - </entry>
+                    </row>
+                    <row>
+                        <entry>network/tcp</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> &#10004;? </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                    </row>
+                    <row>
+                        <entry>network/udp</entry>
+                        <entry> - </entry>
+                        <entry> &#10004;? </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004;? </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                    </row>
+                    <row>
+                        <entry>network/tls</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> &#10004;? </entry>
+                        <entry condition="pe6"> - </entry>
+                    </row>
+                    <row>
+                        <entry>network/tcp/flag</entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> ! </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                    </row>
+                    <row>
+                        <entry>network/udp/flag</entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> ! </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                    </row>
+                    <row>
+                        <entry>network/tls/flag</entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> ! </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> ! </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> - </entry>
+                        <entry> - </entry>
+                        <entry condition="pe6"> - </entry>
+                        <entry> &#10004; </entry>
+                        <entry condition="pe6"> - </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <itemizedlist>
+            <listitem>
+                <para>- This method does not work. The logs will not get to the server.</para>
+            </listitem>
+            <listitem>
+                <para>&#10004; This method works.</para>
+            </listitem>
+            <listitem>
+                <para>! This method has some visible drawbacks. The logs go through, but some of the values are missing/misplaced/and so on.</para>
+            </listitem>
+            <listitem>
+                <para>&#10004;? This method seems to work, but it is not recommended because this can change in a future release.</para>
+            </listitem>
+        </itemizedlist>
+    </section>
 </chapter>
