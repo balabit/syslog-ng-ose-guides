@@ -194,9 +194,6 @@
             <primary>wildcards</primary>
             <secondary>in file sources</secondary>
         </indexterm>
-        <para xml:id="reference-file-wildcard" condition="pe">In &abbrev;, the filename (but not the pathname) may include wildcard characters (for example <userinput>*</userinput>). Note that when using wildcards in filenames, always set how often syslog-ng should check the file for new messages using the <parameter>follow-freq()</parameter> parameter.</para>
-        <xi:include href="../../common/wnt/warning-wildcard-overlapping-files.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <para xml:id="reference-file-wildcard-inotify" condition="pe">When using wildcards, syslog-ng PE monitors every matching file, and can receive new log messages from any of the files. However, monitoring (polling) many files (that is, more than ten) has a significant overhead and may affect performance. On Linux this overhead is not so significant, because &abbrev; uses the inotify feature of the kernel.</para><para>Also, by default, the operating system notifies syslog-ng PE when an application modifies a logfile. However, in some cases this does not happen, because the file-monitoring API of the operating system does not notice that the file has changed, for example, when monitoring logfiles of the Windows DHCP service. In such cases, enable the <parameter>force-directory-polling()</parameter> option. Note that enabling this option decreases the performance of syslog-ng PE if you monitor lots of logfiles.</para>
         <example xml:id="example-source-file">
             <title>Using the file() driver</title>
             <synopsis>source s_file { file("/var/log/messages"); };</synopsis>
@@ -208,14 +205,23 @@
             <synopsis>source s_tail { file("/var/log/apache/access.log"
             follow-freq(1) flags(no-parse)); };</synopsis>
         </example>
+        <note>
+            <para>If the message does not have a proper syslog header, syslog-ng treats messages received from files as sent by the <parameter>kern</parameter> facility. Use the <parameter>default-facility()</parameter> and <parameter>default-priority()</parameter> options in the source definition to assign a different facility if needed.</para>
+        </note>
+        <formalpara condition="pe">
+            <title>Wildcards and file sources</title>
+            <para/>
+        </formalpara>
+        <para xml:id="reference-file-wildcard" condition="pe">In &abbrev;, the filename (but not the pathname) may include wildcard characters (for example <userinput>*</userinput>). Note that when using wildcards in filenames, always set how often &abbrev; should check the file for new messages using the <parameter>follow-freq()</parameter> parameter.</para>
+        <xi:include href="../../common/wnt/warning-wildcard-overlapping-files.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="../../common/chunk/para-wildcard-file-source-and-nfs.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <para xml:id="reference-file-wildcard-inotify" condition="pe">When using wildcards, &abbrev; monitors every matching file, and can receive new log messages from any of the files. However, monitoring (polling) many files (that is, more than ten) has a significant overhead and may affect performance. On Linux this overhead is not so significant, because &abbrev; uses the inotify feature of the kernel.</para><para>Also, by default, the operating system notifies &abbrev; when an application modifies a logfile. However, in some cases this does not happen, because the file-monitoring API of the operating system does not notice that the file has changed, for example, when monitoring logfiles of the Windows DHCP service. In such cases, enable the <parameter>force-directory-polling()</parameter> option. Note that enabling this option decreases the performance of &abbrev; if you monitor lots of logfiles.</para>
         <example xml:id="example-source-file-wildcard" condition="pe">
             <title>Using wildcards in the filename</title>
             <para>The following example monitors every file with the <filename>.log</filename> extension in the <filename>/var/application</filename> directory for log messages. Note that only syslog-ng PE supports wildcards in the file and pathnames.</para>
             <synopsis>source s_file { file("/var/application/*.log" follow-freq(1));};</synopsis>
         </example>
-        <note>
-            <para>If the message does not have a proper syslog header, syslog-ng treats messages received from files as sent by the <parameter>kern</parameter> facility. Use the <parameter>default-facility()</parameter> and <parameter>default-priority()</parameter> options in the source definition to assign a different facility if needed.</para>
-        </note>
+
         <section xml:id="kernel-messages">
             <title>Notes on reading kernel messages</title>
             <para>Note the following points when reading kernel messages on various platforms.</para>
