@@ -367,6 +367,77 @@
             <para>This will result in the following string: <userinput>foofoofbar</userinput></para>
         </example>
     </simplesect>
+    <simplesect xml:id="template-function-python">
+        <title>python</title>
+        <para><emphasis role="bold">Syntax:</emphasis><synopsis> $(python &lt;name-of-the-python-method-to-use&gt; &lt;arguments-of-the-method&gt;)</synopsis></para>
+        <para><emphasis role="bold">Description:</emphasis> This template function enables you to write a custom template function in Python. You can define a Python block in your &abbrev; configuration file, define one or more Python functions in it, and use the methods as template functions. If you use a Python block, &abbrev; embeds a Python interpreter to process the messages. Note the following points:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Currently only Python 2.7 is supported.</para>
+            </listitem>
+            <listitem>
+                <para>The Python block must be a top-level block in the &abbrev; configuration file.</para>
+            </listitem>
+            <listitem>
+                <para>The Python block can contain multiple Python functions.</para>
+            </listitem>
+            <listitem>
+                <para>The first argument in the definition of the Python function is the actual log message. This is implicitly passed to the function, you do not have to use it in the template function.</para>
+            </listitem>
+            <listitem>
+                <para>The value of the template function is return value of the Python function.</para>
+            </listitem>
+            <listitem>
+                <para>To reference a name-value pair or a macro in the Python function, use the dot-notation. For example, if the first argument in the definition of the function is called <userinput>log-message</userinput>, the value of the HOST macro is <userinput>log-message.HOST</userinput>, and so on.</para>
+            </listitem>
+            <listitem>
+                <para>You can define new name-value pairs in the Python function. For example, if the first argument in the definition of the function is called <userinput>log-message</userinput>, you can create a new name-value pair like this: <userinput>log_message["new-macro-name"]="value"</userinput>. This is useful when you parse a part of the message from Python, or lookup a value based on data extracted from the log message.</para>
+            </listitem>
+        </itemizedlist>
+        <formalpara>
+            <title>Declaration:</title>
+            <para/>
+        </formalpara>
+        <synopsis>python {
+    def &lt;name_of_the_python_function&gt;(&lt;log_message&gt;, &lt;optional_other_arguments&gt;):
+        # &lt;your-python-code&gt;
+        return &lt;value_of_the_template_function&gt;
+};
+
+template &lt;template-name&gt; {
+    template($(python &lt;name_of_the_python_function&gt;));
+};</synopsis>
+        <example xml:id="example-python-template-functions">
+            <title>Writing template functions in Python</title>
+            <para>The following example creates a Python template function called <userinput>return_message</userinput> that returns the MESSAGE part of the log message.</para>
+            <synopsis>@version: &techversion;
+
+python {
+    def return_message(log_message):
+        return log_message.MESSAGE
+};
+
+destination d_local {
+    file("/tmp/logs.txt" template("[$(python return_message)]\n"));
+};</synopsis>
+            <para>The following example creates a Python template function called <userinput>resolve_host</userinput> that receives an IP address as an argument, and attempts to resolve it into a hostname.</para>
+            <synopsis>@version: &techversion;
+
+python {
+    import socket
+
+    def resolve_host(log_message, hostname):
+        try:
+            return socket.gethostbyaddr(hostname)[0]
+        except (socket.herror, socket.error):
+            return 'unknown'
+};
+
+destination d_local {
+    file("/tmp/logs.txt" template("${ISODATE} $(python resolve_host(${SOURCE_IP})) ${MESSAGE}\n"));
+};</synopsis>
+        </example>
+    </simplesect>
     <simplesect xml:id="template-function-replace-delimiter">
         <title>replace-delimiter</title>
         <indexterm type="parameter">
