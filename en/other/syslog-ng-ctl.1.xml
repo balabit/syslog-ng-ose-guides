@@ -79,6 +79,99 @@
             </variablelist>
             <para>Example:<synopsis>syslog-ng-ctl verbose --set=on</synopsis></para>
         </refsection>
+        <refsection xml:id="syslog-ng-ctl-query">
+            <title>syslog-ng-ctl query</title>
+            <para>The &abbrev; application stores various data, metrics, and statistics in a hierarchical data structure tree (<userinput>syslog-ng</userinput> is the root node of the tree). The nodes of the tree can contain properties (but not every node contains properties). Every property has a name and a value. For example:</para>
+            <synopsis>[syslog-ng]
+|
+|_[destinations]-[network]-[tcp]->[stats]->{received:12;dropped:2}
+|
+|_[sources]-[sql]-[stats]->{reveived:501;dropped:0}</synopsis>
+            <para>You can query the nodes of this tree, and also use filters to select the information you need. A query is actually a path in the tree. You can also use the <userinput>?</userinput> and <userinput>*</userinput> wildcards. For example:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>Select every property: <userinput>*</userinput></para>
+                </listitem>
+                <listitem>
+                    <para>Select all <userinput>dropped</userinput> value from every <userinput>stats</userinput> node: <userinput>*.stats.dropped</userinput></para>
+                </listitem>
+            </itemizedlist>
+            <para>The nodes and properties available in the tree depend on your &abbrev; configuration (that is, the sources, destinations, and other objects you have configured), and also on your <parameter>stats-level()</parameter> settings.</para>
+            <refsection xml:id="syslog-ng-query-list">
+                <title>The list command</title>
+                <cmdsynopsis><command>syslog-ng-query list</command>
+                </cmdsynopsis>
+                <para>Use the <command>syslog-ng-query list</command> command to display the list of metrics that &abbrev; collects about the processed messages. For details about the displayed metrics, see <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.balabit.com/support/documentation/">The syslog-ng Administrator Guide</link> <xref linkend="chapter-log-statistics"/>.</para>
+                <para>An example output:</para>
+                <synopsis>stats
+center.received.stats.processed
+center.queued.stats.processed
+destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.dropped
+destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.processed
+destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.stored
+destination.d_elastic.stats.processed
+source.s_tcp.stats.processed
+source.severity.7.stats.processed
+source.severity.0.stats.processed
+source.severity.1.stats.processed
+source.severity.2.stats.processed
+source.severity.3.stats.processed
+source.severity.4.stats.processed
+source.severity.5.stats.processed
+source.severity.6.stats.processed
+source.facility.7.stats.processed
+source.facility.16.stats.processed
+source.facility.8.stats.processed
+source.facility.17.stats.processed
+source.facility.9.stats.processed
+source.facility.18.stats.processed
+source.facility.19.stats.processed
+source.facility.20.stats.processed
+source.facility.0.stats.processed
+source.facility.21.stats.processed
+source.facility.1.stats.processed
+source.facility.10.stats.processed
+source.facility.22.stats.processed
+source.facility.2.stats.processed
+source.facility.11.stats.processed
+source.facility.23.stats.processed
+source.facility.3.stats.processed
+source.facility.12.stats.processed
+source.facility.4.stats.processed
+source.facility.13.stats.processed
+source.facility.5.stats.processed
+source.facility.14.stats.processed
+source.facility.6.stats.processed
+source.facility.15.stats.processed
+source.facility.other.stats.processed
+global.payload_reallocs.stats.processed
+global.msg_clones.stats.processed
+global.sdata_updates.stats.processed
+tag..source.s_tcp.stats.processed</synopsis>
+            </refsection>
+            <refsection xml:id="syslog-ng-query-sum">
+                <title>Displaying metrics and statistics</title>
+                <cmdsynopsis><command>syslog-ng-query sum</command>
+                    <arg>options</arg>
+                </cmdsynopsis>
+                <para>The <command>syslog-ng-query sum &lt;query&gt;</command> command lists the nodes that match the query, and their values. For example, the <command>syslog-ng-query sum "destination*"</command> command lists the configured destinations, and the metrics related to each destination. An example output:</para>
+                <synopsis>destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.dropped: 0
+destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.processed: 0
+destination.java.d_elastic#0.java_dst(ElasticSearch,elasticsearch-syslog-ng-test,t7cde889529c034aea9ec_micek).stats.stored: 0
+destination.d_elastic.stats.processed: 0</synopsis>
+                <para>The <command>syslog-ng-query sum</command> command has the following options:</para>
+                <variablelist>
+                    <varlistentry>
+                        <term><command>--aggregate</command>
+                        </term>
+                        <listitem>
+                            <para>Add up the result of each matching node and return only a single number.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+                <para>For example, the <command>syslog-ng-query sum --aggregate "destination*.dropped"</command> command displays the number of messages dropped by the &abbrev; instance.</para>
+            </refsection>
+        </refsection>
         <refsection xml:id="syslog-ng-ctl-stats">
             <title>The stats command</title>
             <cmdsynopsis><command>stats</command>
