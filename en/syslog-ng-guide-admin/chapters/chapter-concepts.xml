@@ -800,8 +800,9 @@
         <para>When the &abbrev; application receives a message, it automatically parses the message. The &abbrev; application can automatically parse log messages that conform to the RFC3164 (BSD or legacy-syslog) or the RFC5424 (IETF-syslog) message formats. If &abbrev; cannot parse a message, it results in an error.</para>
         <tip>
             <para>In case you need to relay messages that cannot be parsed without any modifications or changes, use the <parameter>flags(no-parse)</parameter> option in the source definition, and a template containing only the <parameter>${MSG}</parameter> macro in the destination definition.</para>
+            <para>To parse non-syslog messages, for example, JSON, CSV, or other messages, you can use the built-in parsers of &abbrev;. For details, see <xref linkend="chapter-parsers"/>.</para>
         </tip>
-        <para>A parsed message has the following parts.</para>
+        <para>A parsed syslog message has the following parts.</para>
         <itemizedlist>
             <listitem>
                 <formalpara>
@@ -882,6 +883,17 @@
                 </tip>
             </listitem>
         </itemizedlist>
+        <simplesect xml:id="message-size-and-encoding">
+            <title>Message size and encoding</title>
+            <indexterm>
+                <primary>message encoding</primary>
+            </indexterm>
+            <indexterm>
+                <primary>truncating messages</primary>
+            </indexterm>
+            <para>Internally, &abbrev; represents every message as UTF-8. The maximal length of the log messages is limited by the <parameter>log-msg-size()</parameter> option: if a message is longer than this value, &abbrev; truncates the message at the location it reaches the <parameter>log-msg-size()</parameter> value, and discards the rest of the message.</para>
+            <para>When encoding is set in a source (using the <parameter>encoding()</parameter> option) and the message is longer (in bytes) than <parameter>log-msg-size()</parameter> in UTF-8 representation, &abbrev; splits the message at an undefined location (because the conversion between different encodings is not trivial).</para>
+        </simplesect>
     </section>
     <xi:include href="concepts-value-pairs.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <section xml:id="concepts-things-to-consider">
