@@ -92,9 +92,9 @@
 template second-template "The result of the first-template is: $(template first-template)";</synopsis>
             <para>If you want to use a template only once, you can define the template inline, for example:</para>
             <synopsis>destination d_file {
-    file ("/var/log/messages" template("${ISODATE} ${HOST} ${MSG}\n") );
+    file ("/var/log/messages" template("${ISODATE} ${HOST} ${MESSAGE}\n") );
 };</synopsis>
-            <para>Macros can be included by prefixing the macro name with a <userinput>$</userinput> sign, just like in Bourne compatible shells. Although using braces around macro names is not mandatory, and the <userinput>"$MSG"</userinput> and <userinput>"${MSG}"</userinput> formats are equivalent, using the <userinput>"${MSG}"</userinput> format is recommended for clarity.</para>
+            <para>Macros can be included by prefixing the macro name with a <userinput>$</userinput> sign, just like in Bourne compatible shells. Although using braces around macro names is not mandatory, and the <userinput>"$MESSAGE"</userinput> and <userinput>"${MESSAGE}"</userinput> formats are equivalent, using the <userinput>"${MESSAGE}"</userinput> format is recommended for clarity.</para>
             <indexterm>
                 <primary>templates</primary>
                 <secondary>literal $</secondary>
@@ -114,7 +114,7 @@ template second-template "The result of the first-template is: $(template first-
             <warning>
                 <para>The hostname-related macros (<parameter>${FULLHOST}</parameter>, <parameter>${FULLHOST_FROM}</parameter>, <parameter>${HOST}</parameter>, and <parameter>${HOST_FROM}</parameter>) do not have any effect if the <parameter>keep-hostname()</parameter> option is disabled.</para>
             </warning>
-            <para>By default, syslog-ng sends messages using the following template: <userinput>${ISODATE} ${HOST} ${MSGHDR}${MSG}\n</userinput>. (The <userinput>${MSGHDR}${MSG}</userinput> part is written together because the <parameter>${MSGHDR}</parameter> macro includes a trailing whitespace.)</para>
+            <para>By default, syslog-ng sends messages using the following template: <userinput>${ISODATE} ${HOST} ${MSGHDR}${MESSAGE}\n</userinput>. (The <userinput>${MSGHDR}${MESSAGE}</userinput> part is written together because the <parameter>${MSGHDR}</parameter> macro includes a trailing whitespace.)</para>
             <example>
                 <title>Using templates and macros</title>
                 <indexterm>
@@ -123,18 +123,18 @@ template second-template "The result of the first-template is: $(template first-
                 </indexterm>
                 <para>The following template (<userinput>t_demo_filetemplate</userinput>) adds the date of the message and the name of the host sending the message to the beginning of the message text. The template is then used in a file destination: messages sent to this destination (<userinput>d_file</userinput>) will use the message format defined in the template.</para>
                 <synopsis>template t_demo_filetemplate {
-    template("${ISODATE} ${HOST} ${MSG}\n"); };
+    template("${ISODATE} ${HOST} ${MESSAGE}\n"); };
 destination d_file {
     file("/var/log/messages" template(t_demo_filetemplate)); };</synopsis>
                 <para>If you do not want to enable the <parameter>template-escape()</parameter> option (which is rarely needed), you can define the template without the enclosing braces. The following two templates are equivalent.</para>
                 <synopsis>template t_demo_template-with-braces {
-    template("${ISODATE} ${HOST} ${MSG}\n");
+    template("${ISODATE} ${HOST} ${MESSAGE}\n");
 };
-template t_demo_template-without-braces "${ISODATE} ${HOST} ${MSG}\n";
+template t_demo_template-without-braces "${ISODATE} ${HOST} ${MESSAGE}\n";
 </synopsis>
                 <para>Templates can also be used inline, if they are used only at a single location. The following destination is equivalent with the previous example:</para>
                 <synopsis>destination d_file {
-    file ("/var/log/messages" template("${ISODATE} ${HOST} ${MSG}\n") );
+    file ("/var/log/messages" template("${ISODATE} ${HOST} ${MESSAGE}\n") );
 };</synopsis>
                 <indexterm>
                     <primary>macros</primary>
@@ -287,13 +287,13 @@ template t_demo_template-without-braces "${ISODATE} ${HOST} ${MSG}\n";
                 <title>Using custom template functions</title>
                 <para>The following template function can be used to reformat the message. It adds the length of the message to the message template.</para>
                 <synopsis>
-template-function my-template-function "${ISODATE} ${HOST} message-length=$(length "${MSG}") ${MSG}";
+template-function my-template-function "${ISODATE} ${HOST} message-length=$(length "${MSG}") ${MESSAGE}";
 destination d_file {
 	file("/tmp/mylogs.log" template("$(my-template-function)\n")); };</synopsis>
                 <para>You can also refer to existing templates in your template function.</para>
                 <synopsis>
 template my-custom-header-template "${ISODATE} ${HOST_FROM} ${MSGHDR}";
-template-function my-template-function "$(my-custom-header-template) message-length=$(length "${MSG}") ${MSG}";</synopsis>
+template-function my-template-function "$(my-custom-header-template) message-length=$(length "${MESSAGE}") ${MESSAGE}";</synopsis>
             </example>
         </section>
         <xi:include href="reference-template-functions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
