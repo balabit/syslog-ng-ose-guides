@@ -14,6 +14,22 @@
         <para><emphasis role="bold">Description:</emphasis> Returns the filename from an argument (for example, a macro) that contains a filename with a path. For example, <userinput>$(basename "/var/log/messages.log")</userinput> returns <userinput>messages.log</userinput>. To <link linkend="template-function-dirname">extract the path, use the <parameter>dirname</parameter> template function</link>.</para>
         <para>Available in &abbrev; version <phrase condition="ose">3.10</phrase><phrase condition="pe">7.0.3</phrase> and later.</para>
     </simplesect>
+    <simplesect xml:id="template-function-context-lookup" condition="ose">
+        <title>context-lookup</title>
+        <indexterm type="parameter">
+            <primary>context-lookup</primary>
+        </indexterm>
+        <para><emphasis role="bold">Syntax:</emphasis><synopsis>$(context-lookup [option] condition value-to-select)</synopsis></para>
+        <para><emphasis role="bold">Description:</emphasis> The <parameter>context-lookup</parameter> template function can search a message context when correlating messages (for example, when you use a <link linkend="patterndb-correlation">pattern database</link> or the <link linkend="grouping-by-parser">grouping-by parser</link>). The <parameter>context-lookup</parameter> template function requires a condition (a filter or a string), and returns a specific macro or template of the matching messages (for example, the ${MESSAGE}) as a list. It works similarly to the <link linkend="template-function-grep"><parameter>$(grep)</parameter></link> template function, but it escapes its output properly, so that the returned value is a list that can be processed with other template functions that work on lists, for example, <parameter>$(list-slice)</parameter>.</para>
+        <example>
+            <title>Using the <parameter>context-lookup</parameter> template function</title>
+            <para>The following example selects the message of the context that has a <userinput>username</userinput> name-value pair with the <userinput>root</userinput> value, and returns the value of the <userinput>tags</userinput> name-value pair.</para>
+            <synopsis>$(context-lookup ("${username}" == "root") ${tags})</synopsis>
+        </example>
+        <para>To limit the number of matches that the template function returns, use the <userinput>--max-count</userinput> option, for example, <userinput>$(context-lookup --max-count 5 ("${username}" == "root") ${tags})</userinput>. If you do not want to limit the number of matches, use <userinput>--max-count 0</userinput>.</para>
+        <para>You can to specify multiple name-value pairs as parameters, separated with commas. If multiple messages match the condition of <parameter>context-lookup</parameter>, these will be returned also separated by commas. This can be used for example to collect the e-mail recipients from postfix messages.</para>
+        <para>Available in &abbrev; version <phrase condition="ose">3.10</phrase> and later.</para>
+    </simplesect>
     <simplesect xml:id="template-function-dirname">
         <title>dirname</title>
         <indexterm type="parameter">
