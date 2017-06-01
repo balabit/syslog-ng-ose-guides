@@ -30,10 +30,7 @@
 
         </listitem>
         <listitem>
-            <para></para>
-<!--
-There is another bug in which snmptrapd doesn't quote STRING values in the VarBindList. This only happens if the given OID is resolved to a symbolic name.
--->
+            <para>Beacause of a bug, if <command>snmptrapd</command> does not escape String values in the VarBindList if it can resolve an OID to a symbolic name. As a result, &abbrev; cannot process traps that contain the <userinput>=</userinput> in the value of the string. To overcome this problem, disable resolving OIDs in <command>snmptrapd</command>.</para>
         </listitem>
         <listitem>
             <para>The colon (<userinput>:</userinput>) character is commonly used in SNMP traps. However, this character cannot be used in the name of &abbrev; macros (name-value pairs). Therefore, the &abbrev; application automatically replaces all consecutive <userinput>:</userinput> characters with a single underscore (<userinput>_</userinput>) character. For example, you can reference the value of the <userinput>NET-SNMP-EXAMPLES-MIB::netSnmpExampleString</userinput> key using the <userinput>${NET-SNMP-EXAMPLES-MIB_netSnmpExampleString}</userinput> macro.</para>
@@ -47,9 +44,6 @@ There is another bug in which snmptrapd doesn't quote STRING values in the VarBi
     <itemizedlist>
         <listitem>
             <para>Configure <command>snmptrapd</command> to log into a file.</para>
-            <!--
-         Due to a bug in snmptrapd, if you specify the filename in the configuration file with 'logOption', the trap format won't be applied unless you also specify another output as a command line argument (-Lf, -Ls).
--->
         </listitem>
         <listitem>
             <para>If you use SMIv1 traps, include the following format string in the configuration file of <command>snmptrapd</command>:</para>
@@ -60,7 +54,7 @@ There is another bug in which snmptrapd doesn't quote STRING values in the VarBi
             <synopsis>format2 %.4y-%.2m-%.2l %.2h:%.2j:%.2k %B [%b]:\n%v\n</synopsis>
         </listitem>
         <listitem>
-            <para>If you specify the filename in the configuration file with <userinput>logOption</userinput>, you must also specify another output as a command line argument (-Lf, -Ls). Otherwise, <command>snmptrapd</command> will not apply the the trap format.</para>
+            <para>Beacause of an <command>snmptrapd</command> bug, if you specify the filename in the configuration file with <userinput>logOption</userinput>, you must also specify another output as a command line argument (-Lf, -Ls). Otherwise, <command>snmptrapd</command> will not apply the the trap format.</para>
         </listitem>
     </itemizedlist>
 
@@ -88,7 +82,7 @@ log {
   };
 };</synopsis>
         <para>From the trap, &abbrev; writes the following into the log file:</para>
-        <synopsis>May 23 15:29:40 AnnoL snmptrapd: hostname='localhost', transport_info='UDP: [127.0.0.1]:59993->[127.0.0.1]:162', SNMPv2-SMI::mib-2.1.3.0='(666) 0:00:06.66', SNMPv2-SMI::snmpModules.1.1.4.1.0='NET-SNMP-EXAMPLES-MIB::netSnmpExampleHeartbeatNotification', NET-SNMP-EXAMPLES-MIB::netSnmpExampleHeartbeatRate='60', NET-SNMP-EXAMPLES-MIB::netSnmpExampleString='string'</synopsis>
+        <synopsis>May 23 15:29:40 myhostname snmptrapd: hostname='localhost', transport_info='UDP: [127.0.0.1]:59993->[127.0.0.1]:162', SNMPv2-SMI::mib-2.1.3.0='(666) 0:00:06.66', SNMPv2-SMI::snmpModules.1.1.4.1.0='NET-SNMP-EXAMPLES-MIB::netSnmpExampleHeartbeatNotification', NET-SNMP-EXAMPLES-MIB::netSnmpExampleHeartbeatRate='60', NET-SNMP-EXAMPLES-MIB::netSnmpExampleString='string'</synopsis>
         <para>Using the same input trap, the following configuration example formats the SNMP traps as JSON messages.</para>
         <synopsis>@include "scl.conf"
 log {
@@ -96,7 +90,6 @@ log {
     snmptrap(
       filename("/var/log/snmptrapd.log")
       set-message-macro(no)
-      prefix(".custom.snmp.")
     );
   };
 
@@ -172,30 +165,9 @@ log {
 
         </simplesect>
         <simplesect xml:id="snmptrap-persist-name">
-            <title>persist-name()</title>
-            <indexterm type="parameter">
-                <primary>persist-name()</primary>
-            </indexterm>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
-                    <tbody>
-                        <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                            </entry>
-                            <entry>string</entry>
-                        </row>
-                        <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                            </entry>
-                            <entry></entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> If you want to use the <parameter>snmptrap()</parameter> source in multiple log paths, set the <parameter>persist-name()</parameter> option to a custom string, for example, <userinput>persist-name("example-persist-name")</userinput>. Otherwise, &abbrev; cannot ensure that it reads every trap in every log path from the source.</para>
+
+            <xi:include href="../../common/chunk/option-persist-name.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
         </simplesect>
         <simplesect xml:id="snmptrap-prefix">
             <xi:include href="../../common/chunk/option-parser-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
