@@ -159,7 +159,7 @@
         <simplesect>
             <xi:include href="../../common/chunk/option-source-flags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
-        <simplesect>
+        <simplesect xml:id="wildcard-file-source-option-follow-freq">
             <xi:include href="../../common/chunk/option-source-follow-freq.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
         <simplesect>
@@ -170,6 +170,11 @@
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-source-file-log-iw-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <para>When using wildcards in the filenames, &abbrev; attempts to read <parameter>log-fetch-limit()</parameter> number of messages from each file. For optimal performance, make sure that <parameter>log-iw-size()</parameter> is greater than <userinput>log-fetch-limit()*max-files()</userinput>. Note that to avoid performance problems, if <userinput>log-iw-size()/max-files()</userinput> is smaller than 100, &abbrev; automatically sets <userinput>log-iw-size()</userinput> to <userinput>max-files()*100</userinput>.</para>
+            <example>
+                <title>Initial window size of file sources</title>
+                <para>If <userinput>log-fetch-limit()</userinput> is 100, and your wildcard file source has 200 files, then <parameter>log-iw-size()</parameter> should be at least 20000.</para>
+            </example>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-source-log-msg-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -205,6 +210,38 @@
 
             <xi:include href="../../common/chunk/para-wildcard-file-source-max-files.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
+        </simplesect>
+        <simplesect>
+            <title>monitor-method()</title>
+            <indexterm type="parameter">
+                <primary>monitor-method()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>auto | inotify | poll</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>auto </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <indexterm>
+                <primary>polling files</primary>
+            </indexterm>
+            <indexterm>
+                <primary>inotify</primary>
+            </indexterm>
+            <para><emphasis role="bold">Description:</emphasis> If the platform supports inotify, &abbrev; uses it automatically to detect changes to the source files. If inotify is not available, &abbrev; polls the files as set in the <link linkend="wildcard-file-source-option-follow-freq"><parameter>follow-freq()</parameter></link> option. To force &abbrev; poll the files even if inotify is available, set this option to <userinput>poll</userinput>.</para>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-source-multi-line-mode.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
