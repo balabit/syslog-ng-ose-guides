@@ -2,8 +2,8 @@
 <!DOCTYPE section
  [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
  %entities;]>
-<section xml:id="configuring-destinations-http-nonjava" xmlns="http://docbook.org/ns/docbook" version="5.0" condition="ose">
-    <title>Posting messages over HTTP without Java</title>
+<section xml:id="configuring-destinations-http-nonjava" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>Posting messages over HTTP<phrase condition="ose"> without Java</phrase></title>
     <indexterm>
         <primary>destination drivers</primary>
         <secondary><parameter>http()</parameter> driver</secondary>
@@ -12,19 +12,14 @@
         <primary>destination drivers</primary>
         <secondary><parameter>http</parameter></secondary>
     </indexterm>
-    <para>Version <phrase condition="ose">3.8</phrase> of &abbrev; can directly post log messages to web services using the HTTP protocol, without having to use Java. The current implementation has the following limitations:</para>
+    <para>Version <phrase condition="ose">3.8</phrase><phrase condition="pe">7.0.4</phrase> of &abbrev; can directly post log messages to web services using the HTTP protocol<phrase condition="ose">, without having to use Java</phrase>. The current implementation has the following limitations:</para>
     <itemizedlist>
-        <listitem>
-            <para>Only HTTP connections are supported, HTTPS is not.</para>
-<!--
-            FIXME which types of authentication do we support? redirect handling?
--->
-        </listitem>
         <listitem>
             <para>Only the PUT and the POST methods are supported.</para>
         </listitem>
     </itemizedlist>
-    <xi:include href="../../common/wnt/note-server-mode-only.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <para>HTTPS connection, as well as password- and certificate-based authentication is supported.</para>
+    <!-- FIXME we should add some samples for HTTPS/authentication -->
     <formalpara>
         <title>Declaration:</title>
         <para/>
@@ -40,7 +35,7 @@
         user("user")
         password("password")
         headers("HEADER1: header1", "HEADER2: header2")
-        body("${ISODATE} ${MSG}")
+        body("${ISODATE} ${MESSAGE}")
     );
 };</synopsis>
     <example xml:id="example-destination-http-nonjava">
@@ -53,7 +48,7 @@
         user("user")
         password("password")
         headers("HEADER1: header1", "HEADER2: header2")
-        body("${ISODATE} ${MSG}")
+        body("${ISODATE} ${MESSAGE}")
     );
 };
 
@@ -61,6 +56,7 @@ log
     { source(s_file); destination(d_http); flags(flow-control); };
 </synopsis>
     </example>
+    <para>You can also use the http() destination to <link linkend="syslog-ng-with-splunk">forward log messages to Splunk using &abbrev;</link>.</para>
     <section xml:id="reference-destination-http-nonjava">
         <title>HTTP destination options</title>
         <indexterm>
@@ -104,10 +100,56 @@ log
 <!--
             FIXME can it be empty?
 -->
-            <para><emphasis role="bold">Description:</emphasis> The body of the HTTP request, for example, <userinput>body("${ISODATE} ${MSG}")</userinput>. You can use strings, macros, and template functions in the body.</para>
+            <para><emphasis role="bold">Description:</emphasis> The body of the HTTP request, for example, <userinput>body("${ISODATE} ${MESSAGE}")</userinput>. You can use strings, macros, and template functions in the body.</para>
+        </simplesect>
+        <simplesect xml:id="https-options-ca-dir">
+
+            <xi:include href="../../common/chunk/option-destination-tls-ca-dir.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        </simplesect>
+        <simplesect xml:id="https-options-ca-file">
+            <title>ca-file()</title>
+            <indexterm type="parameter">
+                <primary>ca-file()</primary>
+            </indexterm>
+            <indexterm>
+                <primary>ca_file()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="80pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Accepted values: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>Filename</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>none</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Name of a file, that contains an X.509 CA certificate (or a certificate chain) in PEM format. The &abbrev; application uses this certificate to validate the certificate of the HTTPS server. If the file contains a certificate chain, the file must begin with the certificate of the host, followed by the CA certificate that signed the certificate of the host, and any other signing CAs in order.</para>
+        </simplesect>
+        <simplesect xml:id="https-options-cert-file">
+
+            <xi:include href="../../common/chunk/option-destination-tls-cert-file.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        </simplesect>
+        <simplesect xml:id="https-options-cipher-suite">
+
+            <xi:include href="../../common/chunk/option-destination-tls-cipher-suite.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
         </simplesect>
         <simplesect>
+
             <xi:include href="../../common/chunk/option-destination-diskbuffer.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
         </simplesect>
         <simplesect>
             <title>headers()</title>
@@ -140,6 +182,11 @@ log
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect xml:id="https-options-key-file">
+
+            <xi:include href="../../common/chunk/option-destination-tls-key-file.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
         </simplesect>
         <simplesect>
             <title>method()</title>
@@ -175,15 +222,6 @@ log
             <para><emphasis role="bold">Description:</emphasis> Specifies the HTTP method to use when sending the message to the server.</para>
         </simplesect>
         <simplesect>
-            <xi:include href="../../common/chunk/option-destination-retries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        </simplesect>
-        <simplesect>
-            <xi:include href="../../common/chunk/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        </simplesect>
-        <simplesect>
-            <xi:include href="../../common/chunk/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        </simplesect>
-        <simplesect>
             <title>password()</title>
             <indexterm type="parameter">
                 <primary>password()</primary>
@@ -208,6 +246,107 @@ log
                 </tgroup>
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> The password that &abbrev; uses to authenticate on the server where it sends the messages.</para>
+        </simplesect>
+        <simplesect xml:id="https-option-peer-verify">
+            <title>peer-verify()</title>
+            <indexterm type="parameter">
+                <primary>peer-verify()</primary>
+            </indexterm>
+            <indexterm>
+                <primary>peer_verify()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="80pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Accepted values: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>yes | no
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>yes</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Verification method of the peer. The following table summarizes the possible options and their results depending on the certificate of the peer.</para>
+
+            <xi:include href="../../common/chunk/option-tls-peer-verify-yesno.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+            <xi:include href="../../common/chunk/option-destination-tls-peer-verify-notes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-retries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../common/chunk/option-destination-throttle.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect xml:id="https-options-timeout">
+            <title>timeout()</title>
+            <indexterm type="parameter">
+                <primary>timeout()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type:
+								<?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>number [seconds]</entry>
+                        </row>
+                        <row>
+                            <entry>Default:
+								<?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry></entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The value (in seconds) to wait for an operation to complete, and attempt to reconnect the server if exceeded. By default, the timeout is disabled. Available in version <phrase condition="ose">3.8</phrase><phrase condition="pe">7.0.4</phrase> and later.</para>
+        </simplesect>
+        <simplesect xml:id="https-options-ssl-version">
+            <title>ssl-version()</title>
+            <indexterm type="parameter">
+                <primary>ssl-version()</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>ssl_version()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+        <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>None, uses the libcurl default</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the permitted SSL/TLS version. Possible values: <parameter>sslv2</parameter>, <parameter>sslv3</parameter>, <parameter>tlsv1</parameter>, <parameter>tlsv1_0</parameter>, <parameter>tlsv1_1</parameter>, <parameter>tlsv1_2</parameter>.</para>
         </simplesect>
         <simplesect>
             <title>url()</title>
