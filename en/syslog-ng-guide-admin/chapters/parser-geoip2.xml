@@ -2,19 +2,19 @@
 <!DOCTYPE section
  [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
  %entities;]>
-<section xml:id="geoip-parser" xmlns="http://docbook.org/ns/docbook" version="5.0">
-    <title>Looking up GeoIP data from IP addresses (DEPRECATED)</title>
+<section xml:id="geoip2-parser" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>Looking up GeoIP2 data from IP addresses</title>
     <indexterm>
-        <primary>geoip</primary>
+        <primary>geoip2</primary>
     </indexterm>
     <indexterm>
         <primary>parsers</primary>
-        <secondary>geoip</secondary>
+        <secondary>geoip2</secondary>
     </indexterm>
-    <para>This parser is deprecated. Use <xref linkend="geoip2-parser"/> instead.</para>
-    <para>The &abbrev; application can lookup IP addresses from an offline GeoIP database, and make the retrieved data available in name-value pairs. Depending on the database used, you can access country code, longitude, and latitude information.</para>
+    <para>The &abbrev; application can lookup IP addresses from an offline GeoIP2 database, and make the retrieved data available in name-value pairs. Depending on the database used, you can access country code, longitude, and latitude information.</para>
+    <para>The &abbrev; application the country version and the city version of the GeoIP2 database, both free and the production edition. The &abbrev; application works with the mmdb (GeoIP2) format of these databases. Other formats, like csv are not supported.</para>
     <note>
-        <para>To access longitude and latitude information, download the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz">GeoLiteCity</link> database, and unzip it (for example, to the <filename>/usr/share/GeoIP/GeoLiteCity.dat</filename> file). The default databases available on Linux and other platforms usually contain only the country codes.</para>
+        <para>To access longitude and latitude information, download the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://www.maxmind.com/en/geoip2-databases">GeoIP2</link> database. The GeoLite2 City database is available for free of charge, but it is less accurate. The GeoIP2 City database has to be purchased, and it is more accurate. Unzip the downloaded database (for example, to the <filename>/usr/share/GeoIP2/GeoIP2City.mmdb</filename> file). This path will be used later in the configuration.</para>
     </note>
     <para>You can refer to the separated parts of the message using the key of the value as a macro. For example, if the message contains <userinput>KEY1=value1,KEY2=value2</userinput>, you can refer to the values as <userinput>${KEY1}</userinput> and <userinput>${KEY2}</userinput>.</para>
     <formalpara>
@@ -22,17 +22,17 @@
         <para/>
     </formalpara>
     <synopsis>parser parser_name {
-    geoip(
+    geoip2(
         &lt;macro-containing-the-IP-address-to-lookup&gt;
         prefix()
-        database("&lt;path-to-database-file&gt;")
+        database("&lt;path-to-feoip2-database-file&gt;")
     );
 };</synopsis>
     <example>
-        <title>Using the GeoIP parser</title>
-        <para>In the following example, &abbrev; retrieves the GeoIP data of the IP address contained in the ${HOST} field of the incoming message, and includes the data (prefixed with the <userinput>geoip.</userinput> string) in the output JSON message.</para>
-        <synopsis>@version: 3.7
-@module geoip
+        <title>Using the GeoIP2 parser</title>
+        <para>In the following example, &abbrev; retrieves the GeoIP2 data of the IP address contained in the ${HOST} field of the incoming message, and includes the data (prefixed with the <userinput>.geoip2</userinput> string) in the output JSON message.</para>
+        <synopsis>@version: 3.11
+@module geoip2
 
 options {
     keep_hostname(yes);
@@ -42,34 +42,34 @@ source s_file {
     file("/tmp/input");
 };
 
-parser p_geoip { geoip( "${HOST}", prefix( "geoip." ) database( "/usr/share/GeoIP/GeoLiteCity.dat" ) ); };
+parser p_geoip2 { geoip2( "${HOST}", prefix( "geoip2." ) database( "/usr/share/GeoIP2/GeoLiteCity.dat" ) ); };
 
 destination d_file {
-    file( "/tmp/output" template("$(format-json --scope core --key geoip*)\n") );
+    file( "/tmp/output" template("$(format-json --scope core --key geoip2*)\n") );
 };
 
 
 log {
     source(s_file);
-    parser(p_geoip);
+    parser(p_geoip2);
     destination(d_file);
 };</synopsis>
         <para>For example, for the <userinput>&lt;38&gt;Jan 1 14:45:22 192.168.1.1 prg00000[1234]: test message</userinput> message the output will look like:</para>
-        <synopsis>{"geoip":{"longitude":"47.460704","latitude":"19.049968","country_code":"HU"},"PROGRAM":"prg00000","PRIORITY":"info","PID":"1234","MESSAGE":"test message","HOST":"192.168.1.1","FACILITY":"auth","DATE":"Jan  1 14:45:22"}</synopsis>
+        <synopsis>{"geoip2":{"longitude":"47.460704","latitude":"19.049968","country_code":"HU"},"PROGRAM":"prg00000","PRIORITY":"info","PID":"1234","MESSAGE":"test message","HOST":"192.168.1.1","FACILITY":"auth","DATE":"Jan  1 14:45:22"}</synopsis>
         <para>If you are transferring your log messages into Elasticsearch, use the following rewrite rule to combine the longitude and latitude information into a single value (called <userinput>geoip.location</userinput>), and set the mapping in Elasticsearch accordingly. Do not forget to include the rewrite in your log path. For details on transferring your log messages to Elasticsearch, see <xref linkend="configuring-destinations-elasticsearch"/>.</para>
         <indexterm>
-            <primary>geoip</primary>
+            <primary>geoip2</primary>
             <secondary>elasticsearch</secondary>
         </indexterm>
         <indexterm>
             <primary>elasticsearch</primary>
-            <secondary>transferring geoip data</secondary>
+            <secondary>transferring geoip2 data</secondary>
         </indexterm>
-        <synopsis>rewrite r_geoip {
+        <synopsis>rewrite r_geoip2 {
     set(
-        "${geoip.latitude},${geoip.longitude}",
-        value( "geoip.location" ),
-        condition(not "${geoip.latitude}" == "")
+        "${geoip2.latitude},${geoip2.longitude}",
+        value( "geoip2.location" ),
+        condition(not "${geoip2.latitude}" == "")
     );
 };</synopsis>
         <para>In your Elasticsearch configuration, set the appropriate mappings:</para>
@@ -77,7 +77,7 @@ log {
    "mappings" : {
       "_default_" : {
          "properties" : {
-            "geoip" : {
+            "geoip2" : {
                "properties" : {
                   "country_code" : {
                      "index" : "not_analyzed",
@@ -104,21 +104,21 @@ log {
    }
 }</synopsis>
     </example>
-    <section xml:id="geoip-parser-options">
-        <title>Options of <userinput>geoip</userinput> parsers</title>
+    <section xml:id="geoip2-parser-options">
+        <title>Options of <userinput>geoip2</userinput> parsers</title>
         <indexterm>
-            <primary>geoip</primary>
+            <primary>geoip2</primary>
         </indexterm>
         <indexterm>
             <primary>parsers</primary>
-            <secondary>geoip</secondary>
+            <secondary>geoip2</secondary>
         </indexterm>
-        <para>The <parameter>geoip</parameter> parser has the following options.</para>
-        <simplesect xml:id="geoip-parser-prefix">
+        <para>The <parameter>geoip2</parameter> parser has the following options.</para>
+        <simplesect xml:id="geoip2-parser-prefix">
             <xi:include href="../../common/chunk/option-parser-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            <para>For example, to insert the <userinput>geoip.</userinput> prefix, use the <userinput>prefix(.geoip.)</userinput> option. To refer to a particular data when using a prefix, use the prefix in the name of the macro, for example, <command>${geoip.country_code}</command> .</para>
+            <para>For example, to insert the <userinput>geoip.</userinput> prefix, use the <userinput>prefix(.geoip2)</userinput> option. To refer to a particular data when using a prefix, use the prefix in the name of the macro, for example, <command>${geoip2.country_code}</command> .</para>
         </simplesect>
-        <simplesect xml:id="geoip-parser-database">
+        <simplesect xml:id="geoip2-parser-database">
             <title>database()</title>
             <indexterm>
                 <primary>database()</primary>
@@ -139,13 +139,12 @@ log {
 									<?dbhtml bgcolor="#D4D6EB" ?>
 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
-                            <entry><filename>/usr/share/GeoIP/GeoIP.dat</filename>
-                            </entry>
+                            <entry></entry>
                         </row>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The full path to the GeoIP database to use. Note that &abbrev; must have the required privileges to read this file. Do not modify or delete this file while &abbrev; is running, it can crash &abbrev;.</para>
+            <para><emphasis role="bold">Description:</emphasis> The full path to the GeoIP2 database to use. Note that &abbrev; must have the required privileges to read this file. Do not modify or delete this file while &abbrev; is running, it can crash &abbrev;.</para>
         </simplesect>
     </section>
 </section>
