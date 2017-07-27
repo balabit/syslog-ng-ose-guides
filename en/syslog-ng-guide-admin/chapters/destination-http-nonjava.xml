@@ -19,7 +19,19 @@
         </listitem>
     </itemizedlist>
     <para>HTTPS connection, as well as password- and certificate-based authentication is supported.</para>
-    <!-- FIXME we should add some samples for HTTPS/authentication -->
+    <example>
+        <title>Client certificate authentication with HTTPS</title>
+        <synopsis>destination d_https { 
+  http(
+    [...]
+    ca_file("/path-to-cert-dir/ca-crt.pem")
+    ca_dir("/path-to-cert-dir/")
+    cert_file("/path-to-cert-dir/server-crt.pem")
+    key_file("/path-to-certdir/server-key.pem")
+    [...]
+  ); 
+};</synopsis>
+    </example>
     <formalpara>
         <title>Declaration:</title>
         <para/>
@@ -29,27 +41,26 @@
 -->
     <synopsis>destination d_http {
     http(
-        url("http://127.0.0.1:8000")
-        method("PUT")
-        user_agent("syslog-ng User Agent")
-        user("user")
-        password("password")
-        headers("HEADER1: header1", "HEADER2: header2")
-        body("${ISODATE} ${MESSAGE}")
+        url("&lt;web-service-IP-or-hostname&gt;")
+        method("&lt;HTTP-method&gt;")
+        user_agent("&lt;USER-AGENT-message-value&gt;")
+        user("&lt;username&gt;")
+        password("&lt;password&gt;")
     );
 };</synopsis>
     <example xml:id="example-destination-http-nonjava">
         <title>Sending log data to a web service</title>
         <para>The following example defines an <parameter>http</parameter> destination.</para>
         <synopsis>destination d_http {
-    http(url("http://127.0.0.1:8000")
-        method("PUT")
-        user_agent("syslog-ng User Agent")
-        user("user")
-        password("password")
-        headers("HEADER1: header1", "HEADER2: header2")
-        body("${ISODATE} ${MESSAGE}")
-    );
+  http(
+    url("http://127.0.0.1:8000")
+    method("PUT")
+    user_agent("syslog-ng User Agent")
+    user("user")
+    password("password")
+    headers("HEADER1: header1", "HEADER2: header2")
+    body("${ISODATE} ${MESSAGE}")
+  );
 };
 
 log
@@ -64,15 +75,7 @@ log
             <secondary><parameter>http</parameter></secondary>
         </indexterm>
         <para>The <parameter>http</parameter> destination of &abbrev; can directly post log messages to web services using the HTTP protocol. The <parameter>http</parameter> destination has the following options.</para>
-        <formalpara>
-            <title>Required options:</title>
-            <para/>
-        </formalpara>
-        <para>The following options are required: <parameter>url()</parameter>.</para>
-<!--
-        FIXME What common options are supported?
-        FIXME Default values/required options?
--->
+        
         <simplesect>
             <title>body()</title>
             <indexterm type="parameter">
@@ -84,23 +87,20 @@ log
                     <tbody>
                         <row>
                             <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>string or template</entry>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry></entry>
                         </row>
                     </tbody>
                 </tgroup>
             </informaltable>
-<!--
-            FIXME can it be empty?
--->
-            <para><emphasis role="bold">Description:</emphasis> The body of the HTTP request, for example, <userinput>body("${ISODATE} ${MESSAGE}")</userinput>. You can use strings, macros, and template functions in the body.</para>
+            <para><emphasis role="bold">Description:</emphasis> The body of the HTTP request, for example, <userinput>body("${ISODATE} ${MESSAGE}")</userinput>. You can use strings, macros, and template functions in the body. If not set, it will contain the message received from the source by default.</para>
         </simplesect>
         <simplesect xml:id="https-options-ca-dir">
 
@@ -121,13 +121,13 @@ log
                     <tbody>
                         <row>
                             <entry>Accepted values: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>Filename</entry>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>none</entry>
                         </row>
@@ -162,13 +162,13 @@ log
                     <tbody>
                         <row>
                             <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>string list</entry>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry></entry>
                         </row>
@@ -176,9 +176,25 @@ log
                 </tgroup>
             </informaltable>
 <!--
-            FIXME can you use templates/macros in the header names/values?
+            FIXME can you use templates/macros in the header names/values? 
+            - Ilyet most nem tudunk, de tok jo felvetes. Szerintem hasznos lenne ilyet betenni :) (by Nemes Antal)
 -->
-            <para><emphasis role="bold">Description:</emphasis> Custom HTTP headers to include in the request, for example, <userinput>headers("HEADER1: header1", "HEADER2: header2")</userinput></para>
+            <para><emphasis role="bold">Description:</emphasis> Custom HTTP headers to include in the request, for example, <userinput>headers("HEADER1: header1", "HEADER2: header2")</userinput>. If not set, only the default headers are included, but no custom headers.</para>
+            <para>The following headers are included by default:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>X-Syslog-Host: &lt;host&gt;</para>
+                </listitem>
+                <listitem>
+                    <para>X-Syslog-Program: &lt;program&gt;</para>
+                </listitem>
+                <listitem>
+                    <para>X-Syslog-Facility: &lt;facility&gt;</para>
+                </listitem>
+                <listitem>
+                    <para>X-Syslog-Level: &lt;loglevel/priority&gt;</para>
+                </listitem>
+            </itemizedlist>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-log-fifo-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -203,18 +219,16 @@ log
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-								<?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>POST | PUT</entry>
                         </row>
                         <row>
-                            <entry>Default: POST
-								<?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
-                            <entry></entry>
+                            <entry>POST</entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -232,13 +246,13 @@ log
                     <tbody>
                         <row>
                             <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>string</entry>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry></entry>
                         </row>
@@ -261,14 +275,13 @@ log
                     <tbody>
                         <row>
                             <entry>Accepted values: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
-                            <entry>yes | no
-                            </entry>
+                            <entry>yes | no </entry>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>yes</entry>
                         </row>
@@ -283,7 +296,40 @@ log
 
         </simplesect>
         <simplesect>
+            <xi:include href="../../common/chunk/option-persist-name.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
             <xi:include href="../../common/chunk/option-destination-retries.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <para>To handle HTTP error responses, if the HTTP server returns 5xx codes, &abbrev; will attempt to resend messages until the number of attempts reaches <parameter>retries</parameter>. If the HTTP server returns 4xx codes, &abbrev; will drop the messages.</para>
+        </simplesect>
+        <simplesect xml:id="https-options-ssl-version">
+            <title>ssl-version()</title>
+            <indexterm type="parameter">
+                <primary>ssl-version()</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>ssl_version()</primary>
+            </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
+                            </entry>
+                            <entry>None, uses the libcurl default</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the permitted SSL/TLS version. Possible values: <parameter>sslv2</parameter>, <parameter>sslv3</parameter>, <parameter>tlsv1</parameter>, <parameter>tlsv1_0</parameter>, <parameter>tlsv1_1</parameter>, <parameter>tlsv1_2</parameter>.</para>
         </simplesect>
         <simplesect>
             <xi:include href="../../common/chunk/option-destination-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -301,52 +347,21 @@ log
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-								<?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>number [seconds]</entry>
                         </row>
                         <row>
-                            <entry>Default:
-								<?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
-                            </entry>
-                            <entry></entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The value (in seconds) to wait for an operation to complete, and attempt to reconnect the server if exceeded. By default, the timeout is disabled. Available in version <phrase condition="ose">3.8</phrase><phrase condition="pe">7.0.4</phrase> and later.</para>
-        </simplesect>
-        <simplesect xml:id="https-options-ssl-version">
-            <title>ssl-version()</title>
-            <indexterm type="parameter">
-                <primary>ssl-version()</primary>
-            </indexterm>
-            <indexterm type="parameter">
-                <primary>ssl_version()</primary>
-            </indexterm>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
-                    <tbody>
-                        <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
-                            </entry>
-                            <entry>string</entry>
-                        </row>
-                        <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
-                            <entry>None, uses the libcurl default</entry>
+                            <entry>0</entry>
                         </row>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies the permitted SSL/TLS version. Possible values: <parameter>sslv2</parameter>, <parameter>sslv3</parameter>, <parameter>tlsv1</parameter>, <parameter>tlsv1_0</parameter>, <parameter>tlsv1_1</parameter>, <parameter>tlsv1_2</parameter>.</para>
+            <para><emphasis role="bold">Description:</emphasis> The value (in seconds) to wait for an operation to complete, and attempt to reconnect the server if exceeded. By default, the timeout value is <userinput>0</userinput>, meaning that there is no timeout. Available in version <phrase condition="ose">3.11</phrase><phrase condition="pe">7.0.4</phrase> and later.</para>
         </simplesect>
         <simplesect>
             <title>url()</title>
@@ -363,18 +378,16 @@ log
                     <colspec colnum="1" colwidth="40pt"/>
                     <tbody>
                         <row>
-                            <entry>Type:
-								<?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>URL</entry>
                         </row>
                         <row>
-                            <entry>Default:
-								<?dbhtml bgcolor="#D4D6EB" ?>
-<?dbfo bgcolor="#D4D6EB" ?>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
-                            <entry></entry>
+                            <entry>http://localhost/</entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -392,15 +405,15 @@ log
                     <tbody>
                         <row>
                             <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>string</entry>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
-                            <entry></entry>
+                            <entry>syslog-ng [version]/libcurl[version]</entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -408,9 +421,9 @@ log
             <para><emphasis role="bold">Description:</emphasis> The value of the USER-AGENT header in the messages sent to the server.</para>
         </simplesect>
         <simplesect>
-            <title>username()</title>
+            <title>user()</title>
             <indexterm type="parameter">
-                <primary>username()</primary>
+                <primary>user()</primary>
             </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -418,13 +431,13 @@ log
                     <tbody>
                         <row>
                             <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>string</entry>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-        <?dbfo bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry></entry>
                         </row>
