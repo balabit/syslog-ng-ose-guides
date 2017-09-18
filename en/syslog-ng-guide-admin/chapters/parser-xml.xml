@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="xml-parser" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>The XML parser</title>
+    <indexterm> <primary>segmenting messages</primary> </indexterm>
+    <indexterm> <primary>XML parsers</primary> </indexterm>
+    <indexterm> <primary>splitting messages</primary> </indexterm>
+    <indexterm> <primary>parsers</primary> <secondary>xml-parser</secondary> </indexterm>
+    <para>Extensible Markup Language (XML) is a text-based open standard designed for both human-readable and machine-readable data interchange. Like JSON, it is used primarily to transmit data between a server and web application. It is described in <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://tools.ietf.org/html/rfc3470">RFC 3470</link>. The &abbrev; application can separate parts of incoming XML-encoded log messages to name-value pairs and add the parsed data to message objects. For details on using value-pairs in &abbrev; see <xref linkend="concepts-value-pairs"/>.</para>
+    <para>To create an XML parser, define an <parameter>xml_parser</parameter> that has the <parameter>xml()</parameter> option. By default, the parser will process the <userinput>${MESSAGE}</userinput> part of the log message. To process other parts of a log message using the XML parser, use the <parameter>template()</parameter> option. You can also define the parser inline in the log path.</para>
+    <formalpara>
+        <title>Declaration:</title>
+        <para/>
+    </formalpara>
+    <synopsis>parser xml_name {
+    xml(template()
+        prefix()
+        drop_invalid()
+        exclude-tags()
+        strip-whitespaces();
+    );
+};</synopsis>
+    <formalpara>
+        <title>Example:</title>
+        <para/>
+    </formalpara>
+    <synopsis>parser xml_parser {
+
+       xml(template("$MSG")
+           prefix(".xml")
+           drop_invalid(no)
+           exclude-tags("tag1", "tag2", "tag3?", "tag*")
+           strip-whitespaces(no);
+           );
+
+};</synopsis>
+    <example>
+        <title>Using an XML parser</title>
+        <para>In the following example, the source is an XML-encoded log message. The syslog parser is disabled, so that &abbrev; does not parse the message: <userinput>flags(no-parse)</userinput>. </para>
+        <para>The destination is a file that uses the <parameter>json-parse</parameter> template. The log line connects the source, the destination and the parser.</para>
+        <synopsis>parser xml_parser {
+
+       xml(template("$MSG")
+           prefix(".xml")
+           drop_invalid(no)
+           exclude-tags("tag1", "tag2", "tag3?", "tag*")
+           strip-whitespaces(no);
+           );
+
+};</synopsis>
+        <para>You can also define the parser inline in the log path.</para>
+        <synopsis>FIXME example</synopsis>
+        <para>The xml-parser inserts an "<userinput>_xml</userinput>" prefix before the extracted name-value pairs. Attributes get an <userinput>_attr</userinput> prefix. For example, from the XML input:</para>
+        <synopsis>&lt;tags attr='attrval'>part1&lt;tag1>Tag1 Leaf&lt;/tag1>part2&lt;tag2>Tag2 Leaf&lt;/tag2>part3&lt;/tags></synopsis>
+        <para>The following output is generated:</para>
+        <synopsis>{<emphasis role="bold">"_xml"</emphasis>:{"tags":{"tag2":"Tag2 Leaf","tag1":"Tag1
+    Leaf","<emphasis role="bold">_attr</emphasis>":"attrval","tags":"part1part2part3"}}}</synopsis>
+        <para>When the text is separated by tags on different levels or tags on the same level, the parser simply concatenates the different parts of text. For example, from this input XML:</para>
+        <synopsis>&lt;tag>
+
+ &lt;tag1>text1&lt;/tag1>
+
+ &lt;tag1>text2&lt;/tag1>
+
+&lt;/tag></synopsis>
+        <para>The following output is generated:</para>
+        <synopsis>.xml.tag.tag1 = text1text2</synopsis>
+        <para>Whitespaces are conserved as they are in the XML input. No trimming or collapsing happens on significant whitespaces. For example, from this input XML:</para>
+        <synopsis>&lt;133>Feb 25 14:09:07 webserver syslogd: &lt;b>|Test\n\n   Test2|&lt;/b>\n</synopsis>
+        <para>The following output is generated:</para>
+        <synopsis>[2017-09-04T13:20:27.417266] Setting value; msg='0x7f2fd8002df0', name='.xml.b', value='|Test\x0a\x0a   Test2|'</synopsis>
+        <bridgehead>Limitations</bridgehead>
+        <para>The XML parser comes with certain limitations.</para>
+        <formalpara>
+            <title>Vector-like structures:</title>
+            <para/>
+        </formalpara>
+        <para>It is not possible to address each elements individually of a vector-like structure. For example:</para>
+        <synopsis>&lt;vector>
+    &lt;entry>value1&lt;/entry>
+    &lt;entry>value2&lt;/entry>
+    ...
+    &lt;entry>valueN&lt;/entry>
+&lt;/vector></synopsis>
+        <para>After parsing, the entries cannot be addressed individually. Instead, the text of the entries will be concatenated:</para>
+        <synopsis>vector.entry = "value1value2...valueN"</synopsis>
+        <para>Note that xmllint has the same behavior:</para>
+        <synopsis>$ xmllint --xpath "/vector/entry/text()" test.xml
+value1value2valueN%</synopsis>
+        <formalpara>
+            <title>CDATA:</title>
+            <para/>
+        </formalpara>
+        <para>The XML parser does not support CDATA. CDATA inside the XML input is simply ignored. This is true for the processing instructions as well.</para>
+        <formalpara>
+            <title>Inherited limitations:</title>
+            <para>The XML parser is based on the glib XML Subset Parser, which is not a full-scale XML parser. Some limitations are inherited.</para>
+        </formalpara>
+    </example>
+    <section xml:id="xml-parser-options">
+        <title>Options of XML parsers</title>
+        <para>The XML parser has the following options.</para>
+        <simplesect xml:id="xml-parser-drop-invalid">
+            <title>drop_invalid</title>
+            <indexterm type="parameter"> <primary>drop_invalid</primary> </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="50pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Synopsis: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>drop_invalid()</entry>
+                        </row>
+                        <row>
+                            <entry>Format: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>yes/no</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>no</entry>
+                        </row>
+                        <row>
+                            <entry>Mandatory: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>no</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> If set, messages with an invalid XML will be dropped entirely.</para>
+        </simplesect>
+        <simplesect xml:id="xml-parser-exclude-tags">
+            <title>exclude-tags</title>
+            <indexterm type="parameter"> <primary>exclude-tags</primary> </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="50pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Synopsis: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>exclude-tags()</entry>
+                        </row>
+                        <row>
+                            <entry>Format: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>list of globs</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry> <para>None</para> <para>If not set, no filtering will be executed.</para> </entry>
+                        </row>
+                        <row>
+                            <entry>Mandatory: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>no</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> The XML parser matches tags against the listed globs. If there is a match, the given subtree of the XML will be omitted.</para>
+        </simplesect>
+        <simplesect xml:id="xml-parser-prefix">
+            <xi:include href="../../common/chunk/option-parser-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect xml:id="xml-parser-strip-whitespaces">
+            <title>strip-whitespaces</title>
+            <indexterm type="parameter"> <primary>strip-whitespaces</primary> </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="50pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Synopsis: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>strip-whitespaces()</entry>
+                        </row>
+                        <row>
+                            <entry>Format: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>yes/no</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>no </entry>
+                        </row>
+                        <row>
+                            <entry>Mandatory: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>no</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Strip the whitespaces from the XML text nodes before adding them to the message.</para>
+        </simplesect>
+        <simplesect xml:id="xml-parser-template">
+            <xi:include href="../../common/chunk/option-parser-template.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+    </section>
+</section>
