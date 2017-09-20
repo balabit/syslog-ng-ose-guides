@@ -17,9 +17,6 @@
             <para>The &abbrev; application always creates a new file if the previous has been closed. Appending data to existing files is not supported.</para>
         </listitem>
         <listitem>
-            <xi:include href="../../common/chunk/para-hdfs-filename.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        </listitem>
-        <listitem>
             <xi:include href="../../common/chunk/para-hdfs-flush.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </listitem>
         <xi:include href="../../common/chunk/listitem-java-internal-messages.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -245,16 +242,20 @@ destination d_mapr {
                 </tgroup>
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> The path and name of the log file. For example, <userinput>hdfs-file("/usr/hdfs/mylogfile.txt")</userinput>. &abbrev; checks if the path to the logfile exists. If a directory does not exist &abbrev; automatically creates it.</para>
-            <para><parameter>hdfs</parameter> filenames support the usage of macros. This means that syslog-ng can create files on HDFS dynamically, using macros in the file (or directory) name.</para>
+            <para><parameter>hdfs-file()</parameter> supports the usage of macros. This means that syslog-ng can create files on HDFS dynamically, using macros in the file (or directory) name.</para>
+            <note>
+                <para>When a filename resolved from the macros contains a character that HDFS does not support, &abbrev; will not be able to create the file. Make sure that you use macros that do not contain unsupported characters.</para>
+            </note>
             <example>
                 <title>Using macros in filenames</title>
+                <para>In the following example, a <filename>/var/testdb_working_dir/$DAY-$HOUR.txt</filename> file will be created (with a UUID suffix):</para>
                 <synopsis>destination d_hdfs_9bf3ff45341643c69bf46bfff940372a {
     hdfs(client-lib-dir(/hdfs-libs)
  hdfs-uri("hdfs://hdp2.syslog-ng.balabit:8020")
  hdfs_file("/var/testdb_working_dir/$DAY-$HOUR.txt"));
 };</synopsis>
+                <para>As an example, if it is the 31st day of the month and it is 12 o'clock, then the name of the file will be <filename>31-12.txt</filename>.</para>
             </example>
-            <xi:include href="../../common/chunk/para-hdfs-filename.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </simplesect>
         <simplesect xml:id="hdfs-option-hdfs-max-filename-length">
             <title>hdfs-max-filename-length()</title>
