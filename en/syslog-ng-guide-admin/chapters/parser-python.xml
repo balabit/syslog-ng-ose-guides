@@ -4,23 +4,12 @@
  %entities;]>
 <section xml:id="python-parser" xmlns="http://docbook.org/ns/docbook" version="5.0">
     <title>The Python Parser</title>
-    <indexterm>
-        <primary>segmenting messages</primary>
-    </indexterm>
-    <indexterm>
-        <primary>python parser</primary>
-    </indexterm>
-    <indexterm>
-        <primary>custom python parser</primary>
-    </indexterm>
-    <indexterm>
-        <primary>parsers</primary>
-        <secondary>python</secondary>
-    </indexterm>
+    <indexterm> <primary>segmenting messages</primary> </indexterm>
+    <indexterm> <primary>python parser</primary> </indexterm>
+    <indexterm> <primary>custom python parser</primary> </indexterm>
+    <indexterm> <primary>parsers</primary> <secondary>python</secondary> </indexterm>
     <para>The Python Log Parser (available in &abbrev; version <phrase condition="ose">3.10</phrase><phrase condition="pe">7.0.2</phrase> and later) allows you to write your own parser in Python. Practically, that way you can process the log message (or parts of the log message) any way you need. For example, you can import external Python modules to process the messages, query databases to enrich the messages with additional data, and many other things.</para>
-
     <xi:include href="../../common/chunk/python-blocks.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-
     <formalpara>
         <title>Declaration:</title>
         <para/>
@@ -39,7 +28,7 @@ class MyParser(object):
         '''Optional. This method is executed when syslog-ng is started or reloaded.'''
         return True
     def deinit(self):
-        '''Optional. This method is executed when syslog-ng is stopped.'''
+        '''Optional. This method is executed when syslog-ng is stopped or reloaded.'''
         return True
     def parse(self, msg):
         '''Required. This method receives and processes the log message.'''
@@ -49,7 +38,7 @@ class MyParser(object):
         <title>Methods of the python() parser</title>
         <formalpara>
             <title>The <parameter>init (self, options)</parameter> method (optional)</title>
-            <para></para>
+            <para/>
         </formalpara>
         <para>The &abbrev; application initializes Python objects only when it is started or reloaded. That means it keeps the state of internal variables while &abbrev; is running. The <parameter>init</parameter> method is executed as part of the initialization. You can perform any initialization steps that are necessary for your parser to work. For example, if you want to perform a lookup from a file or a database, you can open the file or connect to the database here, or you can initialize a counter that you will increase in the <parameter>parse()</parameter> method.</para>
         <para>The return value of the <parameter>init()</parameter> method must be <userinput>True</userinput>. If it returns <userinput>False</userinput>, or raises an exception, &abbrev; will not start.</para>
@@ -66,28 +55,26 @@ class MyParser(object):
         self.regex = re.compile(pattern)
         self.counter = 0
         return True</synopsis>
-
         <formalpara>
             <title>The <parameter>parse(self, log_message)</parameter> method</title>
-            <para></para>
+            <para/>
         </formalpara>
         <para>The <parameter>parse()</parameter> method processes the log messages it receives, and can do virtually anything that you can code in Python. This method is required, otherwise &abbrev; will not start.</para>
         <para>The return value of the <parameter>parse()</parameter> method must be <userinput>True</userinput>. If it returns <userinput>False</userinput>, or raises an exception, &abbrev; will drop the message.</para>
-
         <xi:include href="../../common/chunk/python-blocks-nvpairs.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-
         <formalpara>
             <title>The <parameter>deinit(self)</parameter> method (optional)</title>
-            <para></para>
+            <para/>
         </formalpara>
-        <para>This method is executed when &abbrev; is stopped.</para>
+        <para>This method is executed when &abbrev; is stopped or reloaded.</para>
+        <xi:include href="../../common/wnt/warning-python-parser-deinit.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     </simplesect>
     <simplesect xml:id="python-parser-example">
         <title>Example: Parse loggen logs</title>
         <para>The following sample code parses the messages of the <command>loggen</command> tool (for details, see <xref linkend="loggen.1"/>). The following is a sample loggen message:</para>
         <synopsis>&lt;38&gt;2017-04-05T12:16:46 localhost prg00000[1234]: seq: 0000000000, thread: 0000, runid: 1491387406, stamp: 2017-04-05T12:16:46 PADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADD</synopsis>
         <para>The &abbrev; parser object references the LoggenParser class and passes a set of regular expressions to parse the loggen messages. The <userinput>init()</userinput> method of the LoggenParser class compiles these expressions into a pattern. The <userinput>parse</userinput> method uses these patterns to extract the fields of the message into name-value pairs. The destination template of the &abbrev; log statement uses the extracted fields to format the output message.</para>
-    <!-- FIXME calloutosra megcsinalni a konfigmagyarazatot? -->
+        <!-- FIXME calloutosra megcsinalni a konfigmagyarazatot? -->
         <synopsis>@version: &techversion;
 @include "scl.conf"
 parser my_python_parser{
@@ -122,7 +109,6 @@ class LoggenParser(object):
         return False
 };</synopsis>
     </simplesect>
-
     <simplesect xml:id="python-parser-example-windows-logs">
         <title>Example: Parse Windows eventlogs in Python - performance</title>
         <para>The following example uses regular expressions to process Windows log messages received in XML format from the &agent; application. The parser extracts different fields from messages received from the Security and the Application eventlog containers. Using the following configuration file, &abbrev; could process about 25000 real-life Windows log messages per second.</para>
@@ -180,8 +166,7 @@ class EventlogParser(object):
         return True
 };</synopsis>
     </simplesect>
-<!--
+    <!--
 FIXME whois lookupos pelda webszerver logokra?
 -->
-
 </section>
