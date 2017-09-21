@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="cisco-parser" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>The Cisco Parser</title>
+    <indexterm> <primary>segmenting messages</primary> </indexterm>
+    <indexterm> <primary>Cisco Parser</primary> </indexterm>
+    <indexterm> <primary>cisco</primary> </indexterm>
+    <indexterm> <primary>parsers</primary> <secondary>cisco</secondary> </indexterm>
+    <para>The Cisco Parser can parse the log messages of various Cisco devices. The messages of these devices often do not completely comply with the syslog RFCs, making them difficult to parse. The <parameter>cisco-parser()</parameter> of &abbrev; solves this problem, and can separate these log messages to name-value pairs, extracting also the Cisco-specific values, for example, the mnemonic. For details on using value-pairs in &abbrev; see <xref linkend="concepts-value-pairs"/>. The parser can parse variations of the following message format:</para>
+    <synopsis>&lt;pri>(sequence: )?(origin-id: )?(timestamp? timezone?: )?%msg</synopsis>
+    <para>For example:</para>
+    <synopsis>&lt;189>29: foo: *Apr 29 13:58:40.411: %SYS-5-CONFIG_I: Configured from console by console
+&lt;190>30: foo: *Apr 29 13:58:46.411: %SYS-6-LOGGINGHOST_STARTSTOP: Logging to host 192.168.1.239 stopped - CLI initiated
+&lt;190>31: foo: *Apr 29 13:58:46.411: %SYS-6-LOGGINGHOST_STARTSTOP: Logging to host 192.168.1.239 started - CLI initiated
+&lt;189>32: 0.0.0.0: *Apr 29 13:59:12.491: %SYS-5-CONFIG_I: Configured from console by console</synopsis>
+    <para>Note that not every Cisco log message conforms to this format. If you find a message that the <parameter>cisco-parser()</parameter> cannot properly parse, send it to <email>documentation@balabit.com</email> so we can improve the parser.</para>
+    <para>The &abbrev; application normalizes the parsed log messages into the following format:</para>
+    <synopsis>${MESSAGE}=%FAC-SEV-MNEMONIC: message
+${HOST}=origin-id</synopsis>
+    <para>By default, the Cisco-specific fields are extracted into the following name-value pairs:<parameter>${.cisco.facility}</parameter>, <parameter>${.cisco.severity}</parameter>, <parameter>${.cisco.mnemonic}</parameter>. You can change the prefix using the <parameter>prefix</parameter> option.</para>
+    <formalpara>
+        <title>Declaration:</title>
+        <para/>
+    </formalpara>
+    <synopsis>@version: &techversion;
+@include "scl.conf"
+log {
+    source { udp(flags(no-parse)); };
+    parser { cisco-parser(); };
+    destination { ... };
+};</synopsis>
+    <para>Note that you have to disable message parsing in the source using the <userinput>flags(no-parse)</userinput> option for the parser to work.</para>
+    <para>The <parameter>cisco-parser()</parameter> is actually a reusable configuration snippet configured to parse Cisco messages. For details on using or writing such configuration snippets, see <xref linkend="config-blocks"/>. You can find the source of this configuration snippet on <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://github.com/balabit/syslog-ng/blob/master/scl/cisco/plugin.conf">GitHub</link>.</para>
+    <simplesect xml:id="cisco-parser-prefix">
+        <xi:include href="../../common/chunk/option-parser-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <para>By default, <parameter>cisco-parser()</parameter> uses the <userinput>cisco.</userinput> prefix. To modify it, use the following format:</para>
+        <synopsis>parser { cisco-parser(prefix("myprefix.")); };</synopsis>
+    </simplesect>
+</section>
