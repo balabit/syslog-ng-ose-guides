@@ -5,19 +5,10 @@
  %entities;]>
 <chapter xml:id="chapter-multithreading" xmlns="http://docbook.org/ns/docbook" version="5.0">
     <title>Multithreading and scaling in &abbrev;</title>
-    <indexterm significance="preferred">
-        <primary>multithreading in &abbrev;</primary>
-    </indexterm>
-    <indexterm>
-        <primary>scaling to multiple CPUs</primary>
-    </indexterm>
-    <indexterm>
-        <primary>threading</primary>
-    </indexterm>
-    <indexterm>
-        <primary>performance</primary>
-        <secondary>using multithreading</secondary>
-    </indexterm>
+    <indexterm significance="preferred"> <primary>multithreading in &abbrev;</primary> </indexterm>
+    <indexterm> <primary>scaling to multiple CPUs</primary> </indexterm>
+    <indexterm> <primary>threading</primary> </indexterm>
+    <indexterm> <primary>performance</primary> <secondary>using multithreading</secondary> </indexterm>
     <para>Starting with version <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.3</phrase>, &abbrev; can process sources and destinations in multithreaded mode to scale to multiple CPUs or cores for increased performance. Starting with version <phrase condition="ose">3.6</phrase><phrase condition="pe">5 F4</phrase>, this multithreaded mode is the default.</para>
     <section xml:id="multithreading-in-syslog-ng">
         <title>Multithreading concepts of &abbrev;</title>
@@ -100,26 +91,6 @@
             <synopsis>source s_tcp_syslog { network(ip(127.0.0.1) port(1999) flags("syslog-protocol", "threaded") ); };</synopsis>
         </example>
     </section>
-<!-- This section below is re-used in the syslog-ng pe performance whitepaper executive summary section -->
-    <section xml:id="optimize-syslog-ng-performance">
-        <title>Optimizing multithreaded performance</title>
-        <indexterm>
-            <primary>performance</primary>
-            <secondary>optimizing multithreading</secondary>
-        </indexterm>
-        <para>Destinations that have a queue process that queue in a single thread. Multiple sources can send messages to the same queue, so the queue can scale to multiple CPUs. However, when the writer thread writes the queue contents to the destination, it will be single-threaded.</para>
-        <para>Message parsing, rewrite rules, filters, and other types of message processing is performed by the reader thread in a sequential manner. This means that such operations can scale only if reading messages from the source can be multithreaded. For example, if a <parameter>tcp</parameter> source can process messages from different connections (clients) in separate threads. If the source cannot use multiple threads to process the messages, the operations will not scale.</para>
-        <para>To improve the processing power of &abbrev; and scale to more processors, use the following methods:</para>
-        <itemizedlist>
-            <listitem>
-                <para>To improve scaling on the source side, use more sources, for example, more source files, or receive the messages from more parallel connections. For network sources, you can also configure a part of your clients to send the messages to a different port of your syslog-ng server, and use separate source definitions for each port.</para>
-            </listitem>
-            <listitem>
-                <para>On the destination side, when writing the log messages to files, use macros in the filename to split the messages to separate files (for example, using the ${HOST} macro). Files with macros in their filenames are processed in separate writer threads.</para>
-            </listitem>
-            <listitem>
-                <para>On the destination side, when sending messages to a syslog-ng server, you can use multiple connections to the server if you configure the syslog-ng server to receive messages on multiple ports, and configure separate destinations on the clients to use both ports.</para>
-            </listitem>
-        </itemizedlist>
-    </section>
+    <!-- This section below is re-used in the syslog-ng pe performance whitepaper executive summary section. There are two different files and the reference to the entities is different on purpose. -->
+    <xi:include href="multithreading-performance.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 </chapter>
