@@ -1265,7 +1265,7 @@ log { source(s_pacct); destination(...); };</synopsis>
             <simplesect xml:id="sql-source-max-uid-query">
                 <title>max-uid-query()</title>
                 <indexterm> <primary>max-uid-query()</primary> </indexterm>
-                <indexterm> <primary>max-uid-query()</primary> </indexterm>
+                <indexterm> <primary>max_uid_query()</primary> </indexterm>
                 <informaltable frame="topbot" colsep="0" rowsep="0">
                     <tgroup cols="2">
                         <colspec colnum="1" colwidth="40pt"/>
@@ -1283,11 +1283,17 @@ log { source(s_pacct); destination(...); };</synopsis>
                         </tbody>
                     </tgroup>
                 </informaltable>
-                <para><emphasis role="bold">Description:</emphasis> Used for retrieving the ID of the latest row (that is, the last row of the last fetch) from the database source.</para>
+                <para><emphasis role="bold">Description:</emphasis> Used for retrieving the ID of the last row (that is, the last row of the last fetch) from the database source.</para>
                 <note>
                     <para>If this parameter is defined, &abbrev; does not check or validate whether it is correct. Ensure that the customized statements are correct.</para>
                 </note>
-                <para>This option is mandatory if <parameter>read-old-records(no)</parameter> and <parameter>fetch-query()</parameter> is defined.</para>
+                <para>This option is mandatory if <parameter>read-old-records(no)</parameter> and <parameter>fetch-query()</parameter> is defined. </para>
+                <note>
+                    <para>When <parameter>fetch-query()</parameter> is defined, the default value will be:</para>
+                    <synopsis>"SELECT MAX($uid) FROM ( &lt;fetch-query()> )"</synopsis>
+                    <para>Following a restart or reload of &abbrev;, if no new data has arrived since the last fetch, the custom query defined in <parameter>fetch-query()</parameter> will fetch everything starting from the very beginning. To avoid this and retrieve only the ID of the last row, replace the above value with:</para>
+                    <synopsis>"SELECT max($uid) FROM $table"</synopsis>
+                </note>
                 <para>This option cannot be used if <parameter>read-old-records(yes)</parameter>.</para>
             </simplesect>
             <simplesect>
