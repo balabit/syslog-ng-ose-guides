@@ -567,17 +567,17 @@ en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTA
         </section>
         <section xml:id="upgrading-from-ose-to-pe">
             <title>Upgrading from syslog-ng OSE to &abbrev;</title>
-            <para>If you wish to upgrade your existing syslog-ng OSE installation to &abbrev;, there are a number of considerations to keep in mind.</para>
+            <para>If you wish to upgrade your existing syslog-ng OSE installation to &abbrev;, there are a number of considerations to keep in mind. This section highlights the main differences between syslog-ng OSE and &abbrev; that are useful to know before performing an upgrade. It also provides you with step-by-step instructions on how to do the upgrade.</para>
             <section>
                 <title>Feature differences</title>
-                <para>syslog-ng OSE includes certain features that are experimental in nature, require special external dependencies, or are important only to a very limited set of users. Therefore, while &abbrev; is built from the same code base, it includes only a subset of syslog-ng OSE features. These features are well tested. They are commercially supported precisely because they are covered by automated end-to-end tests, which make sure that they not only compile but work correctly on many different platforms.</para>
-                <para>So your syslog-ng OSE installation may contain features that are not part of &abbrev;, or if they are, they may not have been tested.</para>
+                <para>syslog-ng OSE includes certain features that are highly experimental, require special external dependencies, or are important only to a very limited set of users. While &abbrev; is built from the same code base, it includes only a subset of syslog-ng OSE features. Those that are well tested and represent commercial value. These features are commercially supported as they are covered by automated end-to-end tests, which make sure that they not only compile but work correctly on many different platforms.</para>
+                <para>This means that your syslog-ng OSE installation may contain features that are not part of &abbrev;, or if they are, they may not have been tested.</para>
             </section>
             <section>
                 <title>Packaging</title>
-                <para>The packaging of syslog-ng OSE and &abbrev; also vary greatly. </para>
-                <para>With syslog-ng OSE, distribution packages do not bundle dependencies and only include features for which dependencies are available within the distribution. Packaging is modular to make sure that you install only a minimal set of extra dependencies.</para>
-                <para>In the case of &abbrev;, all dependencies are included in a single package either in a distribution specific format (rpm or deb) or in a generic .run installer. </para>
+                <para>The packaging of syslog-ng OSE and &abbrev; also differ greatly. </para>
+                <para>With syslog-ng OSE, distribution packages do not bundle dependencies and only include features for which dependencies are available within the distribution. Packaging is modular to make sure that you install only a minimal set of extra dependencies. In addition, the naming and content of subpackages varies between distributions, and there are also unofficial syslog-ng OSE packages enabling more features than available in official distribution packages.</para>
+                <para>In the case of &abbrev;, all dependencies are included in a single package either in a distribution specific format (rpm or deb) or in a generic <filename>.run</filename> installer. </para>
             </section>
             <procedure>
                 <title>Upgrading from syslog-ng OSE to &abbrev;</title>
@@ -585,13 +585,8 @@ en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTA
                     <title>Purpose:</title>
                     <para/>
                 </formalpara>
-                <para>The cleanest way to upgrade from syslog-ng OSE to &abbrev; is to remove the syslog-ng OSE package from the system. </para>
-                <para>In the examples below, an upgrade of syslog-ng OSE version 3.12 is performed from unofficial repositories running on Red Hat Enterprise Linux 7.4 to &abbrev; version 7.0.4.</para>
-                <formalpara>
-                    <title>Prerequisites:</title>
-                    <para/>
-                </formalpara>
-                <para>Unless you did not touch the syslog-ng configuration at all, make a backup of <filename>syslog-ng.conf</filename> first. This way you can avoid the packaging conflicts and feature differences, and do a clean installation of &abbrev;.</para>
+                <para>The cleanest way to upgrade from syslog-ng OSE to &abbrev; is to remove the syslog-ng OSE package from the system. This way you can avoid the packaging conflicts and feature differences.</para>
+                <para>In the procedure provided here, we describe an upgrade of syslog-ng OSE version 3.12 from unofficial repositories running on Red Hat Enterprise Linux 7.4 to &abbrev; version 7.0.4.</para>
                 <formalpara>
                     <title>Steps:</title>
                     <para/>
@@ -601,19 +596,19 @@ en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTA
                     <para>The following instructions assume that the user is in the <filename>/root</filename> directory.</para>
                     <substeps>
                         <step>
-                            <para>Copy the contents of <filename>/etc/syslog-ng</filename> to a directory under <filename>/root</filename> (or where you can find it), so you have a backup you can work from later:</para>
+                            <para>Unless you have not touched the syslog-ng configuration at all, make a backup of <filename>syslog-ng.conf</filename> first. Copy the contents of <filename>/etc/syslog-ng</filename> to a directory under <filename>/root</filename> (or where you can find it), so you have a backup you can work from later:</para>
                             <synopsis>cp -R /etc/syslog-ng sngose</synopsis>
                         </step>
                         <step>
-                            <para>Remove the syslog-ng package and dependent sub packages:</para>
+                            <para>Remove the syslog-ng package and dependent subpackages:</para>
                             <synopsis>yum erase syslog-ng</synopsis>
                         </step>
                         <step>
                             <para>Remove the <filename>/etc/syslog-ng</filename> directory:</para>
                             <synopsis>rm -fr /etc/syslog-ng</synopsis>
-                            <note>
-                                <para>Check the output of yum carefully. If there are any applications listed other than syslog-ng and sub packages, you should rather remove syslog-ng using <command>rpm -e —nodeps</command>, so dependent packages are not removed.</para>
-                            </note>
+                            <warning>
+                                <para>Check the output of yum carefully. If there are any applications listed other than syslog-ng and subpackages, remove syslog-ng using <command>rpm -e —nodeps</command>, so dependent packages are not removed.</para>
+                            </warning>
                         </step>
                     </substeps>
                 </step>
@@ -667,18 +662,22 @@ Preparing...                          ################################# [100%]
 [root@localhost ~]#</synopsis>
                                 </listitem>
                                 <listitem>
-                                    <para>syslog-ng OSE uses the <userinput>s_sys</userinput> name for references to the local system, while &abbrev; uses <userinput>s_local</userinput>. Do not forget to rename references, otherwise a similar error message will be displayed:</para>
+                                    <para>syslog-ng OSE uses <userinput>s_sys</userinput> for references to local system sources, while &abbrev; uses <userinput>s_local</userinput>. Remember to rename such references, otherwise a similar error message will be displayed:</para>
                                     <synopsis>[2017-10-03T14:04:18.968550] Error resolving reference; content='source', name='s_sys', location='/opt/syslog-ng/etc/syslog-ng.conf:86:2'</synopsis>
                                 </listitem>
                                 <listitem>
-                                    <para>Some features of &abbrev; require a license file to be present.</para>
+                                    <para>Some features of &abbrev; require a license file to be present. In the example shown here, a Java plugin failed to initialize due to a missing license:</para>
                                     <synopsis>[2017-10-03T14:07:05.894534] syslog-ng running in client/relay mode, cannot initialize plugin; plugin name='java'
 [2017-10-03T14:07:05.894560] Error initializing message pipeline; plugin name='java', location='#buffer:2:3'</synopsis>
                                 </listitem>
                             </itemizedlist>
+                            <para>Once you have made sure that your configuration works fine, you do not have to start syslog-ng in the foreground anymore.</para>
                         </step>
                         <step>
-                            <para>Once you have made sure that your configuration works fine, you do not have to start syslog-ng in the foreground anymore. Stop it using <userinput>Ctrl-C</userinput>, and start syslog-ng as a service using <userinput>systemctl start syslog-ng</userinput>.</para>
+                            <para>Stop syslog-ng using <userinput>Ctrl-C</userinput>.</para>
+                        </step>
+                        <step>
+                            <para>Start syslog-ng as a service using <userinput>systemctl start syslog-ng</userinput>.</para>
                         </step>
                     </substeps>
                 </step>
