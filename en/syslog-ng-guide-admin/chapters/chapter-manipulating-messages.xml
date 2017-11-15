@@ -402,7 +402,7 @@ template-function my-template-function "$(my-custom-header-template) message-len
             <indexterm> <primary>setting message fields</primary> </indexterm>
             <indexterm> <primary>creating SDATA fields</primary> </indexterm>
             <indexterm> <primary>modifying SDATA</primary> </indexterm>
-            <para>If you use RFC5424-formatted (IETF-syslog) messages, you can also create custom fields in the SDATA part of the message (For details on the SDATA message part, see <xref linkend="ietfsyslog-structureddata"/>). According to RFC5424, the name of the field (its SD-ID) must not contain the <userinput>@</userinput> character for reserved SD-IDs. Custom SDATA fields must be in the following format: <userinput>.SDATA.name@&lt;private enterprise number&gt;</userinput>, for example, <userinput>.SDATA.mySDATA-field@18372.4</userinput>. (18372.4 is the private enterprise number of &fullvendor;, the developer of &abbrev;.)</para>
+            <para>If you use RFC5424-formatted (IETF-syslog) messages, you can also create custom fields in the SDATA part of the message (For details on the SDATA message part, see <xref linkend="ietfsyslog-structureddata"/>). According to RFC5424, the name of the field (its SD-ID) must not contain the <userinput>@</userinput> character for reserved SD-IDs. Custom SDATA fields must be in the following format: <userinput>.SDATA.group-name@&lt;private enterprise number>.field-name</userinput>, for example, <userinput>.SDATA.mySDATA-field-group@18372.4.mySDATA-field</userinput>. (18372.4 is the private enterprise number of &fullvendor;, the developer of &abbrev;.)</para>
             <example>
                 <title>Rewriting custom SDATA fields</title>
                 <para>The following example sets the sequence ID field of the RFC5424-formatted (IETF-syslog) messages to a fixed value. This field is a predefined SDATA field with a reserved SD-ID, therefore its name does not contain the <userinput>@</userinput> character.</para>
@@ -410,9 +410,12 @@ template-function my-template-function "$(my-custom-header-template) message-len
     set("55555" value(".SDATA.meta.sequenceId"));
 };</synopsis>
                 <para>It is also possible to set the value of a field that does not exist yet, and create a new, custom name-value pair that is associated with the message. The following example creates the <userinput>.SDATA.groupID.fieldID@18372.4</userinput> field and sets its value to <userinput>yes</userinput>. If you use the <userinput>${.SDATA.groupID.fieldID@18372.4}</userinput> macro in a template or SQL table, its value will be <userinput>yes</userinput> for every message that was processed with this rewrite rule, and empty for every other message.</para>
+                <para>The next example creates a new SDATA field-group and field called <userinput>custom</userinput> and <userinput>sourceip</userinput>, respectively:</para>
                 <synopsis>rewrite r_rewrite_set {
-    set("yes" value(".SDATA.groupID.fieldID@18372.4"));
+    set("${SOURCEIP}" value(".SDATA.custom@18372.4.sourceip"));
 };</synopsis>
+                <para>If you use the <userinput>${.SDATA.custom@18372.4.sourceip}</userinput> macro in a template or SQL table, its value will be that of the <userinput>SOURCEIP</userinput> macro (as seen on the machine where the SDATA field was created) for every message that was processed with this rewrite rule, and empty for every other message.</para>
+                <para>You can verify whether or not the format is correct by looking at the actual network traffic. The SDATA field-group will be called <userinput>custom@18372.4</userinput>, and <userinput>sourceip</userinput> will become a field within that group. If you decide to set up several fields, they will be listed in consecutive order within the field-group's SDATA block.</para>
             </example>
         </section>
         <section xml:id="rewrite-groupset">
