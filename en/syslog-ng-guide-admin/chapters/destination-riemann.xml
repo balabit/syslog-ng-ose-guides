@@ -406,14 +406,31 @@ event_time("12345678")</synopsis>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The type of the network connection to the Riemann server: TCP, TLS, or UDP. For TLS connections, set the <parameter>cacert()</parameter> option to authenticate the Riemann server, and the <parameter>cert-file()</parameter> and <parameter>key-file()</parameter> options if the Riemann server requires authentication from its clients.</para>
+            <para><emphasis role="bold">Description:</emphasis> The type of the network connection to the Riemann server: TCP, TLS, or UDP. For TLS connections, set the <parameter>ca-file()</parameter> option to authenticate the Riemann server, and the <parameter>cert-file()</parameter> and <parameter>key-file()</parameter> options if the Riemann server requires authentication from its clients.</para>
+            <para>An alternative way to specify TLS options is to group them into a <parameter>tls()</parameter> block. This allows you to separate them and ensure better readability.</para>
+            <formalpara>
+                <title>Declaration:</title>
+                <para/>
+            </formalpara>
+            <synopsis>destination d_riemann {
+	riemann(
+		server("127.0.0.1")
+		port(5672)<emphasis role="bold">
+		tls(
+			ca-file("ca")
+			cert-file("cert") 
+			key-file("key")
+		)</emphasis>
+	);
+};</synopsis>
+            <para>Make sure that you specify TLS options either using <parameter>type()</parameter> or using the <parameter>tls()</parameter> block. Avoid mixing the two methods. In case you do specify TLS options in both ways, the one that comes later in the configuration file will take effect.</para>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="40pt"/>
                     <colspec colnum="2" colname="c2"/>
                     <tbody>
                         <row>
-                            <entry> <indexterm type="parameter"> <primary>cacert()</primary> </indexterm><emphasis role="bold">cacert()</emphasis> </entry>
+                            <entry> <indexterm type="parameter"> <primary>cacert()</primary> </indexterm><indexterm type="parameter"> <primary>ca-file()</primary> </indexterm><emphasis role="bold">ca-file()</emphasis> </entry>
                             <entry/>
                         </row>
                         <row>
@@ -427,10 +444,15 @@ event_time("12345678")</synopsis>
                             <entry/>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> Path to the CA certificate in PEM format that signed the certificate of the Riemann server. When establishing TLS connection, &abbrev; verifies the certificate of the Riemann server using this CA.</para> <synopsis>type(
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> Path to the CA certificate in PEM format that signed the certificate of the Riemann server. When establishing TLS connection, &abbrev; verifies the certificate of the Riemann server using this CA.</para> <para><emphasis role="bold">Alternative 1:</emphasis></para> <synopsis>type(
 	tls
-	cacert("/opt/syslog-ng/etc/syslog-ng/riemann-cacert.pem")
-	)</synopsis> </entry>
+	<emphasis role="bold">ca-file("/opt/syslog-ng/etc/syslog-ng/riemann-cacert.pem")</emphasis>
+	)</synopsis> <para><emphasis role="bold">Alternative 2:</emphasis></para> <synopsis>riemann(
+	.
+	.
+<emphasis role="bold">	tls(
+          	ca_file("/opt/syslog-ng/etc/syslog-ng/riemann-cacert.pem")
+	)</emphasis></synopsis> <para condition="ose"> This option was called <parameter>cacert()</parameter> up until (and including) &abbrev; version 3.12.</para> </entry>
                         </row>
                     </tbody>
                 </tgroup>
