@@ -120,6 +120,28 @@ log {
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> Instead of the arrival time into Riemann, &abbrev; can also send its own timestamp value.</para>
             <para>This can be useful if Riemann is inaccessible for a while, and the messages are collected in the disk buffer until Riemann is accessible again. In this case, it would be difficult to differentiate between messages based on the arrival time only, because this would mean that there would be hundreds of messages with the same arrival time. This issue can be solved by using this option.</para>
+            <para>The <parameter>event-time()</parameter> option takes an optional parameter specifying whether the time format is in seconds or microseconds. For example:</para>
+            <synopsis>event_time("$(* $UNIXTIME 1000000)" microseconds)
+event_time("12345678" microseconds)
+event_time("12345678" seconds)
+event_time("12345678")</synopsis>
+            <para>In case the parameter is omitted, &abbrev; defaults to the seconds version. In case the <parameter>event-time()</parameter> option is omitted altogether, &abbrev; defaults to the seconds version with <userinput>$UNIXTIME</userinput>.</para>
+            <para>Note that the time format parameter requires:</para>
+            <itemizedlist>
+                <listitem>
+                    <para>riemann-c-client 1.10.0 or newer</para>
+                    <para>In older versions of riemann-c-client, the microseconds option is not available.</para>
+                    <para>In case your distribution does not contain a recent enough version of riemann-c-client and you wish to use microseconds, install a new version from <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://github.com/algernon/riemann-c-client"/>. </para>
+                    <para>riemann-c-client provides a pkg-config file (<filename>.pc</filename> file). Install this file in a custom location. Then append the directory of the <filename>.pc</filename> file to the environment variable <userinput>export PKG_CONFIG_PATH=...</userinput>. Finally, call <command>configure</command>. In case of success, <command>configure</command> will end with the following message:</para>
+                    <synopsis>[...]
+ Riemann destination (module): yes, microseconds: yes
+[...]</synopsis>
+                </listitem>
+                <listitem>
+                    <para>Riemann 2.13 or newer</para>
+                    <para>Older versions of Riemann cannot handle microseconds. No error will be indicated, however, the time of the event will be set to the timestamp when the message arrived to Riemann.</para>
+                </listitem>
+            </itemizedlist>
             <example>
                 <title>Example event-time() option</title>
                 <synopsis>destination d_riemann {
