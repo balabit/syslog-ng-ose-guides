@@ -1,0 +1,200 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE article
+  [
+  <!ENTITY % entities SYSTEM "../common/syslog-ng-entities.ent">
+  %entities;
+  ]
+ >
+<article xmlns="http://docbook.org/ns/docbook" version="5.0" condition="pe" xml:id="syslog-ng-pe-wec-guide">
+    <info>
+        <title>&wec; for &product; 7.0</title>
+        <orgname>&fullvendor;</orgname>
+        <keywordset>
+            <keyword>system logging, forward event log to syslog-ng, &docgithash;</keyword>
+        </keywordset>
+        <subjectset>
+            <subject>
+                <subjectterm>Forwarding Windows event logs to syslog-ng</subjectterm>
+            </subject>
+        </subjectset>
+        <xi:include href="../xml-stylesheet/common/common.xml" xmlns:xi="http://www.w3.org/2001/XInclude" xpointer="common_copyright_bb"/>
+        <pubdate><?dbtimestamp?></pubdate>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../xml-stylesheet/common/common.xml" xpointer="common_logo_bb"/>
+        <abstract>
+            <para>This manual is the primary documentation of the &wec; tool, a proof-of-concept implementation of the source-initiated Windows event log collector server for Linux systems.</para>
+        </abstract>
+    </info>
+    <section xml:id="preface">
+        <title>Introduction</title>
+        <para>The &wec; (&wecabbrev;) acts as a log collector and forwarder tool for the Microsoft Windows platform. It collects the log messages of the Windows-based host and forwards them to a syslog-ng server using regular or TLS-encrypted TCP connections. Using Windows terminology, this tool allows you to define source-initiated subscriptions, and have them forwarded to a syslog-ng server.</para>
+        <para>Unlike the <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.balabit.com/documents/syslog-ng-pe-6.0-guides/en/syslog-ng-windows-agent-guide-admin/html-single/index.html">syslog-ng Agent for Windows</link>, the &wec; is a standalone tool that does not require installing on the Windows-based host itself. This can be an advantage when your organization's policies do not allow or restrict the installation of third-party tools. The &wec; sits between your Windows-based hosts and your &product; server, accepting log messages from the remote Windows side with WinRM and feeding them to &product; 7.0.</para>
+        <para>At a high level, this is how the Windows hosts, the &wec;, and &product; interact with each other:</para>
+        <orderedlist>
+            <listitem>
+                <para>You subscribe to events on the Windows hosts and configure the &wec; as the client that collects and forwards event logs.</para>
+            </listitem>
+            <listitem>
+                <para>The &wec; accepts incoming event log subscription requests from the Windows hosts.</para>
+            </listitem>
+            <listitem>
+                <para>The &wec; handshakes the event forwarding settings with the Windows hosts, for example, which events to forward (uses the <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://blogs.technet.microsoft.com/askds/2011/09/26/advanced-xml-filtering-in-the-windows-event-viewer/">Advanced XML filtering in the Windows Event Viewer</link> filter format).</para>
+            </listitem>
+            <listitem>
+                <para>The &wec; accepts the forwarded event logs, and writes the raw logs to a file.</para>
+            </listitem>
+            <listitem>
+                <para>&abbrev; reads the raw logs file using a file source.</para>
+            </listitem>
+            <listitem>
+                <para>&abbrev; parses the log files into key-value paris using the XML parser.</para>
+            </listitem>
+        </orderedlist>
+    </section>
+    <procedure>
+        <title>Install the &wec;</title>
+        <formalpara>
+            <title>Prerequisites:</title>
+            <para/>
+        </formalpara>
+        <itemizedlist>
+            <listitem>
+                <!--Ehhez kellene pontosabb infó:-->
+                <para>Microsoft Windows 7 or newer as these use XML-based event logging</para>
+            </listitem>
+            <listitem>
+                <para>&product; 7.0.6</para>
+            </listitem>
+            <listitem>
+                <para>Red Hat Enterprise Linux 6.9</para>
+            </listitem>
+        </itemizedlist>
+        <formalpara>
+            <title>Purpose:</title>
+            <para/>
+        </formalpara>
+        <para>The &wec; is part of the &abbrev; 7.0.6 install package so by installing &abbrev;, you also install &wecabbrev;. However, on starting up &abbrev;, &wecabbrev; will not launch automatically. To launch &wecabbrev;, you are required to run an init script. To run the init script, complete the following steps.</para>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <para>FIXME</para>
+    </procedure>
+    <procedure>
+        <title>Generate SSL certificates</title>
+        <formalpara>
+            <title>Purpose:</title>
+            <para/>
+        </formalpara>
+        <para>When the Windows-based host and the &wec; start communicating for the first time, they authenticate each other by exchanging and verifying each other's certificates. The process begins with the Windows host requesting and verifying the &wecabbrev; tool's certificate. After successful verification, the Windows host sends its own certificate for verification by &wecabbrev;. To generate the SSL certificates for &wecabbrev;, complete the following steps:</para>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <step>
+            <para>Create an OpenSSL extension file (<filename>openssl-ext.conf</filename>) with the following content:</para>
+            <synopsis>[client_server_auth]
+extendedKeyUsage = serverAuth,clientAuth
+</synopsis>
+        </step>
+        <step>
+            <para>Generate the certificate authority (CA):</para>
+            <synopsis>$ openssl genrsa -out ca.key 4096
+$ openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt
+</synopsis>
+        </step>
+        <step xml:id="step-thumbprint-CA" xreflabel="use the CA thumbprint you saved earlier">
+            <para>Save the thumbprint of the CA: </para>
+            <synopsis>$ openssl x509 -in ca.crt -fingerprint -sha1 -noout | sed -e 's/\://g'</synopsis>
+        </step>
+        <step>
+            <para>Create the server certificate:</para>
+            <note>
+                <para>The Common Name must be the FQDN (or IP address) of the collector server.</para>
+            </note>
+            <synopsis>$ openssl genrsa -out server.key 4096
+$ openssl req -new -key server.key -out server.csr
+$ openssl x509 -req -extensions client_server_auth -extfile openssl-ext.conf -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
+</synopsis>
+        </step>
+        <step>
+            <para>Create client certificates:</para>
+            <note>
+                <para>The Common Name must be the FQDN (or IP address) of the client.</para>
+            </note>
+            <synopsis>$ openssl genrsa -out client1.key 4096
+$ openssl req -new -key client1.key -out client1.csr
+$ openssl x509 -req -extensions client_server_auth -extfile openssl-ext.conf -in client1.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client1.crt -days 365
+$ openssl pkcs12 -export  -inkey client1.key -in client1.crt -certfile ca.crt -out client1.p12
+</synopsis>
+        </step>
+    </procedure>
+    <procedure>
+        <title>Configure event source computers</title>
+        <formalpara>
+            <title>Purpose:</title>
+            <para/>
+        </formalpara>
+        <para>When collecting event logs from Windows machines, the Windows clients sending logs act as the event source computers. To configure your event sources, complete the following steps.</para>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <!--Erről a folyamatról szeretnék látni screenshotot.-->
+        <step>
+            <para>In certmgr (Local Computer), install the client certificate (<filename>client*.p12</filename>), and move the installed CA certificate to the <guimenu>Trusted Root Certification Authorities</guimenu>.</para>
+        </step>
+        <step>
+            <para>Give NetworkService access to the private key file of the client authentication certificate: </para>
+            <substeps>
+                <step>
+                    <para>In certmgr, right-click the certificate, select <guimenu>All Tasks and Manage Private Keys...</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Add read permission to "NETWORK SERVICE".</para>
+                </step>
+            </substeps>
+        </step>
+        <step>
+            <para>To forward security logs:</para>
+            <substeps>
+                <step>
+                    <para>In CompMgmt.msc, under <guimenu>Local Users and Groups</guimenu>, click <guimenu>Groups > Event Log Readers</guimenu> to open <guimenu>Event Log Readers Properties</guimenu>.</para>
+                </step>
+                <step>
+                    <para>Add the "Network Service" account to the <guimenu>Event Log Readers</guimenu> group.</para>
+                </step>
+                <step>
+                    <para>Reboot the client computer.</para>
+                </step>
+            </substeps>
+        </step>
+        <step>
+            <para>Run the following commands from an elevated privilege command prompt:</para>
+            <synopsis>winrm qc -q
+winrm set winrm/config/client/auth @{Certificate="true"}
+</synopsis>
+        </step>
+        <step>
+            <para>Open gpedit.msc.</para>
+        </step>
+        <step>
+            <para>Under the <guimenu>Computer Configuration</guimenu> node, expand the <guimenu>Administrative Templates</guimenu> node, then expand the <guimenu>Windows Components</guimenu> node, then select the <guimenu>Event Forwarding</guimenu> node.</para>
+        </step>
+        <step>
+            <para xreflabel="use the CA thumbprint you saved earlier">Select the <guimenu>SubscriptionManager</guimenu> setting and enable it. Click the <guimenu>Show</guimenu> button to add a subscription (<xref linkend="step-thumbprint-CA"/>):</para>
+            <synopsis>Server=https://&lt;FQDN of the collector>:5986/wsman/SubscriptionManager/WEC,Refresh=&lt;Refresh interval in seconds>,IssuerCA=&lt;Thumb print of the CA></synopsis>
+            <para>For example:</para>
+            <synopsis>
+Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerCA=A814E609311FD3A89FFD0297974524E4F2D2BA9D
+</synopsis>
+        </step>
+    </procedure>
+    <procedure>
+        <title>Configure &wec;</title>
+        <formalpara>
+            <title>Purpose:</title>
+            <para/>
+        </formalpara>
+        <para>Once you have configured your event source computer(s), the next step is to configure your event collector, in this case, the &wec; tool. To configure &wec;, complete the followign steps.</para>
+    </procedure>
+</article>
