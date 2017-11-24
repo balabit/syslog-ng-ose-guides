@@ -408,15 +408,32 @@ event_time("12345678")</synopsis>
                 </tgroup>
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> The type of the network connection to the Riemann server: TCP, TLS, or UDP. For TLS connections, set the <parameter>ca-file()</parameter> option to authenticate the Riemann server, and the <parameter>cert-file()</parameter> and <parameter>key-file()</parameter> options if the Riemann server requires authentication from its clients.</para>
-            <para>An alternative way to specify TLS options is to group them into a <parameter>tls()</parameter> block. This allows you to separate them and ensure better readability.</para>
             <formalpara>
-                <title>Declaration:</title>
+                <title>Declaration 1:</title>
                 <para/>
             </formalpara>
             <synopsis>destination d_riemann {
 	riemann(
 		server("127.0.0.1")
-		port(5672)<emphasis role="bold">
+		port(5672)
+		type(
+		   "tls"
+		   ca-file("ca")
+		   cert-file("cert") 
+		   key-file("key")
+		)
+	);
+};</synopsis>
+            <para>An alternative way to specify TLS options is to group them into a <parameter>tls()</parameter> block. This allows you to separate them and ensure better readability.</para>
+            <formalpara>
+                <title>Declaration 2:</title>
+                <para/>
+            </formalpara>
+            <synopsis>destination d_riemann {
+	riemann(
+		server("127.0.0.1")
+		port(5672)
+		type("tls")<emphasis role="bold">
 		tls(
 			ca-file("ca")
 			cert-file("cert") 
@@ -446,11 +463,12 @@ event_time("12345678")</synopsis>
                         </row>
                         <row>
                             <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> Path to the CA certificate in PEM format that signed the certificate of the Riemann server. When establishing TLS connection, &abbrev; verifies the certificate of the Riemann server using this CA.</para> <para><emphasis role="bold">Alternative 1:</emphasis></para> <synopsis>type(
-	tls
+	"tls"
 	<emphasis role="bold">ca-file("/opt/syslog-ng/etc/syslog-ng/riemann-cacert.pem")</emphasis>
 	)</synopsis> <para><emphasis role="bold">Alternative 2:</emphasis></para> <synopsis>riemann(
 	.
 	.
+	type("tls")
 <emphasis role="bold">	tls(
           	ca_file("/opt/syslog-ng/etc/syslog-ng/riemann-cacert.pem")
 	)</emphasis></synopsis> <para condition="ose"> This option was called <parameter>cacert()</parameter> up until (and including) &abbrev; version 3.12.</para> </entry>
