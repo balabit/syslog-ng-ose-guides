@@ -52,7 +52,7 @@
                 <para>The &wec; accepts the forwarded event logs, and writes the raw logs to a file.</para>
             </listitem>
             <listitem>
-                <para>&abbrev; reads the raw logs file using a file source called <parameter>windowseventsource()</parameter>.</para>
+                <para>&abbrev; reads the raw logs file using a file source called <parameter>windowsevent()</parameter>.</para>
                 <para>For details on how to configure your &abbrev; server, see <xref linkend="wec-configure-syslog-ng"/>.</para>
             </listitem>
             <listitem>
@@ -827,35 +827,47 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
             <title>Purpose:</title>
             <para/>
         </formalpara>
-        <para>To enable &abbrev; to read and accept Windows events, you need to configure a source called <parameter>windowseventsource()</parameter> for this purpose.</para>
+        <para>To enable &abbrev; to read and accept Windows events, you need to configure a source called <parameter>windowsevent()</parameter> for this purpose.</para>
         <formalpara>
             <title>Steps:</title>
             <para/>
         </formalpara>
         <step>
-            <para>Ensure that the default 5986 TCP port is accessible from &wecabbrev;, as it is the &wec; that will initiate the event forwarding subscription toward the &abbrev; server.</para>
-            <!--synopsisba, hogy ezt hogy kell-->
+            <para>Ensure that the default <userinput>5986</userinput> TCP port is accessible from &wecabbrev;, as it is the &wec; that will initiate the event forwarding subscription toward the &abbrev; server.</para>
         </step>
         <step>
-            <para>Configure the <parameter>windowseventsource()</parameter> source.</para>
-            <para>The <parameter>windowseventsource()</parameter> source takes the following options:</para>
+            <para>Configure the <parameter>windowsevent()</parameter> source.</para>
+            <para>The <parameter>windowsevent()</parameter> source takes the following options:</para>
             <itemizedlist>
                 <listitem>
-                    <para><parameter>unix-domain-socket()</parameter>: Specify the Unix domain socket that will receive and store the event log messages in the &wec;.</para>
+                    <para><parameter>unix-domain-socket()</parameter>: The path to the Unix domain socket to read messages from.</para>
                 </listitem>
                 <listitem>
-                    <para><parameter>prefix()</parameter>: Specify a prefix that you wish to append to the event log messages arriving from Windows hosts.</para>
-                    <para>The default value is <userinput>windowsevent</userinput>. </para>
-                    <para>If you want to send Windows event logs to SDATA, then set <parameter>prefix(.sdata)</parameter>. This can be useful, for example, when you forward Windows event logs to a &ssb;.</para>
+                    <para><parameter>prefix()</parameter>: The prefix that you wish to append to the event log messages read from the &wec;.</para>
+                    <para>The default value is <userinput>".windowsevent."</userinput>. </para>
+                    <para>If you want to send Windows event logs to SDATA, then set <parameter>prefix(".sdata.")</parameter>. This can be useful, for example, when you forward Windows event logs to a &ssb;.</para>
                 </listitem>
             </itemizedlist>
-            <!--synopsisba hogy ezt hogy kell-->
-            <para>For more information on the <parameter>windowseventsource()</parameter> source, see<olink targetdoc="syslog-ng-pe-guide-admin"/>.</para>
+            <para>For more information on the <parameter>windowsevent()</parameter> source, see<olink targetdoc="syslog-ng-pe-guide-admin" targetptr="source-windowsevent"/>.</para>
         </step>
         <step>
             <para>Configure the XML parser.</para>
-            <!--Ezt hogy kell?-->
             <para>For more information on the XML parser, see <olink targetdoc="syslog-ng-pe-guide-admin" targetptr="xml-parser"/>.</para>
+            <para>The following snippet is a configuration example for &abbrev;:</para>
+            <synopsis>block source windowsevent(
+  prefix(".windowsevent.")
+  template("${MSG}")
+  filename("`syslog-ng-root`/var/run/wec.sock")
+)
+{
+    channel {
+        source {
+           unix-dgram("`filename`" flags(no-parse));
+        };
+
+        parser { xml(template("`template`") prefix("`prefix`")); };
+    };
+};</synopsis>
         </step>
     </procedure>
     <section>
@@ -891,7 +903,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
         <para>Performance is dependent on the number of event log messages that the Windows hosts send to &wecabbrev; and the capabilities of the XML parser.</para>
         <para>The &wec; tool is able to handle 500-800 messages/second per 1 Windows host. When &wecabbrev; is receiving and forwarding events from a higher volume of Windows hosts, the XML parser may have difficulty handling those. </para>
         <para>As the value set in the <xref linkend="table-batchsizelimit"/> parameter is treated only as a recommendation by the Windows hosts, there is no direct way to control the amount of messages arriving from the event source computers.</para>
-        <para>A possible workaround is to launch multiple &wecabbrev; servers and create multiple <parameter>windowseventsource()</parameter> sources in &abbrev;. That way, you can distribute your Windows hosts across multiple &wecabbrev; and &abbrev; servers, decreasing the load on individual servers.</para>
+        <para>A possible workaround is to launch multiple &wecabbrev; servers and create multiple <parameter>windowsevent()</parameter> sources in &abbrev;. That way, you can distribute your Windows hosts across multiple &wecabbrev; and &abbrev; servers, decreasing the load on individual servers.</para>
     </section>
     <section xml:id="wec-limitations">
         <title>Limitations</title>
