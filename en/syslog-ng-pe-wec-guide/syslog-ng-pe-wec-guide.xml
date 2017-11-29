@@ -26,17 +26,15 @@
     </info>
     <section xml:id="preface">
         <title>Introduction</title>
-        <para>The &wec; (&wecabbrev;) acts as a log collector and forwarder tool for the Microsoft Windows platform. It collects the log messages of Windows-based hosts and forwards them to a &abbrev; server using regular or TLS-encrypted TCP connections. In Windows terminology, this tool allows you to define source-initiated subscriptions, and have them forwarded to a &abbrev; server.</para>
-        <para>Unlike the <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.balabit.com/documents/syslog-ng-pe-6.0-guides/en/syslog-ng-windows-agent-guide-admin/html-single/index.html">&agent;</link>, the &wec; is a standalone tool that does not require installing on the Windows-based host itself. This can be an advantage when your organization's policies restrict or do not allow the installation of third-party tools. The &wec; sits between your Windows hosts and your &product; server, accepting log messages from the remote Windows side with WinRM and feeding them to &product; 7.0.</para>
+        <para>The &wec; (&wecabbrev;) acts as a log collector and forwarder tool for the Microsoft Windows platform. It collects the log messages of Windows-based hosts over HTTPS (using TLS encryption and mutual authentication), and forwards them to a &abbrev; server. In Windows terminology, this tool allows you to define source-initiated subscriptions, and have them forwarded to a &abbrev; server.</para>
+        <para>Unlike the <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.balabit.com/documents/syslog-ng-pe-6.0-guides/en/syslog-ng-windows-agent-guide-admin/html-single/index.html">&agent;</link>, the &wec; is a standalone tool that does not require installing on the Windows-based host itself. This can be an advantage when your organization's policies restrict or do not allow the installation of third-party tools.</para>
+        <para>Another difference between the &wec; tool and &agent; is that &wecabbrev; forwards logs only about Windows events, while &agentabbrev; forwards both Windows event logs as well as files from Windows hosts to the &abbrev; server.</para>
+        <para>The &wec; sits between your Windows hosts and your &product; server, accepting log messages from the remote Windows side with WinRM and feeding them to &product; 7.0.</para>
         <para>At a high level, this is how you can get Windows event logs to be forwarded to your &product; server using the &wecabbrev; tool:</para>
         <orderedlist>
             <listitem>
                 <para>Configure Windows event source computers.</para>
                 <para>For details on how to configure your Windows hosts, see <xref linkend="wec-configure-event-source-computers"/>.</para>
-            </listitem>
-            <listitem>
-                <para>Subscribe to events on the Windows hosts.</para>
-                <para>For details on how to create subscriptions, see Microsoft TechNet article <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://technet.microsoft.com/en-us/library/cc722010(v=ws.11).aspx"><emphasis>Create a New Subscription</emphasis></link> and Microsoft Developer Network article <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://msdn.microsoft.com/en-us/library/bb870973(v=vs.85).aspx"><emphasis>Setting up a Source Initiated Subscription</emphasis></link>.</para>
             </listitem>
             <listitem>
                 <para>Set up the &wec; as the server that collects and forwards event logs.</para>
@@ -49,14 +47,14 @@
                 <para>The &wec; handshakes the event forwarding settings with the Windows hosts, for example, which events to forward.</para>
             </listitem>
             <listitem>
-                <para>The &wec; accepts the forwarded event logs, and writes the raw logs to a file.</para>
+                <para>The &wec; accepts the forwarded event logs, and writes the raw logs to a Unix datagram socket.</para>
             </listitem>
             <listitem>
-                <para>&abbrev; reads the raw logs file using a file source called <parameter>windowsevent()</parameter>.</para>
+                <para>&abbrev; reads the Unix datagram socket using a source called <parameter>windowsevent()</parameter>.</para>
                 <para>For details on how to configure your &abbrev; server, see <xref linkend="wec-configure-syslog-ng"/>.</para>
             </listitem>
             <listitem>
-                <para>&abbrev; parses the log files into key-value paris using the XML parser.</para>
+                <para>&abbrev; parses the logs into key-value paris using the XML parser.</para>
                 <para>For details on the XML parser, see <olink targetdoc="syslog-ng-pe-guide-admin" targetptr="xml-parser"/>.</para>
             </listitem>
         </orderedlist>
@@ -95,7 +93,9 @@
         <para>When the Windows-based host and the &wec; start communicating for the first time, they authenticate each other by exchanging and verifying each other's certificates. The process begins with the Windows host requesting and verifying the &wecabbrev; tool's certificates. After successful verification, the Windows host sends its own certificates for verification to &wecabbrev;. </para>
         <tip>
             <para>If the Windows host fails to authenticate the &wecabbrev; tool's certificates for some reason, check the Windows event logs for details.</para>
+            <para>For details on which event logs to look at, see <xref linkend="wec-troubleshoot"/>.</para>
         </tip>
+        <para>The example described in this section uses OpenSSL for certificate generation. Note, however, that you can generate certificates using the Windows Public Key Infrastructure (PKI). </para>
         <para>To generate the SSL certificates for &wecabbrev;, complete the following steps:</para>
         <formalpara>
             <title>Steps:</title>
@@ -137,7 +137,6 @@ $ openssl req -new -key client1.key -out client1.csr
 $ openssl x509 -req -extensions client_server_auth -extfile openssl-ext.conf -in client1.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client1.crt -days 365
 $ openssl pkcs12 -export  -inkey client1.key -in client1.crt -certfile ca.crt -out client1.p12
 </synopsis>
-            <!--An alternative way to generate certificates is to create and load them using the GUI of FIXME.-->
         </step>
     </procedure>
     <procedure xml:id="wec-configure-event-source-computers">
@@ -173,6 +172,17 @@ $ openssl pkcs12 -export  -inkey client1.key -in client1.crt -certfile ca.crt -o
                 </step>
                 <step>
                     <para>Add read permission to "NETWORK SERVICE".</para>
+                    <figure>
+                        <title>Adding read permission to "NETWORK SERVICE"</title>
+                        <mediaobject>
+                            <imageobject role="html">
+                                <imagedata format="PNG" fileref="cert-add-permission-to-network-service.png"/>
+                            </imageobject>
+                            <imageobject role="fo">
+                                <imagedata format="PNG" fileref="&imgroot;/cert-add-permission-to-network-service.png" contentwidth="&screenshotsize_small;"/>
+                            </imageobject>
+                        </mediaobject>
+                    </figure>
                 </step>
             </substeps>
         </step>
@@ -184,6 +194,17 @@ $ openssl pkcs12 -export  -inkey client1.key -in client1.crt -certfile ca.crt -o
                 </step>
                 <step>
                     <para>Add the "Network Service" account to the <guimenu>Event Log Readers</guimenu> group.</para>
+                    <figure>
+                        <title>Adding the "Network Service" account to the Event Log Readers group.</title>
+                        <mediaobject>
+                            <imageobject role="html">
+                                <imagedata format="PNG" fileref="add-network-service-to-eventlog-readers-group.png"/>
+                            </imageobject>
+                            <imageobject role="fo">
+                                <imagedata format="PNG" fileref="&imgroot;/add-network-service-to-eventlog-readers-group.png" contentwidth="&screenshotsize_small;"/>
+                            </imageobject>
+                        </mediaobject>
+                    </figure>
                 </step>
                 <step>
                     <para>Reboot the client computer.</para>
@@ -203,12 +224,23 @@ winrm set winrm/config/client/auth @{Certificate="true"}
             <para>Under the <guimenu>Computer Configuration</guimenu> node, expand the <guimenu>Administrative Templates</guimenu> node, then expand the <guimenu>Windows Components</guimenu> node, then select the <guimenu>Event Forwarding</guimenu> node.</para>
         </step>
         <step>
-            <para xreflabel="use the CA thumbprint you saved earlier">Select the <guimenu>SubscriptionManager</guimenu> setting and enable it. Click the <guimenu>Show</guimenu> button to add a subscription (<xref linkend="step-thumbprint-CA"/>):</para>
+            <para xreflabel="use the CA thumbprint you saved earlier">Select the <guimenu>SubscriptionManagers</guimenu> setting and enable it. Click the <guimenu>Show</guimenu> button to add a subscription (<xref linkend="step-thumbprint-CA"/>):</para>
             <synopsis>Server=https://&lt;FQDN of the collector>:5986/wsman/SubscriptionManager/WEC,Refresh=&lt;Refresh interval in seconds>,IssuerCA=&lt;Thumbprint of the root CA></synopsis>
             <para>For example:</para>
             <synopsis>
 Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerCA=A814E609311FD3A89FFD0297974524E4F2D2BA9D
 </synopsis>
+            <figure>
+                <title>Adding the subscription in SubscriptionManagers</title>
+                <mediaobject>
+                    <imageobject role="html">
+                        <imagedata format="PNG" fileref="set-subscription-event-forwarding.png"/>
+                    </imageobject>
+                    <imageobject role="fo">
+                        <imagedata format="PNG" fileref="&imgroot;/set-subscription-event-forwarding.png" contentwidth="&screenshotsize_small;"/>
+                    </imageobject>
+                </mediaobject>
+            </figure>
         </step>
     </procedure>
     <section xml:id="wec-configure">
@@ -287,7 +319,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The name of the file that contains the unencrypted private key of the server running &wecabbrev;. The file is in PEM format.</para>
+            <para><emphasis role="bold">Description:</emphasis> The path to the file that contains the unencrypted private key of the server running &wecabbrev;. The file is in PEM format.</para>
         </simplesect>
         <simplesect>
             <title>certfile</title>
@@ -309,7 +341,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The name of the file that contains the X.509 certificate of the server running &wecabbrev;. The file is in PEM format.</para>
+            <para><emphasis role="bold">Description:</emphasis> The path to the file that contains the X.509 certificate of the server running &wecabbrev;. The file is in PEM format.</para>
         </simplesect>
         <simplesect>
             <title>cadir</title>
@@ -331,31 +363,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The name of the directory that contains the trusted CA certificates in PEM format. When using certficate chains, this is where the root CA is stored.</para>
-        </simplesect>
-        <simplesect>
-            <title>cathumbprints</title>
-            <indexterm type="parameter"> <primary>cathumbprints</primary> </indexterm>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
-                    <tbody>
-                        <row>
-                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
-                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
-                            <entry>string</entry>
-                        </row>
-                        <row>
-                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
-                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
-                            <entry>N/A</entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The list of CA certificate thumbprints. This option allows you to specify which CA thumbprints to send to the Windows-based host(s).</para>
-            <para>Specifying this option is optional.</para>
-            <para>It is recommended to leave this option as is in order to avoid accidentally sending a narrower list of CA thumbprints to the Windows host(s) than required.</para>
+            <para><emphasis role="bold">Description:</emphasis> The path to the directory that contains the trusted CA certificates in PEM format.</para>
         </simplesect>
         <simplesect>
             <title>log</title>
@@ -367,7 +375,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                         <row>
                             <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
                                 <?dbfo bgcolor="#D4D6EB" ?> </entry>
-                            <entry>FIXME</entry>
+                            <entry>map</entry>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
@@ -378,6 +386,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                 </tgroup>
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> The options to specify how to handle the internal logs of &wecabbrev;.</para>
+            <para>&wecabbrev; sends internal log messages to stderr. You can also optionally specify a <xref linkend="table-file"/> to send logs to (in parallel with stderr). If you are using a systemd platform and start &wecabbrev; using <command>systemctl</command>, then stderr is redirected to systemd-journal, and this is where you will find the internal logs of &wecabbrev;.</para>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="40pt"/>
@@ -403,14 +412,14 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                                     <para><userinput>debug</userinput>: Information with the most details, useful when debugging &wecabbrev; and diagnosing issues.</para>
                                 </listitem>
                                 <listitem>
-                                    <para><userinput>info</userinput>: Basic information about the operation of &wecabbrev;.</para>
+                                    <para><userinput>info</userinput>: Basic information about the initialization of &wecabbrev;. Following initialization, no information is printed on screen, unless an issue occurs.</para>
                                 </listitem>
                                 </itemizedlist> </entry>
                         </row>
                     </tbody>
                 </tgroup>
             </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-file" xreflabel="file">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="40pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -446,7 +455,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                         <row>
                             <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
                                 <?dbfo bgcolor="#D4D6EB" ?> </entry>
-                            <entry>FIXME</entry>
+                            <entry>map</entry>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
@@ -527,7 +536,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                             <entry>10000</entry>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> The number of events that the destination memory queue can store. Note that no state information is stored for events that are in the queue, meaning that in case of a &wecabbrev; crash, the events that were in the queue are lost.</para> <para>It is recommened to use the default value for this option.</para> <para>For more information about flow control, see <xref linkend="wec-flow-control"/>.</para> </entry>
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> The number of events that the destination memory queue can store. Note that the main purpose of <parameter>queuesize</parameter> is to speed up the writing of data into memory and smooth out peaks.</para> <para>It is recommened to use the default value for this option.</para> <para>For more information about flow control, see <xref linkend="wec-flow-control"/>.</para> </entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -543,7 +552,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                         <row>
                             <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
                                 <?dbfo bgcolor="#D4D6EB" ?> </entry>
-                            <entry>FIXME</entry>
+                            <entry>map</entry>
                         </row>
                         <row>
                             <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
@@ -555,7 +564,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> The options related to the subscriptions you have set up on the Windows host.</para>
             <note>
-                <para>You can set up multiple subscriptions to events coming from the same Windows host. If a subscription matches more than one event, the event log will come in to &wecabbrev; as many times as there is a match.</para>
+                <para>You can set up multiple subscriptions to events coming from the same Windows host. If an event matches more than one subscription, the event log will come in to &wecabbrev; as many times as there is a match.</para>
             </note>
             <informaltable frame="topbot" colsep="0" rowsep="0">
                 <tgroup cols="2">
@@ -577,7 +586,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                             <entry>N/A</entry>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> The unique name of the subscription set up on the Windows host.</para> </entry>
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> The unique name of the subscription in &wecabbrev;.</para> </entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -624,15 +633,15 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                         <row>
                             <entry>Default:<?dbhtml bgcolor="#D4D6EB" ?>
                                 <?dbfo bgcolor="#D4D6EB" ?> </entry>
-                            <entry>FIXME</entry>
+                            <entry>N/A</entry>
                         </row>
                         <row>
                             <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> A value that specifies the format of the returned events.</para> <para>Possible values are:</para> <itemizedlist>
                                 <listitem>
-                                    <para><userinput>Events</userinput>:</para>
+                                    <para><userinput>RenderedText</userinput>: Events are returned with the localized strings (such as event description strings) attached to the events</para>
                                 </listitem>
                                 <listitem>
-                                    <para><userinput>RenderedText</userinput>: Events are returned with the localized strings (such as event description strings) attached to the events</para>
+                                    <para><userinput>Events</userinput>: Events are returned without any of the localized strings</para>
                                 </listitem>
                                 </itemizedlist> <para>It is recommended to set this option to <userinput>RenderedText</userinput>.</para> </entry>
                         </row>
@@ -656,10 +665,10 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                         <row>
                             <entry>Default:<?dbhtml bgcolor="#D4D6EB" ?>
                                 <?dbfo bgcolor="#D4D6EB" ?> </entry>
-                            <entry>FIXME</entry>
+                            <entry>N/A</entry>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> A value that specifies the heartbeat interval for the subscription in seconds.</para> </entry>
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> A value that specifies the heartbeat interval for the subscription in seconds.</para> <para>The example configuration in <xref linkend="wec-config-example"/> shows three examples provided by Microsoft with good "default" values: ExampleMinimizeLatency, ExampleDebug, and ExampleMinimizeBandwidth.</para> </entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -681,10 +690,10 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                         <row>
                             <entry>Default:<?dbhtml bgcolor="#D4D6EB" ?>
                                 <?dbfo bgcolor="#D4D6EB" ?> </entry>
-                            <entry>FIXME</entry>
+                            <entry>N/A</entry>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> &wecabbrev; attempts to reconnect to the Windows host(s) at the specified interval of time in seconds.</para> </entry>
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> &wecabbrev; attempts to reconnect to the Windows host(s) at the specified interval of time in seconds.</para> <para>The example configuration in <xref linkend="wec-config-example"/> shows three examples provided by Microsoft with good "default" values: ExampleMinimizeLatency, ExampleDebug, and ExampleMinimizeBandwidth.</para> </entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -706,18 +715,11 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                         <row>
                             <entry>Default:<?dbhtml bgcolor="#D4D6EB" ?>
                                 <?dbfo bgcolor="#D4D6EB" ?> </entry>
-                            <entry>FIXME</entry>
+                            <entry>0 (meaning that there is no limit)</entry>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> Specifies the maximum number of items for batched delivery in the event subscription.</para> <para>Set this value to <userinput>1</userinput> if you wish to:</para> <itemizedlist>
-                                <listitem>
-                                    <para>Perform tests or debugging.</para>
-                                </listitem>
-                                <listitem>
-                                    <para>Receive Windows events in real time.</para>
-                                </listitem>
-                                </itemizedlist> <note>
-                                <para>This option is not forced to the Windows hosts, they are handling this value only as a recommendation. The only exception is the value <userinput>1</userinput>.</para>
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> Specifies the maximum number of items for batched delivery in the event subscription.</para> <para>Set this value to <userinput>1</userinput> if you wish to perform tests or debugging.</para> <note>
+                                <para>This option is not enforced on the Windows host side. Windows is handling this value only as a recommendation. The only exception is the value <userinput>1</userinput>.</para>
                                 </note> </entry>
                         </row>
                     </tbody>
@@ -740,11 +742,11 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                         <row>
                             <entry>Default:<?dbhtml bgcolor="#D4D6EB" ?>
                                 <?dbfo bgcolor="#D4D6EB" ?> </entry>
-                            <entry>FIXME</entry>
+                            <entry>N/A</entry>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> Specifies the maximum latency allowed in delivering a batch of events (in seconds).</para> <note>
-                                <para>This option is not forced to the Windows hosts, they are handling this value only as a recommendation. The only exception is the maximum value.</para>
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> Specifies the maximum latency allowed in delivering a batch of events (in seconds).</para> <para>The example configuration in <xref linkend="wec-config-example"/> shows three examples provided by Microsoft with good "default" values: ExampleMinimizeLatency, ExampleDebug, and ExampleMinimizeBandwidth.</para> <note>
+                                <para>This option is not enforced on the Windows host side. Windows is handling this value only as a recommendation.</para>
                                 </note> </entry>
                         </row>
                     </tbody>
@@ -775,7 +777,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                                     <para>type this value manually, or</para>
                                 </listitem>
                                 <listitem>
-                                    <para>copy this value from the <guimenu>XML</guimenu> tab of the <guimenu>Create Custom View</guimenu> pop-up window on the Windows host where you created the subscription</para>
+                                    <para>copy this value from the <guimenu>XML</guimenu> tab of the <guimenu>Create Custom View</guimenu> pop-up window in Windows</para>
                                 </listitem>
                                 </itemizedlist> <para>For examples of queries, check the following Windows blog posts:</para> <itemizedlist>
                                 <listitem>
@@ -837,52 +839,37 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
         </step>
         <step>
             <para>Configure the <parameter>windowsevent()</parameter> source.</para>
+            <synopsis>source s_wec {
+    windowsevent()    
+}</synopsis>
             <para>The <parameter>windowsevent()</parameter> source takes the following options:</para>
             <itemizedlist>
                 <listitem>
                     <para><parameter>unix-domain-socket()</parameter>: The path to the Unix domain socket to read messages from.</para>
+                    <para>The default value is <userinput>/opt/syslog-ng/var/run/wec.sock</userinput>.</para>
                 </listitem>
                 <listitem>
-                    <para><parameter>prefix()</parameter>: The prefix that you wish to append to the event log messages read from the &wec;.</para>
+                    <para><parameter>prefix()</parameter>: The prefix that you wish to append to the key-value pairs.</para>
                     <para>The default value is <userinput>".windowsevent."</userinput>. </para>
-                    <para>If you want to send Windows event logs to SDATA, then set <parameter>prefix(".sdata.")</parameter>. This can be useful, for example, when you forward Windows event logs to a &ssb;.</para>
+                    <para>If you want to send Windows event logs to SDATA, then set <parameter>prefix(".SDATA.")</parameter>. This can be useful, for example, when you forward Windows event logs to a &ssb;.</para>
                 </listitem>
             </itemizedlist>
             <para>For more information on the <parameter>windowsevent()</parameter> source, see<olink targetdoc="syslog-ng-pe-guide-admin" targetptr="source-windowsevent"/>.</para>
-        </step>
-        <step>
-            <para>Configure the XML parser.</para>
-            <para>For more information on the XML parser, see <olink targetdoc="syslog-ng-pe-guide-admin" targetptr="xml-parser"/>.</para>
-            <para>The following snippet is a configuration example for &abbrev;:</para>
-            <synopsis>block source windowsevent(
-  prefix(".windowsevent.")
-  template("${MSG}")
-  filename("`syslog-ng-root`/var/run/wec.sock")
-)
-{
-    channel {
-        source {
-           unix-dgram("`filename`" flags(no-parse));
-        };
-
-        parser { xml(template("`template`") prefix("`prefix`")); };
-    };
-};</synopsis>
         </step>
     </procedure>
     <section>
         <title>Message format in &wec; for &abbrev;</title>
         <para>The &wec; for &abbrev; is supported for Windows 7 or newer platforms. Starting with Windows 7, event logging is XML-based, meaning that event log messages reach the &wec; in XML format. When these are forwarded to the &abbrev; server, &abbrev; parses them into key-value pairs using the XML parser.</para>
         <para>Once event log data is available in &abbrev;, you have the flexibility to modify and format data any way you want, using macros and rewrite rules.</para>
-        <para>Note that the &wec; tool does not map and resolve data the same way the &agent; does. This means that event log data as processed by the &wec; tool may differ from the data collected and made available by the &agent;. On the other hand, the &wec; tool provides you with greater freedom and flexibility when it comes to manipulating your raw data.</para>
+        <para>Note that the &wec; tool does not map and resolve data the same way the &agent; does. For example, &agentabbrev; can resolve Windows SIDs (such as User, Group, Domain, Computer) while &wecabbrev; cannot (so &wecabbrev; uses the data in the format it is received in).</para>
+        <para>This means that event log data as processed by the &wec; tool may differ from the data collected and made available by the &agent;. On the other hand, the &wec; tool provides you with greater freedom and flexibility when it comes to manipulating your raw data.</para>
     </section>
     <section xml:id="wec-flow-control">
         <title>Flow control</title>
         <para>The &wec; tool applies flow control to minimize event log loss.</para>
         <para>&wecabbrev; regularly (in every second) polls the datagram socket that will receive the Windows events to check whether it exists already. Once the socket has been created (&abbrev; has started up), &wecabbrev; connects to the socket and accepts the incoming connections from the Windows hosts. If the datagram socket does not exist, &wecabbrev; refuses the incoming connections. </para>
         <para>If the socket exists (&abbrev; is running) but &abbrev; does not read the Unix datagram socket, &wecabbrev; fills up the kernel buffer of the datagram socket and stores <parameter>queuesize</parameter> amounts of log messages in the memory. When all buffers are full, &wecabbrev; stops reading messages from the HTTP connections to prevent message loss.</para>
-        <!--Mik ezek a paraméterek és honnan jönnek?-->
-        <para>The buffer size of a datagram socket is determined by the value of rmem_* (max/default) and the count of net.unix.max_dgram_qlen.</para>
+        <para>The buffer size of a datagram socket is determined by certain Linux kernel parameters: the value of <userinput>rmem_*</userinput> (max/default) and the count of <userinput>net.unix.max_dgram_qlen</userinput>.</para>
         <simplesect>
             <title>Reliability</title>
             <para>&wecabbrev; flags a message as delivered once it has put the message in the socket buffer. If &abbrev; does not read the socket for some reason (for example, because it is still flow-controlled) and &abbrev; is stopped, the contents of this socket (that is, the messages that are in the kernel buffer, unread by &abbrev;) will be lost.</para>
@@ -901,7 +888,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
     <section>
         <title>Performance</title>
         <para>Performance is dependent on the number of event log messages that the Windows hosts send to &wecabbrev; and the capabilities of the XML parser.</para>
-        <para>The &wec; tool is able to handle 500-800 messages/second per 1 Windows host. When &wecabbrev; is receiving and forwarding events from a higher volume of Windows hosts, the XML parser may have difficulty handling those. </para>
+        <para>Our performance measurements indicate that &abbrev;'s XML parser is capable of parsing 15,000-20,000 events/second. The exact capacity of the XML parser depends on the complexity of the Windows log messages, as well as the performance of the hardware that &abbrev; and &wecabbrev; are running on. When the limit of 15,000-20,000 events/seconds is reached, a workaround is recommended.</para>
         <para>As the value set in the <xref linkend="table-batchsizelimit"/> parameter is treated only as a recommendation by the Windows hosts, there is no direct way to control the amount of messages arriving from the event source computers.</para>
         <para>A possible workaround is to launch multiple &wecabbrev; servers and create multiple <parameter>windowsevent()</parameter> sources in &abbrev;. That way, you can distribute your Windows hosts across multiple &wecabbrev; and &abbrev; servers, decreasing the load on individual servers.</para>
     </section>
@@ -914,17 +901,17 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                 <para>An advantage of this, however, is that this requires less firewall rules.</para>
             </listitem>
             <listitem>
-                <para>Only HTTPS and SSL certificate based authentication are supported. Kerberos authentication is not supported at the moment (but is planned in the future).</para>
+                <para>Only HTTPS and SSL certificate based authentication are supported. Kerberos authentication is not supported at the moment.</para>
             </listitem>
             <listitem>
                 <para>The compression of events is not supported.</para>
             </listitem>
             <listitem>
-                <para>The <xref linkend="table-batchsizelimit"/> and <xref linkend="table-batchtimeoutlimit"/> options are not forced to the Windows hosts: they are handling these values only as a recommendation.</para>
+                <para>The <xref linkend="table-batchsizelimit"/> and <xref linkend="table-batchtimeoutlimit"/> options are not enforced on the Windows host side: Windows is handling these values only as a recommendation.</para>
             </listitem>
             <listitem>
-                <para>On Windows 7 and Windows 2008 platforms, there is a known issue. After about 3-6 reconnect events, the remote sender stops forwarding the logs. In this case, you need to restart the Windows RM service. This can also occur between the Windows forwarder and the Windows collector.</para>
-                <para>This issue has been reported to Microsoft and is awaiting resolution.</para>
+                <para>On Windows 7 and Windows 2008 platforms, there is a known issue. After several reconnects (if &wecabbrev; is restarted quickly), the remote sender can stop forwarding the logs for a certain period of time. In this case, restarting the Windows RM service can help.</para>
+                <para>This issue can also occur between two Windows machines. It has been reported to Microsoft and is awaiting resolution.</para>
             </listitem>
         </itemizedlist>
     </section>
@@ -952,7 +939,7 @@ DEBUG   enumerate</synopsis>
                         <para><filename>Applications and Services Logs\Microsoft\Windows\Eventlog-ForwardingPlugin</filename></para>
                     </listitem>
                     <listitem>
-                        <para><filename>Applications and Services Logs\Microsoft\Windows\Eventlog-ForwardingPlugin</filename></para>
+                        <para><filename>Applications and Services Logs\Microsoft\Windows\Windows Remote Management</filename></para>
                     </listitem>
                 </itemizedlist>
             </listitem>
@@ -979,25 +966,24 @@ DEBUG   enumerate</synopsis>
     </section>
     <appendix xml:id="wec-config-example">
         <title>&wecabbrev; configuration example</title>
-        <synopsis>server: "wec.balabit"
+        <synopsis>server: "wec.mydomain"
 port: 5986
-keyfile: "server.key"
-certfile: "server.crt"
-cadir: "certs"
+keyfile: "/opt/syslog-ng/etc/server.key"
+certfile: "/opt/syslog-ng/etc/server.crt"
+cadir: "/opt/syslog-ng/etc/cadir"
 
 log:
   level: "info"
-  file: "wec.log"
+  file: "/opt/syslog-ng/var/wec.log"
 
 eventdestination:
-  file: "events.txt"
-  unixdatagram: "listen.sock"
+  unixdatagram: "/opt/syslog-ng/var/run/wec.sock"
 
 subscriptions:
-  - name: "ExampleDefault"
+  - name: "ExampleDefaultSubscription"
     computers:
-      - "www.example.com"
-      - "*.example.com"
+      - "windowsdc.mydomain.com"
+      - "*.trusteddomain.com"
 
     contentformat: "RenderedText"
     heartbeats: 900.000
@@ -1008,9 +994,7 @@ subscriptions:
         &lt;Query Id="0">
           &lt;Select Path="Application">*&lt;/Select>
           &lt;Select Path="Security">*&lt;/Select>
-          &lt;Select Path="Setup">*&lt;/Select>
           &lt;Select Path="System">*&lt;/Select>
-          &lt;Select Path="ForwardedEvents">*&lt;/Select>
         &lt;/Query>
       &lt;/QueryList>
 
@@ -1065,7 +1049,6 @@ subscriptions:
   #         &lt;Select Path="System">*&lt;/Select>
   #         &lt;Select Path="ForwardedEvents">*&lt;/Select>
   #       &lt;/Query>
-  #     &lt;/QueryList>
-</synopsis>
+  #     &lt;/QueryList></synopsis>
     </appendix>
 </article>
