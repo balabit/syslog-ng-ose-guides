@@ -425,7 +425,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
             </listitem>
             <listitem>
                 <indexterm> <primary>disk queue</primary> <see>disk buffer</see> </indexterm>
-                <para><emphasis>Disk buffer</emphasis>: If the output queue is full, disk-buffering is enabled, and <parameter>reliable()</parameter> is set to <userinput>no</userinput>, &abbrev; puts the outgoing messages into the disk buffer of the destination. (The disk buffer is enabled if the <parameter>log-disk-fifo-size()</parameter> parameter of the destination is larger than <userinput>0</userinput>. This option specifies the size of the disk buffer in bytes.)</para>
+                <para><emphasis>Disk buffer</emphasis>: If the output queue is full, disk-buffering is enabled, and <parameter>reliable()</parameter> is set to <userinput>no</userinput>, &abbrev; puts the outgoing messages into the disk buffer of the destination. (The disk buffer is enabled if the <parameter>disk-buffer()</parameter> option is configured.)</para>
             </listitem>
             <listitem>
                 <indexterm> <primary>overflow queue</primary> <see>output buffer</see> </indexterm>
@@ -465,10 +465,9 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
             <title>Enabling normal disk-based buffering</title>
             <xi:include href="../../common/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <para>To enable normal disk-based buffering, use the <userinput>disk-buffer(reliable(no))</userinput> parameter in the destination. Use normal disk-based buffering if you want a solution that is faster than the reliable disk-based buffering. In this case, disk buffering will be less reliable and it is possible to lose logs in case of &abbrev; crash. The filename of the normal disk buffer file is the following: <filename>&lt;syslog-ng path&gt;/var/syslog-ng-00000.qf</filename>.</para>
-            <para>It is possible to use this option without using the disk-buffer plugin. In this case, use the <parameter>log-disk-fifo-size()</parameter> parameter in the destination.</para>
             <example>
                 <title>Example for using normal disk-based buffering</title>
-                <para>When using the disk-buffer plugin</para>
+                <para>When using the disk-buffer plugin:</para>
                 <synopsis>destination d_BSD {
     network(
             "127.0.0.1"
@@ -480,15 +479,6 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
             )
         );
         }; </synopsis>
-                <para>Without disk-buffer plugin</para>
-                <synopsis>destination d_BSD {
-    network(
-            "127.0.0.1"
-            port(3333)
-            log-disk-fifo-size(2000000)
-            log-fifo-size(10000)
-        );
-}; </synopsis>
             </example>
             <para>For details on the differences between normal and reliable disk-based buffering, see also <xref linkend="about-disk-buffer-files"/>.</para>
         </section>
