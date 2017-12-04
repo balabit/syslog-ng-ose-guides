@@ -30,6 +30,17 @@
         <para>Unlike the <link xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://www.balabit.com/documents/syslog-ng-pe-6.0-guides/en/syslog-ng-windows-agent-guide-admin/html-single/index.html">&agent;</link>, the &wec; is a standalone tool that does not require installing on the Windows-based host itself. This can be an advantage when your organization's policies restrict or do not allow the installation of third-party tools.</para>
         <para>Another difference between the &wec; tool and &agent; is that &wecabbrev; forwards logs only about Windows events, while &agentabbrev; forwards both Windows event logs as well as files from Windows hosts to the &abbrev; server.</para>
         <para>The &wec; sits between your Windows hosts and your &product; server, accepting log messages from the remote Windows side with WinRM and feeding them to &product; 7.0.</para>
+        <figure>
+            <title>Topology of &wec; for &abbrev; 7.0 infrastructure</title>
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata format="PNG" fileref="wec-topology.png"/>
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata format="PNG" fileref="&imgroot;/wec-topology.png" contentwidth="&screenshotsize_small;"/>
+                </imageobject>
+            </mediaobject>
+        </figure>
         <para>At a high level, this is how you can get Windows event logs to be forwarded to your &product; server using the &wecabbrev; tool:</para>
         <orderedlist>
             <listitem>
@@ -668,7 +679,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                             <entry>N/A</entry>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> A value that specifies the heartbeat interval for the subscription in seconds.</para> <para>The example configuration in <xref linkend="wec-config-example"/> shows three examples provided by Microsoft with good "default" values: ExampleMinimizeLatency, ExampleDebug, and ExampleMinimizeBandwidth.</para> </entry>
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> A value that specifies the heartbeat interval for the subscription in seconds.</para> </entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -693,7 +704,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                             <entry>N/A</entry>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> &wecabbrev; attempts to reconnect to the Windows host(s) at the specified interval of time in seconds.</para> <para>The example configuration in <xref linkend="wec-config-example"/> shows three examples provided by Microsoft with good "default" values: ExampleMinimizeLatency, ExampleDebug, and ExampleMinimizeBandwidth.</para> </entry>
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> &wecabbrev; attempts to reconnect to the Windows host(s) at the specified interval of time in seconds.</para> </entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -745,7 +756,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                             <entry>N/A</entry>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> Specifies the maximum latency allowed in delivering a batch of events (in seconds).</para> <para>The example configuration in <xref linkend="wec-config-example"/> shows three examples provided by Microsoft with good "default" values: ExampleMinimizeLatency, ExampleDebug, and ExampleMinimizeBandwidth.</para> <note>
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> Specifies the maximum latency allowed in delivering a batch of events (in seconds).</para> <note>
                                 <para>This option is not enforced on the Windows host side. Windows is handling this value only as a recommendation.</para>
                                 </note> </entry>
                         </row>
@@ -861,8 +872,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
         <title>Message format in &wec; for &abbrev;</title>
         <para>The &wec; for &abbrev; is supported for Windows 7 or newer platforms. Starting with Windows 7, event logging is XML-based, meaning that event log messages reach the &wec; in XML format. When these are forwarded to the &abbrev; server, &abbrev; parses them into key-value pairs using the XML parser.</para>
         <para>Once event log data is available in &abbrev;, you have the flexibility to modify and format data any way you want, using macros and rewrite rules.</para>
-        <para>Note that the &wec; tool does not map and resolve data the same way the &agent; does. For example, &agentabbrev; can resolve Windows SIDs (such as User, Group, Domain, Computer) while &wecabbrev; cannot (so &wecabbrev; uses the data in the format it is received in).</para>
-        <para>This means that event log data as processed by the &wec; tool may differ from the data collected and made available by the &agent;. On the other hand, the &wec; tool provides you with greater freedom and flexibility when it comes to manipulating your raw data.</para>
+        <para>Note that while event log data as processed by the &wec; tool may differ from the data collected and made available by the &agent;, the &wec; tool provides you with greater freedom and flexibility when it comes to manipulating your raw data.</para>
     </section>
     <section xml:id="wec-flow-control">
         <title>Flow control</title>
@@ -996,59 +1006,6 @@ subscriptions:
           &lt;Select Path="Security">*&lt;/Select>
           &lt;Select Path="System">*&lt;/Select>
         &lt;/Query>
-      &lt;/QueryList>
-
-  # - name: "ExampleMinimizeLatency"
-  #   computers:
-  #     - "*"
-  #   contentformat: "RenderedText"
-  #   heartbeats: 3600.000
-  #   connectionretry: 60.0
-  #   #batchsizelimit: 256
-  #   batchtimeoutlimit: 30.000
-  #   queries: |
-  #     &lt;QueryList>
-  #       &lt;Query Id="0">
-  #         &lt;Select Path="Application">*&lt;/Select>
-  #         &lt;Select Path="Security">*&lt;/Select>
-  #         &lt;Select Path="Setup">*&lt;/Select>
-  #         &lt;Select Path="System">*&lt;/Select>
-  #         &lt;Select Path="ForwardedEvents">*&lt;/Select>
-  #       &lt;/Query>
-  #     &lt;/QueryList>
-
-  # - name: "ExampleDebug"
-  #   computers:
-  #     - "*"
-  #   contentformat: "Events"
-  #   heartbeats: 3.000
-  #   connectionretry: 10.0
-  #   batchsizelimit: 1
-  #   batchtimeoutlimit: 30.000
-  #   queries: |
-  #     &lt;QueryList>
-  #       &lt;Query Id="0">
-  #         &lt;Select Path="Application">*&lt;/Select>
-  #       &lt;/Query>
-  #     &lt;/QueryList>
-  #   readexistingevents: true
-
-  # - name: "ExampleMinimizeBandwidth"
-  #   computers:
-  #     - "*"
-  #   contentformat: "RenderedText"
-  #   heartbeats: 21600.000
-  #   connectionretry: 60.0
-  #   batchtimeoutlimit: 21600.000
-  #   queries: |
-  #     &lt;QueryList>
-  #       &lt;Query Id="0">
-  #         &lt;Select Path="Application">*&lt;/Select>
-  #         &lt;Select Path="Security">*&lt;/Select>
-  #         &lt;Select Path="Setup">*&lt;/Select>
-  #         &lt;Select Path="System">*&lt;/Select>
-  #         &lt;Select Path="ForwardedEvents">*&lt;/Select>
-  #       &lt;/Query>
-  #     &lt;/QueryList></synopsis>
+      &lt;/QueryList></synopsis>
     </appendix>
 </article>
