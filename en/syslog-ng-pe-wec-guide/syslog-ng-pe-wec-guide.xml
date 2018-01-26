@@ -135,6 +135,7 @@ extendedKeyUsage = serverAuth,clientAuth
             <synopsis>$ openssl genrsa -out ca.key 4096
 $ openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt
 </synopsis>
+            <para>Take a note of the directory where you put the certificate created in this step. This is the directory that you need to reference in the <link linkend="option-cadir"><parameter>cadir</parameter></link> option of the configuration file of &wecabbrev;. </para>
         </step>
         <step xml:id="step-thumbprint-CA" xreflabel="use the CA thumbprint you saved earlier">
             <para>Save the thumbprint of the CA: </para>
@@ -149,7 +150,6 @@ $ openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt
 $ openssl req -new -key server.key -out server.csr
 $ openssl x509 -req -extensions client_server_auth -extfile openssl-ext.conf -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
 </synopsis>
-            <para>You need to put the certificate created in this step in the <filename>/cadir</filename> directory. </para>
         </step>
         <step>
             <para>Create client certificates:</para>
@@ -161,7 +161,6 @@ $ openssl req -new -key client1.key -out client1.csr
 $ openssl x509 -req -extensions client_server_auth -extfile openssl-ext.conf -in client1.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client1.crt -days 365
 $ openssl pkcs12 -export  -inkey client1.key -in client1.crt -certfile ca.crt -out client1.p12
 </synopsis>
-            <para>You need to put the certificates created in this step in the <filename>/cadir</filename> directory.</para>
         </step>
     </procedure>
     <procedure xml:id="wec-configure-event-source-computers">
@@ -368,7 +367,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> The path to the file that contains the X.509 certificate of the server running &wecabbrev;. The file is in PEM format.</para>
         </simplesect>
-        <simplesect>
+        <simplesect xml:id="option-cadir">
             <title>cadir</title>
             <indexterm type="parameter"> <primary>cadir</primary> </indexterm>
             <informaltable frame="topbot" colsep="0" rowsep="0">
