@@ -149,6 +149,7 @@ $ openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt
 $ openssl req -new -key server.key -out server.csr
 $ openssl x509 -req -extensions client_server_auth -extfile openssl-ext.conf -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
 </synopsis>
+            <para>You need to put the certificate created in this step in the <filename>/cadir</filename> directory. </para>
         </step>
         <step>
             <para>Create client certificates:</para>
@@ -160,6 +161,7 @@ $ openssl req -new -key client1.key -out client1.csr
 $ openssl x509 -req -extensions client_server_auth -extfile openssl-ext.conf -in client1.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client1.crt -days 365
 $ openssl pkcs12 -export  -inkey client1.key -in client1.crt -certfile ca.crt -out client1.p12
 </synopsis>
+            <para>You need to put the certificates created in this step in the <filename>/cadir</filename> directory.</para>
         </step>
     </procedure>
     <procedure xml:id="wec-configure-event-source-computers">
@@ -462,7 +464,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                             <entry>N/A</entry>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> The path to the file where &wecabbrev; should write internal log messages.</para> <para>You can send this file to syslog-ng using a <parameter>file()</parameter> source.</para> </entry>
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> The path to the file where &wecabbrev; should write internal log messages. The log file is automatically created by &abbrev;.</para> <para>You can send this file to syslog-ng using a <parameter>file()</parameter> source.</para> </entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -534,7 +536,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                             <entry>N/A</entry>
                         </row>
                         <row>
-                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> The path to the Unix datagram socket receiving the Windows events. &wecabbrev; writes the received events to the Unix datagram socket specified here. The listening socket must be created by &abbrev;.</para> <para>It is possible to log both to a file and a Unix datagram socket in parallel.</para> </entry>
+                            <entry namest="c1" nameend="c2"> <para><emphasis role="bold">Description:</emphasis> The path to the Unix datagram socket receiving the Windows events. &wecabbrev; writes the received events to the Unix datagram socket specified here. The listening socket is automatically created by &abbrev;.</para> <para>It is possible to log both to a file and a Unix datagram socket in parallel.</para> </entry>
                         </row>
                     </tbody>
                 </tgroup>
@@ -878,6 +880,21 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                 </listitem>
             </itemizedlist>
             <para>For more information on the <parameter>windowsevent()</parameter> source, see <olink targetdoc="syslog-ng-pe-guide-admin" targetptr="source-windowsevent"/>.</para>
+        </step>
+        <step>
+            <para>Define a complete log path in <filename>syslog-ng.conf</filename> to enable the <parameter>windowsevent()</parameter> source, <userinput>s_wec</userinput>. Otherwise, the &wecabbrev; process will not run (connection refused).</para>
+            <para>For example:</para>
+            <synopsis>source s_wec {
+    windowsevent();  
+};
+
+log {
+  source(s_wec);
+
+  destination {
+    file("/var/log/example.log" template("$(format-json --scope dot-nv-pairs)\n"));
+  };
+};</synopsis>
         </step>
     </procedure>
     <section xml:id="wec-start-stop">
