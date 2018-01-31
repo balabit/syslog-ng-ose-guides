@@ -3,10 +3,10 @@
 # into this, after generation.
 #
 
-GIT_BASE=git+ssh://git.balabit/var/scm/git
+GIT_BASE=git+ssh://git@git.balabit
 HOSTNAME=$(shell hostname)
 ifneq (,$(findstring docbuilder,$(HOSTNAME)))
-GIT_BASE=git://git.balabit/var/scm/git
+GIT_BASE=git+ssh://git@git.balabit
 endif
 
 BUILDERREPO=xml-stylesheet
