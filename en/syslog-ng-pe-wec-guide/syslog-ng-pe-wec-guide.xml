@@ -125,16 +125,54 @@
             <para/>
         </formalpara>
         <step>
-            <para>Create an OpenSSL extension file (<filename>openssl-ext.conf</filename>) with the following content:</para>
-            <synopsis>[client_server_auth]
+            <para>Create two certificate template files for both the server and the client(s).</para>
+            <note>
+                <para>The templates shown here are examples only. Not all elements of the example <filename>*opts.cnf</filename> files are mandatory, for example, you do not need to define two DNS instances.</para>
+            </note>
+            <para>The contents of <filename>server-certopts.cnf</filename>:</para>
+            <synopsis>[req]
+default_bits = 4096
+default_md = sha256
+req_extensions = req_ext
 extendedKeyUsage = serverAuth,clientAuth
-</synopsis>
+keyUsage = keyEncipherment,dataEncipherment
+basicConstraints = CA:FALSE
+distinguished_name = dn
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = windowseventcollector.widgits
+DNS.2 = wec.widgits
+IP.1 = 10.64.10.2
+
+[dn]</synopsis>
+            <para>The contents of <filename>client-certopts.cnf</filename>:</para>
+            <synopsis>[req]
+default_bits = 4096
+default_md = sha256
+req_extensions = req_ext
+extendedKeyUsage = serverAuth,clientAuth
+keyUsage = keyEncipherment,dataEncipherment
+basicConstraints = CA:FALSE
+distinguished_name = dn
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = windowsclient01.widgits
+DNS.2 = client01.widgits
+IP.1 = 10.64.10.11
+
+[dn]</synopsis>
         </step>
         <step>
             <para>Generate the certificate authority (CA):</para>
             <synopsis>$ openssl genrsa -out ca.key 4096
-$ openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt
-</synopsis>
+
+$ openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt -subj '/C=AU/ST=Victoria/L=Melbourne/O=Internet Widgits Pty Ltd/OU=Operations/CN=Operations Root CA'</synopsis>
             <para>Place a copy of the <filename>ca.crt</filename> file in a directory of your choice. Take a note of the directory because you need to reference it in the <link linkend="option-cadir"><parameter>cadir</parameter></link> option of the &wecabbrev; configuration file. </para>
         </step>
         <step xml:id="step-thumbprint-CA" xreflabel="use the CA thumbprint you saved earlier">
@@ -146,21 +184,22 @@ $ openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt
             <note>
                 <para>The Common Name must be the FQDN (or IP address) of the &wec; server.</para>
             </note>
-            <synopsis>$ openssl genrsa -out server.key 4096
-$ openssl req -new -key server.key -out server.csr
-$ openssl x509 -req -extensions client_server_auth -extfile openssl-ext.conf -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
-</synopsis>
+            <synopsis>$ openssl req -new -newkey rsa:4096 -nodes -out server.csr -keyout server.key -subj '/C=AU/ST=Victoria/L=Melbourne/O=Internet Widgits Pty Ltd/OU=Operations/CN=windowseventcollector.widgits'
+
+$ openssl x509 -req -in server.csr -out server.crt -CA ca.crt -CAkey ca.key -CAcreateserial -extfile server-certopts.cnf -extensions req_ext -days 365</synopsis>
         </step>
         <step>
-            <para>Create client certificates:</para>
+            <para>Create client(s') certificates:</para>
             <note>
                 <para>The Common Name must be the FQDN (or IP address) of the client.</para>
             </note>
-            <synopsis>$ openssl genrsa -out client1.key 4096
-$ openssl req -new -key client1.key -out client1.csr
-$ openssl x509 -req -extensions client_server_auth -extfile openssl-ext.conf -in client1.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client1.crt -days 365
-$ openssl pkcs12 -export  -inkey client1.key -in client1.crt -certfile ca.crt -out client1.p12
-</synopsis>
+            <synopsis>$ openssl req -new -newkey rsa:4096 -nodes -out client.csr -keyout client.key -subj '/C=AU/ST=Victoria/L=Melbourne/O=Internet Widgits Pty Ltd/OU=Operations/CN=windowsclient01.widgits'
+
+$ openssl x509 -req -in client.csr -out client.crt -CA ca.crt -CAkey ca.key -CAcreateserial -extfile client-certopts.cnf -extensions req_ext -days 365</synopsis>
+        </step>
+        <step>
+            <para>Export the client(s') certificate(s) to the format recognized by the Windows Certificate Manager tool.</para>
+            <synopsis>$ openssl pkcs12 -export  -inkey client.key -in client.crt -certfile ca.crt -out client.p12</synopsis>
         </step>
     </procedure>
     <procedure xml:id="wec-configure-event-source-computers">
@@ -409,9 +448,17 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The options to specify how to handle the internal logs of &wecabbrev;.</para>
-            <para>&wecabbrev; sends internal log messages to stderr. You can also optionally specify a <xref linkend="table-file"/> to send logs to (in parallel with stderr). If you are using a systemd platform and start &wecabbrev; using <command>systemctl</command>, then stderr is redirected to systemd-journal, and this is where you will find the internal logs of &wecabbrev;.</para>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <para><emphasis role="bold">Description:</emphasis> The options to specify how to handle the internal logs of &wecabbrev;:</para>
+            <itemizedlist>
+                <listitem>
+                    <para><xref linkend="table-log-level"/></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="table-log-file"/></para>
+                </listitem>
+            </itemizedlist>
+            <para>&wecabbrev; sends internal log messages to stderr. You can also optionally specify a <xref linkend="table-log-file"/> to send logs to (in parallel with stderr). If you are using a systemd platform and start &wecabbrev; using <command>systemctl</command>, then stderr is redirected to systemd-journal, and this is where you will find the internal logs of &wecabbrev;.</para>
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-log-level" xreflabel="level">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -443,7 +490,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-file" xreflabel="file">
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-log-file" xreflabel="file">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -489,8 +536,19 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The options to specify how to store the event logs that are forwarded to &wecabbrev;. </para>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <para><emphasis role="bold">Description:</emphasis> The options to specify how to store the event logs that are forwarded to &wecabbrev;:</para>
+            <itemizedlist>
+                <listitem>
+                    <para><xref linkend="table-eventdestination-file"/></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="table-eventdestination-unixdatagram"/></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="table-eventdestination-queuesize"/></para>
+                </listitem>
+            </itemizedlist>
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-eventdestination-file" xreflabel="file">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -515,7 +573,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-eventdestination-unixdatagram" xreflabel="unixdatagram">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -540,7 +598,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-eventdestination-queuesize" xreflabel="queuesize">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -586,11 +644,39 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> The options related to the subscriptions you have set up on &wecabbrev;.</para>
+            <para><emphasis role="bold">Description:</emphasis> The options related to the subscriptions you have set up on &wecabbrev;:<itemizedlist>
+                <listitem>
+                    <para><xref linkend="table-subscriptions-name"/></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="table-subscriptions-computers"/></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="table-subscriptions-contentformat"/></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="table-subscriptions-heartbeats"/></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="table-subscriptions-connectionretry"/></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="table-batchsizelimit"/></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="table-batchtimeoutlimit"/></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="table-subscriptions-queries"/></para>
+                </listitem>
+                <listitem>
+                    <para><xref linkend="table-subscriptions-readexistingevents"/></para>
+                </listitem>
+                </itemizedlist></para>
             <note>
                 <para>You can set up multiple subscriptions to events coming from the same Windows host. If an event matches more than one subscription, the event log comes in to &wecabbrev; as many times as there is a match.</para>
             </note>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-subscriptions-name" xreflabel="name">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -615,7 +701,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-subscriptions-computers" xreflabel="computers">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -640,7 +726,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-subscriptions-contentformat" xreflabel="contentformat">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -672,7 +758,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-subscriptions-heartbeats" xreflabel="heartbeats">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -697,7 +783,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-subscriptions-connectionretry" xreflabel="connectionretry">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -776,7 +862,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-subscriptions-queries" xreflabel="queries">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
@@ -815,7 +901,7 @@ Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerC
                     </tbody>
                 </tgroup>
             </informaltable>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
+            <informaltable frame="topbot" colsep="0" rowsep="0" xml:id="table-subscriptions-readexistingevents" xreflabel="readexistingevents">
                 <tgroup cols="2">
                     <colspec colnum="1" colname="c1" colwidth="100pt"/>
                     <colspec colnum="2" colname="c2"/>
