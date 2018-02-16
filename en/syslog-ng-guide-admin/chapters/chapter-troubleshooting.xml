@@ -291,8 +291,7 @@ persist_name='afsocket_dd_qfile(stream,serverdown:514)' </synopsis>
                             </entry>
                             <entry>
                                 <para>This message indicates message loss.</para>
-                                <para>Flow-control must be enabled in the log path. As a result syslog-ng will stop reading messages from the sources of this log statement if the destinations are not able to process the messages at the required speed.</para>
-                                <para>If flow-control is disabled, syslog-ng will drop messages when the destination queues are full. Syslog-ng will drop messages even if the server is alive. If the remote server accepts the logs slower than the sender syslog-ng receives, the sender syslog-ng will fill up the destination queue, then drop the newer messages. Sometimes this error happens only at a specific time interval, for example, only between <code>7:00</code> AM and <code>8:00</code> AM or between <code>16:00</code> PM and <code>17:00</code> PM when your users log in or log off and that generates a lot of messages within a short interval.</para>
+                                <para>Flow-control must be enabled in the log path. When flow-control is enabled, syslog-ng will stop reading messages from the sources of the log statement if the destinations are not able to process the messages at the required speed.</para>
                                 <para>If flow-control is enabled, syslog-ng will only drop messages if the destination queues/window sizes are improperly sized.</para>
                             </entry>
                         </row>
@@ -302,6 +301,7 @@ persist_name='afsocket_dd_qfile(stream,serverdown:514)' </synopsis>
                             </entry>
                             <entry>
                                 <para>Enable flow-control in the log path. </para>
+                                <para>If flow-control is disabled, syslog-ng will drop messages if the destination queues are full. Note that syslog-ng will drop messages even if the server is alive. If the remote server accepts logs at a slower rate than the sender syslog-ng receives them, the sender syslog-ng will fill up the destination queue, then drop the newer messages. Sometimes this error occurs only at a specific time interval, for example, only between <code>7:00</code> AM and <code>8:00</code> AM or between <code>16:00</code> PM and <code>17:00</code> PM when your users log in or log off and that generates a lot of messages within a short interval.</para>
                                 <para>For more information, see <xref linkend="concepts-flow-control"/>.</para>
                             </entry>
                         </row>
@@ -373,7 +373,7 @@ line:pem_lib.c:701:Expecting: TRUSTED CERTIFICATE</synopsis>
                                 <?dbfo bgcolor="#D4D6EB" ?>
                             </entry>
                             <entry>
-                                <para>The error message is displayed when using TLS (Transport Layer Security). Syslog-ng uses OpenSSL for TLS and this message indicates that the certificate contains characters that OpenSSL cannot process. </para>
+                                <para>The error message is displayed when using Transport Layer Security (TLS). The syslog-ng application uses OpenSSL for TLS and this message indicates that the certificate contains characters that OpenSSL cannot process. </para>
                                 <para>The error occurs when the certificate comes from Windows and you want to use it on a Linux-based computer. On Windows, the end of line (EOL) character is different (\r\n) compared to Linux (\n). </para>
                                 <para>To verify this, open the certificate in a text editor, for example, MCEdit. Notice the <code>^M</code> characters as shown in the image below:</para>
                                 <para>
@@ -398,13 +398,13 @@ line:pem_lib.c:701:Expecting: TRUSTED CERTIFICATE</synopsis>
                             <entry>
                                 <itemizedlist>
                                     <listitem>
-                                        <para>Save the certificate using UTF-8 on Windows, for example, using Notepad++. </para>
+                                        <para>On Windows, save the certificate using UTF-8, for example, using Notepad++. </para>
                                         <note>
                                             <para>Windows Notepad is not able to save the file in normal UTF-8, even if you select it.</para>
                                         </note>
                                         <orderedlist>
                                             <listitem>
-                                                <para>From the menu, select <guibutton>Encoding</guibutton>.</para>
+                                                <para>In Notepad++, from the menu, select <guibutton>Encoding</guibutton>.</para>
                                             </listitem>
                                             <listitem>
                                                 <para>Change the value from <guibutton>UTF-8-BOM</guibutton> to <guibutton>UTF-8</guibutton>.</para>
@@ -415,7 +415,7 @@ line:pem_lib.c:701:Expecting: TRUSTED CERTIFICATE</synopsis>
                                         </orderedlist>
                                     </listitem>
                                     <listitem>
-                                        <para>Run dos2unix cert.pem on Linux. This will convert the file to a Linux-compatible style. </para>
+                                        <para>On Linux, run dos2unix cert.pem. This will convert the file to a Linux-compatible style. </para>
                                         <para>Alternatively, replace the EOL characters in the file manually.</para>
                                     </listitem>
                                 </itemizedlist>
@@ -425,49 +425,9 @@ line:pem_lib.c:701:Expecting: TRUSTED CERTIFICATE</synopsis>
                 </tgroup>
             </informaltable>
         </simplesect>
-        <simplesect>
-            <title>TID is already used</title>
-            <indexterm>
-                <primary>troubleshooting</primary>
-                <secondary>TID is already used</secondary>
-            </indexterm>
-            <informaltable frame="topbot" colsep="0" rowsep="0">
-                <tgroup cols="2">
-                    <colspec colnum="1" colwidth="40pt"/>
-                    <tbody>
-                        <row>
-                            <entry>Error message: <?dbhtml bgcolor="#D4D6EB" ?>
-                                <?dbfo bgcolor="#D4D6EB" ?>
-                            </entry>
-                            <entry>
-                                <synopsis>TID is already used; proto='0x202c6c0', 
+        <!--<simplesect><title>TID is already used</title><indexterm><primary>troubleshooting</primary><secondary>TID is already used</secondary></indexterm><informaltable frame="topbot" colsep="0" rowsep="0"><tgroup cols="2"><colspec colnum="1" colwidth="40pt"/><tbody><row><entry>Error message: <?dbhtml bgcolor="#D4D6EB"?> <?dbfo bgcolor="#D4D6EB"?> </entry><entry><synopsis>TID is already used; proto='0x202c6c0', 
 TID='61b6456d2f02052780d0d8930cbd043857c2463fcb6014b748b1450595a682', 
 client='10.140.35.9'
-Syslog connection closed;</synopsis>
-                            </entry>
-                        </row>
-                        <row>
-                            <entry>Description: <?dbhtml bgcolor="#D4D6EB" ?>
-                                <?dbfo bgcolor="#D4D6EB" ?>
-                            </entry>
-                            <entry>
-                                <para>When a client using Reliable Log Transfer Protocol™ (RLTP™) connects to the server for the first time, it generates a persistent ID and sends it to the server during the handshake process. This is the <emphasis role="bold">TID</emphasis>.</para>
-                                <para>If the client loses the connection to the server silently, for example, the UTP cable is pulled from the host or other network issues happen, the server is unable to detect the connection loss.</para>
-                                <para>If the client tries to reconnect within a short time interval, it will send the same TID. However, the server allows only one connection with the same TID. As the server will “think” it already has a live connection with this TID, it drops the new connection due to the duplicated TID.</para>
-                            </entry>
-                        </row>
-                        <row>
-                            <entry>Solution: <?dbhtml bgcolor="#D4D6EB" ?>
-                                <?dbfo bgcolor="#D4D6EB" ?>
-                            </entry>
-                            <entry>
-                                <para>This error will be eliminated automatically because the RLTP™ server will close the connection if there were no new messages from the client within the timeout frame. After the timeout of the RLTP™ server, the client will be able to reconnect to the server (when the <parameter>time_reopen()</parameter> of the client has elapsed).</para>
-                                <para>If this error message appears regularly, it means your network may be unstable, and sometimes the client loses the connection to the server in an abnormal way.</para>
-                            </entry>
-                        </row>
-                    </tbody>
-                </tgroup>
-            </informaltable>
-        </simplesect>
+Syslog connection closed;</synopsis></entry></row><row><entry>Description: <?dbhtml bgcolor="#D4D6EB"?> <?dbfo bgcolor="#D4D6EB"?> </entry><entry><para>When a client using Reliable Log Transfer Protocol™ (RLTP™) connects to the server for the first time, it generates a persistent ID and sends it to the server during the handshake process. This is the <emphasis role="bold">TID</emphasis>.</para><para>If the client loses the connection to the server silently, for example, the UTP cable is pulled from the host or other network issues happen, the server is unable to detect the connection loss.</para><para>If the client tries to reconnect within a short time interval, it will send the same TID. However, the server allows only one connection with the same TID. As the server “thinks” that it already has a live connection with this TID, it drops the new connection due to the duplicated TID.</para></entry></row><row><entry>Solution: <?dbhtml bgcolor="#D4D6EB"?> <?dbfo bgcolor="#D4D6EB"?> </entry><entry><para>This error is eliminated automatically because the RLTP™ server will close the connection if there were no new messages from the client within the timeout frame. Once the timeout period of the RLTP™ server has passed, the client will be able to reconnect to the server (when the <parameter>time_reopen()</parameter> of the client has elapsed).  </para><para>If this error message appears regularly, it means that your network may be unstable, and sometimes the client loses the connection to the server in an abnormal way.</para></entry></row></tbody></tgroup></informaltable></simplesect>-->
     </section>
 </chapter>
