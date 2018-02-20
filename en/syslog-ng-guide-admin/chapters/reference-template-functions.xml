@@ -114,6 +114,25 @@
             <para>To use the <parameter>format-cim()</parameter> template function, &abbrev; must be compiled with JSON support. For details, see <xref linkend="syslog-ng-compile-options"/>. To see if your &abbrev; binary was compiled with JSON support, execute the <command>syslog-ng --version</command> command.</para>
         </note>
     </simplesect>
+    <simplesect xml:id="template-function-format-gelf">
+        <title>format-gelf</title>
+        <indexterm type="parameter">
+            <primary>format-gelf</primary>
+        </indexterm>
+        <para><emphasis role="bold">Syntax:</emphasis><synopsis>$(format-gelf)</synopsis></para>
+        <para><emphasis role="bold">Description:</emphasis> Available in &abbrev; <phrase condition="ose">3.13</phrase> and later. </para>
+        <para>You can use the Graylog Extended Log Format (GELF) template together with the <parameter>graylog2()</parameter> destination to send syslog messages to <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="http://docs.graylog.org">Graylog</link>. GELF is the native data format of Graylog.</para>
+        <example>
+            <title>Using the format-gelf template function</title>
+            <para>The following configuration example shows how you can use the <parameter>format-gelf</parameter> template:</para>
+            <synopsis>destination graylog2(host("127.0.0.1") port(12201) template("$(format-gelf)")) { 
+network("`host`"
+     port(`port`)
+     transport(tcp)
+     template("`template`"));
+};</synopsis>
+        </example>
+    </simplesect>
     <simplesect xml:id="template-function-format-json">
         <title>format-json</title>
         <indexterm type="parameter"> <primary>format-json</primary> </indexterm>
@@ -190,6 +209,72 @@
             <para>This template function is available only if &abbrev; has been compiled with geoip2 support. To enable it, use the <parameter>--enable-geoip</parameter> compiling option.</para>
         </note>
         <para>To retrieve additional GeoIP information, see <xref linkend="geoip2-parser"/>.</para>
+    </simplesect>
+    <simplesect xml:id="template-function-getent">
+        <title>getent</title>
+        <indexterm type="parameter">
+            <primary>getent</primary>
+        </indexterm>
+        <para><emphasis role="bold">Syntax:</emphasis><synopsis>$(getent)</synopsis></para>
+        <para><emphasis role="bold">Description:</emphasis> Available in &abbrev; <phrase condition="ose">3.13</phrase> and later. </para>
+        <para>You can use the <parameter>getent</parameter> template function to look up entries from the Name Service Switch libraries, such as, passwd, services, or protocols.</para>
+        <para>The following databases are supported: </para>
+        <itemizedlist>
+            <listitem>
+                <para><emphasis>passwd</emphasis></para>
+                <para>Use this database to query data related to a user. Specify the user by either username or user ID. You can query the following data: username, user ID, group ID, GECOS field, home directory, or user shell.</para>
+                <synopsis>$(getent passwd testuser name)
+$(getent passwd testuser uid)
+$(getent passwd testuser gid)
+$(getent passwd testuser gecos)
+$(getent passwd testuser dir)
+$(getent passwd testuser shell)</synopsis>
+                <para>or</para>
+                <synopsis>$(getent passwd 1000 name)
+$(getent passwd 1000 uid)
+$(getent passwd 1000 gid)
+$(getent passwd 1000 gecos)
+$(getent passwd 1000 dir)
+$(getent passwd 1000 shell)</synopsis>
+                <para>The queried data is optional. When you do not query any data, the default behavior applies, which is as follows: user ID is returned for username, or username is returned for user ID.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Username <parameter>$(getent passwd testuser)</parameter> returns user ID <parameter>1000</parameter>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>User ID <parameter>$(getent passwd 1000)</parameter> returns username <parameter>testuser</parameter>.</para>
+                    </listitem>
+                </itemizedlist>
+            </listitem>
+            <listitem>
+                <para><emphasis>group</emphasis></para>
+                <para>Use this database to query group-related data. The group can be specified using either group ID or group name. You can query the following data: group name, group ID, and members.</para>
+                <synopsis>$(getent group adm name)
+$(getent group adm gid)
+$(getent group adm members)</synopsis>
+                <para>The queried data is optional. The default behavior is as follows: group ID is returned for group name, or group name is returned for user ID.</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>Group name <parameter>$(getent group adm)</parameter> returns group ID <parameter>4</parameter>.</para>
+                    </listitem>
+                    <listitem>
+                        <para>Group ID <parameter>$(getent group 4)</parameter> returns group name <parameter>adm</parameter>.</para>
+                    </listitem>
+                </itemizedlist>
+            </listitem>
+            <listitem>
+                <para><emphasis>protocols</emphasis></para>
+                <para>Use this database to translate protocol name to protocol ID, or protocol ID to protocol string.</para>
+                <synopsis>$(getent protocols tcp)
+$(getent protocols 6)</synopsis>
+            </listitem>
+            <listitem>
+                <para><emphasis>services</emphasis></para>
+                <para>Use this database to translate service name to service ID, or service ID to service name.</para>
+                <synopsis>$(getent services http)
+$(getent services 80)</synopsis>
+            </listitem>
+        </itemizedlist>
     </simplesect>
     <simplesect xml:id="template-function-graphite">
         <title>graphite-output</title>
