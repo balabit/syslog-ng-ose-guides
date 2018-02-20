@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="configuring-destinations-syslog" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title><parameter>syslog</parameter>: Sending messages to a remote logserver using the IETF-syslog protocol</title>
+    <indexterm> <primary>destination drivers</primary> <secondary><parameter>syslog()</parameter> driver</secondary> </indexterm>
+    <para>The <parameter>syslog()</parameter> driver sends messages to a remote host (for example a syslog-ng server or relay) on the local intranet or internet using the new standard syslog protocol developed by IETF (for details about the new protocol, see <xref linkend="concepts-message-ietfsyslog"/>). The protocol supports sending messages using the UDP, TCP, or the encrypted TLS networking protocols.</para>
+    <para>The required arguments of the driver are the address of the destination host (where messages should be sent). The transport method (networking protocol) is optional, syslog-ng uses the TCP protocol by default. For the list of available optional parameters, see <xref linkend="reference-destination-syslog-chapter"/>.</para>
+    <formalpara>
+        <title>Declaration:</title>
+        <para/>
+    </formalpara>
+    <synopsis>syslog(host transport [options]);</synopsis>
+    <note>
+        <para>Note that the <parameter>syslog</parameter> destination driver has required parameters, while the source driver defaults to the local bind address, and every parameter is optional.</para>
+    </note>
+    <para>The <parameter>udp</parameter> transport method automatically sends multicast packets if a multicast destination address is specified. The <parameter>tcp</parameter> and <parameter>tls</parameter> methods do not support multicasting.</para>
+    <note>
+        <para>The default ports for the different transport protocols are as follows: UDP &mdash; 514, TCP &mdash; 601, TLS &mdash; 6514.</para>
+    </note>
+    <example xml:id="example-destination-syslog">
+        <title>Using the syslog() driver</title>
+        <synopsis>destination d_tcp { syslog("10.1.2.3" transport("tcp") port(1999) localport(999)); };</synopsis>
+        <para>If name resolution is configured, the hostname of the target server can be used as well.</para>
+        <synopsis>destination d_tcp { syslog("target_host" transport("tcp") port(1999) localport(999)); };</synopsis>
+        <para>Send the log messages using TLS encryption and use mutual authentication. For details on the encryption and authentication options, see <xref linkend="tlsoptions"/>.</para>
+        <synopsis>destination d_syslog_tls {
+    syslog("10.100.20.40"
+        transport("tls")
+        port(6514)
+        tls(peer-verify(required-trusted)
+            ca-dir('/opt/syslog-ng/etc/syslog-ng/keys/ca.d/')
+            key-file('/opt/syslog-ng/etc/syslog-ng/keys/client_key.pem')
+            cert-file('/opt/syslog-ng/etc/syslog-ng/keys/client_certificate.pem')
+        )
+    );
+};</synopsis>
+    </example>
+    <xi:include href="../../common/wnt/note-formatting-messages.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <section xml:id="reference-destination-syslog-chapter">
+        <title>syslog() destination options</title>
+        <indexterm> <primary>destination drivers</primary> <secondary><parameter>syslog()</parameter> driver</secondary> </indexterm>
+        <para>The <parameter>syslog()</parameter> driver sends messages to a remote host (for example a syslog-ng server or relay) on the local intranet or internet using the RFC5424 syslog protocol developed by IETF (for details about the protocol, see <xref linkend="concepts-message-ietfsyslog"/>). The protocol supports sending messages using the <phrase condition="pe"><trademark>RLTP</trademark>, </phrase>UDP, TCP, or the encrypted TLS networking protocols.</para>
+        <para xml:id="table-destination-syslog-options">These destinations have the following options:</para>
+        <xi:include href="../../common/chunk/destination-syslog-options.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    </section>
+</section>
