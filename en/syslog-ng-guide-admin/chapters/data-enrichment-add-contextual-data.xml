@@ -16,7 +16,7 @@
     <para>The database file is a simple text file in comma-separated value (CSV) format, where each line contains the following information:</para>
     <itemizedlist>
         <listitem>
-            <para>A selector or ID that appears in the log messages<phrase condition="pe">, or the name of a filter that matches the messages</phrase>, for example, the hostname.</para>
+            <para>A selector or ID that appears in the log messages, or the name of a filter that matches the messages, for example, the hostname.</para>
         </listitem>
         <listitem>
             <para>The name of the name-value pair that &abbrev; adds to matching log messages.</para>
@@ -84,6 +84,38 @@ log {
 192.168.3.1,host-role,mailserver
 unknown,host-role,unknown</synopsis>
     </example>
+    <section xml:id="add-contextual-data-filters">
+        <title>Using filters as selector</title>
+        <para>To better control to which log messages you add contextual data, you can use filters as selectors. In this case, the first column of the CSV database file must contain the name of a filter. For each message, &abbrev; evaluates the filters in the order they appear in the database file. If a filter matches the message, &abbrev; adds the name-value pair related to the filter.</para>
+        <para>For example, the database file can contain the entries. (For details on the accepted CSV-format, see <xref linkend="add-contextual-data-option-database"/>.)</para>
+        <synopsis>f_auth,domain,all
+f_localhost,source,localhost
+f_kern,domain,kernel</synopsis>
+        <para>Note that &abbrev; does not evaluate other filters after the first match. For example, if you use the previous database file, and a message matches both the <userinput>f_auth</userinput> and <userinput>f_localhost</userinput> filters, &abbrev; adds only the name-value pair of <userinput>f_auth</userinput> to the message.</para>
+        <para>To add multiple name-value pairs to a message, include a separate line in the database for each name-value pair, for example:</para>
+        <synopsis>f_localhost,host-role,firewall
+f_localhost,contact-person,"John Doe"
+f_localhost,contact-email,johndoe@example.com</synopsis>
+        <para>You can also add data to messages that do not have a matching selector entry in the database using the <parameter>default-selector()</parameter> option.</para>
+        <para>You must store the filters you reference in a database in a separate file. This file is similar to a &abbrev; configuration file, but must contain only a version string and filters (and optionally comments). You can use the <command>syslog-ng --syntax-only &lt;filename&gt;</command> command to ensure that the file is valid. For example, the content of such a file can be:</para>
+        <synopsis>@version: &techversion;
+filter f_localhost { host("mymachine.example.com") };
+filter f_auth { facility(4) };
+filter f_kern { facility(0) };</synopsis>
+<formalpara>
+        <title>Declaration:</title>
+        <para/>
+    </formalpara>
+    <synopsis>parser p_add_context_data_filter {
+    add-contextual-data(
+        selector(filters("filters.conf")),
+        database("context-info-db.csv"),
+        prefix(".metadata.")
+    );
+};
+</synopsis>
+    <para>If you modify the database file, or the file that contains the filters, you have to reload &abbrev; for the changes to take effect. If reloading &abbrev; or the files fails for some reason, &abbrev; will keep using the last working version of the file.</para>
+    </section>
     <section xml:id="reference-add-contextual-data-options">
         <title>Options add-contextual-data()</title>
         <indexterm>
@@ -201,7 +233,7 @@ unknown,host-role,unknown</synopsis>
                   </tbody>
               </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies the string or macro that &abbrev; evaluates for each message, and if its value matches the ID of an entry in the database, &abbrev; adds the name-value pair of every matching database entry to the log message. Currently, you can use strings and a single macro (for example, <userinput>${HOST}</userinput>) in the <parameter>selector()</parameter> option, templates are not supported.</para>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the string or macro that &abbrev; evaluates for each message, and if its value matches the ID of an entry in the database, &abbrev; adds the name-value pair of every matching database entry to the log message. Currently, you can use strings and a single macro (for example, <userinput>${HOST}</userinput>) in the <parameter>selector()</parameter> option, templates are not supported. To use filters as selectors, see <xref linkend="add-contextual-data-filters"/>.</para>
         </simplesect>
     </section>
 </section>
