@@ -98,7 +98,7 @@
                 </example>
             </step>
             <step>
-                <para>Include the destination created in Step 4 in a log statement.</para>
+                <para>Include the destination created in Step 2 in a log statement.</para>
                 <warning>
                     <para>The encrypted connection between the server and the client fails if the <parameter>Common Name</parameter> or the <parameter>subject_alt_name</parameter> parameter of the server certificate does not contain the hostname or the IP address (as resolved from the syslog-ng clients and relays) of the server.</para>
                     <para>Do not forget to update the certificate files when they expire.</para>
@@ -124,7 +124,7 @@
                 <para>Copy the certificate (for example <filename>syslog-ng.cert</filename>) of the syslog-ng server to the syslog-ng server host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename> directory. The certificate must be a valid X.509 certificate in PEM format.</para>
             </step>
             <step>
-                <para>Copy the private key (for example <filename>syslog-ng.key</filename>) matching the certificate of the syslog-ng server to the syslog-ng server host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The key must be in PEM format, and must not be password-protected.</para>
+                <para>Copy the private key (for example <filename>syslog-ng.key</filename>) matching the certificate of the syslog-ng server to the syslog-ng server host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The key must be in PEM format. If you want to use a password-protected key, see <xref linkend="tls-password-protected-keys"/>.</para>
             </step>
             <step>
                 <para>Add a source statement to the syslog-ng configuration file that uses the <userinput>tls( key-file(key_file_fullpathname) cert-file(cert_file_fullpathname) )</userinput> option and specify the key and certificate files. The source must use the source driver (<parameter>network()</parameter> or <parameter>syslog()</parameter>) matching the destination driver used by the syslog-ng client.</para>
@@ -203,7 +203,7 @@
                     from the syslog-ng clients and relays) of the client.--></para>
             </step>
             <step>
-                <para>Copy the certificate (for example <filename>client_cert.pem</filename>) and the matching private key (for example <filename>client.key</filename>) to the syslog-ng client host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename> directory. The certificate must be a valid X.509 certificate in PEM format and must not be password-protected.</para>
+                <para>Copy the certificate (for example <filename>client_cert.pem</filename>) and the matching private key (for example <filename>client.key</filename>) to the syslog-ng client host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename> directory. The certificate must be a valid X.509 certificate in PEM format. If you want to use a password-protected key, see <xref linkend="tls-password-protected-keys"/>.</para>
             </step>
             <step>
                 <para>Copy the CA certificate of the Certificate Authority (for example <filename>cacert.pem</filename>) that issued the certificate of the syslog-ng server (or the self-signed certificate of the syslog-ng server) to the syslog-ng client hosts, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/ca.d</filename> directory.</para>
@@ -259,7 +259,7 @@
                 <para><command>ln -s cacert.pem 6d2962a8.0</command></para>
             </step>
             <step>
-                <para>Copy the private key (for example <filename>syslog-ng.key</filename>) matching the certificate of the syslog-ng server to the syslog-ng server host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The key must be in PEM format, and must not be password-protected.</para>
+                <para>Copy the private key (for example <filename>syslog-ng.key</filename>) matching the certificate of the syslog-ng server to the syslog-ng server host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/key.d</filename> directory. The key must be in PEM format. If you want to use a password-protected key, see <xref linkend="tls-password-protected-keys"/>.</para>
             </step>
             <step>
                 <para>Add a source statement to the syslog-ng configuration file that uses the <userinput>tls( key-file(key_file_fullpathname) cert-file(cert_file_fullpathname) )</userinput> option and specify the key and certificate files. The source must use the source driver (<parameter>network()</parameter> or <parameter>syslog()</parameter>) matching the destination driver used by the syslog-ng client. Also specify the directory storing the certificate of the CA that issued the client's certificate.</para>
@@ -291,6 +291,34 @@
                 </warning>
             </step>
         </procedure>
+    </section>
+    <section xml:id="tls-password-protected-keys">
+        <title>Password-protected keys</title>
+        <para>Starting with &abbrev; version <phrase condition="ose">3.14</phrase><phrase condition="pe">7.0.7</phrase>, you can use password-protected private keys in the <parameter>network()</parameter> and <parameter>syslog()</parameter> source and destination drivers.</para>
+        <simplesect>
+            <title>Restrictions and limitations:</title>
+            <itemizedlist>
+                <listitem>
+                    <para><emphasis role="bold">Hazard of data loss!</emphasis> If you use password-protected keys, you must provide the passphrase of the password-protected keys every time &abbrev; is restarted (&abbrev; keeps the passphrases over reloads). The sources and destinations that use these keys will not work until you provide the passwords. Other parts of the &abbrev; configuration will be unaffected.</para>
+                    <para>This means that if you use a password-protected key in a destination, and you use this destination in a log path that has multiple destinations, neither destinations will receive log messages until you provide the password. In such cases, always <link linkend="concepts-diskbuffer">use disk-based buffering to avoid data loss</link>.</para>
+                </listitem>
+                <listitem>
+                    <para>The path and the filename of the private key cannot contain whitespaces.</para>
+                </listitem>
+                <listitem>
+                    <para>Depending on your platform, the number of passwords &abbrev; can use at the same time might be limited (for example, on Ubuntu 16.04 you can store 16 passwords if you are running &abbrev; as a non-root user). If you use lots of password-protected private keys in your &abbrev; configuration, increase this limit using the following command: <command>sudo ulimit -l unlimited</command></para>
+                </listitem>
+            </itemizedlist>
+        </simplesect>
+        <simplesect>
+            <title>Providing the passwords</title>
+
+            <xi:include href="../../common/chunk/syslog-ng-ctl-credentials-status-description.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+            <xi:include href="../../common/chunk/syslog-ng-ctl-credentials-add-description.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+            <para>For details on the <command>syslog-ng-ctl credentials</command> command, see <xref linkend="syslog-ng-ctl-credentials"/>.</para>
+        </simplesect>
     </section>
     <section xml:id="tlsoptions">
         <title>TLS options</title>
