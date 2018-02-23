@@ -12,7 +12,9 @@
         <indexterm> <primary>encrypting log messages</primary> </indexterm>
         <indexterm> <primary>authentication</primary> </indexterm>
         <para>The syslog-ng application can send and receive log messages securely over the network using the Transport Layer Security (TLS) protocol using the <parameter>network()</parameter> and <parameter>syslog()</parameter> drivers.</para>
-        <!-- FIXME certain other non-syslog destinations also support tls, mention them and add links (elastic, curl, ...) -->
+        <note>
+            <para>This chapter describes how to use TLS encryption when using the standard syslog protocols, that is, the <parameter>network()</parameter> and <parameter>syslog()</parameter> drivers, for example, to forward log messages between two syslog-ng nodes, or to send log data to &ssb; or another log server. Other destinations that support TLS-encryption are not discussed in this chapter (for example, <link linkend="configuring-destinations-http-nonjava"><parameter>http()</parameter></link>).</para>
+        </note>
         <para>TLS uses certificates to authenticate and encrypt the communication, as illustrated on the following figure:</para>
         <figure>
             <title>Certificate-based authentication</title>
@@ -57,8 +59,6 @@
         <indexterm> <primary>authentication</primary> </indexterm>
         <indexterm> <primary>encrypting log messages</primary> </indexterm>
         <para>This section describes how to configure TLS encryption in syslog-ng. For the concepts of using TLS in syslog-ng, see <xref linkend="concepts-tls"/>.</para>
-        <para>Create an X.509 certificate for the syslog-ng server.</para>
-        <xi:include href="../../common/wnt/note-cert-common-name.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <!-- FIXME add a sample scenario for commonname/altname -->
         <procedure xml:id="procedure-configuring-tls-client">
             <title>Configuring TLS on the syslog-ng clients</title>
@@ -117,6 +117,10 @@
                 <para/>
             </formalpara>
             <step>
+                <para>Create an X.509 certificate for the syslog-ng server.</para>
+                <xi:include href="../../common/wnt/note-cert-common-name.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            </step>
+            <step>
                 <para>Copy the certificate (for example <filename>syslog-ng.cert</filename>) of the syslog-ng server to the syslog-ng server host, for example into the <filename>/opt/syslog-ng/etc/syslog-ng/cert.d</filename> directory. The certificate must be a valid X.509 certificate in PEM format.</para>
             </step>
             <step>
@@ -146,7 +150,7 @@
             </step>
             <step>
                 <para>Disable mutual authentication for the source by setting the following TLS option in the source statement: <userinput>tls( peer-verify(optional-untrusted);</userinput></para>
-                <para>For details on how to configure mutual authentication, see <xref linkend="tls-mutualauth"/>.</para>
+                <para>If you want to authenticate the clients, you have to configure mutual authentication. For details, see <xref linkend="tls-mutualauth"/>.</para>
                 <para>For the details of the available <parameter>tls()</parameter> options, see <xref linkend="tlsoptions"/>.</para>
                 <example>
                     <title>Disabling mutual authentication</title>
@@ -531,7 +535,7 @@
             <indexterm> <primary>disable SSL</primary> </indexterm>
             <synopsis>ssl-options(no-sslv2, no-sslv3, no-tlsv1)</synopsis>
             <para>Using <userinput>ssl-options(none)</userinput> means that &abbrev; does not specify any restrictions on the protocol used. However, in this case, the underlying OpenSSL library can restrict the available protocols, for example, certain OpenSSL versions automatically disable SSLv2.</para>
-            <para>This option is available in &abbrev; <phrase condition="ose">3.7</phrase><phrase condition="pe">5 F4</phrase> and newer.</para>
+            <para>This option is available in &abbrev; <phrase condition="ose">3.7</phrase><phrase condition="pe">7.0</phrase> and newer.</para>
             <example>
                 <title>Using <parameter>ssl-options</parameter></title>
                 <para>The following destination explicitly disables SSL and TLSv1.0</para>
