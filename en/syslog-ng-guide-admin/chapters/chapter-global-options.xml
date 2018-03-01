@@ -762,21 +762,60 @@ options { proto-template(t_isostamp); };</synopsis>
                 </tgroup>
             </informaltable>
             <para><emphasis role="bold">Description:</emphasis> Specifies the detail of statistics syslog-ng collects about the processed messages.</para>
+            <xi:include href="../../common/chunk/option-stats-level-description.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <para>Note that level 2 and 3 increase the memory requirements and CPU load. For details on message statistics, see <xref linkend="chapter-log-statistics"/>.</para>
+        </simplesect>
+        <simplesect xml:id="global-option-stats-max-dynamics">
+            <title>stats-max-dynamics()</title>
+            <indexterm type="parameter"> <primary>stats-max-dynamics()</primary> </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="80pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Accepted values: <?dbhtml bgcolor="#D4D6EB" ?> </entry>
+                            <entry>number</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?> </entry>
+                            <entry><userinput>N/A</userinput> </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> To avoid performance issues or even overloading &abbrev; (for example, if a script starts to send logs from different IP addresses to &abbrev;), you might want to limit the number of registered dynamic counters in the message statistics. For details on message statistics, see <xref linkend="chapter-log-statistics"/>.</para>
             <itemizedlist>
                 <listitem>
-                    <para>Level 0 collects only statistics about the sources and destinations</para>
+                    <formalpara>
+                        <title>Unlimited dynamic counters:</title>
+                        <para/>
+                    </formalpara>
+                    <para>If you do not use this option, dynamic counters will not be limited. This can be useful in cases where you are extremely interested in dynamic counters, and use these statistics extensively.</para>
+                <warning><para>In some cases, there might be even millions of dynamic counters</para></warning></listitem>
+                <listitem>
+                    <formalpara>
+                        <title>Limited dynamic counter clusters:</title>
+                        <para/>
+                    </formalpara>
+                    <para>To limit dynamic counters, enter a number, and only a maximum of &lt;number&gt; counters will be registered in the statistics.</para>
+                    <para>In practice, this means dynamic counter clusters. A program name produces one dynamic counter cluster, that can include several counters, such as <parameter>processed</parameter>, <parameter>stamp</parameter>, and so on.</para>
+                    <example>
+                        <title>Limiting dynamic counter clusters 1</title>
+                        <para>If you set <parameter>stats-max-dynamics()</parameter> to <userinput>1</userinput>, and 2 programs send messages, only one of these programs will be tracked in the dynamic counters, but it will have more than one counters.</para>
+                    </example>
+                    <example>
+                        <title>Limiting dynamic counter clusters 2</title>
+                        <para>If you have 500 clients, and set <parameter>stats-max-dynamics()</parameter> to <userinput>1000</userinput>, you will have enough number of counters reserved for these clients, but at the same time, you limit the use of your resources and therefore protect your system from being overloaded. </para>
+                    </example>
                 </listitem>
                 <listitem>
-                    <para>Level 1 contains details about the different connections and log files, but has a slight memory overhead</para>
-                </listitem>
-                <listitem>
-                    <para>Level 2 contains detailed statistics based on the hostname.</para>
-                </listitem>
-                <listitem>
-                    <para>Level 3 contains detailed statistics based on various message parameters like facility, severity, or tags.</para>
-                </listitem>
+                    <formalpara>
+                        <title>No dynamic counters:</title>
+                        <para/>
+                    </formalpara>
+                    <para>To disable dynamic counters completely, set the value of this option to <userinput>0</userinput>. This is the recommended value if you do not use statistics, or if you are not interested in dynamic counters in particular (for example, the number of logs arriving from programs).</para></listitem>
             </itemizedlist>
-            <para>Note that level 2 and 3 increase the memory requirements and CPU load. For details on message statistics, see <xref linkend="chapter-log-statistics"/>.</para>
+            <note><para>If you set a lower value to <parameter>stats-max-dynamics()</parameter> (or, any limiting value, if this option has not been configured before) and restart &abbrev;, the changes will only be applied after <parameter>stats-freq()</parameter> time has passed. That is, the previously allocated dynamic clusters will only be removed after this time.</para></note>
         </simplesect>
         <simplesect>
             <title>sync() or sync-freq() (DEPRECATED)</title>
