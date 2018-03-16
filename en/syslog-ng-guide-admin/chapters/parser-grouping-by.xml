@@ -87,7 +87,7 @@ type=PROCTITLE msg=audit(1440927434.124:40347): proctitle=2F62696E2F7368002F7573
         <para>These lines are connected by their second field: <userinput>msg=audit(1440927434.124:40347)</userinput>. You can parse such messages using the <link linkend="linux-audit-parser">Linux Audit Parser of &abbrev;</link>, and then use the parsed <userinput>.auditd.msg</userinput> field to group the messages.</para>
         <synopsis>parser auditd_groupingby {
     grouping-by(
-        key(".auditd.msg")
+        key("${.auditd.msg}")
         aggregate(
             value("MESSAGE" "$(format-json .auditd.*)")
             )
@@ -213,10 +213,13 @@ type=PROCTITLE msg=audit(1440927434.124:40347): proctitle=2F62696E2F7368002F7573
                     </tbody>
                 </tgroup>
             </informaltable>
-            <para><emphasis role="bold">Description:</emphasis> Specifies the key (that is, the name of a name-value pair) that every message must have to be added to the context. The value of the key must be the same for every message of the context. For example, this can be a session-id parsed from firewall messages, and so on.</para>
+            <para><emphasis role="bold">Description:</emphasis> Specifies the key as a template (that is, the name of a name-value pair) that every message must have to be added to the context. The value of the key must be the same for every message of the context. For example, this can be a session-id parsed from firewall messages, and so on.</para>
             <para>This is a mandatory option.</para>
             <note>
                 <para>Messages that do not have a key will all belong to the same context.</para>
+            </note>
+            <note>
+                <para>If the value of the key is static (for example, key("PROGRAM") instead of key("$PROGRAM")), all messages will belong to the same context.</para>
             </note>
         </simplesect>
         <simplesect xml:id="grouping-by-parser-scope">
