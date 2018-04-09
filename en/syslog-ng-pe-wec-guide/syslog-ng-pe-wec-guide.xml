@@ -134,13 +134,35 @@
 default_bits = 4096
 default_md = sha256
 req_extensions = req_ext
-extendedKeyUsage = serverAuth,clientAuth
 keyUsage = keyEncipherment,dataEncipherment
 basicConstraints = CA:FALSE
 distinguished_name = dn
 
 [ req_ext ]
 subjectAltName = @alt_names
+extendedKeyUsage = serverAuth,clientAuth
+
+[ alt_names ]
+DNS.1 = &lt;1st DNS hostname of server (preferably FQDN)>
+...
+DNS.&lt;N> = &lt;Nth DNS hostname of server (preferably FQDN)>
+IP.1 = &lt;1st IP of server>
+...
+IP.&lt;N> = &lt;1st DNS hostname of server (preferably FQDN)>
+
+[dn]</synopsis>
+            <para>For example:</para>
+            <synopsis>[req]
+default_bits = 4096
+default_md = sha256
+req_extensions = req_ext
+keyUsage = keyEncipherment,dataEncipherment
+basicConstraints = CA:FALSE
+distinguished_name = dn
+
+[ req_ext ]
+subjectAltName = @alt_names
+extendedKeyUsage = serverAuth,clientAuth
 
 [ alt_names ]
 DNS.1 = windowseventcollector.widgits
@@ -153,13 +175,35 @@ IP.1 = 10.64.10.2
 default_bits = 4096
 default_md = sha256
 req_extensions = req_ext
-extendedKeyUsage = serverAuth,clientAuth
 keyUsage = keyEncipherment,dataEncipherment
 basicConstraints = CA:FALSE
 distinguished_name = dn
 
 [ req_ext ]
 subjectAltName = @alt_names
+extendedKeyUsage = serverAuth,clientAuth
+
+[ alt_names ]
+DNS.1 = &lt;1st DNS hostname of client (preferably FQDN)>
+...
+DNS.&lt;N> = &lt;Nth DNS hostname of client (preferably FQDN)>
+IP.1 = &lt;1st IP of client>
+...
+IP.&lt;N> = &lt;1st DNS hostname of client (preferably FQDN)>
+
+[dn]</synopsis>
+            <para>For example:</para>
+            <synopsis>[req]
+default_bits = 4096
+default_md = sha256
+req_extensions = req_ext
+keyUsage = keyEncipherment,dataEncipherment
+basicConstraints = CA:FALSE
+distinguished_name = dn
+
+[ req_ext ]
+subjectAltName = @alt_names
+extendedKeyUsage = serverAuth,clientAuth
 
 [ alt_names ]
 DNS.1 = windowsclient01.widgits
@@ -170,6 +214,10 @@ IP.1 = 10.64.10.11
         </step>
         <step>
             <para>Generate the certificate authority (CA):</para>
+            <synopsis>$ openssl genrsa -out ca.key 4096
+
+$ openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt -subj '&lt;subject name for CA cert (must be formatted as /type0=value0/type1=value1/type2=..., characters may be escaped by \ (backslash), no spaces are skipped)>'</synopsis>
+            <para>For example:</para>
             <synopsis>$ openssl genrsa -out ca.key 4096
 
 $ openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt -subj '/C=AU/ST=Victoria/L=Melbourne/O=Internet Widgits Pty Ltd/OU=Operations/CN=Operations Root CA'</synopsis>
@@ -184,6 +232,10 @@ $ openssl req -x509 -new -nodes -key ca.key -days 3650 -out ca.crt -subj '/C=AU/
             <note>
                 <para>The Common Name must be the FQDN (or IP address) of the &wec; server.</para>
             </note>
+            <synopsis>$ openssl req -new -newkey rsa:4096 -nodes -out server.csr -keyout server.key -subj '&lt;subject name for server cert (must be formatted as /type0=value0/type1=value1/type2=..., characters may be escaped by \ (backslash), no spaces are skipped)>'
+
+$ openssl x509 -req -in server.csr -out server.crt -CA ca.crt -CAkey ca.key -CAcreateserial -extfile server-certopts.cnf -extensions req_ext -days 365</synopsis>
+            <para>For example:</para>
             <synopsis>$ openssl req -new -newkey rsa:4096 -nodes -out server.csr -keyout server.key -subj '/C=AU/ST=Victoria/L=Melbourne/O=Internet Widgits Pty Ltd/OU=Operations/CN=windowseventcollector.widgits'
 
 $ openssl x509 -req -in server.csr -out server.crt -CA ca.crt -CAkey ca.key -CAcreateserial -extfile server-certopts.cnf -extensions req_ext -days 365</synopsis>
@@ -193,6 +245,10 @@ $ openssl x509 -req -in server.csr -out server.crt -CA ca.crt -CAkey ca.key -CAc
             <note>
                 <para>The Common Name must be the FQDN (or IP address) of the client.</para>
             </note>
+            <synopsis>$ openssl req -new -newkey rsa:4096 -nodes -out client.csr -keyout client.key -subj '&lt;subject name for client cert (must be formatted as /type0=value0/type1=value1/type2=..., characters may be escaped by \ (backslash), no spaces are skipped)>'
+
+$ openssl x509 -req -in client.csr -out client.crt -CA ca.crt -CAkey ca.key -CAcreateserial -extfile client-certopts.cnf -extensions req_ext -days 365</synopsis>
+            <para>For example:</para>
             <synopsis>$ openssl req -new -newkey rsa:4096 -nodes -out client.csr -keyout client.key -subj '/C=AU/ST=Victoria/L=Melbourne/O=Internet Widgits Pty Ltd/OU=Operations/CN=windowsclient01.widgits'
 
 $ openssl x509 -req -in client.csr -out client.crt -CA ca.crt -CAkey ca.key -CAcreateserial -extfile client-certopts.cnf -extensions req_ext -days 365</synopsis>
