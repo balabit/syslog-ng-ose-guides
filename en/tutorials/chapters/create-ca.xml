@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE procedure
+ [  <!ENTITY % entities SYSTEM "../../shared/syslog-ng-entities.ent">
+ %entities;]>
+<procedure xml:id="create-ca" xmlns="http://docbook.org/ns/docbook" version="5.0" condition="ose">
+    <title>Creating a CA</title>
+    <formalpara>
+        <title>Purpose:</title>
+        <para/>
+    </formalpara>
+    <para>To create a CA, complete the following steps:</para>
+    <formalpara>
+        <title>Steps:</title>
+        <para/>
+    </formalpara>
+    <step>
+        <para>Create an empty directory and navigate into that directory:</para>
+        <para><command>mkdir CA</command></para>
+        <para><command>cd CA</command></para>
+    </step>
+    <step>
+        <para>Create a few directories and give starting values to some support files:</para>
+        <para><command>mkdir certs crl newcerts private</command></para>
+        <para><command>echo "01" > serial</command></para>
+        <para><command>cp /dev/null index.txt</command></para>
+    </step>
+    <step>
+        <para>Copy <filename>openssl.conf</filename> to the current directory. Depending on your distributions, the source directory might be different, so check the list of files in the OpenSSL package before copying:</para>
+        <para><command>cp /etc/ssl/openssl.cnf openssl.cnf</command></para>
+    </step>
+    <step>
+        <para>Edit <filename>openssl.conf</filename> in the current directory:</para>
+        <para><command>vi openssl.cnf</command></para>
+    </step>
+    <step>
+        <para>Search for the following part and replace <filename>./DemoCA</filename> with a single dot:</para>
+        <synopsis>[ CA_default ]
+
+dir             = ./demoCA              # Where everything is kept
+certs           = $dir/certs            # Where the issued certs are kept </synopsis>
+        <para>Change it to:</para>
+        <synopsis>[ CA_default ]
+
+dir             = .                     # Where everything is kept
+certs           = $dir/certs            # Where the issued certs are kept </synopsis>
+    </step>
+    <step>
+        <para>As a last step, generate the certificate for the CA:</para>
+        <para><command>openssl req -new -x509 -keyout private/cakey.pem -out cacert.pem -days 365 -config openssl.cnf</command></para>
+        <para>The following will be displayed. Answer the questions as in the example:</para>
+        <synopsis>Generating a 1024 bit RSA private key
+.++++++
+......................++++++
+writing new private key to 'private/cakey.pem'
+Enter PEM pass phrase:
+Verifying - Enter PEM pass phrase:
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:HU
+State or Province Name (full name) [Some-State]:Budapest
+Locality Name (eg, city) []:Budapest
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Balabit
+Organizational Unit Name (eg, section) []:.
+Common Name (e.g. server FQDN or YOUR name) []:Peter Czanik
+Email Address []:czanik@balabit.com</synopsis>
+    </step>
+</procedure>
