@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE procedure
+ [  <!ENTITY % entities SYSTEM "../../shared/syslog-ng-entities.ent">
+ %entities;]>
+<procedure xml:id="concepts-route-of-a-message" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>The route of a log message in syslog-ng</title>
+    <indexterm> <primary>logging procedure</primary> </indexterm>
+    <formalpara>
+        <title>Purpose:</title>
+        <para/>
+    </formalpara>
+    <para>The following procedure illustrates the route of a log message from its source on the syslog-ng client to its final destination on the central syslog-ng server.</para>
+    <figure>
+        <title>The route of a log message</title>
+        <mediaobject>
+            <imageobject role="html">
+                <imagedata format="PNG" fileref="logging01.png"/>
+            </imageobject>
+            <imageobject role="fo">
+                <imagedata format="PNG" fileref="&imgroot;/logging01.png"/>
+            </imageobject>
+        </mediaobject>
+    </figure>
+    <formalpara>
+        <title>Steps:</title>
+        <para/>
+    </formalpara>
+    <step>
+        <para>A device or application sends a log message to a source on the syslog-ng client. For example, an Apache web server running on Linux enters a message into the <filename>/var/log/apache</filename> file.</para>
+    </step>
+    <step>
+        <para>The syslog-ng client running on the web server reads the message from its <filename>/var/log/apache</filename> source.</para>
+    </step>
+    <step>
+        <para>The syslog-ng client processes the first log statement that includes the <filename>/var/log/apache</filename> source.</para>
+    </step>
+    <step>
+        <para>The syslog-ng client performs optional operations (message filtering, parsing, and rewriting) on the message, for example, it compares the message to the filters of the log statement (if any). If the message complies with all filter rules, syslog-ng sends the message to the destinations set in the log statement, for example, to the remote syslog-ng server.</para>
+        <warning>
+            <para>Message filtering, parsing, and rewriting is performed in the order that the operations appear in the log statement.</para>
+        </warning>
+        <note>
+            <para>The syslog-ng client sends a message to <emphasis>all</emphasis> matching destinations by default. As a result, a message may be sent to a destination more than once, if the destination is used in multiple log statements. To prevent such situations, use the <parameter>final</parameter> flag in the destination statements. For details, see <xref linkend="logflags"/>.</para>
+        </note>
+    </step>
+    <step>
+        <para>The syslog-ng client processes the next log statement that includes the <filename>/var/log/apache</filename> source, repeating Steps 3-4.</para>
+    </step>
+    <step>
+        <para>The message sent by the syslog-ng client arrives from a source set in the syslog-ng server.</para>
+    </step>
+    <step>
+        <para>The syslog-ng server reads the message from its source and processes the first log statement that includes that source.</para>
+    </step>
+    <step>
+        <para>The syslog-ng server performs optional operations (message filtering, parsing, and rewriting) on the message, for example, it compares the message to the filters of the log statement (if any). If the message complies with all filter rules, syslog-ng sends the message to the destinations set in the log statement.</para>
+        <warning>
+            <para>Message filtering, parsing, and rewriting is performed in the order that the operations appear in the log statement.</para>
+        </warning>
+    </step>
+    <step>
+        <para>The syslog-ng server processes the next log statement, repeating Steps 7-9.</para>
+        <note>
+            <para>The syslog-ng application can stop reading messages from its sources if the destinations cannot process the sent messages. This feature is called flow-control and is detailed in <xref linkend="concepts-flow-control"/>.</para>
+        </note>
+    </step>
+</procedure>
