@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="syslog-ng-patterndb-using-parsers" xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>Using pattern parsers</title>
+    <indexterm>
+        <primary>pattern database</primary>
+        <secondary>creating parsers</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>artificial ignorance</primary>
+        <secondary>message classification</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>parsing messages</primary>
+    </indexterm>
+    <para>Pattern parsers attempt to parse a part of the message using rules specific to the type of the parser. Parsers are enclosed between @ characters. The syntax of parsers is the following:</para>
+    <itemizedlist>
+        <listitem>
+            <para>a beginning <userinput>@</userinput> character,</para>
+        </listitem>
+        <listitem>
+            <para>the type of the parser written in capitals,</para>
+        </listitem>
+        <listitem>
+            <para>optionally a name,</para>
+        </listitem>
+        <listitem>
+            <para>parameters of the parser, if any, and</para>
+        </listitem>
+        <listitem>
+            <para>a closing <userinput>@</userinput> character.</para>
+        </listitem>
+    </itemizedlist>
+    <example>
+        <title>Pattern parser syntax</title>
+        <para>A simple parser:</para>
+        <synopsis>@STRING@</synopsis>
+        <para>A named parser:</para>
+        <synopsis>@STRING:myparser_name@</synopsis>
+        <para>A named parser with a parameter:</para>
+        <synopsis>@STRING:myparser_name:*@</synopsis>
+        <para>A parser with a parameter, but without a name:</para>
+        <synopsis>@STRING::*@</synopsis>
+    </example>
+    <para>Patterns and literals can be mixed together. For example, to parse a message that begins with the <userinput>Host: </userinput> string followed by an IP address (for example, <userinput>Host: 192.168.1.1</userinput>), the following pattern can be used: <userinput>Host:@IPv4@</userinput>.</para>
+    <note>
+        <para>Note that using parsers is a CPU-intensive operation. Use the ESTRING and QSTRING parsers whenever possible, as these can be processed much faster than the other parsers.</para>
+    </note>
+    <example>
+        <title>Using the STRING and ESTRING parsers</title>
+        <para>For example, look at the following message: <userinput>user=joe96 group=somegroup</userinput>.</para>
+        <itemizedlist>
+            <listitem>
+                <para><userinput>@STRING:mytext:@</userinput> parses only to the first non-alphanumeric character (<userinput>=</userinput>), parsing only <userinput>user</userinput>, so the value of the ${mytext} macro will be <userinput>user</userinput></para>
+            </listitem>
+            <listitem>
+                <para><userinput>@STRING:mytext:=@</userinput> parses the equation mark as well, and proceeds to the next non-alphanumeric character (the whitespace), resulting in <userinput>user=joe96</userinput></para>
+            </listitem>
+            <listitem>
+                <para><userinput>@STRING:mytext:= @</userinput> will parse the whitespace as well, and proceed to the next non-alphanumeric non-equation mark non-whitespace character, resulting in <userinput>user=joe96 group=somegroup</userinput></para>
+            </listitem>
+        </itemizedlist>
+        <para>Of course, usually it is better to parse the different values separately, like this: <userinput>"user=@STRING:user@ group=@STRING:group@"</userinput>.</para>
+        <para>If the username or the group may contain non-alphanumeric characters, you can either include these in the second parameter of the parser (as shown at the beginning of this example), or use an ESTRING parser to parse the message till the next whitespace: <userinput>"user=@ESTRING:user: @group=@ESTRING:group: @"</userinput>.</para>
+    </example>
+    <section xml:id="reference-patterndb-parsers">
+        <title>Pattern parsers of &abbrev;</title>
+        <para>The following parsers are available in &abbrev;.</para>
+        <simplesect xml:id="patterndb-parser-anystring">
+            <title>@ANYSTRING@</title>
+            <indexterm type="parameter">
+                <primary>@ANYSTRING@</primary>
+            </indexterm>
+            <para>Parses everything to the end of the message, you can use it to collect everything that is not parsed specifically to a single macro. In that sense its behavior is similar to the <parameter>greedy()</parameter> option of the CSV parser.</para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-double">
+            <title>@DOUBLE@</title>
+            <para>An obsolete alias of the <parameter>@FLOAT@</parameter> parser.</para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-email">
+            <title>@EMAIL@</title>
+            <indexterm type="parameter">
+                <primary>@EMAIL@</primary>
+            </indexterm>
+            <para>This parser matches an e-mail address. The parameter is a set of characters to strip from the beginning and the end of the e-mail address. That way e-mail addresses enclosed between other characters can be matched easily (for example, <parameter>&lt;user@example.com&gt;</parameter> or <parameter>"user@example.com"</parameter>. Characters that are valid for a hostname are not stripped from the end of the hostname. This includes a trailing period if present.</para>
+            <para>For example, the <parameter>@EMAIL:email:"[&lt;]&gt;@</parameter> parser will match any of the following e-mail addresses: <parameter>&lt;user@example.com&gt;</parameter>, <parameter>[user@example.com]</parameter>, <parameter>"user@example.com"</parameter>, and set the value of the <parameter>email</parameter> macro to <parameter>user@example.com</parameter>.</para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-estring">
+            <title>@ESTRING@</title>
+            <indexterm type="parameter">
+                <primary>@ESTRING@</primary>
+            </indexterm>
+            <para>This parser has a required parameter that acts as the stopcharacter: the parser parses everything until it finds the stopcharacter. For example, to stop by the next <userinput>"</userinput> (double quote) character, use <userinput>@ESTRING::"@</userinput>. You can use the colon (<userinput>:</userinput>) as stopcharacter as well, for example: <userinput>@ESTRING:::@</userinput>. You can also specify a stopstring instead of a single character, for example, <userinput>@ESTRING::stop_here.@</userinput>. The <userinput>@</userinput> character cannot be a stopcharacter, nor can line-breaks or tabs.</para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-float">
+            <title>@FLOAT@</title>
+            <indexterm type="parameter">
+                <primary>@FLOAT@</primary>
+            </indexterm>
+            <para>A floating-point number that may contain a dot (.) character. (Up to syslog-ng 3.1, the name of this parser was <parameter>@DOUBLE@</parameter>.)</para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-hostname">
+            <title>@HOSTNAME@</title>
+            <indexterm type="parameter">
+                <primary>@HOSTNAME@</primary>
+            </indexterm>
+            <para>Parses a generic hostname. The hostname may contain only alphanumeric characters (A-Z,a-z,0-9), hypen (-), or dot (.).</para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-ipv4">
+            <title>@IPv4@</title>
+            <indexterm type="parameter">
+                <primary>@IPv4</primary>
+            </indexterm>
+            <para>Parses an IPv4 IP address (numbers separated with a maximum of 3 dots).</para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-ipv6">
+            <title>@IPv6@</title>
+            <indexterm type="parameter">
+                <primary>@IPv6@</primary>
+            </indexterm>
+            <para>Parses any valid IPv6 IP address.</para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-ipvany">
+            <title>@IPvANY@</title>
+            <indexterm type="parameter">
+                <primary>@IPvANY@</primary>
+            </indexterm>
+            <para>Parses any IP address.</para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-lladdr">
+            <title>@LLADDR@</title>
+            <indexterm type="parameter">
+                <primary>@LLADDR@</primary>
+            </indexterm>
+            <para>Parses a Link Layer Address in the <parameter>xx:xx:xx:...</parameter> form, where each xx is a 2 digit HEX number (an octet). The parameter specifies the maximum number of octets to match and defaults to 20. The MACADDR parser is a special wrapper using the LLADDR parser. For example, the following parser parses maximally 10 octets, and stores the results in the <parameter>link-level-address</parameter> macro:</para>
+            <synopsis>@LLADDR:link-level-address:10@</synopsis>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-macaddr">
+            <title>@MACADDR@</title>
+            <indexterm type="parameter">
+                <primary>@MACADDR@</primary>
+            </indexterm>
+            <para>Parses the standard format of a MAC-48 address, consisting of is six groups of two hexadecimal digits, separated by colons. For example, <parameter>00:50:fc:e3:cd:37</parameter>.</para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-nlstring">
+            <title>@NLSTRING@</title>
+            <indexterm type="parameter">
+                <primary>@NLSTRING@</primary>
+            </indexterm>
+            <para>This parser parses everything until the next new-line character (more precisely, until the next Unix-style LF or Windows-style CRLF character). For single-line messages, NLSTRING is equivalent with ANYSTRING. For multi-line messages, NLSTRING parses to the end of the current line, while ANYSTRING parses to the end of the message. Using NLSTRING is useful when parsing multi-line messages, for example, Windows logs. For example, the following pattern parses information from Windows security auditing logs.</para>
+            <synopsis>&lt;pattern&gt;Balabit-PC\Balabit: Security Microsoft Windows security auditing.: [Success Audit] A new process has been created.
+
+    Subject:
+    Security ID: @LNSTRING:.winaudit.SubjectUserSid@
+    Account Name: @LNSTRING:.winaudit.SubjectUserName@
+    Account Domain: @LNSTRING:.winaudit.SubjectDomainName@
+    Logon ID: @LNSTRING:.winaudit.SubjectLogonId@
+
+    Process Information:
+    New Process ID: @LNSTRING:.winaudit.NewProcessId@
+    New Process Name: @LNSTRING:.winaudit.NewProcessName@
+    Token Elevation Type: @LNSTRING:.winaudit.TokenElevationType@
+    Creator Process ID: @LNSTRING:.winaudit.ProcessId@
+    Process Command Line: @LNSTRING:.winaudit.CommandLine@
+
+    Token Elevation Type indicates the type of token that was assigned to the new process in accordance with User Account Control policy.&lt;/pattern&gt;</synopsis>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-number">
+            <title>@NUMBER@</title>
+            <indexterm type="parameter">
+                <primary>@NUMBER@</primary>
+            </indexterm>
+            <para>A sequence of decimal (0-9) numbers (for example, 1, 0687, and so on). Note that if the number starts with the 0x characters, it is parsed as a hexadecimal number, but only if at least one valid character follows 0x. A leading hyphen (<userinput>&ndash;</userinput>) is accepted for non-hexadecimal numbers, but other separator characters (for example, dot or comma) are not. To parse floating-point numbers, use the @FLOAT@ parser.</para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-pcre">
+            <title>@PCRE@</title>
+            <indexterm type="parameter">
+                <primary>@PCRE@</primary>
+            </indexterm>
+            <para>Use Perl-Compatible Regular Expressions (as implemented by the PCRE library), after the identification of the potential patterns has happened by the radix implementation.</para>
+            <para>Syntax: <parameter>@PCRE:name:regexp@</parameter></para>
+        </simplesect>
+        <simplesect xml:id="patterndb-parser-qstring">
+            <title>@QSTRING@</title>
+            <indexterm type="parameter">
+                <primary>@QSTRING@</primary>
+            </indexterm>
+            <para>Parse a string between the quote characters specified as parameter. Note that the quote character can be different at the beginning and the end of the quote, for example: <userinput>@QSTRING::"@</userinput> parses everything between two quotation marks (<userinput>"</userinput>), while <userinput>@QSTRING:&amp;lt;&amp;gt;@</userinput> parses from an opening bracket to the closing bracket. The <userinput>@</userinput> character cannot be a quote character, nor can line-breaks or tabs.</para>
+        </simplesect>
+        <simplesect>
+            <title>@SET@</title>
+            <indexterm type="parameter">
+                <primary>@SET@</primary>
+            </indexterm>
+            <para>Parse any combination of the specified characters until another character is found. For example, specifying a whitespace character parses any number of whitespaces, and can be used to process paddings (for example, log messages of the Squid application have whitespace padding after the username).</para>
+            <para>For example, the <parameter>@SET:: "@</parameter> parser will parse any combination of whitespaces and double-quotes.</para>
+            <para>Available in <phrase condition="ose">&abbrev; 3.4</phrase><phrase condition="pe">&abbrev; 7.0</phrase> and later.</para>
+        </simplesect>
+        <simplesect>
+            <title>@STRING@</title>
+            <indexterm type="parameter">
+                <primary>@STRING@</primary>
+            </indexterm>
+            <para>A sequence of alphanumeric characters (0-9, A-z), not including any whitespace. Optionally, other accepted characters can be listed as parameters (for example, to parse a complete sentence, add the whitespace as parameter, like: <userinput>@STRING:: @</userinput>). Note that the <userinput>@</userinput> character cannot be a parameter, nor can line-breaks or tabs.</para>
+        </simplesect>
+    </section>
+</section>

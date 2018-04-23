@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+ [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]>
+<topic xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <title>cipher-suite()</title>
+    <indexterm type="parameter">
+        <primary>cipher-suite()</primary>
+    </indexterm>
+    <informaltable frame="topbot" colsep="0" rowsep="0">
+        <tgroup cols="2">
+            <colspec colnum="1" colwidth="80pt"/>
+            <tbody>
+                <row>
+                    <entry>Accepted values: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                    </entry>
+                    <entry>Name of a cipher, or a colon-separated list</entry>
+                </row>
+                <row>
+                    <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+<?dbfo bgcolor="#D4D6EB" ?>
+                    </entry>
+                    <entry condition="ose">Depends on the OpenSSL version that &abbrev; uses</entry>
+                </row>
+            </tbody>
+        </tgroup>
+    </informaltable>
+    <para><emphasis role="bold">Description:</emphasis> Specifies the cipher, hash, and key-exchange algorithms used for the encryption, for example, <userinput>ECDHE-ECDSA-AES256-SHA384</userinput>. The list of available algorithms depends on the version of OpenSSL used to compile &abbrev;. To specify multiple ciphers, separate the cipher names with a colon, and enclose the list between double-quotes, for example:</para>
+    <synopsis>cipher-suite("ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384")</synopsis>
+    <indexterm>
+        <primary>disable SSL</primary>
+    </indexterm>
+    <para condition="ose">For a list of available algorithms, execute the <command>openssl ciphers -v</command> command. The first column of the output contains the name of the algorithms to use in the <parameter>cipher-suite()</parameter> option, the second column specifies which encryption protocol uses the algorithm (for example, <userinput>TLSv1.2</userinput>). That way, the <parameter>cipher-suite()</parameter> also determines the encryption protocol used in the connection: to disable SSLv3, use an algorithm that is available only in TLSv1.2, and that both the client and the server supports. You can also specify the encryption protocols using <xref linkend="tls-options-ssl-options"/>.</para>
+    <para condition="ose">You can also use the following command to automatically list only ciphers permitted in a specific encryption protocol, for example, <userinput>TLSv1.2</userinput>:</para>
+    <synopsis condition="ose">echo "cipher-suite(\"$(openssl ciphers -v | grep TLSv1.2 | awk '{print $1}' | xargs echo -n | sed 's/ /:/g' | sed -e 's/:$//')\")"</synopsis>
+</topic>

@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+[  <!ENTITY % entities SYSTEM "../shared/syslog-ng-entities.ent">
+  %entities;]>
+<section xmlns="http://docbook.org/ns/docbook" xml:id="configuring">
+    <title>Configuring &abbrev;</title>
+    <para>The syslog-ng application reads incoming messages and forwards them to the selected <emphasis>destinations</emphasis>. The syslog-ng application can receive messages from files, remote hosts, and other <emphasis>sources</emphasis>.</para>
+    <para>Log messages enter syslog-ng in one of the defined sources, and are sent to one or more <emphasis>destinations</emphasis>.</para>
+    <para>Sources and destinations are independent objects: <emphasis>log paths</emphasis> define what syslog-ng does with a message, connecting the sources to the destinations. A log path consists of one or more sources and one or more destinations, messages arriving from a source are sent to every destination listed in the log path. A log path defined in syslog-ng is called a <emphasis>log statement</emphasis>.</para>
+    <para>There are many other optional elements, like filters, parsers, etc., but in this guide we focus on a core syslog-ng feature: reliable logging.</para>
+    <procedure>
+        <title>Enabling disk buffer on the &abbrev; client on Linux</title>
+        <formalpara>
+            <title>Purpose:</title>
+            <para/>
+        </formalpara>
+        <para>The Premium Edition of syslog-ng can store messages on the local hard disk if the central log server or the network connection to the server becomes unavailable. This feature is called the disk buffer and needs to be configured only on the client side.</para>
+        <note>
+            <para>The log messages on Windows come from files – either eventlog containers or custom log files – which are already stored on the hard disk, so the agent does not use additional disk buffering.</para>
+        </note>
+        <para>To enable disk buffering on the &abbrev; client on Linux, modify its configuration:</para>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <step>
+            <para>Open the <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename> configuration file in a text editor.</para>
+        </step>
+        <step>
+            <para>Locate the line starting with <command>destination d_logserver</command>.</para>
+        </step>
+        <step>
+            <para>Modify it to look like the following line:</para>
+            <synopsis>destination d_logserver {
+    tcp("&lt;PEServerIP&gt;" disk-buffer(disk-buf-size(2000000)));
+};</synopsis>
+            <para>Replace <parameter>&lt;PEServerIP&gt;</parameter> with the hostname or IP address of the &abbrev; server.</para>
+            <para>For additional disk buffer options, refer to <olink targetdoc="syslog-ng-pe-guide-admin" targetptr="reference-destination-network-chapter"/>.</para>
+        </step>
+        <step>
+            <para>Save the configuration and restart syslog-ng.</para>
+        </step>
+    </procedure>
+    <section condition="pe6">
+        <title><trademark>Reliable Transfer Protocol</trademark>
+        </title>
+        <xi:include href="../syslog-ng-guide-admin/chapters/chapter-rltp.xml" xpointer="para-rltp-intro" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <para>To make RLTP work, you have to enable it on the server and on all participating clients as well. In the following example, a minimum working configuration is provided; for additional options, including TLS configuration, refer to <olink targetdoc="syslog-ng-pe-guide-admin" targetptr="chapter-rltp"/>.</para>
+        <procedure>
+            <title>Configuring the syslog-ng PE server for RLTP</title>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>To configure the &product; server for RLTP, complete the following steps:</para>
+            <formalpara>
+                <title>Steps:</title>
+                <para/>
+            </formalpara>
+            <step>
+                <para>Open the <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename> configuration file in a text editor</para>
+            </step>
+            <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chunk/step-rltp-server.xml"/>
+        </procedure>
+        <procedure>
+            <title>Configuring syslog-ng Windows clients for RLTP</title>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>To configure the syslog-ng Windows clients for RLTP, complete the following steps:</para>
+            <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chunk/step-rltp-windows-client.xml"/>
+            <step>
+                <para>Remote logging can be tested the same way as described in <xref linkend="installing_client_windows"/>.</para>
+            </step>
+        </procedure>
+        <procedure>
+            <title>Configuring syslog-ng Linux clients for RLTP</title>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>To configure the syslog-ng Linux clients for RLTP, complete the following steps:</para>
+            <formalpara>
+                <title>Steps:</title>
+                <para/>
+            </formalpara>
+            <step>
+                <para>Open the <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename> configuration file in a text editor.</para>
+            </step>
+            <step>
+                <para>Replace the line starting with <command>destination d_logserver</command> with the following:</para>
+                <synopsis>destination d_logserver {
+    syslog("&lt;PEServerIP&gt;" transport(rltp())
+        port("601")
+        disk-buffer(disk-buf-size(2000000)));
+};</synopsis>
+                <para>Replace <parameter>&lt;PEServerIP&gt;</parameter> with the hostname or IP address of the &abbrev; server.</para>
+            </step>
+            <step>
+                <para>Save the file and restart syslog-ng.</para>
+                <para>Remote logging can be tested the same way as described in <xref linkend="installing_client_linux"/>.</para>
+            </step>
+        </procedure>
+    </section>
+    <procedure>
+        <title>Macros in filenames</title>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chunk/step-macros-filenames.xml"/>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <step>
+            <para>Open the <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename> configuration file in a text editor.</para>
+        </step>
+        <step>
+            <para>Locate the line starting with <command>destination d_messages</command>.</para>
+        </step>
+        <step>
+            <para>Modify it to look like the following line:</para>
+            <synopsis>destination d_messages {
+    file("/var/log/messages");
+    file("/var/log/$YEAR/$WEEK/$HOST-messages" create-dirs(yes));
+};</synopsis>
+        </step>
+        <step>
+            <para>Save the file and restart syslog-ng</para>
+            <note>
+                <para>Collecting to <filename>/var/log/messages</filename> is left there for your convenience, it can be safely removed. Even if the related configuration item is removed, the file stays there, but it is not updated anymore.</para>
+            </note>
+            <para>For more details on macros available in syslog-ng, refer to <olink targetdoc="syslog-ng-pe-guide-admin"/>.</para>
+        </step>
+    </procedure>
+    <procedure>
+        <title>Storing messages in encrypted files</title>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chunk/step-encrypted-files.xml"/>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <step>
+            <para>Open the <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename> configuration file in a text editor</para>
+        </step>
+        <step>
+            <para>Locate the line starting with <command>destination d_messages</command></para>
+        </step>
+        <step>
+            <para>Add the following line right below:</para>
+            <synopsis>destination d_logstore {
+    logstore("/var/log/messages.lgs" compress(9) );
+};</synopsis>
+        </step>
+        <step>
+            <para>Locate the line containing <command>destination(d_messages)</command></para>
+        </step>
+        <step>
+            <para>Add the following line right below:</para>
+            <synopsis>destination(d_logstore)</synopsis>
+        </step>
+        <step>
+            <para>Restart syslog-ng for the configuration changes to take effect</para>
+        </step>
+        <step>
+            <para><emphasis>Validating the changes</emphasis></para>
+            <para>You can verify that logs are arriving to the logstore using the following command:</para>
+            <para><command>/opt/syslog-ng/bin/logcat /var/log/messages.lgs</command></para>
+        </step>
+    </procedure>
+    <procedure>
+        <title>syslog-ng PE as a relay</title>
+        <formalpara>
+            <title>Purpose:</title>
+            <para/>
+        </formalpara>
+        <para>As mentioned earlier, &abbrev; can be turned into a relay. This functionality is often used on larger networks, or when logs are collected from network devices using UDP and forwarded to a central location using the more reliable TCP or RLTP protocols. When used as a relay, &abbrev; does not store the logs locally, but forwards them immediately to the central &abbrev; server.</para>
+        <para>In this example, a &abbrev; Linux client is reconfigured as a relay.</para>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <step>
+            <para>Open <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename> in a text editor</para>
+        </step>
+        <step>
+            <para>Remove the current log statement: starting with line <command>log {</command>, delete everything until the end of the file</para>
+        </step>
+        <step>
+            <para>Add a new UDP source for router logs:</para>
+            <synopsis>source s_udp {udp();}; </synopsis>
+        </step>
+        <step>
+            <para>Add a new log path for storing local logs locally:</para>
+            <synopsis>log { source(s_local); destination(d_messages); };</synopsis>
+        </step>
+        <step>
+            <para>Add a new log path for sending both local messages and logs collected from the UDP source to the central server:</para>
+            <synopsis>log {
+    source(s_local);
+    source(s_udp);
+    destination(d_logserver);
+};</synopsis>
+        </step>
+        <step>
+            <para><emphasis>Validating the changes</emphasis></para>
+            <para>Test the relay by executing the following command on the relay machine:</para>
+            <para><command>/opt/syslog-ng/bin/loggen -i -D localhost 514</command></para>
+            <para>It generates about a thousand messages a second and sends to the UDP port of the local &abbrev; relay. Executing <command>tail /var/log/messages</command> should not show any of the generated messages on the relay, but doing the same on the server machine should show a large number of similar lines:</para>
+            <synopsis>Sep 20 21:18:09 relayhost prg00000[1234]: seq: 0000009458, thread: 0000, runid: 1379704679, stamp: 2013-09-20T21:18:09 PADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADD</synopsis>
+        </step>
+    </procedure>
+</section>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topic
+ [  <!ENTITY % entities SYSTEM "../syslog-ng-entities.ent">
+ %entities;]>
+<topic xmlns="http://docbook.org/ns/docbook" version="5.0">
+    <para>Note the following points about timeout values:</para>
+    <itemizedlist>
+        <listitem>
+            <para>When a new message is added to a context, &abbrev; will restart the timeout using the <parameter>context-timeout</parameter> set for the new message.</para>
+        </listitem>
+        <listitem>
+            <para>When calculating if the timeout has already expired or not, &abbrev; uses the timestamps of the incoming messages, not system time elapsed between receiving the two messages (unless the messages do not include a timestamp, or the <userinput>keep-timestamp(no)</userinput> option is set). That way &abbrev; can be used to process and correlate already existing log messages offline. However, the timestamps of the messages must be in chronological order (that is, a new message cannot be older than the one already processed), and if a message is newer than the current system time (that is, it seems to be coming from the future), &abbrev; will replace its timestamp with the current system time.</para>
+            <example>
+                <title>How &abbrev; calculates <parameter>context-timeout</parameter> </title>
+                <para>Consider the following two messages:</para>
+                <synopsis>&lt;38&gt;1990-01-01T14:45:25 customhostname program6[1234]: program6 testmessage
+&lt;38&gt;1990-01-01T14:46:25 customhostname program6[1234]: program6 testmessage</synopsis>
+                <para>If the <parameter>context-timeout</parameter> is 10 seconds and &abbrev; receives the messages within 1 sec, the timeout event will occur immediately, because the difference of the two timestamps (60 sec) is larger than the timeout value (10 sec).</para>
+            </example>
+        </listitem>
+        <listitem>
+            <para>Avoid using unnecessarily long timeout values on high-traffic systems, as storing the contexts for many messages can require considerable memory. For example, if two related messages usually arrive within seconds, it is not needed to set the timeout to several hours.</para>
+        </listitem>
+    </itemizedlist>
+</topic>
