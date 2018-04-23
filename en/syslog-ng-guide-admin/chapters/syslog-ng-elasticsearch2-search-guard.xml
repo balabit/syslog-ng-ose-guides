@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE procedure
+ [  <!ENTITY % entities SYSTEM "../../shared/syslog-ng-entities.ent">
+ %entities;]>
+<procedure xml:id="syslog-ng-elasticsearch2-search-guard" xmlns="http://docbook.org/ns/docbook" version="5.0" condition="ose">
+    <title>Search Guard and &abbrev;</title>
+    <formalpara>
+        <title>Purpose:</title>
+        <para/>
+    </formalpara>
+    <para>Version <phrase condition="ose">3.9</phrase> and later supports the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://floragunn.com/searchguard/">Search Guard</link> Elasticsearch plugin (version 2.4.1.16 and newer) to encrypt and authenticate your connections to from &abbrev; to Elasticsearch 2 and newer. To configure &abbrev; to send messages to an Elasticsearch 2.x cluster that uses Search Guard, complete the following steps.</para>
+    <para>To connect to an Elasticsearch 5.x or newer cluster, use HTTPS mode.</para>
+    <formalpara>
+        <title>Steps:</title>
+        <para/>
+    </formalpara>
+    <step>
+        <para>Install the Search Guard plugin on your &abbrev; host. Use the plugin version that matches the version of your Elasticsearch installation.</para>
+        <synopsis>sudo /usr/share/elasticsearch/bin/plugin install -b com.floragunn/search-guard-ssl/&lt;version-number-of-the-plugin&gt;</synopsis>
+    </step>
+    <step>
+        <para>Create a certificate for your &abbrev; host, and add the certificate to the <filename>SYSLOG_NG-NODE_NAME-keystore.jks</filename> file. You can configure the location of this file in the Elasticsearch resources file under the <filename>path.conf</filename> parameter. For details, see the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://github.com/floragunncom/search-guard-ssl-docs/blob/master/certificates.md">Search Guard documentation</link>.</para>
+    </step>
+    <step>
+        <para>Configure an Elasticsearch destination in &abbrev; that uses the <userinput>searchguard</userinput> client mode. For example:</para>
+        <synopsis>destination d_elasticsearch {
+  elasticsearch2(
+    client-lib-dir("/usr/share/elasticsearch/plugins/search-guard-ssl/*.jar:/usr/share/elasticsearch/lib")
+    index("syslog-${YEAR}.${MONTH}.${DAY}")
+    type("syslog")
+    time-zone("UTC")
+    client-mode("searchguard")
+    resource("/etc/syslog-ng/elasticsearch.yml")
+  );
+};</synopsis>
+    </step>
+    <step>
+        <para>Configure the Elasticsearch resource file (for example, <filename>/etc/syslog-ng/elasticsearch.yml</filename>) as needed for your environment. Note the <userinput>searchguard:</userinput> section.</para>
+        <synopsis>cluster:
+  name: elasticsearch
+discovery:
+  zen:
+    ping:
+      unicast:
+        hosts:
+          - &lt;ip-address-of-the-elasticsearch-server&gt;
+node:
+  name: syslog_ng_secure
+  data; false
+  master: false
+path:
+  home: /etc/syslog-ng
+  conf: /etc/syslog-ng
+searchguard:
+  ssl:
+    transport:
+      keystore_filepath: syslog_ng-keystore.jks
+      keystore_password: changeit
+      truststore_filepath: truststore.jks
+      truststore_password: changeit
+      enforce_hostname_verification: true</synopsis>
+    </step>
+</procedure>
