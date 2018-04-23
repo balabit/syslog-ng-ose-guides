@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article
+  [<!ENTITY % entities SYSTEM "../common/syslog-ng-entities.ent">
+  %entities;
+  ]
+ >
+<section xml:id="configuration" xmlns="http://docbook.org/ns/docbook">
+    <title>Configuring &product;</title>
+    <para>The syslog-ng application reads incoming messages and forwards them to the selected <emphasis>destinations</emphasis>. The syslog-ng application can receive messages from files, remote hosts, and other <emphasis>sources</emphasis>.</para>
+    <para>Log messages enter syslog-ng in one of the defined sources, and are sent to one or more <emphasis>destinations</emphasis>.</para>
+    <para>Sources and destinations are independent objects; <emphasis>log paths</emphasis> define what syslog-ng does with a message, connecting the sources to the destinations. A log path consists of one or more sources and one or more destinations; messages arriving from a source are sent to every destination listed in the log path. A log path defined in syslog-ng is called a <emphasis>log statement</emphasis>.</para>
+    <para>There are many other optional elements, like filters, parsers, etc., but in this guide we focus on a core syslog-ng feature: reliable logging.</para>
+    <note>
+        <para>The syslog-ng PE server for Windows can also be installed without a license file. In this case it will act as a client or relay (depending on configuration), but with some additional features compared to syslog-ng Agent for Windows. These features include disk buffer and relay.</para>
+        <para>Consult the documentation or a pre-sales engineer for further details.</para>
+    </note>
+    <section xml:id="rltp">
+        <title><trademark>Reliable Transfer Protocol</trademark>
+        </title>
+        <xi:include href="../syslog-ng-guide-admin/chapters/chapter-rltp.xml" xpointer="para-rltp-intro" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <para>To make RLTP work, you have to enable it on the server and on all participating clients as well. In the following example, a minimum working configuration is provided; for additional options, including TLS configuration, refer to <olink targetdoc="syslog-ng-pe-guide-admin" targetptr="chapter-rltp"/>.</para>
+        <procedure xml:id="configuring_server_for_rltp">
+            <title>Configuring the syslog-ng PE server for RLTP</title>
+            <formalpara>
+                <title>Purpose:</title>
+                <para/>
+            </formalpara>
+            <para>To configure the &product; server for RLTP, complete the following steps:</para>
+            <formalpara>
+                <title>Steps:</title>
+                <para/>
+            </formalpara>
+            <step>
+                <para>Open the C:\Program Files\syslog-ng\etc\syslog-ng.conf configuration file for editing</para>
+            </step>
+            <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chunk/step-rltp-server.xml"/>
+        </procedure>
+        <procedure xml:id="configuring_windows_client_for_rltp">
+            <title>Configuring &agent; clients for RLTP</title>
+            <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chunk/step-rltp-windows-client.xml"/>
+            <step>
+                <para>Remote logging can be tested the same way as described in <xref linkend="installing_client_windows"/>.</para>
+            </step>
+        </procedure>
+    </section>
+    <procedure xml:id="macros">
+        <title>Macros in file names</title>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chunk/step-macros-filenames.xml"/>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <step>
+            <para>Open the C:\Program Files\syslog-ng\etc\syslog-ng.conf configuration file for editing</para>
+        </step>
+        <step>
+            <para>Locate the block starting with<computeroutput>destination d_nettofile</computeroutput></para>
+        </step>
+        <step>
+            <para>Modify it to look like the following line:</para>
+            <synopsis>destination d_nettofile {
+	file('C:\tmp\tcp_to_file_example.txt' flags(no-multi-line));
+	file('C:\tmp\$YEAR\$WEEK\$HOST-messages' flags(no-multi-line) create-dirs(yes));
+};</synopsis>
+            <para>For more details on macros available in syslog-ng, refer to <olink targetdoc="syslog-ng-pe-guide-admin"/>.</para>
+        </step>
+        <step>
+            <para>Save the file and restart syslog-ng</para>
+            <note>
+                <para>Collecting to <filename>C:\tmp\tcp_to_file_example.txt</filename> is left there for your convenience, it can be safely removed. If the related configuration item is removed, the file stays in the folder, but will not be updated.</para>
+            </note>
+        </step>
+    </procedure>
+    <procedure xml:id="storing_encryption">
+        <title>Storing messages in encrypted files</title>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="chunk/step-encrypted-files.xml"/>
+        <formalpara>
+            <title>Steps:</title>
+            <para/>
+        </formalpara>
+        <step>
+            <para>Open the C:\Program Files\syslog-ng\etc\syslog-ng.conf configuration file for editing</para>
+        </step>
+        <step>
+            <para>Locate the block starting with<computeroutput>destination d_nettofile</computeroutput></para>
+        </step>
+        <step>
+            <para>Add the following line right below:</para>
+            <synopsis>destination d_logstore {
+	logstore('C:\tmp\messages.lgs' compress(9) );
+};</synopsis>
+        </step>
+        <step>
+            <para>Locate the line containing<computeroutput>destination(d_nettofile)</computeroutput></para>
+        </step>
+        <step>
+            <para>Add the following line right below:</para>
+            <synopsis>destination(d_logstore)</synopsis>
+        </step>
+        <step>
+            <para>Restart syslog-ng for the configuration changes to take effect</para>
+        </step>
+        <step>
+            <para><emphasis>Validating the changes</emphasis></para>
+            <para>You can verify that logs are arriving to the logstore using the following command:</para>
+            <para><command>"C:\Program Files\syslog-ng\bin\lgstool.exe” cat C:\tmp\messages.lgs</command></para>
+        </step>
+    </procedure>
+</section>
