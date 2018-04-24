@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article
+  [
+  <!ENTITY % entities SYSTEM "../common/syslog-ng-entities.ent">
+  %entities;
+  ]
+ >
+<procedure xml:id="wec-configure-event-source-computers" xmlns="http://docbook.org/ns/docbook">
+    <title>Configure event source computers</title>
+    <formalpara>
+        <title>Prerequisites:</title>
+        <para/>
+    </formalpara>
+    <itemizedlist>
+        <listitem>
+            <para>Microsoft Windows 7 or newer</para>
+        </listitem>
+    </itemizedlist>
+    <formalpara>
+        <title>Purpose:</title>
+        <para/>
+    </formalpara>
+    <para>When collecting event logs from Windows hosts, the Windows clients sending logs act as the event source computers. The &wecabbrev; tool collects and forwards messages from the standard Windows eventlog containers.</para>
+    <para>There is no restriction on the number of Windows hosts that can connect to the &wec;.</para>
+    <para>To configure your event sources, complete the following steps.</para>
+    <formalpara>
+        <title>Steps:</title>
+        <para/>
+    </formalpara>
+    <step>
+        <para>Open the <guimenu>Microsoft Management Console</guimenu> (<filename>mmc.exe</filename>), select <guimenu>File > Add/Remove Snap-ins</guimenu>, and add the <guimenu>Certificates</guimenu> snap-in.</para>
+    </step>
+    <step>
+        <para>Select <guimenu>Computer Account</guimenu>.</para>
+    </step>
+    <step>
+        <para>Right-click the <guimenu>Personal</guimenu> node, and select <guimenu>All Tasks > Import</guimenu>.</para>
+    </step>
+    <step>
+        <para>Find and select the client certificate (<filename>client*.p12</filename>) and import this file.</para>
+    </step>
+    <step>
+        <para>The PKCS #12 archive contains the CA certificate as well. Move the CA certificate to the <guimenu>Trusted Root Certification Authorities</guimenu> node after the import.</para>
+        <note>
+            <para>Make sure that you only move the CA certificate and not the client certificate.</para>
+        </note>
+    </step>
+    <step>
+        <para>Give NetworkService access to the private key file of the client authentication certificate: </para>
+        <note>
+            <para>Make sure that you modify the access rights of only the private key file of the client certificate and not the CA certificate.</para>
+        </note>
+        <substeps>
+            <step>
+                <para>In certmgr, right-click the client certificate, select <guimenu>All Tasks > Manage Private Keys...</guimenu>.</para>
+            </step>
+            <step>
+                <para>Add read permission to "NETWORK SERVICE".</para>
+                <figure>
+                    <title>Adding read permission to "NETWORK SERVICE"</title>
+                    <mediaobject>
+                        <imageobject role="html">
+                            <imagedata format="PNG" fileref="cert-add-permission-to-network-service.png"/>
+                        </imageobject>
+                        <imageobject role="fo">
+                            <imagedata format="PNG" fileref="&imgroot;/cert-add-permission-to-network-service.png" contentwidth="&screenshotsize_small;"/>
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+            </step>
+        </substeps>
+    </step>
+    <step>
+        <para>To forward security logs:</para>
+        <substeps>
+            <step>
+                <para>In CompMgmt.msc, under <guimenu>Local Users and Groups</guimenu>, click <guimenu>Groups > Event Log Readers</guimenu> to open <guimenu>Event Log Readers Properties</guimenu>.</para>
+            </step>
+            <step>
+                <para>Add the "NETWORK SERVICE" account to the <guimenu>Event Log Readers</guimenu> group.</para>
+                <figure>
+                    <title>Adding the "Network Service" account to the Event Log Readers group.</title>
+                    <mediaobject>
+                        <imageobject role="html">
+                            <imagedata format="PNG" fileref="add-network-service-to-eventlog-readers-group.png"/>
+                        </imageobject>
+                        <imageobject role="fo">
+                            <imagedata format="PNG" fileref="&imgroot;/add-network-service-to-eventlog-readers-group.png" contentwidth="&screenshotsize_small;"/>
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+            </step>
+            <step>
+                <para>Reboot the client computer.</para>
+            </step>
+        </substeps>
+    </step>
+    <step>
+        <para>Run the following commands from an elevated privilege command prompt:</para>
+        <synopsis>winrm qc -q
+winrm set winrm/config/client/auth @{Certificate="true"}
+</synopsis>
+    </step>
+    <step>
+        <para>Open gpedit.msc.</para>
+    </step>
+    <step>
+        <para>Under the <guimenu>Computer Configuration</guimenu> node, expand the <guimenu>Administrative Templates</guimenu> node, then expand the <guimenu>Windows Components</guimenu> node, and then select the <guimenu>Event Forwarding</guimenu> node.</para>
+    </step>
+    <step>
+        <para xreflabel="use the CA thumbprint you saved earlier">Select the <guimenu>SubscriptionManagers</guimenu> setting and enable it. Click the <guimenu>Show</guimenu> button to add a subscription (<xref linkend="step-thumbprint-CA"/>):</para>
+        <synopsis>Server=https://&lt;FQDN of the collector>:5986/wsman/SubscriptionManager/WEC,Refresh=&lt;Refresh interval in seconds>,IssuerCA=&lt;Thumbprint of the root CA></synopsis>
+        <para>For example:</para>
+        <synopsis>
+Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerCA=A814E609311FD3A89FFD0297974524E4F2D2BA9D
+</synopsis>
+        <figure>
+            <title>Adding the subscription in SubscriptionManagers</title>
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata format="PNG" fileref="set-subscription-event-forwarding.png"/>
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata format="PNG" fileref="&imgroot;/set-subscription-event-forwarding.png" contentwidth="&screenshotsize_small;"/>
+                </imageobject>
+            </mediaobject>
+        </figure>
+        <note>
+            <para>If you wish to set up multiple subscriptions because you want to forward Windows events to multiple event collectors (such as &wecabbrev;), then you can do that here.</para>
+        </note>
+    </step>
+</procedure>

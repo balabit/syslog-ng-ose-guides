@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article
+  [
+  <!ENTITY % entities SYSTEM "../common/syslog-ng-entities.ent">
+  %entities;
+  ]
+ >
+<section xml:id="wec-troubleshoot" xmlns="http://docbook.org/ns/docbook">
+    <title>Troubleshoot &wec;</title>
+    <para>When you experience issues while using &wecabbrev;, run &wecabbrev; in debug mode to get detailed log messages.</para>
+    <orderedlist>
+        <listitem>
+            <para>Set the log level to <userinput>debug</userinput>:</para>
+            <synopsis>log:
+  level: "debug"</synopsis>
+        </listitem>
+        <listitem>
+            <para>Start &wecabbrev;.</para>
+            <para>At every refresh interval, the following debug messages should be displayed:</para>
+            <synopsis>DEBUG   subscriptionEndpoint    {"clientAddress": "..."}
+DEBUG   actionHandler   {"messageID": "...", "action": "http://schemas.xmlsoap.org/ws/2004/09/enumeration/Enumerate"}
+DEBUG   enumerate</synopsis>
+            <para>This means that the client has connected and requested the subscription list.</para>
+        </listitem>
+        <listitem>
+            <para>If you cannot see these messages within the refresh interval, you should check the following channels in the client's event viewer:</para>
+            <itemizedlist>
+                <listitem>
+                    <para><filename>Applications and Services Logs\Microsoft\Windows\Eventlog-ForwardingPlugin</filename></para>
+                </listitem>
+                <listitem>
+                    <para><filename>Applications and Services Logs\Microsoft\Windows\Windows Remote Management</filename></para>
+                </listitem>
+            </itemizedlist>
+        </listitem>
+    </orderedlist>
+    <para>Some common error codes and their explanations:</para>
+    <itemizedlist>
+        <listitem>
+            <para><emphasis role="bold">5004</emphasis>: A channel specified in the query XML does not exist or cannot be read on the Windows client. This can be caused by the "Network Service" not having permission to read the security log.</para>
+            <para>Add the "Network Service" account to the <guimenu>Event Log Readers</guimenu> group, and restart the computer for changes to take effect.</para>
+        </listitem>
+        <listitem>
+            <para><emphasis role="bold">15008</emphasis>: The query XML of the subscription is invalid.</para>
+        </listitem>
+        <listitem>
+            <para><emphasis role="bold">995 (HTTP error 12186)</emphasis>: The "Network Service" does not have permission to read the client certificate.</para>
+        </listitem>
+        <listitem>
+            <para><emphasis role="bold">HTTP error 403</emphasis>: If everything is set correctly, then it might be possible that a proxy is set and the forwarder tries to connect to the proxy instead of &wecabbrev;.</para>
+            <tip>
+                <para>Sometimes proxy settings are not displayed in any GUI window. Check them using <command>netsh winhttp show proxy</command>. To reset proxy settings, use <command>netsh winhttp reset proxy</command>.</para>
+            </tip>
+        </listitem>
+    </itemizedlist>
+</section>

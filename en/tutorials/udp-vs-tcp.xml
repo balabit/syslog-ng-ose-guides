@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article
+[
+<!ENTITY % entities SYSTEM "../common/syslog-ng-entities.ent">
+%entities;
+]>
+<section xml:id="udp-vs-tcp" xmlns="http://docbook.org/ns/docbook">
+    <title>Problems</title>
+    <para><xi:include href="../xml-stylesheet/common/copyright.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>Central logging is based on TCP connections in most cases (or even encrypted TCP connections) as it provides several reliability features that are simply not available using UDP. Still, there are certain situations, when you have to use UDP. One use case is when the company standard syslog configuration for servers contains only a single, common UDP destination, and it cannot be altered because of company IT policies. The other, more common use case is, that network devices, for example routers, switches or firewalls send their logs using UDP. Most of the time the TCP implementation of syslog is completely missing from these devices. In some cases it is there, but badly broken and therefore avoided by the users.</para>
+    <para>When compared to TCP, UDP is more lightweight, and it consumes less computing resources. However, this is probably the only positive feature of UDP when discussing log message transfer. On the sender side UDP sends packets with a “fire and forget” method, meaning that it does not ensure that the packet was received, there is no error handling, acknowledgement, retransmission or timeout and therefore it is prone to losing messages.</para>
+    <para>There are several points during the transmission where messages can be lost when using UDP:</para>
+    <itemizedlist>
+        <listitem>
+            <para>When there are multiple hops, a burst of log messages can be lost.</para>
+        </listitem>
+        <listitem>
+            <para>Kernel network card driver level: virtualization might cause problems, also certain drivers and cards are unable to keep up with high traffic and therefore log messages can be lost.</para>
+        </listitem>
+        <listitem>
+            <para>Kernel buffer size: when syslog-ng cannot read fast enough from the kernel, buffers are filled and log messages can be lost.</para>
+        </listitem>
+        <listitem>
+            <para>In syslog-ng when the destination side is not fast enough and buffers are filled. For example when the disk I/O is held by some other application, therefore the messages cannot get written by syslog-ng. Even on a dedicated server, just browsing the stored logs can be a reason for that.</para>
+        </listitem>
+    </itemizedlist>
+    <para>The effects of these problems can be reduced, but keep in mind, that UDP is not a reliable protocol.</para>
+</section>

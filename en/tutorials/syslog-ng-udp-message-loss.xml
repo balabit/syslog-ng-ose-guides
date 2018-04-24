@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article
+[
+<!ENTITY % entities SYSTEM "../common/syslog-ng-entities.ent">
+%entities;
+]>
+<section xml:id="syslog-ng-udp-message-loss" xmlns="http://docbook.org/ns/docbook">
+    <title>Resolving UDP message loss problems</title>
+    <para>Even if UDP is not a reliable protocol, and message loss can not be completely avoided, there are many ways to improve the situation. If you only have a few incoming UDP messages, you might not need any or all of these safe guards. However, as soon as you expect higher UDP traffic or burst of UDP packages, it is definitely worth implementing them.</para>
+    <simplesect>
+        <title>Collect messages close to the source</title>
+        <para>UDP packages easily get lost if they have to travel through switches and routers. This kind of loss is difficult to detect, unless you can count the number of messages both on the sending and receiving side. To avoid message loss, install a syslog-ng relay collecting UDP messages as close as possible to the log source, ideally on the same switch or at least on the same subnetwork. Forward the logs to your central log server using a more reliable protocols, such as TCP<phrase condition="pe6"> or RLTP</phrase>.</para>
+    </simplesect>
+    <simplesect>
+        <title>Use the right network card and network driver</title>
+        <para>Some network cards handle high load better than others. In high traffic environments it is worth using server class network cards that can off-load many of the tasks. The same hardware can sometimes be used with different drivers, so select the driver that suits your needs best.</para>
+        <para>To generate syslog traffic for stress testing your environment, use <command>loggen</command> (a tool bundled with syslog-ng). To check for dropped packages at hardware level, use <command>ifconfig</command> or <command>ethtool</command>.</para>
+    </simplesect>
+    <simplesect>
+        <title>Use physical machines instead of virtual ones</title>
+        <para>Full hardware virtualization, for example VMware can degrade performance, especially during hardware access like high speed networking. In some situations, using the right network driver inside the virtual machine can resolve this problem. On a loaded host machine even the right network driver will not solve these issues, therefore it is better to move log collection to a physical machine.</para>
+    </simplesect>
+    <simplesect>
+        <title>Use large buffers in kernel</title>
+        <para>If syslog-ng cannot read the messages fast enough from the UDP socket, the kernel receive buffers will start to fill and after the configured limit has been reached, the kernel will start discarding messages. In this case, it is necessary to adjust the buffer size accordingly. To raise the size of the kernel receive buffers, use the <command>sysctl</command> command to tune the <parameter>net.core.rmem_max</parameter> parameter. Next, raise the size of the <parameter>so-rcvbuf</parameter> option of the syslog-ng source definition as well, so that syslog-ng is capable of utilizing the larger kernel receive buffers. In a high traffic environment as high as 256MB might be necessary:</para>
+        <para><command>sysctl -w net.core.rmem_max=268435456</command></para>
+        <para>Enter the value in bytes. In the example above, 256*1024*1024=<userinput>268435456</userinput> bytes. As a rule of thumb, this buffer size should be enough to accommodate incoming peak message rate for at least one second.</para>
+        <warning>
+            <para>Any issue causing the loss of buffer content can result in higher message loss because of the higher buffer size. To minimize risk, it is important to determine the required buffer size instead of using a buffer that is higher than what is absolutely necessary.</para>
+        </warning>
+        <para>To monitor packet loss, use the following command:</para>
+        <para><command>netstat -su | grep "receive errors"</command></para>
+    </simplesect>
+    <simplesect>
+        <title>Tuning syslog-ng for UDP</title>
+        <para>There are several configuration possibilities in syslog-ng that are related to using UDP protocol. To be able to handle message bursts, increase the value of the <parameter>log_fifo_size()</parameter> option. To match the value configured for <command>net.core.rmem_max</command> in the previous step, increase the value of the <parameter>so-rcvbuf()</parameter> accordingly.</para>
+        <para>Flow control in syslog-ng slows down message reception if the destination slowed down for some reason. This works fine when messages are coming from TCP sources, as the sender side will notice slower reception and send messages at a lower rate. UDP, as a stateless protocol cannot handle this situation, the sender side will never notice that the receiving end slowed down and this will result in immediate message loss. Therefore in case of UDP sources, do not enable flow control for the destination.</para>
+        <para>When you use a syslog-ng Store Box as the central logserver, flow-control is always applied to the log paths where messages are written into logspaces in order to avoid message loss. Therefore, log processing may slow down if logs are massively searched by dozens of users (this is similar to the example described in the “Problems” section above). Contrary to the highly configurable syslog-ng PE, you do not have the ability to fine-tune the low level OS level buffers underneath the syslog-ng Store Box log management application. Therefore, you may turn the UDP-based log collection into TCP-based already on a lower message rate.</para>
+        <para>The UDP source driver in syslog-ng is not multi-threaded. A single UDP source runs only in a single thread on a single CPU core. If you have a high message rate and multiple CPU cores, define multiple UDP sources in your syslog-ng configuration. This way load is distributed among multiple CPU cores, ensuring that CPU does not become a bottleneck. Still in this case, if the messages received from several UDP sources are written into the very same file, the destination side can become a bottleneck.</para>
+        <para>The consequence is that UDP-based collection always comes with a risk of message loss. The possibility of losing messages is different in each environment, therefore the situation might be examined in all cases in order to select the right safe guards that are sufficient to eliminate the risk of losing messages.</para>
+    </simplesect>
+</section>
