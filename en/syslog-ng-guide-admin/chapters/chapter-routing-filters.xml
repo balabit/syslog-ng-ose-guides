@@ -230,6 +230,20 @@ log {
     flags(fallback);
 };</synopsis>
             </example>
+            <example>
+                <title>Using the <parameter>drop-unmatched</parameter> flag</title>
+                <para>In the following example, if a log message arrives whose <userinput>$MSG</userinput> part does not contain the string <userinput>foo</userinput>, then &abbrev; will discard the message and will not check compliance with the second <userinput>if</userinput> condition.</para>
+                <synopsis>...
+if {
+    filter { message('foo') };
+    <emphasis role="bold">flags(drop-unmatched)</emphasis>
+};
+if {
+    filter { message('bar') };
+};
+...</synopsis>
+                <para>(Without the <parameter>drop-unmatched</parameter> flag, &abbrev; would check if the message complies with the second <userinput>if</userinput> condition, that is, whether or not the message contains the string <userinput>bar</userinput> .)</para>
+            </example>
         </section>
     </section>
     <section xml:id="concepts-flow-control">
@@ -507,27 +521,13 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
     </section>
     <section xml:id="concepts-failover" condition="pe">
         <title>Client-side failover</title>
-        <indexterm>
-            <primary>secondary servers</primary>
-        </indexterm>
-        <indexterm>
-            <primary>failover servers</primary>
-        </indexterm>
-        <indexterm>
-            <primary>fail-over servers</primary>
-        </indexterm>
-        <indexterm>
-            <primary>tcp failover</primary>
-        </indexterm>
-        <indexterm>
-            <primary>fail-over</primary>
-        </indexterm>
-        <indexterm>
-            <primary>client-side failover</primary>
-        </indexterm>
-        <indexterm>
-            <primary>FailoverSyslogServer</primary>
-        </indexterm>
+        <indexterm> <primary>secondary servers</primary> </indexterm>
+        <indexterm> <primary>failover servers</primary> </indexterm>
+        <indexterm> <primary>fail-over servers</primary> </indexterm>
+        <indexterm> <primary>tcp failover</primary> </indexterm>
+        <indexterm> <primary>fail-over</primary> </indexterm>
+        <indexterm> <primary>client-side failover</primary> </indexterm>
+        <indexterm> <primary>FailoverSyslogServer</primary> </indexterm>
         <para>&abbrev; can detect if the remote server of a network destination becomes unaccessible, and start sending messages to a secondary server. Multiple failover servers can be configured, so if the secondary server becomes unaccessible as well, &abbrev; will switch to the third server in the list, and so on. If there are no more failover servers left, &abbrev; returns to the beginning of a list and attempts to connect to the primary server.</para>
         <para>When &abbrev; starts up, it will always try to connect to the primary server first, but once it fails over to a secondary server, it will not automatically attempt to return to the primary server even if it becomes available. If &abbrev; is restarted, it will attempt to connect the primary server. Reloading the configuration of &abbrev; will not cause &abbrev; to return to the primary server, unless the configuration of the destination has changed.</para>
         <para>If &abbrev; uses TLS-encryption to communicate with the remote server, &abbrev; checks the certificate of the failover server as well. The certificates of the failover servers should match their domain names or IP addresses &mdash; for details, see <xref linkend="tls-serverauth"/>. Note that when mutual authentication is used, the &abbrev; client sends the same certificate to every server.</para>
