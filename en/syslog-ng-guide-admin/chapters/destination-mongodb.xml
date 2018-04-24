@@ -44,64 +44,7 @@
     );
 };</synopsis>
     </example>
-    <procedure xml:id="mongodb-connecting-server">
-        <title>How &abbrev; connects the MongoDB server</title>
-        <para>When &abbrev; connects the MongoDB server during startup, it completes the following steps.</para>
-        <step>
-            <para>The &abbrev; application connects the first address listed in the <parameter>servers()</parameter> option.</para>
-        </step>
-        <step>
-            <itemizedlist>
-                <listitem>
-                    <para>If the server is accessible and it is a master MongoDB server, &abbrev; authenticates on the server (if needed), then starts sending the log messages to the server.</para>
-                </listitem>
-                <listitem>
-                    <para>If the server is not accessible, or it is not a master server in a MongoDB replicaset and it does not send the address of the master server, &abbrev; connects the next address listed in the <parameter>servers()</parameter> option.</para>
-                </listitem>
-                <listitem>
-                    <para>If the server is not a master server in a MongoDB replicaset, but it sends the address of the master server, &abbrev; connects the received address.</para>
-                    <indexterm> <primary>mongodb</primary> <secondary>replicasets</secondary> </indexterm>
-                    <indexterm> <primary>mongodb</primary> <secondary>failover</secondary> </indexterm>
-                    <indexterm> <primary>failover</primary> <secondary>in mongodb</secondary> </indexterm>
-                </listitem>
-            </itemizedlist>
-        </step>
-        <step>
-            <para>When &abbrev; connects the master MongoDB server, it retrieves the list of replicas (from the <userinput>replSet</userinput> option of the server), and appends this list to the <parameter>servers()</parameter> option.</para>
-            <warning>
-                <itemizedlist>
-                    <listitem>
-                        <para>This means that &abbrev; can send log messages to addresses that are not listed in its configuration.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Make sure to include the address of your master server in your &abbrev; configuration file, otherwise you risk losing log messages if all the addresses listed in the &abbrev; configuration are offline.</para>
-                    </listitem>
-                    <listitem>
-                        <para>Addresses retrieved from the MongoDB servers are not stored, and can be lost when &abbrev; is restarted. The retrieved addresses are not lost if the <parameter>server()</parameter> option of the destination was not changed in the configuration file since the last restart.</para>
-                    </listitem>
-                    <listitem>
-                        <para>The failover mechanism used in the <parameter>mongodb()</parameter> driver is different from the client-side failover used in other drivers.</para>
-                    </listitem>
-                </itemizedlist>
-            </warning>
-        </step>
-        <step>
-            <para>The &abbrev; application attempts to connect another server if the <parameter>servers()</parameter> list contains at least two addresses, and one of the following events happens:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>The <userinput>safe-mode()</userinput> option is set to <userinput>no</userinput>, and the MongoDB server becomes unreachable.</para>
-                </listitem>
-                <listitem>
-                    <para>The <userinput>safe-mode()</userinput> option is set to <userinput>yes</userinput>, and &abbrev; cannot insert a log message into the database because of an error.</para>
-                </listitem>
-            </itemizedlist>
-            <para>In such case, &abbrev; starts to connect the addresses in from the <parameter>servers()</parameter> list (starting from the first address) to find the new master server, authenticates on the new server (if needed), then continues to send the log messages to the new master server.</para>
-            <para>During this failover step, one message can be lost if the <parameter>safe-mode()</parameter> option is disabled.</para>
-        </step>
-        <step>
-            <para>If the original master becomes accessible again, &abbrev; will automatically connect to the original master.</para>
-        </step>
-    </procedure>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="mongodb-connecting-server.xml"/>
     <section xml:id="reference-destination-mongodb">
         <title>mongodb() destination options</title>
         <indexterm> <primary>destination drivers</primary> <secondary><parameter>mongodb()</parameter> driver</secondary> </indexterm>

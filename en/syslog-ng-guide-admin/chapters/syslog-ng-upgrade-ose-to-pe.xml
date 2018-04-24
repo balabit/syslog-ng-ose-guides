@@ -1,0 +1,102 @@
+<!DOCTYPE chapter
+ [
+ <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<procedure xml:id="syslog-ng-upgrade-ose-to-pe" xmlns="http://docbook.org/ns/docbook">
+    <title>Upgrading from syslog-ng OSE to &abbrev;</title>
+    <formalpara>
+        <title>Purpose:</title>
+        <para/>
+    </formalpara>
+    <para>The cleanest way to upgrade from syslog-ng OSE to &abbrev; is to remove the syslog-ng OSE package from the system. This way you can avoid the packaging conflicts and feature differences.</para>
+    <para>In the example procedure provided here, we describe an upgrade of syslog-ng OSE version 3.12 from unofficial repositories running on Red Hat Enterprise Linux 7.4 to &abbrev; version 7.0.4. The process should work in a fairly similar way when using other OS or syslog-ng versions.</para>
+    <formalpara>
+        <title>Steps:</title>
+        <para/>
+    </formalpara>
+    <step>
+        <para>Remove syslog-ng OSE.</para>
+        <para>The following instructions assume that the user is in the <filename>/root</filename> directory.</para>
+        <substeps>
+            <step>
+                <para>Unless you have not touched the syslog-ng configuration at all, make a backup of <filename>syslog-ng.conf</filename> first. Copy the contents of <filename>/etc/syslog-ng</filename> to a directory under <filename>/root</filename> (or where you can find it), so you have a backup you can work from later:</para>
+                <synopsis>cp -R /etc/syslog-ng sngose</synopsis>
+            </step>
+            <step>
+                <para>Remove the syslog-ng package and dependent subpackages:</para>
+                <synopsis>yum erase syslog-ng</synopsis>
+            </step>
+            <step>
+                <para>Remove the <filename>/etc/syslog-ng</filename> directory:</para>
+                <synopsis>rm -fr /etc/syslog-ng</synopsis>
+                <warning>
+                    <para>Check the output of yum carefully. If there are any applications listed other than syslog-ng and subpackages, remove syslog-ng using <command>rpm -e —nodeps</command>, so dependent packages are not removed.</para>
+                </warning>
+            </step>
+        </substeps>
+    </step>
+    <step>
+        <para>Install &abbrev;.</para>
+        <para>The following instructions assume that the &abbrev; rpm package is available in the current directory. You can install &abbrev; using the following command:</para>
+        <synopsis>[root@localhost ~]# rpm -Uvh syslog-ng-premium-edition-compact-7.0.5-1.rhel7.x86_64.rpm
+Preparing...                          ################################# [100%]
+Trying to stop syslog services on Linux, using systemd services.
+Updating / installing...
+   1:syslog-ng-premium-edition-compact################################# [100%]
+Created symlink from /etc/systemd/system/multi-user.target.wants/syslog-ng.service to /usr/lib/systemd/system/syslog-ng.service.
+[root@localhost ~]#</synopsis>
+    </step>
+    <step>
+        <para>Merge configurations.</para>
+        <para>The configuration file of the freshly installed &abbrev; is available under <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename>. Start by making a backup of it.</para>
+        <para>The next steps largely depend on the particulars of your previous syslog-ng OSE configuration and what you want to achieve:</para>
+        <substeps>
+            <step>
+                <para>Append your old OSE configuration to <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename>.</para>
+            </step>
+            <step>
+                <para>Edit out redundant configuration parts, for example, a version declaration.</para>
+            </step>
+            <step>
+                <para>Edit out those configuration parts that refer to features unavailable in &abbrev;, such as the Riemann destination.</para>
+                <para>If you try to start &abbrev; with an unknown feature enabled, it fails with a similar error message (in the example, it is the Riemann destination that is causing the error):</para>
+                <synopsis>/opt/syslog-ng/sbin/syslog-ng -s
+Error parsing destination, destination plugin riemann not found in /opt/syslog-ng/etc/syslog-ng.conf at line 41, column 2:
+
+    riemann(
+    ^^^^^^^</synopsis>
+            </step>
+            <step>
+                <para>Syntax check your configuration using the <userinput>-s</userinput> option of syslog-ng. Make sure that you use the full path to &abbrev;, or add it to the PATH:</para>
+                <synopsis>/opt/syslog-nb/sbin/syslog-ng -s</synopsis>
+            </step>
+            <step>
+                <para>If no errors are found, stop syslog-ng:</para>
+                <synopsis>systemctl stop syslog-ng</synopsis>
+            </step>
+            <step>
+                <para>Try to start syslog-ng from the command line in the foreground using the <userinput>-F</userinput> option, so you can see any errors:</para>
+                <synopsis>/opt/syslog-ng/sbin/syslog-ng -F</synopsis>
+                <para>Some common error messages and explanations:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para>syslog-ng OSE uses <userinput>s_sys</userinput> for references to local system sources, while &abbrev; uses <userinput>s_local</userinput>. Remember to rename such references, otherwise a similar error message will be displayed:</para>
+                        <synopsis>[2017-10-03T14:04:18.968550] Error resolving reference; content='source', name='s_sys', location='/opt/syslog-ng/etc/syslog-ng.conf:86:2'</synopsis>
+                    </listitem>
+                    <listitem>
+                        <para>Some features of &abbrev; require a license file to be present. In the example shown here, a Java plugin failed to initialize due to a missing license:</para>
+                        <synopsis>[2017-10-03T14:07:05.894534] syslog-ng running in client/relay mode, cannot initialize plugin; plugin name='java'
+[2017-10-03T14:07:05.894560] Error initializing message pipeline; plugin name='java', location='#buffer:2:3'</synopsis>
+                    </listitem>
+                </itemizedlist>
+                <para>Once you have made sure that your configuration works fine, you do not have to start syslog-ng in the foreground anymore.</para>
+            </step>
+            <step>
+                <para>Stop syslog-ng using <userinput>Ctrl-C</userinput>.</para>
+            </step>
+            <step>
+                <para>Start syslog-ng as a service using <userinput>systemctl start syslog-ng</userinput>.</para>
+            </step>
+        </substeps>
+    </step>
+</procedure>

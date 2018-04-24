@@ -1,0 +1,35 @@
+<!DOCTYPE chapter [
+<!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+  %entities;]>
+<procedure xml:id="procedure-associating-timezone" xmlns="http://docbook.org/ns/docbook">
+    <title>How &abbrev; assigns timezone to the message</title>
+    <para>When &abbrev; receives a message, it assigns timezone information to the message using the following algorithm.</para>
+    <step>
+        <para>The sender application (for example the syslog-ng client) or host specifies the timezone of the messages. If the incoming message includes a timezone it is associated with the message. Otherwise, the local timezone is assumed.</para>
+    </step>
+    <step>
+        <para>Specify the <parameter>time-zone()</parameter> parameter for the source driver that reads the message. This timezone will be associated with the messages only if no timezone is specified within the message itself. Each source defaults to the value of the <link linkend="global-option-recv-time-zone">
+                <parameter>recv-time-zone()</parameter>
+            </link> global option. It is not possible to override only the timezone information of the incoming message, but setting the <parameter>keep-timestamp()</parameter> option to <userinput>no</userinput> allows &abbrev; to replace the full timestamp (timezone included) with the time the message was received.</para>
+        <note>
+            <para>When processing a message that does not contain timezone information, the &abbrev; application will use the timezone and daylight-saving that was effective when the timestamp was generated. For example, the current time is <userinput>2011-03-11</userinput> (March 11, 2011) in the <userinput>EU/Budapest</userinput> timezone. When daylight-saving is active (summertime), the offset is <userinput>+02:00</userinput>. When daylight-saving is inactive (wintertime) the timezone offset is <userinput>+01:00</userinput>. If the timestamp of an incoming message is <userinput>2011-01-01</userinput>, the timezone associated with the message will be <userinput>+01:00</userinput>, but the timestamp will be converted, because 2011-01-01 meant winter time when daylight saving is not active but the current timezone is <userinput>+02:00</userinput>.</para>
+        </note>
+    </step>
+    <step>
+        <para>Specify the timezone in the destination driver using the <parameter>time-zone()</parameter> parameter. Each destination driver might have an associated timezone value: syslog-ng converts message timestamps to this timezone before sending the message to its destination (file or network socket). Each destination defaults to the value of the <link linkend="global-option-send-time-zone">
+                <parameter>send-time-zone()</parameter>
+            </link> global option.</para>
+        <note>
+            <para>A message can be sent to multiple destination zones. The syslog-ng application converts the timezone information properly for every individual destination zone.</para>
+        </note>
+        <warning>
+            <para>If &abbrev; sends the message is to the destination using the legacy-syslog protocol (RFC3164) which does not support timezone information in its timestamps, the timezone information cannot be encapsulated into the sent timestamp, so &abbrev; will convert the hour:min values based on the explicitly specified timezone.</para>
+        </warning>
+    </step>
+    <step>
+        <para>If the timezone is not specified, local timezone is used.</para>
+    </step>
+    <step>
+        <para>When macro expansions are used in the destination filenames, the local timezone is used. (Also, if the timestamp of the received message does not contain the year of the message, &abbrev; uses the local year.)</para>
+    </step>
+</procedure>

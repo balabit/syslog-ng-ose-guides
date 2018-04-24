@@ -1,0 +1,51 @@
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<procedure xml:id="destination-hdfs-maprfs" xmlns="http://docbook.org/ns/docbook">
+    <title>Storing messages with MapR-FS</title>
+    <indexterm>
+        <primary>MapR</primary>
+    </indexterm>
+    <indexterm>
+        <primary>MapR-FS</primary>
+    </indexterm>
+    <indexterm>
+        <primary>MapR File System</primary>
+    </indexterm>
+    <para>The &abbrev; application is also compatible with MapR File System (MapR-FS), starting from version 5.4, &product; is <emphasis>MapR</emphasis> certified. MapR-FS provides better performance, reliability, efficiency, maintainability, and ease of use compared to the default Hadoop Distributed Files System (HDFS). To use MapR-FS with &abbrev;, complete the following steps:</para>
+    <step>
+        <para>Install MapR libraries. Instead of the official Apache HDFS libraries, MapR uses different libraries. The supported version is MapR 4.x.</para>
+        <substeps>
+            <step>
+                <para>Download the libraries from the <link xmlns:ns1="http://doc.mapr.com/display/MapR3/Maven+Repository+and+Artifacts+for+MapR">Maven Repository and Artifacts for MapR</link> or get it from <link xmlns:ns1="http://doc.mapr.com/display/MapR/Quick+Installation+Guide">an already existing MapR installation</link>.</para>
+            </step>
+            <step>
+                <para>Install MapR. If you do not know how to install MapR, follow the instructions on the <link xmlns:ns1="https://www.mapr.com/">MapR website</link>.</para>
+            </step>
+        </substeps>
+    </step>
+    <step>
+        <para>In a default MapR installation, the required libraries are installed in the following path: <filename>/opt/mapr/lib</filename>.</para>
+        <para>Enter the path where MapR was installed in the <parameter>class-path</parameter> option of the <parameter>hdfs</parameter> destination, for example:</para>
+        <synopsis>class-path("/opt/mapr/lib/")</synopsis>
+        <para>If the libraries were downloaded from the Maven Repository, the following additional libraries will be requiered. Note that the version numbers in the filenames can be different in the various Hadoop releases:<filename>commons-collections-3.2.1.jar</filename>, <filename>commons-logging-1.1.3.jar</filename>, <filename>hadoop-auth-2.5.1.jar</filename>, <filename>log4j-1.2.15.jar</filename>, <filename>slf4j-api-1.7.5.jar</filename>, <filename>commons-configuration-1.6.jar</filename>, <filename>guava-13.0.1.jar</filename>, <filename>hadoop-common-2.5.1.jar</filename>, <filename>maprfs-4.0.2-mapr.jar</filename>, <filename>slf4j-log4j12-1.7.5.jar</filename>, <filename>commons-lang-2.5.jar</filename>, <filename>hadoop-0.20.2-dev-core.jar</filename>, <filename>json-20080701.jar</filename>, <filename>protobuf-java-2.5.0.jar</filename>, <filename>zookeeper-3.4.5-mapr-1406.jar</filename>.</para>
+    </step>
+    <step>
+        <para>Configure the <parameter>hdfs</parameter> destination in &abbrev;.</para>
+        <example xml:id="example-destination-hdfs-mapr">
+            <title>Storing logfiles with MapR-FS</title>
+            <para>The following example defines an <parameter>hdfs</parameter> destination for MapR-FS using only the required parameters.</para>
+            <synopsis>@module mod-java
+@include "scl.conf"
+
+destination d_mapr {
+    hdfs(
+        client-lib-dir("/opt/syslog-ng/lib/syslog-ng/java-modules/:/opt/mapr/lib/")
+        hdfs-uri("maprfs://10.140.32.80")
+        hdfs-file("/user/log/logfile.txt")
+    );
+};
+</synopsis>
+        </example>
+    </step>
+</procedure>

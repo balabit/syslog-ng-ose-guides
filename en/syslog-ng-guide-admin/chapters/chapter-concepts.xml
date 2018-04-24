@@ -11,71 +11,11 @@
     </section>
     <section xml:id="concepts-logging-with-syslog-ng">
         <title>Logging with syslog-ng</title>
-        <indexterm> <primary>sources</primary> </indexterm>
+        <indexterm>
+            <primary>sources</primary>
+        </indexterm>
         <xi:include href="../../common/chunk/intro-concepts.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <procedure xml:id="concepts-route-of-a-message">
-            <title>The route of a log message in syslog-ng</title>
-            <indexterm> <primary>logging procedure</primary> </indexterm>
-            <formalpara>
-                <title>Purpose:</title>
-                <para/>
-            </formalpara>
-            <para>The following procedure illustrates the route of a log message from its source on the syslog-ng client to its final destination on the central syslog-ng server.</para>
-            <figure>
-                <title>The route of a log message</title>
-                <mediaobject>
-                    <imageobject role="html">
-                        <imagedata format="PNG" fileref="logging01.png"/>
-                    </imageobject>
-                    <imageobject role="fo">
-                        <imagedata format="PNG" fileref="&imgroot;/logging01.png"/>
-                    </imageobject>
-                </mediaobject>
-            </figure>
-            <formalpara>
-                <title>Steps:</title>
-                <para/>
-            </formalpara>
-            <step>
-                <para>A device or application sends a log message to a source on the syslog-ng client. For example, an Apache web server running on Linux enters a message into the <filename>/var/log/apache</filename> file.</para>
-            </step>
-            <step>
-                <para>The syslog-ng client running on the web server reads the message from its <filename>/var/log/apache</filename> source.</para>
-            </step>
-            <step>
-                <para>The syslog-ng client processes the first log statement that includes the <filename>/var/log/apache</filename> source.</para>
-            </step>
-            <step>
-                <para>The syslog-ng client performs optional operations (message filtering, parsing, and rewriting) on the message, for example, it compares the message to the filters of the log statement (if any). If the message complies with all filter rules, syslog-ng sends the message to the destinations set in the log statement, for example, to the remote syslog-ng server.</para>
-                <warning>
-                    <para>Message filtering, parsing, and rewriting is performed in the order that the operations appear in the log statement.</para>
-                </warning>
-                <note>
-                    <para>The syslog-ng client sends a message to <emphasis>all</emphasis> matching destinations by default. As a result, a message may be sent to a destination more than once, if the destination is used in multiple log statements. To prevent such situations, use the <parameter>final</parameter> flag in the destination statements. For details, see <xref linkend="logflags"/>.</para>
-                </note>
-            </step>
-            <step>
-                <para>The syslog-ng client processes the next log statement that includes the <filename>/var/log/apache</filename> source, repeating Steps 3-4.</para>
-            </step>
-            <step>
-                <para>The message sent by the syslog-ng client arrives from a source set in the syslog-ng server.</para>
-            </step>
-            <step>
-                <para>The syslog-ng server reads the message from its source and processes the first log statement that includes that source.</para>
-            </step>
-            <step>
-                <para>The syslog-ng server performs optional operations (message filtering, parsing, and rewriting) on the message, for example, it compares the message to the filters of the log statement (if any). If the message complies with all filter rules, syslog-ng sends the message to the destinations set in the log statement.</para>
-                <warning>
-                    <para>Message filtering, parsing, and rewriting is performed in the order that the operations appear in the log statement.</para>
-                </warning>
-            </step>
-            <step>
-                <para>The syslog-ng server processes the next log statement, repeating Steps 7-9.</para>
-                <note>
-                    <para>The syslog-ng application can stop reading messages from its sources if the destinations cannot process the sent messages. This feature is called flow-control and is detailed in <xref linkend="concepts-flow-control"/>.</para>
-                </note>
-            </step>
-        </procedure>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="concepts-route-of-a-message.xml"/>
     </section>
     <section xml:id="concepts-modes-of-operation">
         <title>Modes of operation</title>
@@ -198,34 +138,7 @@
         <para>The syslog-ng application receives the timezone and daylight saving information from the operating system it is installed on. If the operating system handles daylight saving correctly, so does syslog-ng.</para>
         <indexterm> <primary>timezones</primary> </indexterm>
         <para>The syslog-ng application supports messages originating from different timezones. The original syslog protocol (RFC3164) does not include timezone information, but syslog-ng provides a solution by extending the syslog protocol to include the timezone in the log messages. The syslog-ng application also enables administrators to supply timezone information for legacy devices which do not support the protocol extension.</para>
-        <procedure xml:id="procedure-associating-timezone">
-            <title>How &abbrev; assigns timezone to the message</title>
-            <para>When &abbrev; receives a message, it assigns timezone information to the message using the following algorithm.</para>
-            <step>
-                <para>The sender application (for example the syslog-ng client) or host specifies the timezone of the messages. If the incoming message includes a timezone it is associated with the message. Otherwise, the local timezone is assumed.</para>
-            </step>
-            <step>
-                <para>Specify the <parameter>time-zone()</parameter> parameter for the source driver that reads the message. This timezone will be associated with the messages only if no timezone is specified within the message itself. Each source defaults to the value of the <link linkend="global-option-recv-time-zone"> <parameter>recv-time-zone()</parameter> </link> global option. It is not possible to override only the timezone information of the incoming message, but setting the <parameter>keep-timestamp()</parameter> option to <userinput>no</userinput> allows &abbrev; to replace the full timestamp (timezone included) with the time the message was received.</para>
-                <note>
-                    <para>When processing a message that does not contain timezone information, the &abbrev; application will use the timezone and daylight-saving that was effective when the timestamp was generated. For example, the current time is <userinput>2011-03-11</userinput> (March 11, 2011) in the <userinput>EU/Budapest</userinput> timezone. When daylight-saving is active (summertime), the offset is <userinput>+02:00</userinput>. When daylight-saving is inactive (wintertime) the timezone offset is <userinput>+01:00</userinput>. If the timestamp of an incoming message is <userinput>2011-01-01</userinput>, the timezone associated with the message will be <userinput>+01:00</userinput>, but the timestamp will be converted, because 2011-01-01 meant winter time when daylight saving is not active but the current timezone is <userinput>+02:00</userinput>.</para>
-                </note>
-            </step>
-            <step>
-                <para>Specify the timezone in the destination driver using the <parameter>time-zone()</parameter> parameter. Each destination driver might have an associated timezone value: syslog-ng converts message timestamps to this timezone before sending the message to its destination (file or network socket). Each destination defaults to the value of the <link linkend="global-option-send-time-zone"> <parameter>send-time-zone()</parameter> </link> global option.</para>
-                <note>
-                    <para>A message can be sent to multiple destination zones. The syslog-ng application converts the timezone information properly for every individual destination zone.</para>
-                </note>
-                <warning>
-                    <para>If &abbrev; sends the message is to the destination using the legacy-syslog protocol (RFC3164) which does not support timezone information in its timestamps, the timezone information cannot be encapsulated into the sent timestamp, so &abbrev; will convert the hour:min values based on the explicitly specified timezone.</para>
-                </warning>
-            </step>
-            <step>
-                <para>If the timezone is not specified, local timezone is used.</para>
-            </step>
-            <step>
-                <para>When macro expansions are used in the destination filenames, the local timezone is used. (Also, if the timestamp of the received message does not contain the year of the message, &abbrev; uses the local year.)</para>
-            </step>
-        </procedure>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="procedure-associating-timezone.xml"/>
         <section xml:id="example-timezones">
             <title>A note on timezones and timestamps</title>
             <indexterm> <primary>timestamp</primary> </indexterm>

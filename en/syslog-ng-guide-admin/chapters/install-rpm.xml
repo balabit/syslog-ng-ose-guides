@@ -1,0 +1,126 @@
+<!DOCTYPE chapter
+ [
+ <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<procedure xml:id="install-rpm" xmlns="http://docbook.org/ns/docbook">
+    <title>Installing &abbrev; on RPM-based platforms (Red Hat, SUSE, AIX)</title>
+    <indexterm>
+        <primary>installing syslog-ng</primary>
+        <secondary>from RPM package</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>installing syslog-ng</primary>
+        <secondary>on Red Hat Enterprise Server</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>Red Hat Enterprise Server</primary>
+        <secondary>installing syslog-ng</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>installing syslog-ng</primary>
+        <secondary>on CentOS</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>CentOS</primary>
+        <secondary>installing syslog-ng</secondary>
+    </indexterm>
+    <indexterm condition="pe6">
+        <primary>installing syslog-ng</primary>
+        <secondary>on AIX</secondary>
+    </indexterm>
+    <indexterm condition="pe6">
+        <primary>AIX</primary>
+        <secondary>installing syslog-ng</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>installing syslog-ng</primary>
+        <secondary>on SUSE Linux Enterprise Server</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>SUSE Linux Enterprise Server</primary>
+        <secondary>installing syslog-ng</secondary>
+    </indexterm>
+    <formalpara>
+        <title>Purpose:</title>
+        <para/>
+    </formalpara>
+    <para>To install &abbrev; on operating systems that use the Red Hat Package Manager (RPM), complete the following steps. Installing &abbrev; automatically replaces the original syslog service. The following supported operating systems use RPM:</para>
+    <itemizedlist condition="pe">
+        <listitem condition="pe6">
+            <para>CentOS</para>
+        </listitem>
+        <listitem condition="pe6">
+            <para>openSUSE</para>
+        </listitem>
+        <listitem>
+            <para>Red Hat Enterprise Linux</para>
+        </listitem>
+        <listitem>
+            <para>Red Hat Enterprise Server</para>
+        </listitem>
+        <listitem>
+            <para>SUSE Linux Enterprise Server</para>
+        </listitem>
+    </itemizedlist>
+    <xi:include href="../../common/wnt/warning-install-pid.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="../../common/wnt/warning-rhel6-python.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <formalpara>
+        <title>Steps:</title>
+        <para/>
+    </formalpara>
+    <step condition="pe">
+        <para>Login to your &mybalabit; account and download the <link xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="https://syslog-ng.com/downloads?product=syslog-ng-pe">syslog-ng RPM package for your system</link>.</para>
+    </step>
+    <step>
+        <itemizedlist>
+            <listitem>
+                <para>If the host already uses &abbrev; for logging, execute the following command as root. Otherwise, skip this step.</para>
+                <synopsis>rpm -U syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;arch&gt;.rpm</synopsis>
+                <para>The &product; application and all its dependencies will be installed, and the configuration of the existing &abbrev; installation will be used.</para>
+                <note>
+                    <para>If you are upgrading from syslog-ng version 2.1, note that the location of the configuration file has been moved to <filename>/opt/syslog-ng/etc/syslog-ng.conf</filename></para>
+                </note>
+            </listitem>
+            <listitem>
+                <para>Execute the following command as root:</para>
+                <synopsis>rpm -i syslog-ng<phrase condition="pe">-premium-edition</phrase>-&lt;version&gt;-&lt;OS&gt;-&lt;arch&gt;.rpm</synopsis>
+                <para>The &abbrev; application and all its dependencies will be installed.</para>
+            </listitem>
+        </itemizedlist>
+    </step>
+    <step>
+        <warning>
+            <para>When performing an upgrade, the package manager might automatically execute the post-uninstall script of the upgraded package, stopping &abbrev; and starting syslogd. If this happens, stop syslogd and start &abbrev; by issuing the following commands:</para>
+            <synopsis>/etc/init.d/syslogd stop
+/etc/init.d/syslog-ng start</synopsis>
+            <para>This behavior has been detected on CentOS 4 systems, but may occur on other rpm-based platforms as well.</para>
+        </warning>
+    </step>
+    <!--<step>
+                <indexterm>
+                    <primary>Novell AppArmor</primary>
+                </indexterm>
+                <para><emphasis>Optional step</emphasis>: If Novell AppArmor is used on the
+                    computer, copy the <filename>/usr/share/doc/syslog-ng/sbin.syslog-ng</filename>
+                    file into the <filename>/etc/apparmor.d/</filename> directory and restart
+                    AppArmor.</para>
+            </step>-->
+    <step>
+        <para>Edit the &abbrev; configuration file as needed. If you want to run &abbrev; in server mode, copy the license file to the <filename>/opt/syslog-ng/etc/</filename> directory.</para>
+        <para>For information on configuring &abbrev;, see the <xref linkend="chapter-quickstart"/>.</para>
+    </step>
+    <step>
+        <para><emphasis>Optional step for &selinux;-enabled systems</emphasis>: Complete <xref linkend="selinux-support"/>.</para>
+    </step>
+    <step condition="pe6">
+        <para><indexterm>
+                <primary>AIX</primary>
+                <secondary>redirecting errorlog to syslog-ng</secondary>
+            </indexterm><emphasis>Optional step for AIX systems</emphasis>: To redirect the messages of the AIX Error log into syslog, create a file (for example <filename>/tmp/syslog-ng.add</filename>) with the following contents:</para>
+        <synopsis>errnotify:
+en_name = "syslog1"
+en_persistenceflg = 1
+en_method = "logger Msg from Error Log: `errpt -l $1 | grep -v 'ERROR_ID TIMESTAMP'`"</synopsis>
+        <para>Then execute the following command as root: <command>odmadd /tmp/syslog-ng.add</command>.</para>
+    </step>
+</procedure>

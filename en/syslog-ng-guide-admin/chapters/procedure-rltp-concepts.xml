@@ -1,0 +1,55 @@
+<!DOCTYPE chapter
+ [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ %entities;]>
+<procedure xml:id="procedure-rltp-concepts" xmlns="http://docbook.org/ns/docbook">
+    <title>How <trademark>RLTP</trademark> connections work</title>
+    <indexterm>
+        <primary><trademark>RLTP</trademark></primary>
+    </indexterm>
+    <indexterm>
+        <primary>log transfer protocol</primary>
+        <secondary>reliable</secondary>
+    </indexterm>
+    <indexterm>
+        <primary>transport</primary>
+        <secondary>TCP</secondary>
+    </indexterm>
+    <formalpara>
+        <title>Purpose:</title>
+        <para/>
+    </formalpara>
+    <para>This procedure summarizes how two &abbrev; hosts (a sender and a receiver) communicate using the <trademark>Reliable Log Transfer Protocol</trademark> (<trademark>RLTP</trademark>).</para>
+    <formalpara>
+        <title>Prerequisites:</title>
+        <para/>
+    </formalpara>
+    <para>The sender (also called the client) is the host that has <trademark>RLTP</trademark> configured in its destination driver. The receiver (also called the server) is the host that has <trademark>RLTP</trademark> configured in its source driver.</para>
+    <formalpara>
+        <title>Steps:</title>
+        <para/>
+    </formalpara>
+    <step>
+        <para>The sender initiates the connection to the receiver.</para>
+    </step>
+    <step>
+        <para>The sender and the receiver negotiate whether to encrypt the connection and to use compression or not.</para>
+    </step>
+    <step>
+        <para>If the connection should be encrypted, the sender and the receiver perform authentication (as configured in the <parameter>tls()</parameter> options of their configuration).</para>
+    </step>
+    <step>
+        <para>If the sender and the receiver have communicated earlier using <trademark>RLTP</trademark>, the receiver indicates which was the last message received from the sender.</para>
+    </step>
+    <step>
+        <para>The sender starts sending messages in batches. Batch size depends on the <parameter>flush-lines()</parameter> parameter of the sender.</para>
+        <xi:include href="../../common/chunk/para-option-destination-flush-lines-note.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    </step>
+    <step>
+        <para>When the receiver has successfully processed the messages in the batch, it sends an acknowledgement of the processed messages to the sender.</para>
+        <para>What "successfully processed" means depends on the configuration of the receiver, for example, written to disk in a destination, forwarded to a remote destination using <emphasis>not</emphasis>
+            <trademark>RLTP</trademark>, dropped because of filter settings, or written to the disk-buffer. (If the messages are forwarded using <trademark>RLTP</trademark>, see <xref linkend="rltp-client-relay-server"/>.)</para>
+    </step>
+    <step>
+        <para>After receiving the acknowledgement, the sender sends another batch of messages.</para>
+    </step>
+</procedure>
