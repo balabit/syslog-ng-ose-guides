@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section
+ [  <!ENTITY % entities SYSTEM "../../shared/syslog-ng-entities.ent">
+ %entities;]>
+<section xml:id="source-unixstream" xmlns="http://docbook.org/ns/docbook" version="5.0" condition="ose">
+    <title><parameter>unix-stream</parameter>, <parameter>unix-dgram</parameter>: Collecting messages from UNIX domain sockets</title>
+    <para>The <parameter>unix-stream()</parameter> and <parameter>unix-dgram()</parameter> drivers open an <parameter>AF_UNIX</parameter> socket and start listening on it for messages. The <parameter>unix-stream()</parameter> driver is primarily used on Linux and uses <parameter>SOCK_STREAM</parameter> semantics (connection oriented, no messages are lost), while <parameter>unix-dgram()</parameter> is used on BSDs and uses <parameter>SOCK_DGRAM</parameter> semantics: this may result in lost local messages if the system is overloaded.</para>
+    <para>To avoid denial of service attacks when using connection-oriented protocols, the number of simultaneously accepted connections should be limited. This can be achieved using the <parameter>max-connections()</parameter> parameter. The default value of this parameter is quite strict, you might have to increase it on a busy system.</para>
+    <para>Both unix-stream and unix-dgram have a single required argument that specifies the filename of the socket to create. For the list of available optional parameters, see <xref linkend="reference-source-unixstream"/></para>
+    <formalpara>
+        <title>Declaration:</title>
+        <para/>
+    </formalpara>
+    <synopsis>unix-stream(filename [options]);
+unix-dgram(filename [options]);</synopsis>
+    <note>
+        <para><parameter>syslogd</parameter> on Linux originally used <parameter>SOCK_STREAM</parameter> sockets, but some distributions switched to <parameter>SOCK_DGRAM</parameter> around 1999 to fix a possible DoS problem. On Linux you can choose to use whichever driver you like as syslog clients automatically detect the socket type being used.</para>
+    </note>
+    <example xml:id="example-source-unixstream">
+        <title>Using the unix-stream() and unix-dgram() drivers</title>
+        <synopsis>source s_stream { unix-stream("/dev/log" max-connections(10)); };</synopsis>
+        <synopsis>source s_dgram { unix-dgram("/var/run/log"); };</synopsis>
+    </example>
+    <section xml:id="unixstream-unix-credentials" condition="ose">
+        <title>UNIX credentials and other metadata</title>
+        <indexterm> <primary>UNIX credentials</primary> </indexterm>
+        <para>Starting with &abbrev; <phrase condition="ose">3.6</phrase><phrase condition="pe">5.2</phrase>, the <parameter>unix-stream()</parameter> and <parameter>unix-dgram()</parameter> sources automatically extract the available UNIX credentials and other metainformation from the received log messages. The &abbrev; application can extract the following information on Linux and FreeBSD platforms (examples show the value of the macro for the <userinput>su - myuser</userinput> command). Similar information is available for the <link linkend="configuring-sources-journal">systemd-journal</link> source.</para>
+        <table>
+            <title>UNIX credentials available via UNIX domain sockets</title>
+            <tgroup cols="2">
+                <thead>
+                    <row>
+                        <entry align="center">Macro</entry>
+                        <entry align="center">Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry><parameter>${.unix.cmdline}</parameter> </entry>
+                        <entry>The name (without the path) and command-line options of the executable belonging to the PID that sent the message. For example, <userinput>su - myuser</userinput> </entry>
+                    </row>
+                    <row>
+                        <entry><parameter>${.unix.exe}</parameter> </entry>
+                        <entry>The path of the executable belonging to the PID that sent the message. For example, <userinput>/usr/bin/su</userinput> </entry>
+                    </row>
+                    <row>
+                        <entry><parameter>${.unix.gid}</parameter> </entry>
+                        <entry>The group ID (GID) corresponding to the UID of the application that sent the log message. Note that this is the ID number of the group, not its human-readable name. For example, <userinput>0</userinput> </entry>
+                    </row>
+                    <row>
+                        <entry><parameter>${.unix.pid}</parameter> </entry>
+                        <entry> <para>The process ID (PID) of the application that sent the log message. For example, <userinput>774</userinput>.</para> <para>Note that on every UNIX platforms, if the <parameter>system()</parameter> source uses sockets, it will overwrite the PID macro with the value of <parameter>${.unix.pid}</parameter>, if it is available.</para> </entry>
+                    </row>
+                    <row>
+                        <entry><parameter>${.unix.uid}</parameter> </entry>
+                        <entry>The user ID (UID) of the application that sent the log message. Note that this is the ID number of the user, not its human-readable name. For example, <userinput>0</userinput> </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+    <!-- FIXME a correct comparison should be added, based on info from Geller Sanyi:
+        unix-dgram is superiot to unix-stream:
+        (it does not need 1 fd per client, does not lose messages, blocks the sender just like in stream, keeps the order of messages, and 1 read() is enough to read a complete message)
+        
+        <para>The difference between the unix-stream and unix-dgram drivers is similar to the
+            difference between the TCP and UDP network protocols. Use the following guidelines
+            to select which driver to use in a particular situation:</para>
+        <para>Choose unix-stream if you would choose TCP (stream) instead of UDP (datagram). The
+            unix-stream driver offers the following features:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Increased reliability</para>
+            </listitem>
+            <listitem>
+                <para>Ordered delivery of messages</para>
+            </listitem>
+            <listitem>
+                <para>Client-side notification of failures</para>
+            </listitem>
+        </itemizedlist>
+        <para>Choose unix-dgram if you would choose TCP (stream) over UDP (datagram). The
+            unix-dgram driver offers the following features:</para>
+        <itemizedlist>
+            <listitem>
+                <para>Decreased possibility of Dos by opening too many connections (a local
+                    vulnerability)</para>
+            </listitem>
+            <listitem>
+                <para>Less overhead</para>
+            </listitem>
+        </itemizedlist>
+        <para>However, the client does not notice if a message is lost when using the unix-dgram
+            driver.</para>-->
+    <section xml:id="reference-source-unixstream">
+        <title>unix-stream() and unix-dgram() source options</title>
+        <indexterm> <primary>source drivers</primary> <secondary><parameter>unix-stream()</parameter> driver</secondary> </indexterm>
+        <indexterm> <primary>source drivers</primary> <secondary><parameter>unix-dgram()</parameter> driver</secondary> </indexterm>
+        <para>These two drivers behave similarly: they open an <parameter>AF_UNIX</parameter> socket and start listening on it for messages. The following options can be specified for these drivers:</para>
+        <simplesect>
+            <title>create-dirs()</title>
+            <indexterm type="parameter"> <primary>create-dirs()</primary> </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>yes or no</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>no</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Enable creating non-existing directories when creating the socket files.</para>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-encoding.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-flags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <title>group()</title>
+            <indexterm type="parameter"> <primary>group()</primary> </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>root</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Set the gid of the socket.</para>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-host-override.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <title>keep-alive()</title>
+            <indexterm type="parameter"> <primary>keep-alive()</primary> </indexterm>
+            <indexterm> <primary>keep_alive()</primary> </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>yes or no</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>yes</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Selects whether to keep connections open when syslog-ng is restarted, cannot be used with <parameter>unix-dgram()</parameter>.</para>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-keep-timestamp.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-listen-backlog.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-log-fetch-limit.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-log-iw-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-log-msg-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-log-prefix.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <title>max-connections()</title>
+            <indexterm type="parameter"> <primary>max-connections()</primary> </indexterm>
+            <indexterm> <primary>max_connections()</primary> </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>number (simultaneous connections)</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>256</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Limits the number of simultaneously open connections. Cannot be used with <parameter>unix-dgram()</parameter>.</para>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-optional.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <title>owner()</title>
+            <indexterm type="parameter"> <primary>owner()</primary> </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>string</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>root</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Set the uid of the socket.</para>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-pad-size.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <title>perm()</title>
+            <indexterm type="parameter"> <primary>perm()</primary> </indexterm>
+            <informaltable frame="topbot" colsep="0" rowsep="0">
+                <tgroup cols="2">
+                    <colspec colnum="1" colwidth="40pt"/>
+                    <tbody>
+                        <row>
+                            <entry>Type: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>number (octal notation)</entry>
+                        </row>
+                        <row>
+                            <entry>Default: <?dbhtml bgcolor="#D4D6EB" ?>
+                                <?dbfo bgcolor="#D4D6EB" ?> </entry>
+                            <entry>0666</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </informaltable>
+            <para><emphasis role="bold">Description:</emphasis> Set the permission mask. For octal numbers prefix the number with '0', for example: use 0755 for rwxr-xr-x.</para>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-program-override.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-so-keepalive.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-so-rcvbuf.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-tags.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+        <simplesect>
+            <xi:include href="../../shared/chunk/option-source-time-zone.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        </simplesect>
+    </section>
+</section>
