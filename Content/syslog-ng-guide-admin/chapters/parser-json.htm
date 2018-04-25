@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+ <body name="json-parser" oldrole="section">
+  <h1 name="json-parser" oldrole="section">
+   The JSON parser
+  </h1>
+  <MadCap:keyword term="segmenting messages">
+  </MadCap:keyword>
+  <MadCap:keyword term="JSON parsers">
+  </MadCap:keyword>
+  <MadCap:keyword term="splitting messages">
+  </MadCap:keyword>
+  <MadCap:keyword term="parsers:['json-parser']">
+  </MadCap:keyword>
+  <p oldrole="para">
+   JavaScript Object Notation (JSON) is a text-based open standard designed for human-readable data interchange. It is used primarily to transmit data between a server and web application, serving as an alternative to XML. It is described in
+   <a href="https://tools.ietf.org/html/rfc4627">
+    RFC 4627
+   </a>
+   . The
+   <entity>
+    abbrev
+   </entity>
+   application can separate parts of incoming JSON-encoded log messages to name-value pairs. For details on using value-pairs in
+   <entity>
+    abbrev
+   </entity>
+   see
+   <xref linkend="concepts-value-pairs">
+   </xref>
+   .
+  </p>
+  <p oldrole="para">
+   You can refer to the separated parts of the JSON message using the key of the JSON object as a macro. For example, if the JSON contains
+   <span class="Code" oldrole="userinput">
+    {"KEY1":"value1","KEY2":"value2"}
+   </span>
+   , you can refer to the values as
+   <span class="Code" oldrole="userinput">
+    ${KEY1}
+   </span>
+   and
+   <span class="Code" oldrole="userinput">
+    ${KEY2}
+   </span>
+   . If the JSON content is structured,
+   <entity>
+    abbrev
+   </entity>
+   converts it to dot-notation-format. For example, to access the value of the following structure
+   <span class="Code" oldrole="userinput">
+    {"KEY1": {"KEY2": "VALUE"}}
+   </span>
+   , use the
+   <span class="Code" oldrole="userinput">
+    ${KEY1.KEY2}
+   </span>
+   macro.
+  </p>
+  <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
+   <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
+   </col>
+   <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2">
+   </col>
+   <tbody>
+    <tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1">
+     <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1">
+      <p>
+       <img src="../../Resources/Images/Common/caution.png"/>
+      </p>
+     </td>
+     <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1">
+      <span class="Yellow">
+       Caution:
+      </span>
+      <p oldrole="para">
+       If the names of keys in the JSON content are the same as the names of
+       <entity>
+        abbrev
+       </entity>
+       soft macros, the value from the JSON content will overwrite the value of the macro. For example, the
+       <span class="Code" oldrole="userinput">
+        {"PROGRAM":"value1","MESSAGE":"value2"}
+       </span>
+       JSON content will overwrite the
+       <span class="Code" oldrole="userinput">
+        ${PROGRAM}
+       </span>
+       and
+       <span class="Code" oldrole="userinput">
+        ${MESSAGE}
+       </span>
+       macros. To avoid overwriting such macros, use the
+       <span class="Code" oldrole="parameter">
+        prefix()
+       </span>
+       option.
+      </p>
+      <p oldrole="para">
+       Hard macros cannot be modified, so they will not be overwritten. For details on the macro types, see
+       <xref linkend="macros-hard-vs-soft">
+       </xref>
+       .
+      </p>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+   </col>
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+   </col>
+   <tbody>
+    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+      <p>
+       <img src="../../Resources/Images/Common/note.png"/>
+      </p>
+     </td>
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
+      <span class="AllNoteStyles">
+       NOTE:
+      </span>
+      <p oldrole="para">
+       The JSON parser currently supports only integer, double and string values when interpreting JSON structures. As syslog-ng does not handle different data types internally, the JSON parser converts all JSON data to string values. In case of boolean types, the value is converted to 'TRUE' or 'FALSE' as their string representation.
+      </p>
+      <p oldrole="para">
+       The JSON parser discards messages if it cannot parse them as JSON messages, so it acts as a JSON-filter as well.
+      </p>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <p oldrole="para">
+   To create a JSON parser, define a parser that has the
+   <span class="Code" oldrole="parameter">
+    json-parser()
+   </span>
+   option. Defining the prefix and the marker are optional. By default, the parser will process the
+   <span class="Code" oldrole="userinput">
+    ${MESSAGE}
+   </span>
+   part of the log message. To process other parts of a log message with the JSON parser, use the
+   <span class="Code" oldrole="parameter">
+    template()
+   </span>
+   option. You can also define the parser inline in the log path.
+  </p>
+  <p>
+   <b oldrole="formalpara">
+    Declaration:
+   </b>
+  </p>
+  <p oldrole="para">
+  </p>
+  <p class="Code" oldrole="synopsis">
+   parser parser_name {
+    json-parser(
+        marker()
+        prefix()
+    );
+};
+  </p>
+  <example>
+   <title>
+    Using a JSON parser
+   </title>
+   <p oldrole="para">
+    In the following example, the source is a JSON encoded log message. The syslog parser is disabled, so that
+    <entity>
+     abbrev
+    </entity>
+    does not parse the message:
+    <span class="Code" oldrole="userinput">
+     flags(no-parse)
+    </span>
+    . The json-parser inserts "
+    <span class="Code" oldrole="userinput">
+     .json.
+    </span>
+    " prefix before all extracted name-value pairs. The destination is a file that uses the
+    <span class="Code" oldrole="parameter">
+     format-json
+    </span>
+    template function. Every name-value pair that begins with a dot ("
+    <span class="Code" oldrole="userinput">
+     .
+    </span>
+    ") character will be written to the file (
+    <span class="Code" oldrole="userinput">
+     dot-nv-pairs
+    </span>
+    ). The log line connects the source, the destination and the parser.
+   </p>
+   <p class="Code" oldrole="synopsis">
+    source s_json {
+    network(port(21514) flags(no-parse));
+};
+
+destination d_json {
+    file("/tmp/test.json"
+        template("$(format-json --scope dot-nv-pairs)\n"));
+};
+
+parser p_json {
+    json-parser (prefix(".json."));
+};
+
+log {
+    source(s_json);
+    parser(p_json);
+    destination(d_json);
+};
+   </p>
+   <p oldrole="para">
+    You can also define the parser inline in the log path.
+   </p>
+   <p class="Code" oldrole="synopsis">
+    source s_json {
+    network(port(21514) flags(no-parse));
+};
+
+destination d_json {
+    file("/tmp/test.json"
+        template("$(format-json --scope dot-nv-pairs)\n"));
+};
+
+log {
+    source(s_json);
+    parser {
+        json-parser (prefix(".json."));
+    };
+    destination(d_json);
+};
+   </p>
+  </example>
+  <h2 name="json-parser-options">
+   Options of JSON parsers
+  </h2>
+  <p oldrole="para">
+   The JSON parser has the following options.
+  </p>
+  <simplesect xml:id="json-parser-extract-prefix">
+   <title>
+    extract-prefix()
+   </title>
+   <indexterm>
+    <primary>
+     extract-prefix()
+    </primary>
+   </indexterm>
+   <indexterm>
+    <primary>
+     extract_prefix()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="50pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Synopsis:
+       </entry>
+       <entry>
+        extract-prefix()
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    Extract only the specified subtree from the JSON message. Use the dot-notation to specify the subtree. The rest of the message will be ignored. For example, assuming that the incoming object is named
+    <span class="Code" oldrole="userinput">
+     msg
+    </span>
+    , the
+    <span class="Code" oldrole="userinput">
+     json-parser(extract-prefix("foo.bar[5]"));
+    </span>
+    parser is equivalent to the
+    <span class="Code" oldrole="userinput">
+     msg.foo.bar[5]
+    </span>
+    javascript code. Note that the resulting expression must be a JSON object in order to extract its members into name-value pairs.
+   </p>
+   <p oldrole="para">
+    This feature also works when the top-level object is an array, because you can use an array index at the first indirection level, for example:
+    <span class="Code" oldrole="userinput">
+     json-parser(extract-prefix("[5]"))
+    </span>
+    , which is equivalent to
+    <span class="Code" oldrole="userinput">
+     msg[5]
+    </span>
+    .
+   </p>
+   <p oldrole="para">
+    In addition to alphanumeric characters, the key of the JSON object can contain the following characters:
+    <span class="Code" oldrole="userinput">
+     !"#$%&amp;'()*+,-/:;&lt;=&gt;?@\^_`{|}~
+    </span>
+   </p>
+   <p oldrole="para">
+    It cannot contain the following characters:
+    <span class="Code" oldrole="userinput">
+     .[]
+    </span>
+   </p>
+   <example>
+    <title>
+     Convert logstash eventlog format v0 to v1
+    </title>
+    <p oldrole="para">
+     The following parser converts messages in the logstash eventlog v0 format to the v1 format.
+    </p>
+    <p class="Code" oldrole="synopsis">
+     parser p_jsoneventv0 {
+  channel {
+    parser { json-parser(extract-prefix("@fields")); };
+    parser { json-parser(prefix(".json.")); };
+    rewrite {
+      set("1" value("@version"));
+      set("${.json.@timestamp}" value("@timestamp"));
+      set("${.json.@message}" value("message"));
+    };
+  };
+};
+    </p>
+   </example>
+  </simplesect>
+  <simplesect xml:id="json-parser-marker">
+   <title>
+    marker
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     marker
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="50pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Synopsis:
+       </entry>
+       <entry>
+        marker()
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    Use a marker in case of mixed log messages, to identify JSON encoded messages for the parser.
+   </p>
+   <p oldrole="para">
+    Some logging implementations require a marker to be set before the JSON payload. The JSON parser is able to find these markers and parse the message only if it is present.
+   </p>
+   <example>
+    <title>
+     Using the marker option in JSON parser
+    </title>
+    <p oldrole="para">
+     This json parser parses log messages which use the "@cee:" marker in front of the json payload. It inserts "
+     <span class="Code" oldrole="userinput">
+      .cee.
+     </span>
+     " in front of the name of name-value pairs, so later on it is easier to find name-value pairs that were parsed using this parser. (For details on selecting name-value pairs, see
+     <xref linkend="options-value-pairs">
+     </xref>
+     .)
+    </p>
+    <p class="Code" oldrole="synopsis">
+     parser {
+        json-parser(
+            marker("@cee:")
+            prefix(".cee.")
+        );
+    };
+    </p>
+   </example>
+  </simplesect>
+  <simplesect xml:id="json-parser-prefix">
+   <MadCap:snippetBlock src="../../shared/chunk/option-parser-prefix.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect>
+   <MadCap:snippetBlock src="../../shared/chunk/option-parser-template.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+ </body>
+</html>

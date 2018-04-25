@@ -1,0 +1,741 @@
+<?xml version="1.0" encoding="UTF-8"?>
+%entities;]&gt;
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+ <body condition="ose" name="configuring-destinations-http-nonjava" oldrole="section">
+  <h1 condition="ose" name="configuring-destinations-http-nonjava" oldrole="section">
+   <span class="Code" oldrole="parameter">
+    http
+   </span>
+   : Posting messages over HTTP
+   <MadCap:conditionaltext MadCap:conditions="ose">
+    without Java
+   </MadCap:conditionaltext>
+  </h1>
+  <MadCap:keyword term="destination drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;http()&lt;/span&gt;, ' driver']">
+  </MadCap:keyword>
+  <MadCap:keyword term='destination drivers:[&lt;span class="Code" oldrole="parameter"&gt;http&lt;/span&gt;]'>
+  </MadCap:keyword>
+  <p oldrole="para">
+   Version
+   <MadCap:conditionaltext MadCap:conditions="ose">
+    3.8
+   </MadCap:conditionaltext>
+   <MadCap:conditionaltext MadCap:conditions="pe">
+    7.0.4
+   </MadCap:conditionaltext>
+   of
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   can directly post log messages to web services using the HTTP protocol
+   <MadCap:conditionaltext MadCap:conditions="ose">
+    , without having to use Java
+   </MadCap:conditionaltext>
+   . The current implementation has the following limitations:
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Only the PUT and the POST methods are supported.
+    </p>
+   </li>
+  </ul>
+  <p oldrole="para">
+   HTTPS connection, as well as password- and certificate-based authentication is supported.
+  </p>
+  <h6 oldrole="example">
+   Example:
+   Client certificate authentication with HTTPS
+  </h6>
+  <p class="Code" oldrole="synopsis">
+   destination d_https { 
+  http(
+    [...]
+    ca-file("/&lt;path-to-certificate-directory&gt;/ca-crt.pem")
+    ca-dir("/&lt;path-to-certificate-directory&gt;/")
+    cert-file("/&lt;path-to-certificate-directory&gt;/server-crt.pem")
+    key-file("/&lt;path-to-certificate-directory&gt;/server-key.pem")
+    [...]
+  ); 
+};
+  </p>
+  <p>
+   <b oldrole="formalpara">
+    Declaration:
+   </b>
+  </p>
+  <p oldrole="para">
+  </p>
+  <!--
+    FIXME remove options that have usable defaults
+-->
+  <p class="Code" oldrole="synopsis">
+   destination d_http {
+    http(
+        url("&lt;web-service-IP-or-hostname&gt;")
+        method("&lt;HTTP-method&gt;")
+        user-agent("&lt;USER-AGENT-message-value&gt;")
+        user("&lt;username&gt;")
+        password("&lt;password&gt;")
+    );
+};
+  </p>
+  <h6 name="example-destination-http-nonjava" oldrole="example">
+   Example:
+   Sending log data to a web service
+  </h6>
+  <p oldrole="para">
+   The following example defines an
+   <span class="Code" oldrole="parameter">
+    http
+   </span>
+   destination.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   destination d_http {
+  http(
+    url("http://127.0.0.1:8000")
+    method("PUT")
+    user-agent("syslog-ng User Agent")
+    user("user")
+    password("password")
+    headers("HEADER1: header1", "HEADER2: header2")
+    body("${ISODATE} ${MESSAGE}")
+  );
+};
+
+log
+    { source(s_file); destination(d_http); flags(flow-control); };
+  </p>
+  <p oldrole="para">
+   You can also use the http() destination to
+   <a href="destination-splunk.htm">
+    forward log messages to Splunk using
+    <entity>
+     abbrev
+    </entity>
+   </a>
+   .
+  </p>
+  <h2 name="reference-destination-http-nonjava">
+   HTTP destination options
+  </h2>
+  <indexterm>
+   <primary>
+    destination drivers
+   </primary>
+   <secondary>
+    <span class="Code" oldrole="parameter">
+     http
+    </span>
+   </secondary>
+  </indexterm>
+  <p oldrole="para">
+   The
+   <span class="Code" oldrole="parameter">
+    http
+   </span>
+   destination of
+   <entity>
+    abbrev
+   </entity>
+   can directly post log messages to web services using the HTTP protocol. The
+   <span class="Code" oldrole="parameter">
+    http
+   </span>
+   destination has the following options.
+  </p>
+  <simplesect>
+   <title>
+    body()
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     body()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="40pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Type:
+       </entry>
+       <entry>
+        string or template
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    The body of the HTTP request, for example,
+    <span class="Code" oldrole="userinput">
+     body("${ISODATE} ${MESSAGE}")
+    </span>
+    . You can use strings, macros, and template functions in the body. If not set, it will contain the message received from the source by default.
+   </p>
+  </simplesect>
+  <simplesect xml:id="https-options-ca-dir">
+   <MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-ca-dir.htm">
+   </MadCap:snippetBlock>
+   <MadCap:snippetBlock src="../../shared/chunk/topic-tls-block-http.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect xml:id="https-options-ca-file">
+   <title>
+    ca-file()
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     ca-file()
+    </primary>
+   </indexterm>
+   <indexterm>
+    <primary>
+     ca_file()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="80pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Accepted values:
+       </entry>
+       <entry>
+        Filename
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+        none
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    Name of a file that contains an X.509 CA certificate (or a certificate chain) in PEM format. The
+    <entity>
+     abbrev
+    </entity>
+    application uses this certificate to validate the certificate of the HTTPS server. If the file contains a certificate chain, the file must begin with the certificate of the host, followed by the CA certificate that signed the certificate of the host, and any other signing CAs in order.
+   </p>
+   <MadCap:snippetBlock src="../../shared/chunk/topic-tls-block-http.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect xml:id="https-options-cert-file">
+   <MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-cert-file.htm">
+   </MadCap:snippetBlock>
+   <MadCap:snippetBlock src="../../shared/chunk/topic-tls-block-http.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect xml:id="https-options-cipher-suite">
+   <MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-cipher-suite.htm">
+   </MadCap:snippetBlock>
+   <MadCap:snippetBlock src="../../shared/chunk/topic-tls-block-http.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect>
+   <MadCap:snippetBlock src="../../shared/chunk/option-destination-diskbuffer.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect>
+   <title>
+    headers()
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     headers()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="40pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Type:
+       </entry>
+       <entry>
+        string list
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <!--
+            FIXME can you use templates/macros in the header names/values? 
+            - Ilyet most nem tudunk, de tok jo felvetes. Szerintem hasznos lenne ilyet betenni :) (by Nemes Antal)
+-->
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    Custom HTTP headers to include in the request, for example,
+    <span class="Code" oldrole="userinput">
+     headers("HEADER1: header1", "HEADER2: header2")
+    </span>
+    . If not set, only the default headers are included, but no custom headers.
+   </p>
+   <p oldrole="para">
+    The following headers are included by default:
+   </p>
+   <ul oldrole="itemizedlist">
+    <li oldrole="listitem">
+     <p oldrole="para">
+      X-Syslog-Host: &lt;host&gt;
+     </p>
+    </li>
+    <li oldrole="listitem">
+     <p oldrole="para">
+      X-Syslog-Program: &lt;program&gt;
+     </p>
+    </li>
+    <li oldrole="listitem">
+     <p oldrole="para">
+      X-Syslog-Facility: &lt;facility&gt;
+     </p>
+    </li>
+    <li oldrole="listitem">
+     <p oldrole="para">
+      X-Syslog-Level: &lt;loglevel/priority&gt;
+     </p>
+    </li>
+   </ul>
+  </simplesect>
+  <simplesect>
+   <MadCap:snippetBlock src="../../shared/chunk/option-destination-log-fifo-size.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect xml:id="https-options-key-file">
+   <MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-key-file.htm">
+   </MadCap:snippetBlock>
+   <MadCap:snippetBlock src="../../shared/chunk/topic-tls-block-http.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect>
+   <title>
+    method()
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     method()
+    </primary>
+    <secondary>
+     http
+    </secondary>
+   </indexterm>
+   <indexterm type="parameter">
+    <primary>
+     http
+    </primary>
+    <secondary>
+     method
+    </secondary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="40pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Type:
+       </entry>
+       <entry>
+        POST | PUT
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+        POST
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    Specifies the HTTP method to use when sending the message to the server.
+   </p>
+  </simplesect>
+  <simplesect>
+   <title>
+    password()
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     password()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="40pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Type:
+       </entry>
+       <entry>
+        string
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    The password that
+    <entity>
+     abbrev
+    </entity>
+    uses to authenticate on the server where it sends the messages.
+   </p>
+  </simplesect>
+  <simplesect xml:id="https-option-peer-verify">
+   <MadCap:snippetBlock src="../../shared/chunk/option-peer-verify-simple.htm">
+   </MadCap:snippetBlock>
+   <MadCap:snippetBlock src="../../shared/chunk/topic-tls-block-http.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect>
+   <MadCap:snippetBlock src="../../shared/chunk/option-persist-name.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect>
+   <MadCap:snippetBlock src="../../shared/chunk/option-destination-retries.htm">
+   </MadCap:snippetBlock>
+   <p oldrole="para">
+    To handle HTTP error responses, if the HTTP server returns 5xx codes,
+    <entity>
+     abbrev
+    </entity>
+    will attempt to resend messages until the number of attempts reaches
+    <span class="Code" oldrole="parameter">
+     retries
+    </span>
+    . If the HTTP server returns 4xx codes,
+    <entity>
+     abbrev
+    </entity>
+    will drop the messages.
+   </p>
+  </simplesect>
+  <simplesect xml:id="https-options-ssl-version">
+   <title>
+    ssl-version()
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     ssl-version()
+    </primary>
+   </indexterm>
+   <indexterm type="parameter">
+    <primary>
+     ssl_version()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="40pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Type:
+       </entry>
+       <entry>
+        string
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+        None, uses the libcurl default
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    Specifies the permitted SSL/TLS version. Possible values:
+    <span class="Code" oldrole="parameter">
+     sslv2
+    </span>
+    ,
+    <span class="Code" oldrole="parameter">
+     sslv3
+    </span>
+    ,
+    <span class="Code" oldrole="parameter">
+     tlsv1
+    </span>
+    ,
+    <span class="Code" oldrole="parameter">
+     tlsv1_0
+    </span>
+    ,
+    <span class="Code" oldrole="parameter">
+     tlsv1_1
+    </span>
+    ,
+    <span class="Code" oldrole="parameter">
+     tlsv1_2
+    </span>
+    .
+   </p>
+   <MadCap:snippetBlock src="../../shared/chunk/topic-tls-block-http.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect>
+   <MadCap:snippetBlock src="../../shared/chunk/option-destination-template.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect>
+   <MadCap:snippetBlock src="../../shared/chunk/option-destination-throttle.htm">
+   </MadCap:snippetBlock>
+  </simplesect>
+  <simplesect xml:id="https-options-timeout">
+   <title>
+    timeout()
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     timeout()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="40pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Type:
+       </entry>
+       <entry>
+        number [seconds]
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+        0
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    The value (in seconds) to wait for an operation to complete, and attempt to reconnect the server if exceeded. By default, the timeout value is
+    <span class="Code" oldrole="userinput">
+     0
+    </span>
+    , meaning that there is no timeout. Available in version
+    <phrase condition="ose">
+     3.11
+    </phrase>
+    <phrase condition="pe">
+     7.0.4
+    </phrase>
+    and later.
+   </p>
+  </simplesect>
+  <simplesect>
+   <title>
+    url()
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     url()
+    </primary>
+    <secondary>
+     http
+    </secondary>
+   </indexterm>
+   <indexterm type="parameter">
+    <primary>
+     http
+    </primary>
+    <secondary>
+     url
+    </secondary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="40pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Type:
+       </entry>
+       <entry>
+        URL
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+        http://localhost/
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    Specifies the hostname or IP address and optionally the port number of the web service that can receive log data via HTTP. Use a colon (
+    <span class="Code" oldrole="userinput">
+     :
+    </span>
+    ) after the address to specify the port number of the server. For example:
+    <span class="Code" oldrole="userinput">
+     http://127.0.0.1:8000
+    </span>
+   </p>
+  </simplesect>
+  <simplesect>
+   <title>
+    user-agent()
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     user-agent()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="40pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Type:
+       </entry>
+       <entry>
+        string
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+        syslog-ng [version]/libcurl[version]
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    The value of the USER-AGENT header in the messages sent to the server.
+   </p>
+  </simplesect>
+  <simplesect>
+   <title>
+    user()
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     user()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="40pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Type:
+       </entry>
+       <entry>
+        string
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    The username that
+    <entity>
+     abbrev
+    </entity>
+    uses to authenticate on the server where it sends the messages.
+   </p>
+  </simplesect>
+ </body>
+</html>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+%entities;]&gt;
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+ <body condition="ose" name="syslog-ng-elasticsearch2-search-guard" oldrole="procedure">
+  <h1 condition="ose" name="syslog-ng-elasticsearch2-search-guard" oldrole="procedure">
+   Search Guard and
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+  </h1>
+  <p>
+   <b oldrole="formalpara">
+    Purpose:
+   </b>
+  </p>
+  <p oldrole="para">
+  </p>
+  <p oldrole="para">
+   Version
+   <MadCap:conditionaltext MadCap:conditions="ose">
+    3.9
+   </MadCap:conditionaltext>
+   and later supports the
+   <a href="https://floragunn.com/searchguard/">
+    Search Guard
+   </a>
+   Elasticsearch plugin (version 2.4.1.16 and newer) to encrypt and authenticate your connections to from
+   <entity>
+    abbrev
+   </entity>
+   to Elasticsearch 2 and newer. To configure
+   <entity>
+    abbrev
+   </entity>
+   to send messages to an Elasticsearch 2.x cluster that uses Search Guard, complete the following steps.
+  </p>
+  <p oldrole="para">
+   To connect to an Elasticsearch 5.x or newer cluster, use HTTPS mode.
+  </p>
+  <p>
+   <b oldrole="formalpara">
+    Steps:
+   </b>
+  </p>
+  <p oldrole="para">
+  </p>
+  <ol oldrole="procedure">
+   <li oldrole="step">
+    <p oldrole="para">
+     Install the Search Guard plugin on your
+     <entity>
+      abbrev
+     </entity>
+     host. Use the plugin version that matches the version of your Elasticsearch installation.
+    </p>
+    <p class="Code" oldrole="synopsis">
+     sudo /usr/share/elasticsearch/bin/plugin install -b com.floragunn/search-guard-ssl/&lt;version-number-of-the-plugin&gt;
+    </p>
+   </li>
+   <li oldrole="step">
+    <p oldrole="para">
+     Create a certificate for your
+     <entity>
+      abbrev
+     </entity>
+     host, and add the certificate to the
+     <span class="Code" oldrole="filename">
+      SYSLOG_NG-NODE_NAME-keystore.jks
+     </span>
+     file. You can configure the location of this file in the Elasticsearch resources file under the
+     <span class="Code" oldrole="filename">
+      path.conf
+     </span>
+     parameter. For details, see the
+     <a href="https://github.com/floragunncom/search-guard-ssl-docs/blob/master/certificates.md">
+      Search Guard documentation
+     </a>
+     .
+    </p>
+   </li>
+   <li oldrole="step">
+    <p oldrole="para">
+     Configure an Elasticsearch destination in
+     <entity>
+      abbrev
+     </entity>
+     that uses the
+     <span class="Code" oldrole="userinput">
+      searchguard
+     </span>
+     client mode. For example:
+    </p>
+    <p class="Code" oldrole="synopsis">
+     destination d_elasticsearch {
+  elasticsearch2(
+    client-lib-dir("/usr/share/elasticsearch/plugins/search-guard-ssl/*.jar:/usr/share/elasticsearch/lib")
+    index("syslog-${YEAR}.${MONTH}.${DAY}")
+    type("syslog")
+    time-zone("UTC")
+    client-mode("searchguard")
+    resource("/etc/syslog-ng/elasticsearch.yml")
+  );
+};
+    </p>
+   </li>
+   <li oldrole="step">
+    <p oldrole="para">
+     Configure the Elasticsearch resource file (for example,
+     <span class="Code" oldrole="filename">
+      /etc/syslog-ng/elasticsearch.yml
+     </span>
+     ) as needed for your environment. Note the
+     <span class="Code" oldrole="userinput">
+      searchguard:
+     </span>
+     section.
+    </p>
+    <p class="Code" oldrole="synopsis">
+     cluster:
+  name: elasticsearch
+discovery:
+  zen:
+    ping:
+      unicast:
+        hosts:
+          - &lt;ip-address-of-the-elasticsearch-server&gt;
+node:
+  name: syslog_ng_secure
+  data; false
+  master: false
+path:
+  home: /etc/syslog-ng
+  conf: /etc/syslog-ng
+searchguard:
+  ssl:
+    transport:
+      keystore_filepath: syslog_ng-keystore.jks
+      keystore_password: changeit
+      truststore_filepath: truststore.jks
+      truststore_password: changeit
+      enforce_hostname_verification: true
+    </p>
+   </li>
+  </ol>
+ </body>
+</html>

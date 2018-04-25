@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+%entities;]&gt;
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+ <body name="geoip-parser" oldrole="section">
+  <h1 name="geoip-parser" oldrole="section">
+   Looking up GeoIP data from IP addresses (DEPRECATED)
+  </h1>
+  <MadCap:keyword term="geoip">
+  </MadCap:keyword>
+  <MadCap:keyword term="parsers:['geoip']">
+  </MadCap:keyword>
+  <p oldrole="para">
+   This parser is deprecated. Use
+   <MadCap:xref href="parser-geoip2.htm#geoip2-parser">
+   </MadCap:xref>
+   instead.
+  </p>
+  <p oldrole="para">
+   The
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   application can lookup IPv4 addresses from an offline GeoIP database, and make the retrieved data available in name-value pairs. IPv6 addresses are not supported. Depending on the database used, you can access country code, longitude, and latitude information.
+  </p>
+  <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+   </col>
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+   </col>
+   <tbody>
+    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+      <p>
+       <img src="../../Resources/Images/Common/note.png"/>
+      </p>
+     </td>
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
+      <span class="AllNoteStyles">
+       NOTE:
+      </span>
+      <p oldrole="para">
+       To access longitude and latitude information, download the
+       <a href="http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz">
+        GeoLiteCity
+       </a>
+       database, and unzip it (for example, to the
+       <span class="Code" oldrole="filename">
+        /usr/share/GeoIP/GeoLiteCity.dat
+       </span>
+       file). The default databases available on Linux and other platforms usually contain only the country codes.
+      </p>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <p oldrole="para">
+   You can refer to the separated parts of the message using the key of the value as a macro. For example, if the message contains
+   <span class="Code" oldrole="userinput">
+    KEY1=value1,KEY2=value2
+   </span>
+   , you can refer to the values as
+   <span class="Code" oldrole="userinput">
+    ${KEY1}
+   </span>
+   and
+   <span class="Code" oldrole="userinput">
+    ${KEY2}
+   </span>
+   .
+  </p>
+  <p>
+   <b oldrole="formalpara">
+    Declaration:
+   </b>
+  </p>
+  <p oldrole="para">
+  </p>
+  <p class="Code" oldrole="synopsis">
+   parser parser_name {
+    geoip(
+        &lt;macro-containing-the-IP-address-to-lookup&gt;
+        prefix()
+        database("&lt;path-to-database-file&gt;")
+    );
+};
+  </p>
+  <example>
+   <title>
+    Using the GeoIP parser
+   </title>
+   <p oldrole="para">
+    In the following example,
+    <entity>
+     abbrev
+    </entity>
+    retrieves the GeoIP data of the IP address contained in the ${HOST} field of the incoming message, and includes the data (prefixed with the
+    <span class="Code" oldrole="userinput">
+     geoip.
+    </span>
+    string) in the output JSON message.
+   </p>
+   <p class="Code" oldrole="synopsis">
+    @version: 3.7
+@module geoip
+
+options {
+    keep-hostname(yes);
+};
+
+source s_file {
+    file("/tmp/input");
+};
+
+parser p_geoip { geoip( "${HOST}", prefix( "geoip." ) database( "/usr/share/GeoIP/GeoLiteCity.dat" ) ); };
+
+destination d_file {
+    file( "/tmp/output" template("$(format-json --scope core --key geoip*)\n") );
+};
+
+
+log {
+    source(s_file);
+    parser(p_geoip);
+    destination(d_file);
+};
+   </p>
+   <p oldrole="para">
+    For example, for the
+    <span class="Code" oldrole="userinput">
+     &lt;38&gt;Jan 1 14:45:22 192.168.1.1 prg00000[1234]: test message
+    </span>
+    message the output will look like:
+   </p>
+   <p class="Code" oldrole="synopsis">
+    {"geoip":{"longitude":"47.460704","latitude":"19.049968","country_code":"HU"},"PROGRAM":"prg00000","PRIORITY":"info","PID":"1234","MESSAGE":"test message","HOST":"192.168.1.1","FACILITY":"auth","DATE":"Jan  1 14:45:22"}
+   </p>
+   <p oldrole="para">
+    If you are transferring your log messages into Elasticsearch, use the following rewrite rule to combine the longitude and latitude information into a single value (called
+    <span class="Code" oldrole="userinput">
+     geoip.location
+    </span>
+    ), and set the mapping in Elasticsearch accordingly. Do not forget to include the rewrite in your log path. For details on transferring your log messages to Elasticsearch, see
+    <xref linkend="configuring-destinations-elasticsearch">
+    </xref>
+    .
+   </p>
+   <indexterm>
+    <primary>
+     geoip
+    </primary>
+    <secondary>
+     elasticsearch
+    </secondary>
+   </indexterm>
+   <indexterm>
+    <primary>
+     elasticsearch
+    </primary>
+    <secondary>
+     transferring geoip data
+    </secondary>
+   </indexterm>
+   <p class="Code" oldrole="synopsis">
+    rewrite r_geoip {
+    set(
+        "${geoip.latitude},${geoip.longitude}",
+        value( "geoip.location" ),
+        condition(not "${geoip.latitude}" == "")
+    );
+};
+   </p>
+   <p oldrole="para">
+    In your Elasticsearch configuration, set the appropriate mappings:
+   </p>
+   <p class="Code" oldrole="synopsis">
+    {
+   "mappings" : {
+      "_default_" : {
+         "properties" : {
+            "geoip" : {
+               "properties" : {
+                  "country_code" : {
+                     "index" : "not_analyzed",
+                     "type" : "string",
+                     "doc_values" : true
+                  },
+                  "latitude" : {
+                     "index" : "not_analyzed",
+                     "type" : "string",
+                     "doc_values" : true
+                  },
+                  "longitude" : {
+                     "type" : "string",
+                     "doc_values" : true,
+                     "index" : "not_analyzed"
+                  },
+                  "location" : {
+                     "type" : "geo_point"
+                  }
+               }
+            }
+         }
+      }
+   }
+}
+   </p>
+  </example>
+  <h2 name="geoip-parser-options">
+   Options of
+   <span class="Code" oldrole="userinput">
+    geoip
+   </span>
+   parsers
+  </h2>
+  <indexterm>
+   <primary>
+    geoip
+   </primary>
+  </indexterm>
+  <indexterm>
+   <primary>
+    parsers
+   </primary>
+   <secondary>
+    geoip
+   </secondary>
+  </indexterm>
+  <p oldrole="para">
+   The
+   <span class="Code" oldrole="parameter">
+    geoip
+   </span>
+   parser has the following options.
+  </p>
+  <simplesect xml:id="geoip-parser-prefix">
+   <MadCap:snippetBlock src="../../shared/chunk/option-parser-prefix.htm">
+   </MadCap:snippetBlock>
+   <p oldrole="para">
+    For example, to insert the
+    <span class="Code" oldrole="userinput">
+     geoip.
+    </span>
+    prefix, use the
+    <span class="Code" oldrole="userinput">
+     prefix(.geoip.)
+    </span>
+    option. To refer to a particular data when using a prefix, use the prefix in the name of the macro, for example,
+    <b oldrole="command">
+     ${geoip.country_code}
+    </b>
+    .
+   </p>
+  </simplesect>
+  <simplesect xml:id="geoip-parser-database">
+   <title>
+    database()
+   </title>
+   <indexterm>
+    <primary>
+     database()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="50pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Synopsis:
+       </entry>
+       <entry>
+        database()
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+        <span class="Code" oldrole="filename">
+         /usr/share/GeoIP/GeoIP.dat
+        </span>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    The full path to the GeoIP database to use. Note that
+    <entity>
+     abbrev
+    </entity>
+    must have the required privileges to read this file. Do not modify or delete this file while
+    <entity>
+     abbrev
+    </entity>
+    is running, it can crash
+    <entity>
+     abbrev
+    </entity>
+    .
+   </p>
+  </simplesect>
+ </body>
+</html>

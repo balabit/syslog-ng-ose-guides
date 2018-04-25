@@ -1,0 +1,2193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+%entities;]&gt;
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+ <body name="chapter-routing-filters" oldrole="chapter">
+  <h1 name="chapter-routing-filters" oldrole="chapter">
+   <span class="Code" oldrole="parameter">
+    log
+   </span>
+   : Filter and route log messages using log paths, flags, and filters
+  </h1>
+  <!-- FIXME jumplist -->
+  <h2 name="logpath">
+   Log paths
+  </h2>
+  <MadCap:keyword term="log paths">
+  </MadCap:keyword>
+  <p oldrole="para">
+   Log paths determine what happens with the incoming log messages. Messages coming from the sources listed in the log statement and matching all the filters are sent to the listed destinations.
+  </p>
+  <p oldrole="para">
+   To define a log path, add a log statement to the syslog-ng configuration file using the following syntax:
+  </p>
+  <MadCap:keyword term="log paths:['defining']">
+  </MadCap:keyword>
+  <MadCap:snippetBlock src="../../shared/chunk/synopsis-log-path.htm">
+  </MadCap:snippetBlock>
+  <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
+   <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
+   </col>
+   <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2">
+   </col>
+   <tbody>
+    <tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1">
+     <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1">
+      <p>
+       <img src="../../Resources/Images/Common/caution.png"/>
+      </p>
+     </td>
+     <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1">
+      <span class="Yellow">
+       Caution:
+      </span>
+      <p oldrole="para">
+       Log statements are processed in the order they appear in the configuration file, thus the order of log paths may influence what happens to a message, especially when using filters and log flags.
+      </p>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <MadCap:snippetBlock src="../../shared/wnt/note-element-order.htm">
+  </MadCap:snippetBlock>
+  <h6 name="log-statement-example" oldrole="example">
+   Example:
+   A simple log statement
+  </h6>
+  <MadCap:snippetBlock src="../../shared/chunk/log-statement.htm">
+  </MadCap:snippetBlock>
+  <p oldrole="para">
+   All matching log statements are processed by default, and the messages are sent to
+   <i oldrole="emphasis">
+    every
+   </i>
+   matching destination by default. So a single log message might be sent to the same destination several times, provided the destination is listed in several log statements, and it can be also sent to several different destinations.
+  </p>
+  <MadCap:keyword term="log paths:['flags']">
+  </MadCap:keyword>
+  <MadCap:keyword term="flags">
+  </MadCap:keyword>
+  <p oldrole="para">
+   This default behavior can be changed using the
+   <span class="Code" oldrole="parameter">
+    flags()
+   </span>
+   parameter. Flags apply to individual log paths, they are not global options. For details and examples on the available flags, see
+   <MadCap:xref href="chapter-routing-filters.htm#reference-logflags">
+   </MadCap:xref>
+   . The effect and use of the
+   <span class="Code" oldrole="parameter">
+    flow-control
+   </span>
+   flag is detailed in
+   <MadCap:xref href="chapter-routing-filters.htm#concepts-flow-control">
+   </MadCap:xref>
+   .
+  </p>
+  <h2 name="concepts-embedded-logpaths">
+   Embedded log statements
+  </h2>
+  <MadCap:keyword term="embedded log statements">
+  </MadCap:keyword>
+  <MadCap:keyword term="log pipes:['embedded log statements']">
+  </MadCap:keyword>
+  <MadCap:keyword term="log statements:['embedded']">
+  </MadCap:keyword>
+  <p oldrole="para">
+   Starting from version 3.0, syslog-ng can handle embedded log statements (also called log pipes). Embedded log statements are useful for creating complex, multi-level log paths with several destinations and use filters, parsers, and rewrite rules.
+  </p>
+  <p oldrole="para">
+   For example, if you want to filter your incoming messages based on the facility parameter, and then use further filters to send messages arriving from different hosts to different destinations, you would use embedded log statements.
+  </p>
+  <p class="CaptionFigure">
+   Embedded log statement
+  </p>
+  <img MadCap:mediastyle="@media print { width: auto; height: auto; }" class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/syslog-ng-embedded-log-statement-2.png" format="PNG" oldrole="figure" src="syslog-ng-embedded-log-statement-2.png" style="height: auto; width: auto;"/>
+  <p oldrole="para">
+   Embedded log statements include sources
+   <MadCap:variable name="General.mdash">
+    mdash
+   </MadCap:variable>
+   and usually filters, parsers, rewrite rules, or destinations
+   <MadCap:variable name="General.mdash">
+    mdash
+   </MadCap:variable>
+   and other log statements that can include filters, parsers, rewrite rules, and destinations. The following rules apply to embedded log statements:
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Only the beginning (also called top-level) log statement can include sources.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Embedded log statements can include multiple log statements on the same level (that is, a top-level log statement can include two or more log statements).
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Embedded log statements can include several levels of log statements (that is, a top-level log statement can include a log statement that includes another log statement, and so on).
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     After an embedded log statement, you can write either another log statement, or the
+     <span class="Code" oldrole="parameter">
+      flags()
+     </span>
+     option of the original log statement. You cannot use filters or other configuration objects. This also means that flags (except for the
+     <span class="Code" oldrole="parameter">
+      flow-control
+     </span>
+     flag) apply to the entire log statement, you cannot use them only for the embedded log statement.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Embedded log statements that are on the same level receive the same messages from the higher-level log statement. For example, if the top-level log statement includes a filter, the lower-level log statements receive only the messages that pass the filter.
+    </p>
+   </li>
+  </ul>
+  <p class="CaptionFigure">
+   Embedded log statements
+  </p>
+  <img MadCap:mediastyle="@media print { width: auto; height: auto; }" class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/syslog-ng-embedded-log-statement.png" format="PNG" oldrole="figure" src="syslog-ng-embedded-log-statement.png" style="height: auto; width: auto;"/>
+  <p oldrole="para">
+   Embedded log filters can be used to optimize the processing of log messages, for example, to re-use the results of filtering and rewriting operations.
+  </p>
+  <h2 name="configuring-embedded-logpaths">
+   Using embedded log statements
+  </h2>
+  <p oldrole="para">
+   Embedded log statements (for details, see
+   <MadCap:xref href="chapter-routing-filters.htm#concepts-embedded-logpaths">
+   </MadCap:xref>
+   ) re-use the results of processing messages (for example, the results of filtering or rewriting) to create complex log paths. Embedded log statements use the same syntax as regular log statements, but they cannot contain additional sources. To define embedded log statements, use the following syntax:
+  </p>
+  <p class="Code" name="log-path-synopsis-embedded" oldrole="synopsis">
+   log {
+    source(s1); source(s2); ...
+
+    optional_element(filter1|parser1|rewrite1);
+    optional_element(filter2|parser2|rewrite2);
+    ...
+    destination(d1); destination(d2); ...
+
+    #embedded log statement
+    log {
+        optional_element(filter1|parser1|rewrite1);
+        optional_element(filter2|parser2|rewrite2);
+        ...
+        destination(d1); destination(d2); ...
+
+        #another embedded log statement
+        log {
+            optional_element(filter1|parser1|rewrite1);
+            optional_element(filter2|parser2|rewrite2);
+            ...
+            destination(d1); destination(d2); ...
+        };
+    };
+    #set flags after the embedded log statements
+    flags(flag1[, flag2...]);
+};
+  </p>
+  <h6 name="example-logpath-embedded" oldrole="example">
+   Example:
+   Using embedded log paths
+  </h6>
+  <p oldrole="para">
+   The following log path sends every message to the configured destinations: both the
+   <span class="Code" oldrole="userinput">
+    d_file1
+   </span>
+   and the
+   <span class="Code" oldrole="userinput">
+    d_file2
+   </span>
+   destinations receive every message of the source.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   log { source(s_localhost); destination(d_file1); destination(d_file2); };
+  </p>
+  <p oldrole="para">
+   The next example is equivalent to the one above, but uses an embedded log statement.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   log { source(s_localhost); destination(d_file1);
+    log { destination(d_file2); };
+};
+  </p>
+  <p oldrole="para">
+   The following example uses two filters:
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     messages coming from the host
+     <span class="Code" oldrole="userinput">
+      192.168.1.1
+     </span>
+     are sent to the
+     <span class="Code" oldrole="userinput">
+      d_file1
+     </span>
+     destination, and
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     messages coming from the host
+     <span class="Code" oldrole="userinput">
+      192.168.1.1
+     </span>
+     and containing the string
+     <span class="Code" oldrole="userinput">
+      example
+     </span>
+     are sent to the
+     <span class="Code" oldrole="userinput">
+      d_file2
+     </span>
+     destination.
+    </p>
+   </li>
+  </ul>
+  <p class="Code" oldrole="synopsis">
+   log { source(s_localhost); filter { host(192.168.1.1); }; destination(d_file1);
+    log { message("example"); destination(d_file2); };
+};
+  </p>
+  <p oldrole="para">
+   The following example collects logs from multiple source groups and uses the
+   <span class="Code" oldrole="parameter">
+    source()
+   </span>
+   filter in the embedded log statement to select messages of the
+   <span class="Code" oldrole="userinput">
+    s_network
+   </span>
+   source group.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   log { source(s_localhost); source(s_network); destination(d_file1);
+    log {  filter { source(s_network); }; destination(d_file2); };
+};
+  </p>
+  <MadCap:snippetBlock src="junctions-channels.htm">
+  </MadCap:snippetBlock>
+  <h2 name="reference-logflags">
+   Log path flags
+  </h2>
+  <p oldrole="para">
+   Flags influence the behavior of syslog-ng, and the way it processes messages. The following flags may be used in the log paths, as described in
+   <MadCap:xref href="chapter-routing-filters.htm#logpath">
+   </MadCap:xref>
+   .
+  </p>
+  <MadCap:snippetBlock src="../../shared/chunk/table-logflags-routing-filters.htm">
+  </MadCap:snippetBlock>
+  <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
+   <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
+   </col>
+   <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2">
+   </col>
+   <tbody>
+    <tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1">
+     <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1">
+      <p>
+       <img src="../../Resources/Images/Common/caution.png"/>
+      </p>
+     </td>
+     <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1">
+      <span class="Yellow">
+       Caution:
+      </span>
+      <p oldrole="para">
+       The
+       <span class="Code" oldrole="parameter">
+        final
+       </span>
+       ,
+       <span class="Code" oldrole="parameter">
+        fallback
+       </span>
+       , and
+       <span class="Code" oldrole="parameter">
+        catchall
+       </span>
+       flags apply only for the top-level log paths, they have no effect on embedded log paths.
+      </p>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <h6 name="example-logpath-flags" oldrole="example">
+   Example:
+   Using log path flags
+  </h6>
+  <!--<para>The following log path processes every message received to the
+                    <parameter>s_localhost</parameter> source that was not processed by earlier log
+                    paths. As syslog-ng processes log paths in the order they appear in the
+                    configuration file, place such log paths at the end of the file. A typical situation
+                    is to use filters to select the most important messages and send them to specific
+                    destinations, and process the remaining messages with a fallback log path.</para>
+                    <synopsis>.
+                    .
+                    .
+                    log { source(s_localhost); destination(d_tcp); flags(fallback); };</synopsis>-->
+  <p oldrole="para">
+   Let's suppose that you have two hosts (
+   <span class="Code" oldrole="userinput">
+    myhost_A
+   </span>
+   and
+   <span class="Code" oldrole="userinput">
+    myhost_B
+   </span>
+   ) that run two applications each (
+   <span class="Code" oldrole="userinput">
+    application_A
+   </span>
+   and
+   <span class="Code" oldrole="userinput">
+    application_B
+   </span>
+   ), and you collect the log messages to a central syslog-ng server. On the server, you create two log paths:
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     one that processes only the messages sent by
+     <span class="Code" oldrole="userinput">
+      myhost_A
+     </span>
+     , and
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     one that processes only the messages sent by
+     <span class="Code" oldrole="userinput">
+      application_A
+     </span>
+     .
+    </p>
+   </li>
+  </ul>
+  <p oldrole="para">
+   This means that messages sent by
+   <span class="Code" oldrole="userinput">
+    application_A
+   </span>
+   running on
+   <span class="Code" oldrole="userinput">
+    myhost_A
+   </span>
+   will be processed by both log paths, and the messages of
+   <span class="Code" oldrole="userinput">
+    application_B
+   </span>
+   running on
+   <span class="Code" oldrole="userinput">
+    myhost_B
+   </span>
+   will not be processed at all.
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     If you add the
+     <span class="Code" oldrole="parameter">
+      final
+     </span>
+     flag to the first log path, then only this log path will process the messages of
+     <span class="Code" oldrole="userinput">
+      myhost_A
+     </span>
+     , so the second log path will receive only the messages of
+     <span class="Code" oldrole="userinput">
+      application_A
+     </span>
+     running on
+     <span class="Code" oldrole="userinput">
+      myhost_B
+     </span>
+     .
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     If you create a third log path that includes the
+     <span class="Code" oldrole="parameter">
+      fallback
+     </span>
+     flag, it will process the messages not processed by the first two log paths, in this case, the messages of
+     <span class="Code" oldrole="userinput">
+      application_B
+     </span>
+     running on
+     <span class="Code" oldrole="userinput">
+      myhost_B
+     </span>
+     .
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Adding a fourth log path with the
+     <span class="Code" oldrole="parameter">
+      catchall
+     </span>
+     flag would process every message received by the syslog-ng server.
+    </p>
+    <p class="Code" oldrole="synopsis">
+     log { source(s_localhost); destination(d_file); flags(catchall); };
+    </p>
+   </li>
+  </ul>
+  <p oldrole="para">
+   The following example shows a scenario that can result in message loss. Do NOT use such a configuration, unless you know exactly what you are doing. The problem is if a message matches the filters in the first part of the first log path,
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   treats the message as 'processed'. Since the first log path includes the
+   <span class="Code" oldrole="parameter">
+    final
+   </span>
+   flag,
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   will not pass the message to the second log path (the one with the
+   <span class="Code" oldrole="parameter">
+    fallback
+   </span>
+   flag). As a result,
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   drops messages that do not match the filter of the embedded log path.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   # Do not use such a configuration, unless you know exactly what you are doing.
+log {
+    source(s_network);
+    # Filters in the external log path.
+    # If a message matches this filter, it is treated as 'processed'
+    filter(f_program);
+    filter(f_message);
+    log {
+        # Filter in the embedded log path.
+        # If a message does not match this filter, it is lost, it will not be processed by the 'fallback' log path
+        filter(f_host);
+        destination(d_file1);
+    };
+    flags(final);
+};
+
+log {
+    source(s_network);
+    destination(d_file2);
+    flags(fallback);
+};
+  </p>
+  <h6 oldrole="example">
+   Example:
+   Using the
+   <span class="Code" oldrole="parameter">
+    drop-unmatched
+   </span>
+   flag
+  </h6>
+  <p oldrole="para">
+   In the following example, if a log message arrives whose
+   <span class="Code" oldrole="userinput">
+    $MSG
+   </span>
+   part does not contain the string
+   <span class="Code" oldrole="userinput">
+    foo
+   </span>
+   , then
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   will discard the message and will not check compliance with the second
+   <span class="Code" oldrole="userinput">
+    if
+   </span>
+   condition.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   ...
+if {
+    filter { message('foo') };
+   <i oldrole="emphasis" role="bold">
+    flags(drop-unmatched)
+   </i>
+   };
+if {
+    filter { message('bar') };
+};
+...
+  </p>
+  <p oldrole="para">
+   (Without the
+   <span class="Code" oldrole="parameter">
+    drop-unmatched
+   </span>
+   flag,
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   would check if the message complies with the second
+   <span class="Code" oldrole="userinput">
+    if
+   </span>
+   condition, that is, whether or not the message contains the string
+   <span class="Code" oldrole="userinput">
+    bar
+   </span>
+   .)
+  </p>
+  <h2 name="concepts-flow-control">
+   Managing incoming and outgoing messages with flow-control
+  </h2>
+  <MadCap:keyword term="log paths:['flow-control']">
+  </MadCap:keyword>
+  <MadCap:keyword term="flow-control">
+  </MadCap:keyword>
+  <MadCap:keyword term="preventing message loss:['flow-control']">
+  </MadCap:keyword>
+  <MadCap:keyword term='parameters:[&lt;span class="Code" oldrole="parameter"&gt;log-fetch-limit()&lt;/span&gt;]'>
+  </MadCap:keyword>
+  <MadCap:keyword term='parameters:[&lt;span class="Code" oldrole="parameter"&gt;log-fifo-size()&lt;/span&gt;]'>
+  </MadCap:keyword>
+  <p oldrole="para">
+   This section describes the internal message-processing model of syslog-ng, as well as the flow-control feature that can prevent message losses. To use flow-control, the
+   <span class="Code" oldrole="parameter">
+    flow-control
+   </span>
+   flag must be enabled for the particular log path.
+  </p>
+  <p oldrole="para">
+   The syslog-ng application monitors (polls) the sources defined in its configuration file, periodically checking each source for messages. When a log message is found in one of the sources, syslog-ng polls every source and reads the available messages. These messages are processed and put into the output buffer of syslog-ng (also called fifo). From the output buffer, the operating system sends the messages to the appropriate destinations.
+  </p>
+  <p oldrole="para">
+   In large-traffic environments many messages can arrive during a single poll loop, therefore syslog-ng reads only a fixed number of messages from each source. The
+   <span class="Code" oldrole="parameter">
+    log-fetch-limit()
+   </span>
+   option specifies the number of messages read during a poll loop from a single source.
+  </p>
+  <p class="CaptionFigure">
+   Managing log messages in syslog-ng
+  </p>
+  <img MadCap:mediastyle="@media print { width: auto; height: auto; }" class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/io1.png" format="PNG" oldrole="figure" scale="80" src="io1.png" style="height: auto; width: auto;"/>
+  <MadCap:keyword term="output buffer">
+  </MadCap:keyword>
+  <p oldrole="para">
+   Every destination has its own output buffer. The output buffer is needed because the destination might not be able to accept all messages immediately. The
+   <span class="Code" oldrole="parameter">
+    log-fifo-size()
+   </span>
+   parameter sets the size of the output buffer. The output buffer must be larger than the
+   <span class="Code" oldrole="parameter">
+    log-fetch-limit()
+   </span>
+   of the sources, to ensure that every message read during the poll loop fits into the output buffer. If the log path sends messages to a destination from multiple sources, the output buffer must be large enough to store the incoming messages of every source.
+  </p>
+  <p oldrole="para">
+   TCP and unix-stream sources can receive the logs from several incoming connections (for example many different clients or applications). For such sources, syslog-ng reads messages from every connection, thus the
+   <span class="Code" oldrole="parameter">
+    log-fetch-limit()
+   </span>
+   parameter applies individually to every connection of the source.
+  </p>
+  <MadCap:keyword term='parameters:[&lt;span class="Code" oldrole="parameter"&gt;log-iw-size()&lt;/span&gt;]'>
+  </MadCap:keyword>
+  <MadCap:keyword term='parameters:[&lt;span class="Code" oldrole="parameter"&gt;max-connections()&lt;/span&gt;]'>
+  </MadCap:keyword>
+  <p class="CaptionFigure">
+   Managing log messages of TCP sources in syslog-ng
+  </p>
+  <img MadCap:mediastyle="@media print { width: auto; height: auto; }" class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/io2.png" format="PNG" oldrole="figure" scale="80" src="io2.png" style="height: auto; width: auto;"/>
+  <p oldrole="para">
+   The flow-control of syslog-ng introduces a control window to the source that tracks how many messages can syslog-ng accept from the source. Every message that syslog-ng reads from the source lowers the window size by one, every message that syslog-ng successfully sends from the output buffer increases the window size by one. If the window is full (that is, its size decreases to zero), syslog-ng stops reading messages from the source. The initial size of the control window is by default
+   <span class="Code" oldrole="userinput">
+    100
+   </span>
+   : the
+   <span class="Code" oldrole="parameter">
+    log-fifo-size()
+   </span>
+   must be larger than this value in order for flow-control to have any effect. If a source accepts messages from multiple connections, all messages use the same control window.
+  </p>
+  <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+   </col>
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+   </col>
+   <tbody>
+    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+      <p>
+       <img src="../../Resources/Images/Common/note.png"/>
+      </p>
+     </td>
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
+      <span class="AllNoteStyles">
+       NOTE:
+      </span>
+      <p oldrole="para">
+       If the source can handle multiple connections (for example,
+       <span class="Code" oldrole="parameter">
+        network()
+       </span>
+       ), the size of the control window is divided by the value of the
+       <span class="Code" oldrole="parameter">
+        max-connections()
+       </span>
+       parameter and this smaller control window is applied to each connection of the source.
+      </p>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <p oldrole="para">
+   When flow-control is used, every source has its own control window. As a worst-case situation, the output buffer of the destination must be set to accommodate all messages of every control window, that is, the
+   <span class="Code" oldrole="parameter">
+    log-fifo-size()
+   </span>
+   of the destination must be greater than
+   <span class="Code" oldrole="userinput">
+    number_of_sources
+   </span>
+   *
+   <span class="Code" oldrole="parameter">
+    log-iw-size()
+   </span>
+   . This applies to every source that sends logs to the particular destination. Thus if two sources having several connections and heavy traffic send logs to the same destination, the control window of both sources must fit into the output buffer of the destination. Otherwise, syslog-ng does not activate the flow-control, and messages may be lost.
+  </p>
+  <p oldrole="para">
+   The syslog-ng application handles outgoing messages the following way:
+  </p>
+  <p class="CaptionFigure">
+   Handling outgoing messages in
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+  </p>
+  <img MadCap:mediastyle="@media print { width: auto; height: auto; }" class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/syslog-ng-message-output.png" format="PNG" oldrole="figure" scale="60" src="syslog-ng-message-output.png" style="height: auto; width: auto;"/>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <MadCap:keyword term="output queue">
+    </MadCap:keyword>
+    <p oldrole="para">
+     <i oldrole="emphasis">
+      Output queue
+     </i>
+     : Messages from the output queue are sent to the target syslog-ng server. The syslog-ng application puts the outgoing messages directly into the output queue, unless the output queue is full. The output queue can hold 64 messages, this is a fixed value and cannot be modified.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <MadCap:keyword term="disk queue:['disk buffer']">
+    </MadCap:keyword>
+    <p oldrole="para">
+     <i oldrole="emphasis">
+      Disk buffer
+     </i>
+     : If the output queue is full and disk-buffering is enabled, syslog-ng puts the outgoing messages into the disk buffer of the destination.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <MadCap:keyword term="overflow queue:['output buffer']">
+    </MadCap:keyword>
+    <p oldrole="para">
+     <i oldrole="emphasis">
+      Overflow queue
+     </i>
+     : If the output queue is full and the disk buffer is disabled or full, syslog-ng puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The
+     <span class="Code" oldrole="parameter">
+      log-fifo-size()
+     </span>
+     parameter specifies the number of messages stored in the overflow queue. For details on sizing the
+     <span class="Code" oldrole="parameter">
+      log-fifo-size()
+     </span>
+     parameter, see
+     <MadCap:xref href="chapter-routing-filters.htm#concepts-flow-control">
+     </MadCap:xref>
+     .
+    </p>
+   </li>
+  </ul>
+  <p oldrole="para">
+   There are two types of flow-control: Hard flow-control and soft flow-control.
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <MadCap:keyword term="flow-control:['soft']">
+    </MadCap:keyword>
+    <p oldrole="para">
+     <i oldrole="emphasis">
+      Soft flow-control:
+     </i>
+     In case of soft flow-control there is no message lost if the destination can accept messages, but it is possible to lose messages if it cannot accept messages (for example non-writeable file destination, or the disk becomes full), and all buffers are full. Soft flow-control cannot be configured, it is automatically available for file
+     <MadCap:conditionaltext MadCap:conditions="pe">
+      and logstore
+     </MadCap:conditionaltext>
+     destinations.
+    </p>
+    <h6 oldrole="example">
+     Example:
+     Soft flow-control
+    </h6>
+    <p class="Code" oldrole="synopsis">
+     source s_file { file("/tmp/input_file.log"); };
+destination d_file { file("/tmp/output_file.log"); };
+destination d_tcp { network("127.0.0.1" port(2222) log-fifo-size(1000)); };
+log { source(s_file); destination(d_file); destination(d_tcp); };
+    </p>
+    <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
+     <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
+     </col>
+     <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2">
+     </col>
+     <tbody>
+      <tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1">
+       <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1">
+        <p>
+         <img src="../../Resources/Images/Common/caution.png"/>
+        </p>
+       </td>
+       <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1">
+        <span class="Yellow">
+         Caution:
+        </span>
+        <p oldrole="para">
+         Hazard of data loss! For destinations other than file
+         <MadCap:conditionaltext MadCap:conditions="pe">
+          and logstore
+         </MadCap:conditionaltext>
+         , soft flow-control is not available. Thus, it is possible to lose log messages on those destinations. To avoid data loss on those destinations, use hard flow-control.
+        </p>
+       </td>
+      </tr>
+     </tbody>
+    </table>
+   </li>
+   <li oldrole="listitem">
+    <MadCap:keyword term="flow-control:['hard']">
+    </MadCap:keyword>
+    <p oldrole="para">
+     <i oldrole="emphasis">
+      Hard flow-control:
+     </i>
+     In case of hard flow-control there is no message lost. To use hard flow-control, enable the
+     <span class="Code" oldrole="parameter">
+      flow-control
+     </span>
+     flag in the log path. Hard flow-control is available for all destinations.
+    </p>
+    <h6 oldrole="example">
+     Example:
+     Hard flow-control
+    </h6>
+    <p class="Code" oldrole="synopsis">
+     source s_file { file("/tmp/input_file.log"); };
+destination d_file { file("/tmp/output_file.log"); };
+destination d_tcp { network("127.0.0.1" port(2222) log-fifo-size(1000)); };
+log { source(s_file); destination(d_file); destination(d_tcp); flags(flow-control); };
+    </p>
+   </li>
+  </ul>
+  <MadCap:snippetBlock src="../../shared/chunk/flow-control-multiple-destinations.htm">
+  </MadCap:snippetBlock>
+  <h2 name="configuring-flow-control">
+   Configuring flow-control
+  </h2>
+  <MadCap:keyword term="log paths:['flow-control']">
+  </MadCap:keyword>
+  <MadCap:keyword term="flow-control">
+  </MadCap:keyword>
+  <MadCap:keyword term="preventing message loss:['flow-control']">
+  </MadCap:keyword>
+  <MadCap:keyword term='parameters:[&lt;span class="Code" oldrole="parameter"&gt;log-fetch-limit()&lt;/span&gt;]'>
+  </MadCap:keyword>
+  <MadCap:keyword term='parameters:[&lt;span class="Code" oldrole="parameter"&gt;log-fifo-size()&lt;/span&gt;]'>
+  </MadCap:keyword>
+  <MadCap:keyword term='parameters:[&lt;span class="Code" oldrole="parameter"&gt;log-iw-size()&lt;/span&gt;]'>
+  </MadCap:keyword>
+  <MadCap:keyword term='parameters:[&lt;span class="Code" oldrole="parameter"&gt;max-connections()&lt;/span&gt;]'>
+  </MadCap:keyword>
+  <MadCap:keyword term="output buffer">
+  </MadCap:keyword>
+  <p oldrole="para">
+   For details on how flow-control works, see
+   <MadCap:xref href="chapter-routing-filters.htm#concepts-flow-control">
+   </MadCap:xref>
+   . The summary of the main points is as follows:
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     The syslog-ng application normally reads a maximum of
+     <span class="Code" oldrole="parameter">
+      log-fetch-limit()
+     </span>
+     number of messages from a source.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     From TCP and unix-stream sources, syslog-ng reads a maximum of
+     <span class="Code" oldrole="parameter">
+      log-fetch-limit()
+     </span>
+     from every connection of the source. The number of connections to the source is set using the
+     <span class="Code" oldrole="parameter">
+      max-connections()
+     </span>
+     parameter.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Every destination has an output buffer (
+     <span class="Code" oldrole="parameter">
+      log-fifo-size()
+     </span>
+     ).
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Flow-control uses a control window to determine if there is free space in the output buffer for new messages. Every source has its own control window, the
+     <span class="Code" oldrole="parameter">
+      log-iw-size()
+     </span>
+     parameter sets the size of the control window.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     When a source accepts multiple connections, the size of the control window is divided by the value of the
+     <span class="Code" oldrole="parameter">
+      max-connections()
+     </span>
+     parameter and this smaller control window is applied to each connection of the source.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     The output buffer must be larger than the control window of every source that logs to the destination.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     If the control window is full, syslog-ng stops reading messages from the source until some messages are successfully sent to the destination.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     If the output buffer becomes full, and
+     <MadCap:conditionaltext MadCap:conditions="pe">
+      neither disk-buffering nor flow-control is
+     </MadCap:conditionaltext>
+     <MadCap:conditionaltext MadCap:conditions="ose">
+      flow-control is not
+     </MadCap:conditionaltext>
+     used, messages may be lost.
+    </p>
+   </li>
+  </ul>
+  <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
+   <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
+   </col>
+   <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2">
+   </col>
+   <tbody>
+    <tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1">
+     <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1">
+      <p>
+       <img src="../../Resources/Images/Common/caution.png"/>
+      </p>
+     </td>
+     <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1">
+      <span class="Yellow">
+       Caution:
+      </span>
+      <p oldrole="para">
+       If you modify the
+       <span class="Code" oldrole="parameter">
+        max-connections()
+       </span>
+       or the
+       <span class="Code" oldrole="parameter">
+        log-fetch-limit()
+       </span>
+       parameter, do not forget to adjust the
+       <span class="Code" oldrole="parameter">
+        log-iw-size()
+       </span>
+       and
+       <span class="Code" oldrole="parameter">
+        log-fifo-size()
+       </span>
+       parameters accordingly.
+      </p>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <h6 oldrole="example">
+   Example:
+   Sizing parameters for flow-control
+  </h6>
+  <MadCap:keyword term="log paths:['flow-control']">
+  </MadCap:keyword>
+  <MadCap:keyword term="flow-control:['example']">
+  </MadCap:keyword>
+  <p oldrole="para">
+   Suppose that syslog-ng has a source that must accept up to 300 parallel connections. Such situation can arise when a network source receives connections from many clients, or if many applications log to the same socket. Therefore, set the
+   <span class="Code" oldrole="parameter">
+    max-connections()
+   </span>
+   parameter of the source to
+   <span class="Code" oldrole="userinput">
+    300
+   </span>
+   . However, the
+   <span class="Code" oldrole="parameter">
+    log-fetch-limit()
+   </span>
+   (default value: 10) parameter applies to every connection of the source individually, while the
+   <span class="Code" oldrole="parameter">
+    log-iw-size()
+   </span>
+   (default value: 1000) parameter applies to the source. In a worst-case scenario, the destination does not accept any messages, while all 300 connections send at least
+   <span class="Code" oldrole="parameter">
+    log-fetch-limit()
+   </span>
+   number of messages to the source during every poll loop. Therefore, the control window must accommodate at least
+   <span class="Code" oldrole="parameter">
+    max-connections()
+   </span>
+   *
+   <span class="Code" oldrole="parameter">
+    log-fetch-limit()
+   </span>
+   messages to be able to read every incoming message of a poll loop. In the current example this means that (
+   <span class="Code" oldrole="parameter">
+    log-iw-size()
+   </span>
+   should be greater than
+   <span class="Code" oldrole="userinput">
+    300*10=3000
+   </span>
+   . If the control window is smaller than this value, the control window might fill up with messages from the first connections
+   <MadCap:variable name="General.mdash">
+    mdash
+   </MadCap:variable>
+   causing syslog-ng to read only one message of the last connections in every poll loop.
+  </p>
+  <p oldrole="para">
+   The output buffer of the destination must accommodate at least
+   <span class="Code" oldrole="parameter">
+    log-iw-size()
+   </span>
+   messages, but use a greater value: in the current example
+   <span class="Code" oldrole="userinput">
+    3000*10=30000
+   </span>
+   messages. That way all incoming messages of ten poll loops fit in the output buffer. If the output buffer is full, syslog-ng does not read any messages from the source until some messages are successfully sent to the destination.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   source s_localhost {
+            network(ip(127.0.0.1) port(1999) max-connections(300)); };
+destination d_tcp {
+            network("10.1.2.3" port(1999) localport(999) log-fifo-size(30000)); };
+log { source(s_localhost); destination(d_tcp); flags(flow-control); };
+  </p>
+  <p oldrole="para">
+   If other sources send messages to this destination, then the output buffer must be further increased. For example, if a network host with maximum
+   <span class="Code" oldrole="userinput">
+    100
+   </span>
+   connections also logs into the destination, then increase the
+   <span class="Code" oldrole="parameter">
+    log-fifo-size()
+   </span>
+   by
+   <span class="Code" oldrole="userinput">
+    10000
+   </span>
+   .
+  </p>
+  <p class="Code" oldrole="synopsis">
+   source s_localhost {
+            network(ip(127.0.0.1) port(1999) max-connections(300)); };
+source s_tcp {
+            network(ip(192.168.1.5) port(1999) max-connections(100)); };
+destination d_tcp {
+            network("10.1.2.3" port(1999) localport(999) log-fifo-size(40000)); };
+log { source(s_localhost); destination(d_tcp); flags(flow-control); };
+  </p>
+  <h2 name="concepts-diskbuffer">
+   Using disk-based and memory buffering
+  </h2>
+  <MadCap:keyword term="disk buffer">
+  </MadCap:keyword>
+  <MadCap:keyword term="disk-based buffering">
+  </MadCap:keyword>
+  <MadCap:keyword term="parameters:['log-disk-fifo-size()']">
+  </MadCap:keyword>
+  <!-- FIXME should be merged/streamlined with the flow control section -->
+  <p oldrole="para">
+   The
+   <MadCap:variable name="General.product">
+    product
+   </MadCap:variable>
+   application can store messages on the local hard disk if the destination (for example, the central log server) or the network connection to the destination becomes unavailable. The
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   application automatically sends the stored messages to the destination when the connection is reestablished. The disk buffer is used as a queue: when the connection to the destination is reestablished,
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   sends the messages to the destination in the order they were received.
+  </p>
+  <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+   </col>
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+   </col>
+   <tbody>
+    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+      <p>
+       <img src="../../Resources/Images/Common/note.png"/>
+      </p>
+     </td>
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
+      <span class="AllNoteStyles">
+       NOTE:
+      </span>
+      <p oldrole="para">
+       Disk-based buffering can be used in conjunction with flow-control. For details on flow-control, see
+       <MadCap:xref href="chapter-routing-filters.htm#concepts-flow-control">
+       </MadCap:xref>
+       .
+      </p>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <MadCap:snippetBlock src="../../shared/chunk/p-disk-buffer-drivers.htm">
+  </MadCap:snippetBlock>
+  <p oldrole="para">
+   Every such destination uses a separate disk buffer (similarly to the output buffers controlled by
+   <span class="Code" oldrole="parameter">
+    log-fifo-size()
+   </span>
+   ). The hard disk space is not pre-allocated, so ensure that there is always enough free space to store the disk buffers even when the disk buffers are full.
+  </p>
+  <p oldrole="para">
+   If
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   is restarted (using the
+   <b oldrole="command">
+    /etc/init.d/syslog-ng restart
+   </b>
+   command, or another appropriate command on your platform), it automatically saves any unsent messages from the disk buffer and the output queue. After the restart,
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   sends the saved messages to the destination. In other words, the disk buffer is persistent. The disk buffer is also resistant to
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   crashes.
+  </p>
+  <p oldrole="para">
+   The
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   application supports two types of disk buffering: reliable and normal. For details, see
+   <MadCap:xref href="chapter-routing-filters.htm#configuring-diskbuffer-reliable">
+   </MadCap:xref>
+   and
+   <MadCap:xref href="chapter-routing-filters.htm#configuring-diskbuffer-normal">
+   </MadCap:xref>
+   , respectively.
+  </p>
+  <p>
+   <b oldrole="formalpara">
+    Message handling and normal disk-based buffering
+   </b>
+  </p>
+  <p oldrole="para">
+   When you use disk-based buffering, and the
+   <span class="Code" oldrole="parameter">
+    reliable()
+   </span>
+   option is set to
+   <span class="Code" oldrole="userinput">
+    no
+   </span>
+   ,
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   handles outgoing messages the following way:
+  </p>
+  <p class="CaptionFigure">
+   Handling outgoing messages in
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+  </p>
+  <img MadCap:mediastyle="@media print { width: auto; height: auto; }" class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/syslog-ng-message-output.png" format="PNG" oldrole="figure" scale="60" src="syslog-ng-message-output.png" style="height: auto; width: auto;"/>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <MadCap:keyword term="output queue">
+    </MadCap:keyword>
+    <p oldrole="para">
+     <i oldrole="emphasis">
+      Output queue
+     </i>
+     : Messages from the output queue are sent to the destination (for example, your central log server). The
+     <MadCap:variable name="General.abbrev">
+      abbrev
+     </MadCap:variable>
+     application puts the outgoing messages directly into the output queue, unless the output queue is full. By default, the output queue can hold 64 messages (you can adjust it using the
+     <span class="Code" oldrole="parameter">
+      quot-size()
+     </span>
+     option).
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <MadCap:keyword term="disk queue{see}['disk buffer']">
+    </MadCap:keyword>
+    <p oldrole="para">
+     <i oldrole="emphasis">
+      Disk buffer
+     </i>
+     : If the output queue is full, disk-buffering is enabled, and
+     <span class="Code" oldrole="parameter">
+      reliable()
+     </span>
+     is set to
+     <span class="Code" oldrole="userinput">
+      no
+     </span>
+     ,
+     <MadCap:variable name="General.abbrev">
+      abbrev
+     </MadCap:variable>
+     puts the outgoing messages into the disk buffer of the destination. (The disk buffer is enabled if the
+     <span class="Code" oldrole="parameter">
+      disk-buffer()
+     </span>
+     option is configured.)
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <MadCap:keyword term="overflow queue{see}['output buffer']">
+    </MadCap:keyword>
+    <p oldrole="para">
+     <i oldrole="emphasis">
+      Overflow queue
+     </i>
+     : If the output queue is full and the disk buffer is disabled or full,
+     <MadCap:variable name="General.abbrev">
+      abbrev
+     </MadCap:variable>
+     puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The
+     <span class="Code" oldrole="parameter">
+      log-fifo-size()
+     </span>
+     parameter specifies the number of messages stored in the overflow queue. For details on sizing the
+     <span class="Code" oldrole="parameter">
+      log-fifo-size()
+     </span>
+     parameter, see also
+     <MadCap:xref href="chapter-routing-filters.htm#concepts-flow-control">
+     </MadCap:xref>
+     .
+    </p>
+   </li>
+  </ul>
+  <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+   </col>
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+   </col>
+   <tbody>
+    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+      <p>
+       <img src="../../Resources/Images/Common/note.png"/>
+      </p>
+     </td>
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
+      <span class="AllNoteStyles">
+       NOTE:
+      </span>
+      <p oldrole="para">
+       Using disk buffer can significantly decrease performance.
+      </p>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <p>
+   <b oldrole="formalpara">
+    Message handling and reliable disk-based buffering
+   </b>
+  </p>
+  <p oldrole="para">
+   When you use disk-based buffering, and the
+   <span class="Code" oldrole="parameter">
+    reliable()
+   </span>
+   option is set to
+   <span class="Code" oldrole="userinput">
+    yes
+   </span>
+   ,
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   handles outgoing messages the following way.
+  </p>
+  <!-- FIXME figure/low-chart needed -->
+  <p oldrole="para">
+   The
+   <span class="Code" oldrole="parameter">
+    mem-buf-size()
+   </span>
+   option determines when flow-control is triggered. All messages arriving to the log path that includes the destination using the disk-buffer are written into the disk-buffer, until the size of the disk-buffer reaches (
+   <span class="Code" oldrole="parameter">
+    disk-buf-size()
+   </span>
+   minus
+   <span class="Code" oldrole="parameter">
+    mem-buf-size()
+   </span>
+   ). Above that size, messages are written into both the disk-buffer and the memory-buffer, indicating that flow-control needs to slow down the message source. These messages are not taken out from the control window (governed by
+   <span class="Code" oldrole="parameter">
+    log-iw-size()
+   </span>
+   ), causing the control window to fill up. If the control window is full, the flow-control completely stops reading incoming messages from the source. (As a result,
+   <span class="Code" oldrole="parameter">
+    mem-buf-size()
+   </span>
+   must be at least as large as
+   <span class="Code" oldrole="parameter">
+    log-iw-size()
+   </span>
+   .)
+  </p>
+  <h2 name="configuring-diskbuffer-reliable">
+   Enabling reliable disk-based buffering
+  </h2>
+  <MadCap:snippetBlock src="../../shared/chunk/p-disk-buffer-drivers.htm">
+  </MadCap:snippetBlock>
+  <p oldrole="para">
+   To enable reliable disk-based buffering, use the
+   <span class="Code" oldrole="userinput">
+    disk-buffer(reliable(yes))
+   </span>
+   parameter in the destination. Use reliable disk-based buffering if you do not want to lose logs in case of reload/restart, unreachable destination or
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   crash. This solution provides a slower, but reliable disk-buffer option. It is created and initialized at startup and gradually grows as new messages arrive. The filename of the reliable disk buffer file is the following:
+   <span class="Code" oldrole="filename">
+    &lt;syslog-ng path&gt;/var/syslog-ng-00000.rqf
+   </span>
+   .
+  </p>
+  <h6 oldrole="example">
+   Example:
+   Example for using reliable disk-based buffering
+  </h6>
+  <p class="Code" oldrole="synopsis">
+   destination d_BSD {
+    network(
+            "127.0.0.1"
+            port(3333)
+            disk-buffer(
+                mem-buf-size(10000)
+                disk-buf-size(2000000)
+                reliable(yes)
+            )
+        );
+};
+  </p>
+  <p oldrole="para">
+   For details on the differences between normal and reliable disk-based buffering, see also
+   <MadCap:xref href="chapter-routing-filters.htm#about-disk-buffer-files">
+   </MadCap:xref>
+   .
+  </p>
+  <h2 name="configuring-diskbuffer-normal">
+   Enabling normal disk-based buffering
+  </h2>
+  <MadCap:snippetBlock src="../../shared/chunk/p-disk-buffer-drivers.htm">
+  </MadCap:snippetBlock>
+  <p oldrole="para">
+   To enable normal disk-based buffering, use the
+   <span class="Code" oldrole="userinput">
+    disk-buffer(reliable(no))
+   </span>
+   parameter in the destination. Use normal disk-based buffering if you want a solution that is faster than the reliable disk-based buffering. In this case, disk buffering will be less reliable and it is possible to lose logs in case of
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   crash. The filename of the normal disk buffer file is the following:
+   <span class="Code" oldrole="filename">
+    &lt;syslog-ng path&gt;/var/syslog-ng-00000.qf
+   </span>
+   .
+  </p>
+  <h6 oldrole="example">
+   Example:
+   Example for using normal disk-based buffering
+  </h6>
+  <p oldrole="para">
+   When using the disk-buffer plugin:
+  </p>
+  <p class="Code" oldrole="synopsis">
+   destination d_BSD {
+    network(
+            "127.0.0.1"
+            port(3333)
+            disk-buffer(
+                mem-buf-length(10000)
+                disk-buf-size(2000000)
+                reliable(no)
+            )
+        );
+        };
+  </p>
+  <p oldrole="para">
+   For details on the differences between normal and reliable disk-based buffering, see also
+   <MadCap:xref href="chapter-routing-filters.htm#about-disk-buffer-files">
+   </MadCap:xref>
+   .
+  </p>
+  <h2 name="configuring-diskbuffer-memory">
+   Enabling memory buffering
+  </h2>
+  <p oldrole="para">
+   To enable memory buffering, use the
+   <span class="Code" oldrole="parameter">
+    log-fifo-size()
+   </span>
+   parameter in the destination. All destination drivers can use memory buffering. Use memory buffering if you want to send logs to destinations where disk-based buffering is not available. Or if you want the fastest solution, and if
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   crash or network downtime is never expected. In these cases, losing logs is possible. This solution does not use disk-based buffering, logs are stored only in the memory.
+  </p>
+  <h6 oldrole="example">
+   Example:
+   Example for using memory buffering
+  </h6>
+  <p class="Code" oldrole="synopsis">
+   destination d_BSD {
+    network(
+            "127.0.0.1"
+            port(3333)
+            log-fifo-size(10000)
+        );
+};
+  </p>
+  <h2 name="about-disk-buffer-files">
+   About disk queue files
+  </h2>
+  <MadCap:snippetBlock src="../../shared/chunk/topic-about-disk-queue-files.htm">
+  </MadCap:snippetBlock>
+  <h2 name="filters">
+   Filters
+  </h2>
+  <MadCap:keyword term="filters">
+  </MadCap:keyword>
+  <MadCap:keyword term="regular expressions">
+  </MadCap:keyword>
+  <p oldrole="para">
+   The following sections describe how to select and filter log messages.
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     <MadCap:xref href="chapter-routing-filters.htm#configuring-filters">
+     </MadCap:xref>
+     describes how to configure and use filters.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     <MadCap:xref href="chapter-routing-filters.htm#filters-boolean">
+     </MadCap:xref>
+     shows how to create complex filters using boolean operators.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     <MadCap:xref href="chapter-routing-filters.htm#filters-comparing">
+     </MadCap:xref>
+     explains how to evaluate macros in filters.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     <MadCap:xref href="chapter-routing-filters.htm#regular-expr">
+     </MadCap:xref>
+     provides tips on using regular expressions.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     <MadCap:xref href="chapter-routing-filters.htm#tagging-messages">
+     </MadCap:xref>
+     explains how to tag messages and how to filter on the tags.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     <MadCap:xref href="chapter-routing-filters.htm#reference-filters">
+     </MadCap:xref>
+     is a detailed description of the filter functions available in
+     <MadCap:variable name="General.abbrev">
+      abbrev
+     </MadCap:variable>
+     .
+    </p>
+   </li>
+  </ul>
+  <h2 name="configuring-filters">
+   Using filters
+  </h2>
+  <p oldrole="para">
+   Filters perform log routing within syslog-ng: a message passes the filter if the filter expression is true for the particular message. If a log statement includes filters, the messages are sent to the destinations only if they pass all filters of the log path. For example, a filter can select only the messages originating from a particular host. Complex filters can be created using filter functions and logical boolean expressions.
+  </p>
+  <p oldrole="para">
+   To define a filter, add a filter statement to the syslog-ng configuration file using the following syntax:
+  </p>
+  <MadCap:keyword term="filters:['defining']">
+  </MadCap:keyword>
+  <p class="Code" oldrole="synopsis">
+   filter &lt;identifier&gt; { &lt;filter_type&gt;("&lt;filter_expression&gt;"); };
+  </p>
+  <p oldrole="para">
+   Then use the filter in a log path, for example:
+  </p>
+  <p class="Code" oldrole="synopsis">
+   log {
+    source(s1);
+    filter(&lt;identifier&gt;);
+    destination(d1); };
+  </p>
+  <p oldrole="para">
+   You can also define the filter inline. For details, see
+   <MadCap:xref href="chapter-configuration-file.htm#inline-objects">
+   </MadCap:xref>
+   .
+  </p>
+  <h6 oldrole="example">
+   Example:
+   A simple filter statement
+  </h6>
+  <p oldrole="para">
+   The following filter statement selects the messages that contain the word
+   <span class="Code" oldrole="userinput">
+    deny
+   </span>
+   and come from the host
+   <span class="Code" oldrole="userinput">
+    example
+   </span>
+   .
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter demo_filter { host("example") and match("deny" value("MESSAGE")) };
+log {
+    source(s1);
+    filter(demo_filter);
+    destination(d1); };
+  </p>
+  <p oldrole="para">
+   The following example does the same, but defines the filter inline.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   log {
+    source(s1);
+    filter { host("example") and match("deny" value("MESSAGE")) };
+    destination(d1); };
+  </p>
+  <h2 name="filters-boolean">
+   Combining filters with boolean operators
+  </h2>
+  <MadCap:keyword term="filters:['boolean operators']">
+  </MadCap:keyword>
+  <MadCap:keyword term="filters:['AND, OR, NOT']">
+  </MadCap:keyword>
+  <MadCap:keyword term="boolean operators">
+  </MadCap:keyword>
+  <MadCap:keyword term="AND">
+  </MadCap:keyword>
+  <MadCap:keyword term="OR">
+  </MadCap:keyword>
+  <MadCap:keyword term="NOT">
+  </MadCap:keyword>
+  <p oldrole="para">
+   When a log statement includes multiple filter statements, syslog-ng sends a message to the destination only if all filters are true for the message. In other words, the filters are connected with the logical
+   <span class="Code" oldrole="userinput">
+    AND
+   </span>
+   operator. In the following example, no message arrives to the destination, because the filters are exclusive (the hostname of a client cannot be
+   <span class="Code" oldrole="userinput">
+    example1
+   </span>
+   and
+   <span class="Code" oldrole="userinput">
+    example2
+   </span>
+   at the same time):
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter demo_filter1 { host("example1"); };
+filter demo_filter2 { host("example2"); };
+log {
+    source(s1); source(s2);
+    filter(demo_filter1); filter(demo_filter2);
+    destination(d1); destination(d2); };
+  </p>
+  <p oldrole="para">
+   To select the messages that come from either host
+   <span class="Code" oldrole="userinput">
+    example1
+   </span>
+   or
+   <span class="Code" oldrole="userinput">
+    example2
+   </span>
+   , use a single filter expression:
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter demo_filter { host("example1") or host("example2"); };
+log {
+    source(s1); source(s2);
+    filter(demo_filter);
+    destination(d1); destination(d2); };
+  </p>
+  <p oldrole="para">
+   Use the
+   <span class="Code" oldrole="userinput">
+    not
+   </span>
+   operator to invert filters, for example, to select the messages that were not sent by host
+   <span class="Code" oldrole="userinput">
+    example1
+   </span>
+   :
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter demo_filter { not host("example1"); };
+  </p>
+  <p oldrole="para">
+   However, to select the messages that were not sent by host
+   <span class="Code" oldrole="userinput">
+    example1
+   </span>
+   or
+   <span class="Code" oldrole="userinput">
+    example2
+   </span>
+   , you have to use the
+   <span class="Code" oldrole="userinput">
+    and
+   </span>
+   operator (that's how boolean logic works):
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter demo_filter { not host("example1") and not host("example2"); };
+  </p>
+  <p oldrole="para">
+   Alternatively, you can use parentheses to avoid this confusion:
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter demo_filter { not (host("example1") or host("example2")); };
+  </p>
+  <p oldrole="para">
+   For a complete description on filter functions, see
+   <MadCap:xref href="chapter-routing-filters.htm#reference-filters">
+   </MadCap:xref>
+   .
+  </p>
+  <p oldrole="para">
+   The following filter statement selects the messages that contain the word
+   <span class="Code" oldrole="userinput">
+    deny
+   </span>
+   and come from the host
+   <span class="Code" oldrole="userinput">
+    example
+   </span>
+   .
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter demo_filter { host("example") and match("deny" value("MESSAGE")); };
+  </p>
+  <p oldrole="para">
+   The
+   <span class="Code" oldrole="parameter">
+    value()
+   </span>
+   parameter of the
+   <span class="Code" oldrole="parameter">
+    match
+   </span>
+   function limits the scope of the function to the text part of the message (that is, the part returned by the
+   <span class="Code" oldrole="parameter">
+    ${MESSAGE}
+   </span>
+   macro). For details on using the
+   <span class="Code" oldrole="parameter">
+    match()
+   </span>
+   filter function, see
+   <MadCap:xref href="chapter-routing-filters.htm#reference-filters-match">
+   </MadCap:xref>
+   .
+  </p>
+  <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="tip" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+   </col>
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+   </col>
+   <tbody>
+    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+      <p>
+       <img src="../../Resources/Images/Common/note.png"/>
+      </p>
+     </td>
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
+      <span class="AllNoteStyles">
+       TIP:
+      </span>
+      <p oldrole="para">
+       Filters are often used together with log path flags. For details, see
+       <MadCap:xref href="chapter-routing-filters.htm#reference-logflags">
+       </MadCap:xref>
+       .
+      </p>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <h2 name="filters-comparing">
+   Comparing macro values in filters
+  </h2>
+  <MadCap:keyword term="filters:['comparing values']">
+  </MadCap:keyword>
+  <MadCap:keyword term="ge">
+  </MadCap:keyword>
+  <MadCap:keyword term="gt">
+  </MadCap:keyword>
+  <MadCap:keyword term="eq">
+  </MadCap:keyword>
+  <MadCap:keyword term="ne">
+  </MadCap:keyword>
+  <MadCap:keyword term="le">
+  </MadCap:keyword>
+  <MadCap:keyword term="lt">
+  </MadCap:keyword>
+  <MadCap:keyword term="string comparison">
+  </MadCap:keyword>
+  <MadCap:keyword term="value comparison">
+  </MadCap:keyword>
+  <MadCap:keyword term="comparing values">
+  </MadCap:keyword>
+  <MadCap:keyword term="filters:['comparing values']">
+  </MadCap:keyword>
+  <p oldrole="para">
+   Starting with
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   version
+   <MadCap:conditionaltext MadCap:conditions="ose">
+    3.2
+   </MadCap:conditionaltext>
+   <MadCap:conditionaltext MadCap:conditions="pe">
+    4 F1
+   </MadCap:conditionaltext>
+   , it is also possible to compare macro values and templates as numerical and string values. String comparison is alphabetical: it determines if a string is alphabetically greater or equal to another string. Use the following syntax to compare macro values or templates. For details on macros and templates, see
+   <MadCap:xref href="chapter-manipulating-messages.htm#customizing-message-format">
+   </MadCap:xref>
+   .
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter &lt;filter-id&gt;
+        {"&lt;macro-or-template&gt;" operator "&lt;value-or-macro-or-template&gt;"};
+  </p>
+  <h6 name="example-comparison" oldrole="example">
+   Example:
+   Comparing macro values in filters
+  </h6>
+  <p oldrole="para">
+   The following expression selects log messages containing a PID (that is,
+   <span class="Code" oldrole="parameter">
+    ${PID}
+   </span>
+   macro is not empty):
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter f_pid {"${PID}" !=""};
+  </p>
+  <p oldrole="para">
+   The following expression selects log messages that do not contain a PID. Also, it uses a template as the left argument of the operator and compares the values as strings:
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter f_pid {"${HOST}${PID}" eq "${HOST}"};
+  </p>
+  <p oldrole="para">
+   The following example selects messages with priority level higher than 5.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter f_level {"${LEVEL_NUM}" &gt; "5"};
+  </p>
+  <p oldrole="para">
+   Note that:
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     The macro or template must be enclosed in double-quotes.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     The
+     <span class="Code" oldrole="userinput">
+      $
+     </span>
+     character must be used before macros.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Using comparator operators can be equivalent to using filter functions, but is somewhat slower. For example, using
+     <span class="Code" oldrole="userinput">
+      "${HOST}" eq "myhost"
+     </span>
+     is equivalent to using
+     <span class="Code" oldrole="userinput">
+      host("myhost" type(string))
+     </span>
+     .
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     You can use any macro in the expression, including user-defined macros from parsers and results of pattern database classifications.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     The results of filter functions are boolean values, so they cannot be compared to other values.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     You can use boolean operators to combine comparison expressions.
+    </p>
+    <!-- FIXME add a working example-->
+   </li>
+  </ul>
+  <p oldrole="para">
+   The following operators are available:
+  </p>
+  <MadCap:snippetBlock src="../../shared/chunk/table-comparison-operators-routing-filters.htm">
+  </MadCap:snippetBlock>
+  <h2 name="regular-expr">
+   Using wildcards, special characters, and regular expressions in filters
+  </h2>
+  <MadCap:keyword term="regular expressions">
+  </MadCap:keyword>
+  <p oldrole="para">
+   The
+   <span class="Code" oldrole="parameter">
+    host()
+   </span>
+   ,
+   <span class="Code" oldrole="parameter">
+    match()
+   </span>
+   , and
+   <span class="Code" oldrole="parameter">
+    program()
+   </span>
+   filter functions accept regular expressions as parameters. The exact type of the regular expression to use can be specified with the
+   <span class="Code" oldrole="parameter">
+    type()
+   </span>
+   option. By default,
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   uses PCRE regular expressions.
+  </p>
+  <MadCap:keyword term="filters:['wildcards']">
+  </MadCap:keyword>
+  <p oldrole="para">
+   In regular expressions, the asterisk (
+   <span class="Code" oldrole="userinput">
+    *
+   </span>
+   ) character means 0, 1, or any number of the previous expression. For example, in the
+   <span class="Code" oldrole="userinput">
+    f*ilter
+   </span>
+   expression the asterisk means 0 or more f letters. This expression matches for the following strings:
+   <span class="Code" oldrole="userinput">
+    ilter
+   </span>
+   ,
+   <span class="Code" oldrole="userinput">
+    filter
+   </span>
+   ,
+   <span class="Code" oldrole="userinput">
+    ffilter
+   </span>
+   , and so on. To achieve the wildcard functionality commonly represented by the asterisk character in other applications, use
+   <span class="Code" oldrole="userinput">
+    .*
+   </span>
+   in your expressions, for example
+   <span class="Code" oldrole="userinput">
+    f.*ilter
+   </span>
+   .
+  </p>
+  <p oldrole="para">
+   Alternatively, if you do not need regular expressions, only wildcards, use
+   <span class="Code" oldrole="userinput">
+    type(glob)
+   </span>
+   in your filter:
+  </p>
+  <h6 name="example-wildcard-filter" oldrole="example">
+   Example:
+   Filtering with widcards
+  </h6>
+  <p oldrole="para">
+   The following filter matches on hostnames starting with the
+   <span class="Code" oldrole="userinput">
+    myhost
+   </span>
+   string, for example, on
+   <span class="Code" oldrole="userinput">
+    myhost-1
+   </span>
+   ,
+   <span class="Code" oldrole="userinput">
+    myhost-2
+   </span>
+   , and so on.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter f_wildcard {host("myhost*" type(glob));};
+  </p>
+  <p oldrole="para">
+   For details on using regular expressions in
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   , see
+   <MadCap:xref href="chapter-routing-filters.htm#regular-expr">
+   </MadCap:xref>
+   .
+  </p>
+  <MadCap:keyword term="filters:['control characters']">
+  </MadCap:keyword>
+  <p oldrole="para">
+   To filter for special control characters like the carriage return (CR), use the
+   <span class="Code" oldrole="userinput">
+    \r
+   </span>
+   escape prefix in
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   version 3.0 and 3.1. In
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   3.2 and later, you can also use the
+   <span class="Code" oldrole="userinput">
+    \x
+   </span>
+   escape prefix and the ASCII code of the character. For example, to filter on carriage returns, use the following filter:
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter f_carriage_return {match("\x0d" value ("MESSAGE"));};
+  </p>
+  <h2 name="tagging-messages">
+   Tagging messages
+  </h2>
+  <MadCap:keyword term="filters:['tags']">
+  </MadCap:keyword>
+  <MadCap:keyword term="tagging messages">
+  </MadCap:keyword>
+  <MadCap:keyword term="tags">
+  </MadCap:keyword>
+  <p oldrole="para">
+   You can label the messages with custom tags. Tags are simple labels, identified by their names, which must be unique. Currently
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   can tag a message at two different places:
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     at the source when the message is received, and
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     when the message matches a pattern in the pattern database. For details on using the pattern database, see
+     <MadCap:xref href="chapter-patterndb.htm#configuring-pattern-databases">
+     </MadCap:xref>
+     , for details on creating tags in the pattern database, see
+     <MadCap:xref href="chapter-patterndb.htm#reference-patterndb-schemes">
+     </MadCap:xref>
+     .
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Tags can be also added and deleted using rewrite rules. For details, see
+     <MadCap:xref href="chapter-manipulating-messages.htm#rewrite-tags">
+     </MadCap:xref>
+     .
+    </p>
+   </li>
+  </ul>
+  <p oldrole="para">
+   When syslog-ng receives a message, it automatically adds the
+   <span class="Code" oldrole="userinput">
+    .source.&lt;id_of_the_source_statement&gt;
+   </span>
+   tag to the message. Use the
+   <span class="Code" oldrole="parameter">
+    tags()
+   </span>
+   option of the source to add custom tags, and the
+   <span class="Code" oldrole="parameter">
+    tags()
+   </span>
+   option of the filters to select only specific messages.
+  </p>
+  <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+   </col>
+   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+   </col>
+   <tbody>
+    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+      <p>
+       <img src="../../Resources/Images/Common/note.png"/>
+      </p>
+     </td>
+     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
+      <span class="AllNoteStyles">
+       NOTE:
+      </span>
+      <ul oldrole="itemizedlist">
+       <li oldrole="listitem">
+        <p oldrole="para">
+         Tagging messages and also filtering on the tags is very fast, much faster than other types of filters.
+        </p>
+       </li>
+       <li oldrole="listitem">
+        <p oldrole="para">
+         Tags are available locally, that is, if you add tags to a message on the client, these tags will not be available on the server.
+        </p>
+       </li>
+       <li oldrole="listitem">
+        <p oldrole="para">
+         To include the tags in the message, use the
+         <span class="Code" oldrole="parameter">
+          ${TAGS}
+         </span>
+         macro in a template. Alternatively, if you are using the IETF-syslog message format, you can include the
+         <span class="Code" oldrole="parameter">
+          ${TAGS}
+         </span>
+         macro in the
+         <span class="Code" oldrole="parameter">
+          .SDATA.meta
+         </span>
+         part of the message. Note that the
+         <span class="Code" oldrole="parameter">
+          ${TAGS}
+         </span>
+         macro is available only in
+         <MadCap:variable name="General.abbrev">
+          abbrev
+         </MadCap:variable>
+         3.1.1 and later.
+        </p>
+       </li>
+      </ul>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+  <p oldrole="para">
+   For an example on tagging, see
+   <MadCap:xref href="../../shared/chunk/option-filter-tags-routing.htm#example-tags-filtering">
+   </MadCap:xref>
+   .
+  </p>
+  <h2 name="reference-filters">
+   Filter functions
+  </h2>
+  <MadCap:keyword term="filters:['reference']">
+  </MadCap:keyword>
+  <p oldrole="para">
+   The following functions may be used in the filter statement, as described in
+   <MadCap:xref href="chapter-routing-filters.htm#filters">
+   </MadCap:xref>
+   .
+  </p>
+  <MadCap:snippetBlock src="../../shared/chunk/table-filter-functions.htm">
+  </MadCap:snippetBlock>
+  <h6 name="filter-facility" oldrole="simplesect">
+   facility()
+  </h6>
+  <MadCap:keyword term="facility()">
+  </MadCap:keyword>
+  <MadCap:snippetBlock src="../../shared/chunk/informaltable-filter-facility-routing-filters.htm">
+  </MadCap:snippetBlock>
+  <p oldrole="para">
+   <i oldrole="emphasis" role="bold">
+    Description:
+   </i>
+   Match messages having one of the listed facility codes.
+  </p>
+  <MadCap:keyword term="filters:['facilities, ']">
+  </MadCap:keyword>
+  <p oldrole="para">
+   The
+   <span class="Code" oldrole="parameter">
+    facility()
+   </span>
+   filter accepts both the name and the numerical code of the facility or the importance level. Facility codes 0-23 are predefined and can be referenced by their usual name. Facility codes above 24 are not defined.
+  </p>
+  <p oldrole="para">
+   You can use the facility filter the following ways:
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Use a single facility name, for example,
+     <span class="Code" oldrole="userinput">
+      facility(user)
+     </span>
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Use a single facility code, for example,
+     <span class="Code" oldrole="userinput">
+      facility(1)
+     </span>
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Use a facility range (works only with facility names), for example,
+     <span class="Code" oldrole="userinput">
+      facility(local0..local5)
+     </span>
+    </p>
+   </li>
+  </ul>
+  <p oldrole="para">
+   The syslog-ng application recognizes the following facilities: (Note that some of these facilities are available only on specific platforms.)
+  </p>
+  <!-- FIXME authpriv -->
+  <MadCap:snippetBlock src="../../shared/chunk/informaltable-facilities-routing-filters.htm">
+  </MadCap:snippetBlock>
+  <MadCap:snippetBlock src="../../shared/chunk/option-filter-filter-routing.htm">
+  </MadCap:snippetBlock>
+  <MadCap:snippetBlock src="../../shared/chunk/option-filter-host-routing.htm">
+  </MadCap:snippetBlock>
+  <MadCap:snippetBlock src="../../shared/chunk/option-filter-inlist-routing.htm">
+  </MadCap:snippetBlock>
+  <MadCap:snippetBlock src="../../shared/chunk/option-filter-priority-routing.htm">
+  </MadCap:snippetBlock>
+  <MadCap:snippetBlock src="../../shared/chunk/option-filter-match-routing.htm">
+  </MadCap:snippetBlock>
+  <MadCap:snippetBlock src="../../shared/chunk/option-filter-message-routing.htm">
+  </MadCap:snippetBlock>
+  <MadCap:snippetBlock src="../../shared/chunk/option-filter-netmask-routing.htm">
+  </MadCap:snippetBlock>
+  <MadCap:snippetBlock src="../../shared/chunk/option-filter-netmask6-routing.htm">
+  </MadCap:snippetBlock>
+  <MadCap:snippetBlock src="../../shared/chunk/option-filter-program-routing.htm">
+  </MadCap:snippetBlock>
+  <MadCap:snippetBlock src="../../shared/chunk/option-filter-source-routing.htm">
+  </MadCap:snippetBlock>
+  <MadCap:snippetBlock src="../../shared/chunk/option-filter-tags-routing.htm">
+  </MadCap:snippetBlock>
+  <h2 name="example-dropping-messages">
+   Dropping messages
+  </h2>
+  <MadCap:keyword term="skipping messages">
+  </MadCap:keyword>
+  <MadCap:keyword term="dropping messages">
+  </MadCap:keyword>
+  <MadCap:keyword term="discarding messages">
+  </MadCap:keyword>
+  <p oldrole="para">
+   To skip the processing of a message without sending it to a destination, create a log statement with the appropriate filters, but do not include any destination in the statement, and use the
+   <span class="Code" oldrole="parameter">
+    final
+   </span>
+   flag.
+  </p>
+  <h6 oldrole="example">
+   Example:
+   Skipping messages
+  </h6>
+  <p oldrole="para">
+   The following log statement drops all
+   <span class="Code" oldrole="parameter">
+    debug
+   </span>
+   level messages without any further processing.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   filter demo_debugfilter { level(debug); };
+log { source(s_all); filter(demo_debugfilter); flags(final); };
+  </p>
+ </body>
+</html>

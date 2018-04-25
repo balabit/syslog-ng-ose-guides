@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8"?>
+%entities;]&gt;
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+ <body name="data-enrichment-add-contextual-data" oldrole="section">
+  <h1 name="data-enrichment-add-contextual-data" oldrole="section">
+   Adding metadata from an external file
+  </h1>
+  <MadCap:keyword term='data enrichment:[&lt;span class="Code" oldrole="parameter"&gt;add-contextual-data()&lt;/span&gt;]'>
+  </MadCap:keyword>
+  <MadCap:keyword term='enriching data:[&lt;span class="Code" oldrole="parameter"&gt;add-contextual-data()&lt;/span&gt;]'>
+  </MadCap:keyword>
+  <p oldrole="para">
+   In
+   <MadCap:variable name="General.abbrev">
+    abbrev
+   </MadCap:variable>
+   version
+   <MadCap:conditionaltext MadCap:conditions="ose">
+    3.8
+   </MadCap:conditionaltext>
+   <MadCap:conditionaltext MadCap:conditions="pe">
+    7.0
+   </MadCap:conditionaltext>
+   and later, you can use an external database file to add additional metadata to your log messages. For example, you can create a database (or export it from an existing tool) that contains a list of hostnames or IP addresses, and the department of your organization that the host belongs to, the role of the host (mailserver, webserver, and so on), or similar contextual information.
+  </p>
+  <p oldrole="para">
+   The database file is a simple text file in comma-separated value (CSV) format, where each line contains the following information:
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     A selector or ID that appears in the log messages, or the name of a filter that matches the messages, for example, the hostname.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     The name of the name-value pair that
+     <MadCap:variable name="General.abbrev">
+      abbrev
+     </MadCap:variable>
+     adds to matching log messages.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     The value of the name-value pairs.
+    </p>
+   </li>
+  </ul>
+  <p oldrole="para">
+   For example, the following csv-file contains three lines identified with the IP address, and adds the
+   <span class="Code" oldrole="userinput">
+    host-role
+   </span>
+   field to the log message.
+  </p>
+  <p class="Code" oldrole="synopsis">
+   192.168.1.1,host-role,webserver
+192.168.2.1,host-role,firewall
+192.168.3.1,host-role,mailserver
+  </p>
+  <p>
+   <b name="add-contextual-data-csv-database-file" oldrole="formalpara">
+    The database file:
+   </b>
+  </p>
+  <p oldrole="para">
+  </p>
+  <p oldrole="para">
+   The database file must comply with the
+   <a href="https://tools.ietf.org/html/rfc4180">
+    RFC4180 CSV format
+   </a>
+   , with the following exceptions and limitations:
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     The values of the CSV-file cannot contain line-breaks
+    </p>
+   </li>
+  </ul>
+  <p oldrole="para">
+   To add multiple name-value pairs to a message, include a separate line in the database for each name-value pair, for example:
+  </p>
+  <p class="Code" oldrole="synopsis">
+   192.168.1.1,host-role,webserver
+192.168.1.1,contact-person,"John Doe"
+192.168.1.1,contact-email,johndoe@example.com
+  </p>
+  <p oldrole="para">
+   Technically,
+   <span class="Code" oldrole="parameter">
+    add-contextual-data()
+   </span>
+   is a parser in
+   <entity>
+    abbrev
+   </entity>
+   so you have to define it as a parser object.
+  </p>
+  <p>
+   <b oldrole="formalpara">
+    Declaration:
+   </b>
+  </p>
+  <p oldrole="para">
+  </p>
+  <p class="Code" oldrole="synopsis">
+   parser p_add_context_data {
+    add-contextual-data(
+        selector("$HOST"),
+        database("context-info-db.csv"),
+    );
+};
+  </p>
+  <p oldrole="para">
+   You can also add data to messages that do not have a matching selector entry in the database using the
+   <span class="Code" oldrole="parameter">
+    default-selector()
+   </span>
+   option.
+  </p>
+  <p oldrole="para">
+   If you modify the database file, you have to reload
+   <entity>
+    abbrev
+   </entity>
+   for the changes to take effect. If reloading
+   <entity>
+    abbrev
+   </entity>
+   or the database file fails for some reason,
+   <entity>
+    abbrev
+   </entity>
+   will keep using the last working database file.
+  </p>
+  <example>
+   <title>
+    Adding metadata from a CSV file
+   </title>
+   <p oldrole="para">
+    The following example defines uses a CSV database to add the role of the host based on its IP address, and prefixes the added name-value pairs with
+    <span class="Code" oldrole="userinput">
+     .metadata
+    </span>
+    . The destination includes a template that simply appends the added name-value pairs to the end of the log message.
+   </p>
+   <p class="Code" oldrole="synopsis">
+    @include "scl.conf"
+
+source s_network {
+    network(port(5555));
+};
+
+destination d_local {
+    file("/tmp/test-msgs.log"
+    template("$MSG Additional metadata:[${.metadata.host-role}]")};
+
+parser p_add_context_data {
+    add-contextual-data(selector("$SOURCEIP"), database("context-info-db.csv"), default-selector("unknown"), prefix(".metadata."));
+};
+
+log {
+    source(s_network);
+    parser(p_add_context_data);
+    destination(d_local);
+};
+   </p>
+   <p class="Code" oldrole="synopsis">
+    192.168.1.1,host-role,webserver
+192.168.2.1,host-role,firewall
+192.168.3.1,host-role,mailserver
+unknown,host-role,unknown
+   </p>
+  </example>
+  <h2 name="add-contextual-data-filters">
+   Using filters as selector
+  </h2>
+  <p oldrole="para">
+   To better control to which log messages you add contextual data, you can use filters as selectors. In this case, the first column of the CSV database file must contain the name of a filter. For each message,
+   <entity>
+    abbrev
+   </entity>
+   evaluates the filters in the order they appear in the database file. If a filter matches the message,
+   <entity>
+    abbrev
+   </entity>
+   adds the name-value pair related to the filter.
+  </p>
+  <p oldrole="para">
+   For example, the database file can contain the entries. (For details on the accepted CSV-format, see
+   <xref linkend="add-contextual-data-option-database">
+   </xref>
+   .)
+  </p>
+  <p class="Code" oldrole="synopsis">
+   f_auth,domain,all
+f_localhost,source,localhost
+f_kern,domain,kernel
+  </p>
+  <p oldrole="para">
+   Note that
+   <entity>
+    abbrev
+   </entity>
+   does not evaluate other filters after the first match. For example, if you use the previous database file, and a message matches both the
+   <span class="Code" oldrole="userinput">
+    f_auth
+   </span>
+   and
+   <span class="Code" oldrole="userinput">
+    f_localhost
+   </span>
+   filters,
+   <entity>
+    abbrev
+   </entity>
+   adds only the name-value pair of
+   <span class="Code" oldrole="userinput">
+    f_auth
+   </span>
+   to the message.
+  </p>
+  <p oldrole="para">
+   To add multiple name-value pairs to a message, include a separate line in the database for each name-value pair, for example:
+  </p>
+  <p class="Code" oldrole="synopsis">
+   f_localhost,host-role,firewall
+f_localhost,contact-person,"John Doe"
+f_localhost,contact-email,johndoe@example.com
+  </p>
+  <p oldrole="para">
+   You can also add data to messages that do not have a matching selector entry in the database using the
+   <span class="Code" oldrole="parameter">
+    default-selector()
+   </span>
+   option.
+  </p>
+  <p oldrole="para">
+   You must store the filters you reference in a database in a separate file. This file is similar to a
+   <entity>
+    abbrev
+   </entity>
+   configuration file, but must contain only a version string and filters (and optionally comments). You can use the
+   <b oldrole="command">
+    syslog-ng --syntax-only &lt;filename&gt;
+   </b>
+   command to ensure that the file is valid. For example, the content of such a file can be:
+  </p>
+  <p class="Code" oldrole="synopsis">
+   @version:
+   <entity>
+    techversion
+   </entity>
+   filter f_localhost { host("mymachine.example.com") };
+filter f_auth { facility(4) };
+filter f_kern { facility(0) };
+  </p>
+  <p>
+   <b oldrole="formalpara">
+    Declaration:
+   </b>
+  </p>
+  <p oldrole="para">
+  </p>
+  <p class="Code" oldrole="synopsis">
+   parser p_add_context_data_filter {
+    add-contextual-data(
+        selector(filters("filters.conf")),
+        database("context-info-db.csv"),
+        prefix(".metadata.")
+    );
+};
+  </p>
+  <p oldrole="para">
+   If you modify the database file, or the file that contains the filters, you have to reload
+   <entity>
+    abbrev
+   </entity>
+   for the changes to take effect. If reloading
+   <entity>
+    abbrev
+   </entity>
+   or the files fails for some reason,
+   <entity>
+    abbrev
+   </entity>
+   will keep using the last working version of the file.
+  </p>
+  <h2 name="reference-add-contextual-data-options">
+   Options add-contextual-data()
+  </h2>
+  <indexterm>
+   <primary>
+    data enrichment
+   </primary>
+   <secondary>
+    <span class="Code" oldrole="parameter">
+     add-contextual-data()
+    </span>
+   </secondary>
+  </indexterm>
+  <indexterm>
+   <primary>
+    enriching data
+   </primary>
+   <secondary>
+    <span class="Code" oldrole="parameter">
+     add-contextual-data()
+    </span>
+   </secondary>
+  </indexterm>
+  <p oldrole="para">
+   The
+   <span class="Code" oldrole="parameter">
+    add-contextual-data()
+   </span>
+   has the following options.
+  </p>
+  <p>
+   <b oldrole="formalpara">
+    Required options:
+   </b>
+  </p>
+  <p oldrole="para">
+  </p>
+  <p oldrole="para">
+   The following options are required:
+   <span class="Code" oldrole="parameter">
+    selector()
+   </span>
+   ,
+   <span class="Code" oldrole="parameter">
+    database()
+   </span>
+   .
+  </p>
+  <simplesect xml:id="add-contextual-data-option-database">
+   <title>
+    database()
+   </title>
+   <indexterm type="parameter">
+    <primary>
+     add-contextual-data()
+    </primary>
+    <secondary>
+     database
+    </secondary>
+   </indexterm>
+   <indexterm type="parameter">
+    <primary>
+     add-contextual-data()
+    </primary>
+    <secondary>
+     database
+    </secondary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="40pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Type:
+       </entry>
+       <entry>
+        &lt;path-to-file&gt;.csv
+       </entry>
+      </row>
+      <row>
+       <entry>
+        Default:
+       </entry>
+       <entry>
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    Specifies the path to the CSV file, for example,
+    <span class="Code" oldrole="userinput">
+     /opt/syslog-ng/my-csv-database.csv
+    </span>
+    . The extension of the file must be
+    <span class="Code" oldrole="filename">
+     .csv
+    </span>
+    , and can include Windows-style (CRLF) or UNIX-style (LF) linebreaks. You can use absolute path, or relative to the
+    <entity>
+     abbrev
+    </entity>
+    binary.
+   </p>
+  </simplesect>
+  <simplesect>
+   <title>
+    default-selector()
+   </title>
+   <indexterm>
+    <primary>
+     default-selector()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="50pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Synopsis:
+       </entry>
+       <entry>
+        default-selector()
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    Specifies the ID of the entry (line) that is corresponds to log messages that do not have a selector that matches an entry in the database. For example, if you add name-value pairs from the database based on the hostname from the log message (
+    <span class="Code" oldrole="userinput">
+     selector("${HOST}")
+    </span>
+    ), then you can include a line for unknown hosts in the database, and set
+    <span class="Code" oldrole="parameter">
+     default-selector()
+    </span>
+    to the ID of the line for unknown hosts. In the CSV file:
+   </p>
+   <p class="Code" oldrole="synopsis">
+    unknown-hostname,host-role,unknown
+   </p>
+   <p oldrole="para">
+    In the
+    <entity>
+     abbrev
+    </entity>
+    configuration file:
+   </p>
+   <p class="Code" oldrole="synopsis">
+    add-contextual-data(
+    selector("$HOST")
+    database("context-info-db.csv")
+    default-selector("unknown-hostname")
+);
+   </p>
+  </simplesect>
+  <simplesect>
+   <title>
+    prefix()
+   </title>
+   <indexterm>
+    <primary>
+     prefix()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="50pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Synopsis:
+       </entry>
+       <entry>
+        prefix()
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    Insert a prefix before the name part of the added name-value pairs (including the pairs added by the
+    <span class="Code" oldrole="parameter">
+     default-selector()
+    </span>
+    ) to help further processing.
+   </p>
+  </simplesect>
+  <simplesect>
+   <title>
+    selector()
+   </title>
+   <indexterm>
+    <primary>
+     selector()
+    </primary>
+   </indexterm>
+   <informaltable colsep="0" frame="topbot" rowsep="0">
+    <tgroup cols="2">
+     <colspec colnum="1" colwidth="50pt">
+     </colspec>
+     <tbody>
+      <row>
+       <entry>
+        Synopsis:
+       </entry>
+       <entry>
+        selector()
+       </entry>
+      </row>
+     </tbody>
+    </tgroup>
+   </informaltable>
+   <p oldrole="para">
+    <i oldrole="emphasis" role="bold">
+     Description:
+    </i>
+    Specifies the string or macro that
+    <entity>
+     abbrev
+    </entity>
+    evaluates for each message, and if its value matches the ID of an entry in the database,
+    <entity>
+     abbrev
+    </entity>
+    adds the name-value pair of every matching database entry to the log message. Currently, you can use strings and a single macro (for example,
+    <span class="Code" oldrole="userinput">
+     ${HOST}
+    </span>
+    ) in the
+    <span class="Code" oldrole="parameter">
+     selector()
+    </span>
+    option, templates are not supported. To use filters as selectors, see
+    <xref linkend="add-contextual-data-filters">
+    </xref>
+    .
+   </p>
+  </simplesect>
+ </body>
+</html>

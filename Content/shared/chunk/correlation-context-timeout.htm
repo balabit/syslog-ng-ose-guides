@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+ <body oldrole="topic">
+  <p oldrole="para">
+   Note the following points about timeout values:
+  </p>
+  <ul oldrole="itemizedlist">
+   <li oldrole="listitem">
+    <p oldrole="para">
+     When a new message is added to a context,
+     <MadCap:variable name="General.abbrev">
+      abbrev
+     </MadCap:variable>
+     will restart the timeout using the
+     <span class="Code" oldrole="parameter">
+      context-timeout
+     </span>
+     set for the new message.
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     When calculating if the timeout has already expired or not,
+     <MadCap:variable name="General.abbrev">
+      abbrev
+     </MadCap:variable>
+     uses the timestamps of the incoming messages, not system time elapsed between receiving the two messages (unless the messages do not include a timestamp, or the
+     <span class="Code" oldrole="userinput">
+      keep-timestamp(no)
+     </span>
+     option is set). That way
+     <MadCap:variable name="General.abbrev">
+      abbrev
+     </MadCap:variable>
+     can be used to process and correlate already existing log messages offline. However, the timestamps of the messages must be in chronological order (that is, a new message cannot be older than the one already processed), and if a message is newer than the current system time (that is, it seems to be coming from the future),
+     <MadCap:variable name="General.abbrev">
+      abbrev
+     </MadCap:variable>
+     will replace its timestamp with the current system time.
+    </p>
+    <h6 oldrole="example">
+     Example:
+     How
+     <MadCap:variable name="General.abbrev">
+      abbrev
+     </MadCap:variable>
+     calculates
+     <span class="Code" oldrole="parameter">
+      context-timeout
+     </span>
+    </h6>
+    <p oldrole="para">
+     Consider the following two messages:
+    </p>
+    <p class="Code" oldrole="synopsis">
+     &lt;38&gt;1990-01-01T14:45:25 customhostname program6[1234]: program6 testmessage
+&lt;38&gt;1990-01-01T14:46:25 customhostname program6[1234]: program6 testmessage
+    </p>
+    <p oldrole="para">
+     If the
+     <span class="Code" oldrole="parameter">
+      context-timeout
+     </span>
+     is 10 seconds and
+     <MadCap:variable name="General.abbrev">
+      abbrev
+     </MadCap:variable>
+     receives the messages within 1 sec, the timeout event will occour immediately, because the difference of the two timestamp (60 sec) is larger than the timeout value (10 sec).
+    </p>
+   </li>
+   <li oldrole="listitem">
+    <p oldrole="para">
+     Avoid using unnecessarily long timeout values on high-traffic systems, as storing the contexts for many messages can require considerable memory. For example, if two related messages usually arrive within seconds, it is not needed to set the timeout to several hours.
+    </p>
+   </li>
+  </ul>
+ </body>
+</html>
