@@ -34,20 +34,20 @@
         <para></para>
     </formalpara>
     <itemizedlist>
-    <indexterm>
-        <primary>log statistics</primary>
-        <secondary>on unix-socket</secondary>
-    </indexterm>
-    <indexterm>
-        <primary>message statistics</primary>
-    </indexterm>
-    <indexterm>
-        <primary>message</primary>
-        <secondary>statistics</secondary>
-    </indexterm>
-    <indexterm>
-        <primary>statistics</primary>
-    </indexterm>
+        <indexterm>
+            <primary>log statistics</primary>
+            <secondary>on unix-socket</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>message statistics</primary>
+        </indexterm>
+        <indexterm>
+            <primary>message</primary>
+            <secondary>statistics</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>statistics</primary>
+        </indexterm>
         <listitem>
             <para>Using the <link linkend="log-statistics-internal-source"><parameter>internal()</parameter> source</link>.</para>
         </listitem>
@@ -61,34 +61,39 @@
             <para>If you have an OpenBSD-style <command>netcat</command> application installed, use the <command>echo STATS | nc -U /opt/syslog-ng/var/run/syslog-ng.ctl</command> command. Note that the <command>netcat</command> included in most Linux distributions is a GNU-style version that is not suitable to query the statistics of syslog-ng.</para>
         </listitem>
     </itemizedlist>
-
     <section xml:id="log-statistics-description">
         <title>Metrics and counters of &abbrev;</title>
         <para>You can list all active metrics on your &abbrev; host using the following command (this lists the metrics, without their current values): <command>syslog-ng-ctl query list "*"</command></para>
         <para>To list the metrics and their values, use the following command: <command>syslog-ng-ctl query get "*"</command></para>
         <para>The displayed metrics have the following structure.</para>
-    <orderedlist>
-        <listitem>
-            <para>The type of the object (for example <userinput>dst.file</userinput>, <userinput>tag</userinput>, <userinput>src.facility</userinput>)</para>
-        </listitem>
-        <listitem>
-            <para>The ID of the object used in the syslog-ng configuration file, for example <userinput>d_internal</userinput> or <userinput>source.src_tcp</userinput>. The <userinput>#0</userinput> part means that this is the first destination in the destination group.</para>
-        </listitem>
-        <listitem>
-            <para>The instance ID (destination) of the object, for example the filename of a file destination, or the name of the application for a program source or destination.</para>
-        </listitem>
-        <listitem>
-            <para>The status of the object. One of the following:</para>
-            <itemizedlist>
-                <listitem>
-                    <para><userinput>a</userinput> - active. At the time of quering the statistics, the source or the destination was still alive (it continuously received statistical data).</para>
-                </listitem>
-                <listitem>
+        <orderedlist>
+            <listitem>
+                <para>The type of the object (for example <userinput>dst.file</userinput>, <userinput>tag</userinput>, <userinput>src.facility</userinput>)</para>
+            </listitem>
+            <listitem>
+                <para>The ID of the object used in the syslog-ng configuration file, for example <userinput>d_internal</userinput> or <userinput>source.src_tcp</userinput>. The <userinput>#0</userinput> part means that this is the first destination in the destination group.</para>
+            </listitem>
+            <listitem>
+                <para>The instance ID (destination) of the object, for example the filename of a file destination, or the name of the application for a program source or destination.</para>
+            </listitem>
+            <listitem>
+                <para>The status of the object. One of the following:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para><userinput>a</userinput> - active. At the time of quering the statistics, the source or the destination was still alive (it continuously received statistical data).</para>
+                    </listitem>
+                    <listitem>
                         <para><userinput>d</userinput> - dynamic. Such objects may not be continuously available, for example, like statistics based on the sender's hostname. These counters only appear above a certain value of <parameter>stats-level()</parameter> global option:</para>
                         <itemizedlist>
-                            <listitem><para><parameter>host</parameter>: source host, from <userinput>stats-level(2)</userinput></para></listitem>
-                            <listitem><para><parameter>sender</parameter>: sender host, from <userinput>stats-level(3)</userinput></para></listitem>
-                            <listitem><para><parameter>program</parameter>: program, from <userinput>stats-level(3)</userinput></para></listitem>
+                            <listitem>
+                                <para><parameter>host</parameter>: source host, from <userinput>stats-level(2)</userinput></para>
+                            </listitem>
+                            <listitem>
+                                <para><parameter>sender</parameter>: sender host, from <userinput>stats-level(3)</userinput></para>
+                            </listitem>
+                            <listitem>
+                                <para><parameter>program</parameter>: program, from <userinput>stats-level(3)</userinput></para>
+                            </listitem>
                         </itemizedlist>
                         <example>
                             <title>Dynamic counters</title>
@@ -104,34 +109,35 @@ src.program;;P-9774;d;stamp;1509121919
 src.program;;P-14737;d;processed;1
 src.program;;P-14737;d;stamp;1509121931
 src.host;;localhost;d;processed;4
-src.host;;localhost;d;stamp;1509121934</synopsis></example>
+src.host;;localhost;d;stamp;1509121934</synopsis>
+                        </example>
                         <para>To avoid performance issues or even overloading &abbrev;, you might want to limit the number of registered dynamic counters in the message statistics. To do this, configure the <xref linkend="global-option-stats-max-dynamics"/> global option.</para>
-                </listitem>
-                <listitem>
-                    <para><userinput>o</userinput> - This object was once active, but stopped receiving messages. (For example a dynamic object may disappear and become orphan.)</para>
-                    <note>
-                        <para>The &abbrev; application stores the statistics of the objects when &abbrev; is reloaded. However, if the configuration of &abbrev; was changed since the last reload, the statistics of orphaned objects are deleted.</para>
-                    </note>
-                </listitem>
-            </itemizedlist>
-        </listitem>
-        <listitem>
-            <para>The type of the statistics:</para>
-            <itemizedlist>
-                <listitem>
-                    <para><parameter>processed</parameter>: The number of messages that successfully reached their destination driver. Note that this does not necessarily mean that the destination driver successfully delivered the messages (for example, written to disk or sent to a remote server).</para>
-                </listitem>
-                <listitem>
+                    </listitem>
+                    <listitem>
+                        <para><userinput>o</userinput> - This object was once active, but stopped receiving messages. (For example a dynamic object may disappear and become orphan.)</para>
+                        <note>
+                            <para>The &abbrev; application stores the statistics of the objects when &abbrev; is reloaded. However, if the configuration of &abbrev; was changed since the last reload, the statistics of orphaned objects are deleted.</para>
+                        </note>
+                    </listitem>
+                </itemizedlist>
+            </listitem>
+            <listitem>
+                <para>The type of the statistics:</para>
+                <itemizedlist>
+                    <listitem>
+                        <para><parameter>processed</parameter>: The number of messages that successfully reached their destination driver. Note that this does not necessarily mean that the destination driver successfully delivered the messages (for example, written to disk or sent to a remote server).</para>
+                    </listitem>
+                    <listitem>
                         <para><parameter>dropped</parameter>: The number of dropped messages &mdash; &abbrev; could not send the messages to the destination and the output buffer got full, so messages were dropped by the destination driver, or &abbrev; dropped the message for some other reason (for example, a parsing error).</para>
-                </listitem>
-                <listitem>
+                    </listitem>
+                    <listitem>
                         <para><parameter>queued</parameter>: The number of messages passed to the message queue of the destination driver, waiting to be sent to the destination.</para>
-                </listitem>
-                <listitem>
-                    <para><parameter>suppressed</parameter>: The number of suppressed messages (if the <parameter>suppress()</parameter> feature is enabled).</para>
-                </listitem>
-                <listitem>
-                    <para><parameter>stamp</parameter>: The UNIX timestamp of the last message sent to the destination.</para>
+                    </listitem>
+                    <listitem>
+                        <para><parameter>suppressed</parameter>: The number of suppressed messages (if the <parameter>suppress()</parameter> feature is enabled).</para>
+                    </listitem>
+                    <listitem>
+                        <para><parameter>stamp</parameter>: The UNIX timestamp of the last message sent to the destination.</para>
                     </listitem>
                     <listitem>
                         <para><parameter>discarded</parameter>: The number of messages discarded by the given parser. These are messages that the parser could not parsed, and are therefore not processed. For example:</para>
@@ -153,23 +159,20 @@ src.host;;localhost;d;stamp;1509121934</synopsis></example>
                     <listitem>
                         <para><parameter>written</parameter>: The number of messages successfully delivered to the destination. This value is calculated from other counters: <userinput>written = processed - queued - dropped</userinput>. That is, the number of messages &abbrev; passed to the destination driver (processed) minus the number of messages that are still in the output queue of the destination driver (queued) and the number of messages dropped because of an error (dropped, for example, because &abbrev; could not deliver the message to the destination and exceeded the number of retries).</para>
                         <xi:include href="../../shared/chunk/para-metrics-calculated-reset.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-                </listitem>
-            </itemizedlist>
-        </listitem>
-        <listitem>
-            <para>The number of such messages.</para>
-        </listitem>
-    </orderedlist>
+                    </listitem>
+                </itemizedlist>
+            </listitem>
+            <listitem>
+                <para>The number of such messages.</para>
+            </listitem>
+        </orderedlist>
         <simplesect>
             <title>Availability of statistics</title>
             <para>Certain statistics are available only if the <link linkend="global-option-stats-level"><parameter>stats-level()</parameter> global option</link> is set to a higher value.</para>
-
             <xi:include href="../../shared/chunk/option-stats-level-description.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-
-        <para>When receiving messages with non-standard facility values (that is, higher than 23), these messages will be listed as <parameter>other</parameter> facility instead of their facility number.</para>
+            <para>When receiving messages with non-standard facility values (that is, higher than 23), these messages will be listed as <parameter>other</parameter> facility instead of their facility number.</para>
         </simplesect>
     </section>
-
     <section xml:id="log-statistics-internal-source">
         <title>Log statistics from the <parameter>internal()</parameter> source</title>
         <para>If the <link linkend="global-option-stats-freq"><parameter>stats-freq()</parameter> global option</link> is higher than 0, &abbrev; periodically sends a log statistics message. This message contains statistics about the received messages, and about any lost messages since the last such message. It includes a <parameter>processed</parameter> entry for every source and destination, listing the number of messages received or sent, and a <parameter>dropped</parameter> entry including the IP address of the server for every destination where syslog-ng has lost messages. The <userinput>center(received)</userinput> entry shows the total number of messages received from every configured sources.</para>
@@ -209,6 +212,6 @@ destination;df_kern;;a;processed;70
 center;;queued;a;processed;0
 destination;df_facility_dot_err;;a;processed;0</synopsis>
         <para>The statistics are semicolon separated: every line contains statistics for a particular object (for example source, destination, tag, and so on). The statistics have the following fields:</para>
-    <para>To reset the statistics to zero, use the following command: <command>syslog-ng-ctl stats --reset</command></para>
+        <para>To reset the statistics to zero, use the following command: <command>syslog-ng-ctl stats --reset</command></para>
     </section>
 </chapter>
