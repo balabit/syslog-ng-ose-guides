@@ -1,823 +1,319 @@
 <?xml version="1.0" encoding="UTF-8"?>
-%entities;]&gt;
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
- <body name="chapter-encrypted-transport-tls" oldrole="chapter">
-  <h1 name="chapter-encrypted-transport-tls" oldrole="chapter">
-   TLS-encrypted message transfer
-  </h1>
-  <!-- FIXME jumplist -->
-  <h2 name="concepts-tls">
-   Secure logging using TLS
-  </h2>
-  <MadCap:keyword term="TLS">
-  </MadCap:keyword>
-  <MadCap:keyword term="transport layer security:['TLS']">
-  </MadCap:keyword>
-  <MadCap:keyword term="encrypting log messages">
-  </MadCap:keyword>
-  <MadCap:keyword term="authentication">
-  </MadCap:keyword>
-  <p oldrole="para">
-   The syslog-ng application can send and receive log messages securely over the network using the Transport Layer Security (TLS) protocol using the
-   <span class="Code" oldrole="parameter">
-    network()
-   </span>
-   and
-   <span class="Code" oldrole="parameter">
-    syslog()
-   </span>
-   drivers.
-  </p>
-  <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
-   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
-   </col>
-   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
-   </col>
-   <tbody>
-    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
-     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
-      <p>
-       <img src="../../Resources/Images/Common/note.png"/>
-      </p>
-     </td>
-     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
-      <span class="AllNoteStyles">
-       NOTE:
-      </span>
-      <p oldrole="para">
-       This chapter describes how to use TLS encryption when using the standard syslog protocols, that is, the
-       <span class="Code" oldrole="parameter">
-        network()
-       </span>
-       and
-       <span class="Code" oldrole="parameter">
-        syslog()
-       </span>
-       drivers, for example, to forward log messages between two syslog-ng nodes, or to send log data to
-       <MadCap:variable name="General.ssb">
-        ssb
-       </MadCap:variable>
-       or another log server. Other destinations that support TLS-encryption are not discussed in this chapter (for example,
-       <a href="destination-http-nonjava.htm">
-        <span class="Code" oldrole="parameter">
-         http()
-        </span>
-       </a>
-       ).
-      </p>
-     </td>
-    </tr>
-   </tbody>
-  </table>
-  <p oldrole="para">
-   TLS uses certificates to authenticate and encrypt the communication, as illustrated on the following figure:
-  </p>
-  <p class="CaptionFigure">
-   Certificate-based authentication
-  </p>
-  <img MadCap:mediastyle="@media print { width: auto; height: auto; }" class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/certificate-based_authentication01.png" format="PNG" oldrole="figure" src="certificate-based_authentication01.png" style="height: auto; width: auto;"/>
-  <indexterm>
-   <primary>
-    certificates
-   </primary>
-  </indexterm>
-  <p oldrole="para">
-   The client authenticates the server by requesting its certificate and public key. Optionally, the server can also request a certificate from the client, thus mutual authentication is also possible.
-  </p>
-  <p oldrole="para">
-   In order to use TLS encryption in syslog-ng, the following elements are required:
-  </p>
-  <ul oldrole="itemizedlist">
-   <li oldrole="listitem">
-    <p oldrole="para">
-     A certificate on the syslog-ng server that identifies the syslog-ng server.
-    </p>
-   </li>
-   <li oldrole="listitem">
-    <p oldrole="para">
-     The certificate of the Certificate Authority that issued the certificate of the syslog-ng server (or the self-signed certificate of the syslog-ng server) must be available on the syslog-ng client.
-    </p>
-   </li>
-  </ul>
-  <p oldrole="para">
-   When using mutual authentication to verify the identity of the clients, the following elements are required:
-  </p>
-  <indexterm>
-   <primary>
-    authentication
-   </primary>
-  </indexterm>
-  <indexterm>
-   <primary>
-    mutual authentication
-   </primary>
-  </indexterm>
-  <ul oldrole="itemizedlist">
-   <li oldrole="listitem">
-    <p oldrole="para">
-     A certificate must be available on the syslog-ng client. This certificate identifies the syslog-ng client.
-    </p>
-   </li>
-   <li oldrole="listitem">
-    <p oldrole="para">
-     The certificate of the Certificate Authority that issued the certificate of the syslog-ng client must be available on the syslog-ng server.
-    </p>
-   </li>
-  </ul>
-  <p oldrole="para">
-   Mutual authentication ensures that the syslog-ng server accepts log messages only from authorized clients.
-  </p>
-  <p oldrole="para">
-   For more information about configuring TLS communication in syslog-ng, see
-   <xref linkend="tls-serverauth">
-   </xref>
-   .
-  </p>
-  <p oldrole="para">
-   For more information about TLS-related error messages, see
-   <olink targetdoc="syslog-ng-ose-guide-admin" targetptr="error-messages">
-   </olink>
-   .
-  </p>
-  <h2 name="tls-serverauth">
-   Encrypting log messages with TLS
-  </h2>
-  <indexterm>
-   <primary>
-    TLS
-   </primary>
-   <secondary>
-    configuring
-   </secondary>
-  </indexterm>
-  <indexterm>
-   <primary>
-    authentication
-   </primary>
-  </indexterm>
-  <indexterm>
-   <primary>
-    encrypting log messages
-   </primary>
-  </indexterm>
-  <p oldrole="para">
-   This section describes how to configure TLS encryption in syslog-ng. For the concepts of using TLS in syslog-ng, see
-   <xref linkend="concepts-tls">
-   </xref>
-   .
-  </p>
-  <!-- FIXME add a sample scenario for commonname/altname -->
-  <MadCap:snippetBlock src="procedure-configuring-tls-client.htm">
-  </MadCap:snippetBlock>
-  <MadCap:snippetBlock src="procedure-configuring-tls-server.htm">
-  </MadCap:snippetBlock>
-  <h2 name="tls-mutualauth">
-   Mutual authentication using TLS
-  </h2>
-  <indexterm>
-   <primary>
-    TLS
-   </primary>
-   <secondary>
-    configuring
-   </secondary>
-  </indexterm>
-  <indexterm>
-   <primary>
-    mutual authentication
-   </primary>
-  </indexterm>
-  <p oldrole="para">
-   This section describes how to configure mutual authentication between the syslog-ng server and the client. Configuring mutual authentication is similar to configuring TLS (for details, see
-   <xref linkend="tls-serverauth">
-   </xref>
-   ), but the server verifies the identity of the client as well. Therefore, each client must have a certificate, and the server must have the certificate of the CA that issued the certificate of the clients. For the concepts of using TLS in syslog-ng, see
-   <xref linkend="concepts-tls">
-   </xref>
-   .
-  </p>
-  <MadCap:snippetBlock src="procedure-configuring-mutual-tls-client.htm">
-  </MadCap:snippetBlock>
-  <MadCap:snippetBlock src="procedure-configuring-mutual-tls-server.htm">
-  </MadCap:snippetBlock>
-  <h2 name="tls-password-protected-keys">
-   Password-protected keys
-  </h2>
-  <p oldrole="para">
-   Starting with
-   <entity>
-    abbrev
-   </entity>
-   version
-   <phrase condition="ose">
-    3.14
-   </phrase>
-   <phrase condition="pe">
-    7.0.7
-   </phrase>
-   , you can use password-protected private keys in the
-   <span class="Code" oldrole="parameter">
-    network()
-   </span>
-   and
-   <span class="Code" oldrole="parameter">
-    syslog()
-   </span>
-   source and destination drivers.
-  </p>
-  <simplesect>
-   <title>
-    Restrictions and limitations:
-   </title>
-   <ul oldrole="itemizedlist">
-    <li oldrole="listitem">
-     <p oldrole="para">
-      <i oldrole="emphasis" role="bold">
-       Hazard of data loss!
-      </i>
-      If you use password-protected keys, you must provide the passphrase of the password-protected keys every time
-      <entity>
-       abbrev
-      </entity>
-      is restarted (
-      <entity>
-       abbrev
-      </entity>
-      keeps the passphrases over reloads). The sources and destinations that use these keys will not work until you provide the passwords. Other parts of the
-      <entity>
-       abbrev
-      </entity>
-      configuration will be unaffected.
-     </p>
-     <p oldrole="para">
-      This means that if you use a password-protected key in a destination, and you use this destination in a log path that has multiple destinations, neither destinations will receive log messages until you provide the password. In such cases, always
-      <a href="chapter-routing-filters.htm">
-       use disk-based buffering to avoid data loss
-      </a>
-      .
-     </p>
-    </li>
-    <li oldrole="listitem">
-     <p oldrole="para">
-      The path and the filename of the private key cannot contain whitespaces.
-     </p>
-    </li>
-    <li oldrole="listitem">
-     <p oldrole="para">
-      Depending on your platform, the number of passwords
-      <entity>
-       abbrev
-      </entity>
-      can use at the same time might be limited (for example, on Ubuntu 16.04 you can store 16 passwords if you are running
-      <entity>
-       abbrev
-      </entity>
-      as a non-root user). If you use lots of password-protected private keys in your
-      <entity>
-       abbrev
-      </entity>
-      configuration, increase this limit using the following command:
-      <b oldrole="command">
-       sudo ulimit -l unlimited
-      </b>
-     </p>
-    </li>
-   </ul>
-  </simplesect>
-  <simplesect>
-   <title>
-    Providing the passwords
-   </title>
-   <MadCap:snippetBlock src="../../shared/chunk/syslog-ng-ctl-credentials-status-description.htm">
-   </MadCap:snippetBlock>
-   <MadCap:snippetBlock src="../../shared/chunk/syslog-ng-ctl-credentials-add-description.htm">
-   </MadCap:snippetBlock>
-   <p oldrole="para">
-    For details on the
-    <b oldrole="command">
-     syslog-ng-ctl credentials
-    </b>
-    command, see
-    <xref linkend="syslog-ng-ctl-credentials">
-    </xref>
-    .
-   </p>
-  </simplesect>
-  <h2 name="tlsoptions">
-   TLS options
-  </h2>
-  <indexterm>
-   <primary>
-    TLS
-   </primary>
-   <secondary>
-    reference
-   </secondary>
-  </indexterm>
-  <p oldrole="para">
-   The syslog-ng application can encrypt incoming and outgoing syslog message flows using TLS if you use the
-   <span class="Code" oldrole="parameter">
-    network()
-   </span>
-   or
-   <span class="Code" oldrole="parameter">
-    syslog()
-   </span>
-   drivers.
-  </p>
-  <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
-   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
-   </col>
-   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
-   </col>
-   <tbody>
-    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
-     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
-      <p>
-       <img src="../../Resources/Images/Common/note.png"/>
-      </p>
-     </td>
-     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
-      <span class="AllNoteStyles">
-       NOTE:
-      </span>
-      <p oldrole="para">
-       The format of the TLS connections used by syslog-ng is similar to using syslog-ng and stunnel, but the source IP information is not lost.
-      </p>
-     </td>
-    </tr>
-   </tbody>
-  </table>
-  <p oldrole="para">
-   To encrypt connections, use the
-   <span class="Code" oldrole="parameter">
-    transport("tls")
-   </span>
-   and
-   <span class="Code" oldrole="parameter">
-    tls()
-   </span>
-   options in the source and destination statements.
-  </p>
-  <p oldrole="para">
-   The tls() option can include the following settings:
-  </p>
-  <simplesect xml:id="tls-options-ca-dir">
-   <MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-ca-dir.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect xml:id="tls-options-cert-file">
-   <MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-cert-file.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect xml:id="tls-options-cipher-suite">
-   <MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-cipher-suite.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect xml:id="tls-options-crl-dir">
-   <title>
-    crl-dir()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     crl-dir()
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     crl_dir()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="80pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Accepted values:
-       </entry>
-       <entry>
-        Directory name
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        none
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Name of a directory that contains the Certificate Revocation Lists for trusted CAs. Similarly to
-    <span class="Code" oldrole="parameter">
-     ca-dir()
-    </span>
-    files, use the 32-bit hash of the name of the issuing CAs as filenames. The extension of the files must be
-    <span class="Code" oldrole="userinput">
-     .r0
-    </span>
-    .
-   </p>
-  </simplesect>
-  <simplesect xml:id="tls-options-dhparam-file">
-   <MadCap:snippetBlock src="../../shared/chunk/option-tls-option-dhparam-file.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect xml:id="tls-options-ecdh-curve-list">
-   <title>
-    ecdh-curve-list()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     ecdh-curve-list()
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     ecdh-curve-list()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="80pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Accepted values:
-       </entry>
-       <entry>
-        string [colon-separated list]
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        none
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    A colon-separated list that specifies the curves that are permitted in the connection when using Elliptic Curve Cryptography (ECC).
-   </p>
-   <p oldrole="para">
-    This option is only available when syslog-ng is compiled with OpenSSL version 1.0.2 or later. In the case of older versions, prime256v1 (NIST P-256) is used.
-   </p>
-   <p oldrole="para">
-    The following example curves work for all versions of OpenSSL that are equal to or later than version 1.0.2:
-   </p>
-   <p class="Code" oldrole="synopsis">
-    ecdh-curve-list("prime256v1:secp384r1")
-   </p>
-  </simplesect>
-  <simplesect xml:id="tls-options-key-file">
-   <MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-key-file.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect xml:id="tls-options-peer-verify">
-   <title>
-    peer-verify()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     peer-verify()
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     peer_verify()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="80pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Accepted values:
-       </entry>
-       <entry>
-        <span class="Code" oldrole="userinput">
-         optional-trusted
-        </span>
-        |
-        <span class="Code" oldrole="userinput">
-         optional-untrusted
-        </span>
-        |
-        <span class="Code" oldrole="userinput">
-         required-trusted
-        </span>
-        |
-        <span class="Code" oldrole="userinput">
-         required-untrusted |
-         <span class="Code" oldrole="userinput">
-          yes
-         </span>
-         |
-         <span class="Code" oldrole="userinput">
-          no
-         </span>
-        </span>
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        <span class="Code" oldrole="userinput">
-         required-trusted
-        </span>
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Verification method of the peer, the four possible values is a combination of two properties of validation:
-   </p>
-   <ul oldrole="itemizedlist">
-    <li oldrole="listitem">
-     <p oldrole="para">
-      whether the peer is required to provide a certificate (required or optional prefix), and
-     </p>
-    </li>
-    <li oldrole="listitem">
-     <p oldrole="para">
-      whether the certificate provided needs to be valid or not.
-     </p>
-    </li>
-   </ul>
-   <p oldrole="para">
-    The following table summarizes the possible options and their results depending on the certificate of the peer.
-   </p>
-   <informaltable>
-    <tgroup cols="5">
-     <colspec colname="col1" colnum="1">
-     </colspec>
-     <colspec colname="col2" colnum="2">
-     </colspec>
-     <colspec colname="col3" colnum="3">
-     </colspec>
-     <colspec colname="col4" colnum="4">
-     </colspec>
-     <colspec colname="col5" colnum="5">
-     </colspec>
-     <thead>
-      <row>
-       <entry morerows="1" nameend="col2" namest="col1">
-       </entry>
-       <entry align="center" nameend="col5" namest="col3">
-        The remote peer has:
-       </entry>
-      </row>
-      <row>
-       <entry align="center">
-        no certificate
-       </entry>
-       <entry align="center">
-        invalid certificate
-       </entry>
-       <entry align="center">
-        valid certificate
-       </entry>
-      </row>
-     </thead>
-     <tbody>
-      <row>
-       <entry morerows="3" rotate="1" valign="middle">
-        <i oldrole="emphasis" role="bold">
-         Local peer-verify() setting
-        </i>
-       </entry>
-       <entry align="center">
-        <i oldrole="emphasis" role="bold">
-         optional-untrusted
-        </i>
-       </entry>
-       <entry>
-        TLS-encryption
-       </entry>
-       <entry>
-        TLS-encryption
-       </entry>
-       <entry>
-        TLS-encryption
-       </entry>
-      </row>
-      <row>
-       <entry align="center">
-        <i oldrole="emphasis" role="bold">
-         optional-trusted
-        </i>
-       </entry>
-       <entry>
-        TLS-encryption
-       </entry>
-       <entry>
-        rejected connection
-       </entry>
-       <entry>
-        TLS-encryption
-       </entry>
-      </row>
-      <row>
-       <entry align="center">
-        <i oldrole="emphasis" role="bold">
-         required-untrusted
-        </i>
-       </entry>
-       <entry>
-        rejected connection
-       </entry>
-       <entry>
-        TLS-encryption
-       </entry>
-       <entry>
-        TLS-encryption
-       </entry>
-      </row>
-      <row>
-       <entry align="center">
-        <i oldrole="emphasis" role="bold">
-         required-trusted
-        </i>
-       </entry>
-       <entry>
-        rejected connection
-       </entry>
-       <entry>
-        rejected connection
-       </entry>
-       <entry>
-        TLS-encryption
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-peer-verify-notes.htm">
-   </MadCap:snippetBlock>
-   <p oldrole="para">
-    Starting with
-    <entity>
-     abbrev
-    </entity>
-    version
-    <phrase condition="ose">
-     3.10
-    </phrase>
-    , you can also use a simplified configuration method for the
-    <span class="Code" oldrole="parameter">
-     peer-verify
-    </span>
-    option, simply setting it to
-    <span class="Code" oldrole="userinput">
-     yes
-    </span>
-    or
-    <span class="Code" oldrole="userinput">
-     no
-    </span>
-    . The following table summarizes the possible options and their results depending on the certificate of the peer.
-   </p>
-   <MadCap:snippetBlock src="../../shared/chunk/option-tls-peer-verify-yesno.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect xml:id="tls-options-pkcs12-file">
-   <title>
-    pkcs12-file()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     pkcs12-file()
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     pkcs12-file()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="80pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Accepted values:
-       </entry>
-       <entry>
-        Filename
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        none
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    The name of a
-    <span class="Code" oldrole="filename">
-     PKCS #12
-    </span>
-    file that contains an unencrypted private key, an X.509 certificate, and an optional set of trusted CA certificates.
-   </p>
-   <p oldrole="para">
-    If this option is used in the configuration, the value of
-    <span class="Code" oldrole="parameter">
-     key-file()
-    </span>
-    and
-    <span class="Code" oldrole="parameter">
-     cert-file()
-    </span>
-    will be omitted.
-   </p>
-   <p oldrole="para">
-    You can use the
-    <span class="Code" oldrole="parameter">
-     ca-dir()
-    </span>
-    option together with
-    <span class="Code" oldrole="parameter">
-     pkcs12-file()
-    </span>
-    . However, this is optional because the
-    <span class="Code" oldrole="filename">
-     PKCS #12
-    </span>
-    file may contain CA certificates as well.
-   </p>
-   <p oldrole="para">
-    Passphrase is currently not supported.
-   </p>
-   <example>
-    <title>
-     Using
-     <span class="Code" oldrole="parameter">
-      pkcs12-file()
-     </span>
-    </title>
-    <p oldrole="para">
-     In the following example, the first command creates a single
-     <span class="Code" oldrole="filename">
-      PKCS #12
-     </span>
-     file from the private key, X.509 certificate, and CA certificate files. Then, the second half of the example uses the same
-     <span class="Code" oldrole="filename">
-      PKCS #12
-     </span>
-     file in the syslog-ng configuration.
-    </p>
-    <p>
-     <b oldrole="formalpara">
-      Example:
-     </b>
-    </p>
-    <p oldrole="para">
-    </p>
-    <p class="Code" oldrole="synopsis">
-     $ openssl pkcs12 -export -inkey server.key -in server.crt -certfile ca.crt -out server.p12
-    </p>
-    <p>
-     <b oldrole="formalpara">
-      Example configuration:
-     </b>
-    </p>
-    <p oldrole="para">
-    </p>
-    <p class="Code" oldrole="synopsis">
-     source s_tls {
+
+ %entities;]&gt;
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="chapter-encrypted-transport-tls" oldrole="chapter">
+<h1 name="chapter-encrypted-transport-tls" oldrole="chapter">TLS-encrypted message transfer</h1>
+<!-- FIXME jumplist -->
+
+<h2 name="concepts-tls">Secure logging using TLS</h2>
+<MadCap:keyword term="TLS"></MadCap:keyword>
+<MadCap:keyword term="transport layer security:['TLS']"></MadCap:keyword>
+<MadCap:keyword term="encrypting log messages"></MadCap:keyword>
+<MadCap:keyword term="authentication"></MadCap:keyword>
+<p oldrole="para">The syslog-ng application can send and receive log messages securely over the network using the Transport Layer Security (TLS) protocol using the <span class="Code" oldrole="parameter">network()</span> and <span class="Code" oldrole="parameter">syslog()</span> drivers.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">This chapter describes how to use TLS encryption when using the standard syslog protocols, that is, the <span class="Code" oldrole="parameter">network()</span> and <span class="Code" oldrole="parameter">syslog()</span> drivers, for example, to forward log messages between two syslog-ng nodes, or to send log data to <MadCap:variable name="General.ssb"></MadCap:variable> or another log server. Other destinations that support TLS-encryption are not discussed in this chapter (for example, <a href="destination-http-nonjava.htm"><span class="Code" oldrole="parameter">http()</span></a>).</p></td></tr></tbody></table>
+<p oldrole="para">TLS uses certificates to authenticate and encrypt the communication, as illustrated on the following figure:</p>
+
+<p class="CaptionFigure">Certificate-based authentication</p>
+
+<img MadCap:mediastyle="@media print { width: auto; height: auto; }" class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/certificate-based_authentication01.png" format="PNG" oldrole="figure" src="certificate-based_authentication01.png" style="height: auto; width: auto;"/>
+<indexterm>
+<primary>certificates</primary>
+</indexterm>
+<p oldrole="para">The client authenticates the server by requesting its certificate and public key. Optionally, the server can also request a certificate from the client, thus mutual authentication is also possible.</p>
+<p oldrole="para">In order to use TLS encryption in syslog-ng, the following elements are required:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">A certificate on the syslog-ng server that identifies the syslog-ng server.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The certificate of the Certificate Authority that issued the certificate of the syslog-ng server (or the self-signed certificate of the syslog-ng server) must be available on the syslog-ng client.</p>
+</li>
+</ul>
+<p oldrole="para">When using mutual authentication to verify the identity of the clients, the following elements are required:</p>
+<indexterm>
+<primary>authentication</primary>
+</indexterm>
+<indexterm>
+<primary>mutual authentication</primary>
+</indexterm>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">A certificate must be available on the syslog-ng client. This certificate identifies the syslog-ng client.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The certificate of the Certificate Authority that issued the certificate of the syslog-ng client must be available on the syslog-ng server.</p>
+</li>
+</ul>
+<p oldrole="para">Mutual authentication ensures that the syslog-ng server accepts log messages only from authorized clients.</p>
+<p oldrole="para">For more information about configuring TLS communication in syslog-ng, see <xref linkend="tls-serverauth"></xref>.</p>
+<p oldrole="para">For more information about TLS-related error messages, see <olink targetdoc="syslog-ng-ose-guide-admin" targetptr="error-messages"></olink>.</p>
+
+
+<h2 name="tls-serverauth">Encrypting log messages with TLS</h2>
+<indexterm>
+<primary>TLS</primary>
+<secondary>configuring</secondary>
+</indexterm>
+<indexterm>
+<primary>authentication</primary>
+</indexterm>
+<indexterm>
+<primary>encrypting log messages</primary>
+</indexterm>
+<p oldrole="para">This section describes how to configure TLS encryption in syslog-ng. For the concepts of using TLS in syslog-ng, see <xref linkend="concepts-tls"></xref>.</p>
+<!-- FIXME add a sample scenario for commonname/altname -->
+<MadCap:snippetBlock src="procedure-configuring-tls-client.htm"></MadCap:snippetBlock>
+<MadCap:snippetBlock src="procedure-configuring-tls-server.htm"></MadCap:snippetBlock>
+
+
+<h2 name="tls-mutualauth">Mutual authentication using TLS</h2>
+<indexterm>
+<primary>TLS</primary>
+<secondary>configuring</secondary>
+</indexterm>
+<indexterm>
+<primary>mutual authentication</primary>
+</indexterm>
+<p oldrole="para">This section describes how to configure mutual authentication between the syslog-ng server and the client. Configuring mutual authentication is similar to configuring TLS (for details, see <xref linkend="tls-serverauth"></xref>), but the server verifies the identity of the client as well. Therefore, each client must have a certificate, and the server must have the certificate of the CA that issued the certificate of the clients. For the concepts of using TLS in syslog-ng, see <xref linkend="concepts-tls"></xref>.</p>
+<MadCap:snippetBlock src="procedure-configuring-mutual-tls-client.htm"></MadCap:snippetBlock>
+<MadCap:snippetBlock src="procedure-configuring-mutual-tls-server.htm"></MadCap:snippetBlock>
+
+
+<h2 name="tls-password-protected-keys">Password-protected keys</h2>
+<p oldrole="para">Starting with <entity>abbrev</entity> version <phrase condition="ose">3.14</phrase><phrase condition="pe">7.0.7</phrase>, you can use password-protected private keys in the <span class="Code" oldrole="parameter">network()</span> and <span class="Code" oldrole="parameter">syslog()</span> source and destination drivers.</p>
+<simplesect>
+<title>Restrictions and limitations:</title>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para"><i oldrole="emphasis" role="bold">Hazard of data loss!</i> If you use password-protected keys, you must provide the passphrase of the password-protected keys every time <entity>abbrev</entity> is restarted (<entity>abbrev</entity> keeps the passphrases over reloads). The sources and destinations that use these keys will not work until you provide the passwords. Other parts of the <entity>abbrev</entity> configuration will be unaffected.</p>
+<p oldrole="para">This means that if you use a password-protected key in a destination, and you use this destination in a log path that has multiple destinations, neither destinations will receive log messages until you provide the password. In such cases, always <a href="chapter-routing-filters.htm">use disk-based buffering to avoid data loss</a>.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The path and the filename of the private key cannot contain whitespaces.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">Depending on your platform, the number of passwords <entity>abbrev</entity> can use at the same time might be limited (for example, on Ubuntu 16.04 you can store 16 passwords if you are running <entity>abbrev</entity> as a non-root user). If you use lots of password-protected private keys in your <entity>abbrev</entity> configuration, increase this limit using the following command: <b oldrole="command">sudo ulimit -l unlimited</b></p>
+</li>
+</ul>
+</simplesect>
+<simplesect>
+<title>Providing the passwords</title>
+<MadCap:snippetBlock src="../../shared/chunk/syslog-ng-ctl-credentials-status-description.htm"></MadCap:snippetBlock>
+<MadCap:snippetBlock src="../../shared/chunk/syslog-ng-ctl-credentials-add-description.htm"></MadCap:snippetBlock>
+<p oldrole="para">For details on the <b oldrole="command">syslog-ng-ctl credentials</b> command, see <xref linkend="syslog-ng-ctl-credentials"></xref>.</p>
+</simplesect>
+
+
+<h2 name="tlsoptions">TLS options</h2>
+<indexterm>
+<primary>TLS</primary>
+<secondary>reference</secondary>
+</indexterm>
+<p oldrole="para">The syslog-ng application can encrypt incoming and outgoing syslog message flows using TLS if you use the <span class="Code" oldrole="parameter">network()</span> or <span class="Code" oldrole="parameter">syslog()</span> drivers.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">The format of the TLS connections used by syslog-ng is similar to using syslog-ng and stunnel, but the source IP information is not lost.</p></td></tr></tbody></table>
+<p oldrole="para">To encrypt connections, use the <span class="Code" oldrole="parameter">transport("tls")</span> and <span class="Code" oldrole="parameter">tls()</span> options in the source and destination statements.</p>
+<p oldrole="para">The tls() option can include the following settings:</p>
+<simplesect xml:id="tls-options-ca-dir">
+<MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-ca-dir.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect xml:id="tls-options-cert-file">
+<MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-cert-file.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect xml:id="tls-options-cipher-suite">
+<MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-cipher-suite.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect xml:id="tls-options-crl-dir">
+<title>crl-dir()</title>
+<indexterm type="parameter">
+<primary>crl-dir()</primary>
+</indexterm>
+<indexterm>
+<primary>crl_dir()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="80pt"></colspec>
+<tbody>
+<row>
+<entry>Accepted values:</entry>
+<entry>Directory name</entry>
+</row>
+<row>
+<entry>Default:</entry>
+<entry>none</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Name of a directory that contains the Certificate Revocation Lists for trusted CAs. Similarly to <span class="Code" oldrole="parameter">ca-dir()</span> files, use the 32-bit hash of the name of the issuing CAs as filenames. The extension of the files must be <span class="Code" oldrole="userinput">.r0</span>.</p>
+</simplesect>
+<simplesect xml:id="tls-options-dhparam-file">
+<MadCap:snippetBlock src="../../shared/chunk/option-tls-option-dhparam-file.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect xml:id="tls-options-ecdh-curve-list">
+<title>ecdh-curve-list()</title>
+<indexterm type="parameter">
+<primary>ecdh-curve-list()</primary>
+</indexterm>
+<indexterm>
+<primary>ecdh-curve-list()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="80pt"></colspec>
+<tbody>
+<row>
+<entry>Accepted values:</entry>
+<entry> string [colon-separated list]</entry>
+</row>
+<row>
+<entry>Default:</entry>
+<entry>none </entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> A colon-separated list that specifies the curves that are permitted in the connection when using Elliptic Curve Cryptography (ECC).</p>
+<p oldrole="para">This option is only available when syslog-ng is compiled with OpenSSL version 1.0.2 or later. In the case of older versions, prime256v1 (NIST P-256) is used.</p>
+<p oldrole="para">The following example curves work for all versions of OpenSSL that are equal to or later than version 1.0.2:</p>
+<pre class="Code" oldrole="synopsis">ecdh-curve-list("prime256v1:secp384r1")</pre>
+</simplesect>
+<simplesect xml:id="tls-options-key-file">
+<MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-key-file.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect xml:id="tls-options-peer-verify">
+<title>peer-verify()</title>
+<indexterm type="parameter">
+<primary>peer-verify()</primary>
+</indexterm>
+<indexterm>
+<primary>peer_verify()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="80pt"></colspec>
+<tbody>
+<row>
+<entry>Accepted values:</entry>
+<entry><span class="Code" oldrole="userinput">optional-trusted</span> | <span class="Code" oldrole="userinput">optional-untrusted</span> | <span class="Code" oldrole="userinput">required-trusted</span> | <span class="Code" oldrole="userinput">required-untrusted | <span class="Code" oldrole="userinput">yes</span> | <span class="Code" oldrole="userinput">no</span></span>
+</entry>
+</row>
+<row>
+<entry>Default:</entry>
+<entry><span class="Code" oldrole="userinput">required-trusted</span>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Verification method of the peer, the four possible values is a combination of two properties of validation:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">whether the peer is required to provide a certificate (required or optional prefix), and</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">whether the certificate provided needs to be valid or not.</p>
+</li>
+</ul>
+<p oldrole="para">The following table summarizes the possible options and their results depending on the certificate of the peer.</p>
+<informaltable>
+<tgroup cols="5">
+<colspec colname="col1" colnum="1"></colspec>
+<colspec colname="col2" colnum="2"></colspec>
+<colspec colname="col3" colnum="3"></colspec>
+<colspec colname="col4" colnum="4"></colspec>
+<colspec colname="col5" colnum="5"></colspec>
+<thead>
+<row>
+<entry morerows="1" nameend="col2" namest="col1"></entry>
+<entry align="center" nameend="col5" namest="col3">The remote peer has:</entry>
+</row>
+<row>
+<entry align="center"> no certificate </entry>
+<entry align="center"> invalid certificate </entry>
+<entry align="center"> valid certificate </entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry morerows="3" rotate="1" valign="middle"><i oldrole="emphasis" role="bold">Local peer-verify() setting</i>
+</entry>
+<entry align="center"><i oldrole="emphasis" role="bold">optional-untrusted</i>
+</entry>
+<entry> TLS-encryption </entry>
+<entry> TLS-encryption </entry>
+<entry> TLS-encryption </entry>
+</row>
+<row>
+<entry align="center"><i oldrole="emphasis" role="bold">optional-trusted</i>
+</entry>
+<entry> TLS-encryption </entry>
+<entry> rejected connection </entry>
+<entry> TLS-encryption </entry>
+</row>
+<row>
+<entry align="center"><i oldrole="emphasis" role="bold">required-untrusted</i>
+</entry>
+<entry> rejected connection </entry>
+<entry> TLS-encryption </entry>
+<entry> TLS-encryption </entry>
+</row>
+<row>
+<entry align="center"><i oldrole="emphasis" role="bold">required-trusted</i>
+</entry>
+<entry> rejected connection </entry>
+<entry> rejected connection </entry>
+<entry> TLS-encryption </entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<MadCap:snippetBlock src="../../shared/chunk/option-destination-tls-peer-verify-notes.htm"></MadCap:snippetBlock>
+<p oldrole="para">Starting with <entity>abbrev</entity> version <phrase condition="ose">3.10</phrase>, you can also use a simplified configuration method for the <span class="Code" oldrole="parameter">peer-verify</span> option, simply setting it to <span class="Code" oldrole="userinput">yes</span> or <span class="Code" oldrole="userinput">no</span>. The following table summarizes the possible options and their results depending on the certificate of the peer.</p>
+<MadCap:snippetBlock src="../../shared/chunk/option-tls-peer-verify-yesno.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect xml:id="tls-options-pkcs12-file">
+<title>pkcs12-file()</title>
+<indexterm type="parameter">
+<primary>pkcs12-file()</primary>
+</indexterm>
+<indexterm>
+<primary>pkcs12-file()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="80pt"></colspec>
+<tbody>
+<row>
+<entry>Accepted values:</entry>
+<entry>Filename</entry>
+</row>
+<row>
+<entry>Default:</entry>
+<entry>none</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The name of a <span class="Code" oldrole="filename">PKCS #12</span> file that contains an unencrypted private key, an X.509 certificate, and an optional set of trusted CA certificates.</p>
+<p oldrole="para">If this option is used in the configuration, the value of <span class="Code" oldrole="parameter">key-file()</span> and <span class="Code" oldrole="parameter">cert-file()</span> will be omitted.</p>
+<p oldrole="para">You can use the <span class="Code" oldrole="parameter">ca-dir()</span> option together with <span class="Code" oldrole="parameter">pkcs12-file()</span>. However, this is optional because the <span class="Code" oldrole="filename">PKCS #12</span> file may contain CA certificates as well.</p>
+<p oldrole="para">Passphrase is currently not supported.</p>
+<example>
+<title>Using <span class="Code" oldrole="parameter">pkcs12-file()</span>
+</title>
+<p oldrole="para">In the following example, the first command creates a single <span class="Code" oldrole="filename">PKCS #12</span> file from the private key, X.509 certificate, and CA certificate files. Then, the second half of the example uses the same <span class="Code" oldrole="filename">PKCS #12</span> file in the syslog-ng configuration.</p>
+
+<p><b oldrole="formalpara">Example:</b></p>
+<p oldrole="para"></p>
+
+<pre class="Code" oldrole="synopsis">$ openssl pkcs12 -export -inkey server.key -in server.crt -certfile ca.crt -out server.p12</pre>
+
+<p><b oldrole="formalpara">Example configuration:</b></p>
+<p oldrole="para"></p>
+
+<pre class="Code" oldrole="synopsis">source s_tls {
     syslog(
         transport(tls)
         tls(
@@ -826,298 +322,123 @@
             peer-verify(yes)
         )
     );
-};
-    </p>
-   </example>
-  </simplesect>
-  <simplesect xml:id="tls-options-ssl-options">
-   <title>
-    ssl-options()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     ssl-options()
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     ssl_options()
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     disable SSL
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     disabling SSL
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     disable TLS
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     disabling TLS
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="80pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Accepted values:
-       </entry>
-       <entry>
-        comma-separated list of the following options: no-sslv2, no-sslv3, no-tlsv1, no-tlsv11, no-tlsv12, none
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        no-sslv2
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Sets the specified options of the SSL/TLS protocols. Currently, you can use it to disable specific protocol versions. Note that disabling a newer protocol version (for example, TLSv1.1) does not automatically disable older versions of the same protocol (for example, TLSv1.0). For example, use the following option to permit using only TLSv1.1 or newer:
-   </p>
-   <indexterm>
-    <primary>
-     disable SSL
-    </primary>
-   </indexterm>
-   <p class="Code" oldrole="synopsis">
-    ssl-options(no-sslv2, no-sslv3, no-tlsv1)
-   </p>
-   <p oldrole="para">
-    Using
-    <span class="Code" oldrole="userinput">
-     ssl-options(none)
-    </span>
-    means that
-    <entity>
-     abbrev
-    </entity>
-    does not specify any restrictions on the protocol used. However, in this case, the underlying OpenSSL library can restrict the available protocols, for example, certain OpenSSL versions automatically disable SSLv2.
-   </p>
-   <p oldrole="para">
-    This option is available in
-    <entity>
-     abbrev
-    </entity>
-    <phrase condition="ose">
-     3.7
-    </phrase>
-    <phrase condition="pe">
-     7.0
-    </phrase>
-    and newer.
-   </p>
-   <example>
-    <title>
-     Using
-     <span class="Code" oldrole="parameter">
-      ssl-options
-     </span>
-    </title>
-    <p oldrole="para">
-     The following destination explicitly disables SSL and TLSv1.0
-    </p>
-    <p class="Code" oldrole="synopsis">
-     destination demo_tls_destination {
+};</pre>
+</example>
+</simplesect>
+<simplesect xml:id="tls-options-ssl-options">
+<title>ssl-options()</title>
+<indexterm type="parameter">
+<primary>ssl-options()</primary>
+</indexterm>
+<indexterm>
+<primary>ssl_options()</primary>
+</indexterm>
+<indexterm>
+<primary>disable SSL</primary>
+</indexterm>
+<indexterm>
+<primary>disabling SSL</primary>
+</indexterm>
+<indexterm>
+<primary>disable TLS</primary>
+</indexterm>
+<indexterm>
+<primary>disabling TLS</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="80pt"></colspec>
+<tbody>
+<row>
+<entry>Accepted values:</entry>
+<entry>comma-separated list of the following options: no-sslv2, no-sslv3, no-tlsv1, no-tlsv11, no-tlsv12, none</entry>
+</row>
+<row>
+<entry>Default:</entry>
+<entry>no-sslv2</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Sets the specified options of the SSL/TLS protocols. Currently, you can use it to disable specific protocol versions. Note that disabling a newer protocol version (for example, TLSv1.1) does not automatically disable older versions of the same protocol (for example, TLSv1.0). For example, use the following option to permit using only TLSv1.1 or newer:</p>
+<indexterm>
+<primary>disable SSL</primary>
+</indexterm>
+<pre class="Code" oldrole="synopsis">ssl-options(no-sslv2, no-sslv3, no-tlsv1)</pre>
+<p oldrole="para">Using <span class="Code" oldrole="userinput">ssl-options(none)</span> means that <entity>abbrev</entity> does not specify any restrictions on the protocol used. However, in this case, the underlying OpenSSL library can restrict the available protocols, for example, certain OpenSSL versions automatically disable SSLv2.</p>
+<p oldrole="para">This option is available in <entity>abbrev</entity> <phrase condition="ose">3.7</phrase><phrase condition="pe">7.0</phrase> and newer.</p>
+<example>
+<title>Using <span class="Code" oldrole="parameter">ssl-options</span>
+</title>
+<p oldrole="para">The following destination explicitly disables SSL and TLSv1.0</p>
+<pre class="Code" oldrole="synopsis">destination demo_tls_destination {
     network("172.16.177.147" port(6514)
     transport("tls")
     tls( ca-dir("/etc/syslog-ng/ca.d")
          key-file("/etc/syslog-ng/cert.d/clientkey.pem")
          cert-file("/etc/syslog-ng/cert.d/clientcert.pem")
          ssl-options(no-sslv2, no-sslv3, no-tlsv1) )
-    ); };
-    </p>
-   </example>
-  </simplesect>
-  <simplesect xml:id="tls-options-trusted-dn">
-   <title>
-    trusted-dn()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     trusted-dn()
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     trusted_dn()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="80pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Accepted values:
-       </entry>
-       <entry>
-        list of accepted distinguished names
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        none
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    To accept connections only from hosts using certain certificates signed by the trusted CAs, list the distinguished names of the accepted certificates in this parameter. For example using
-    <span class="Code" oldrole="userinput">
-     trusted-dn("*, O=Example Inc, ST=Some-State, C=*")
-    </span>
-    will accept only certificates issued for the
-    <span class="Code" oldrole="userinput">
-     Example Inc
-    </span>
-    organization in
-    <span class="Code" oldrole="userinput">
-     Some-State
-    </span>
-    state.
-   </p>
-  </simplesect>
-  <simplesect xml:id="tls-options-trusted-keys">
-   <title>
-    trusted-keys()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     trusted-keys()
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     trusted_keys()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="80pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Accepted values:
-       </entry>
-       <entry>
-        list of accepted SHA-1 fingerprints
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        none
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    To accept connections only from hosts using certain certificates having specific SHA-1 fingerprints, list the fingerprints of the accepted certificates in this parameter. For example
-    <span class="Code" oldrole="userinput">
-     trusted-keys("SHA1:00:EF:ED:A4:CE:00:D1:14:A4:AB:43:00:EF:00:91:85:FF:89:28:8F", "SHA1:0C:42:00:3E:B2:60:36:64:00:E2:83:F0:80:46:AD:00:A8:9D:00:15")
-    </span>
-    .
-   </p>
-   <p oldrole="para">
-    To find the fingerprint of a certificate, you can use the following command:
-    <b oldrole="command">
-     openssl x509 -in &lt;certificate-filename&gt; -sha1 -noout -fingerprint
-    </b>
-   </p>
-   <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
-    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
-    </col>
-    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
-    </col>
-    <tbody>
-     <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
-      <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
-       <p>
-        <img src="../../Resources/Images/Common/note.png"/>
-       </p>
-      </td>
-      <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
-       <span class="AllNoteStyles">
-        NOTE:
-       </span>
-       <p oldrole="para">
-        When using the
-        <span class="Code" oldrole="parameter">
-         trusted-keys()
-        </span>
-        and
-        <span class="Code" oldrole="parameter">
-         trusted-dn()
-        </span>
-        parameters, note the following:
-       </p>
-       <ul oldrole="itemizedlist">
-        <li oldrole="listitem">
-         <p oldrole="para">
-          First, the
-          <span class="Code" oldrole="parameter">
-           trusted-keys()
-          </span>
-          parameter is checked. If the fingerprint of the peer is listed, the certificate validation is performed.
-         </p>
-        </li>
-        <li oldrole="listitem">
-         <p oldrole="para">
-          If the fingerprint of the peer is not listed in the
-          <span class="Code" oldrole="parameter">
-           trusted-keys()
-          </span>
-          parameter, the
-          <span class="Code" oldrole="parameter">
-           trusted-dn()
-          </span>
-          parameter is checked. If the DN of the peer is not listed in the
-          <span class="Code" oldrole="parameter">
-           trusted-dn()
-          </span>
-          parameter, the authentication of the peer fails and the connection is closed.
-         </p>
-        </li>
-       </ul>
-      </td>
-     </tr>
-    </tbody>
-   </table>
-  </simplesect>
- </body>
-</html>
+    ); };</pre>
+</example>
+</simplesect>
+<simplesect xml:id="tls-options-trusted-dn">
+<title>trusted-dn()</title>
+<indexterm type="parameter">
+<primary>trusted-dn()</primary>
+</indexterm>
+<indexterm>
+<primary>trusted_dn()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="80pt"></colspec>
+<tbody>
+<row>
+<entry>Accepted values:</entry>
+<entry>list of accepted distinguished names</entry>
+</row>
+<row>
+<entry>Default:</entry>
+<entry>none</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> To accept connections only from hosts using certain certificates signed by the trusted CAs, list the distinguished names of the accepted certificates in this parameter. For example using <span class="Code" oldrole="userinput">trusted-dn("*, O=Example Inc, ST=Some-State, C=*")</span> will accept only certificates issued for the <span class="Code" oldrole="userinput">Example Inc</span> organization in <span class="Code" oldrole="userinput">Some-State</span> state.</p>
+</simplesect>
+<simplesect xml:id="tls-options-trusted-keys">
+<title>trusted-keys()</title>
+<indexterm type="parameter">
+<primary>trusted-keys()</primary>
+</indexterm>
+<indexterm>
+<primary>trusted_keys()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="80pt"></colspec>
+<tbody>
+<row>
+<entry>Accepted values:</entry>
+<entry>list of accepted SHA-1 fingerprints</entry>
+</row>
+<row>
+<entry>Default:</entry>
+<entry>none</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> To accept connections only from hosts using certain certificates having specific SHA-1 fingerprints, list the fingerprints of the accepted certificates in this parameter. For example <span class="Code" oldrole="userinput">trusted-keys("SHA1:00:EF:ED:A4:CE:00:D1:14:A4:AB:43:00:EF:00:91:85:FF:89:28:8F", "SHA1:0C:42:00:3E:B2:60:36:64:00:E2:83:F0:80:46:AD:00:A8:9D:00:15")</span>.</p>
+<p oldrole="para">To find the fingerprint of a certificate, you can use the following command: <b oldrole="command">openssl x509 -in &lt;certificate-filename&gt; -sha1 -noout -fingerprint</b></p>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">When using the <span class="Code" oldrole="parameter">trusted-keys()</span> and <span class="Code" oldrole="parameter">trusted-dn()</span> parameters, note the following:</p><ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">First, the <span class="Code" oldrole="parameter">trusted-keys()</span> parameter is checked. If the fingerprint of the peer is listed, the certificate validation is performed.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">If the fingerprint of the peer is not listed in the <span class="Code" oldrole="parameter">trusted-keys()</span> parameter, the <span class="Code" oldrole="parameter">trusted-dn()</span> parameter is checked. If the DN of the peer is not listed in the <span class="Code" oldrole="parameter">trusted-dn()</span> parameter, the authentication of the peer fails and the connection is closed.</p>
+</li>
+</ul></td></tr></tbody></table>
+</simplesect>
+
+</body></html>

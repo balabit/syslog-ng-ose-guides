@@ -1,74 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-%entities;]&gt;
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
- <body name="csv-parser" oldrole="section">
-  <h1 name="csv-parser" oldrole="section">
-   Parsing messages with comma-separated and similar values
-  </h1>
-  <MadCap:keyword term="segmenting messages">
-  </MadCap:keyword>
-  <MadCap:keyword term="splitting messages">
-  </MadCap:keyword>
-  <MadCap:keyword term="CSV-values">
-  </MadCap:keyword>
-  <MadCap:keyword term="parsers:['csv-parser']">
-  </MadCap:keyword>
-  <MadCap:snippetBlock src="../../shared/chunk/topic-parser-csv-intro.htm">
-  </MadCap:snippetBlock>
-  <h6 name="example-csv-parser" oldrole="example">
-   Example:
-   Segmenting hostnames separated with a dash
-  </h6>
-  <p oldrole="para">
-   The following example separates hostnames like
-   <span class="Code" oldrole="userinput">
-    example-1
-   </span>
-   and
-   <span class="Code" oldrole="userinput">
-    example-2
-   </span>
-   into two parts.
-  </p>
-  <p class="Code" oldrole="synopsis">
-   parser p_hostname_segmentation {
+
+ %entities;]&gt;
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="csv-parser" oldrole="section">
+<h1 name="csv-parser" oldrole="section">Parsing messages with comma-separated and similar values</h1>
+<MadCap:keyword term="segmenting messages"></MadCap:keyword>
+<MadCap:keyword term="splitting messages"></MadCap:keyword>
+<MadCap:keyword term="CSV-values"></MadCap:keyword>
+<MadCap:keyword term="parsers:['csv-parser']"></MadCap:keyword>
+<MadCap:snippetBlock src="../../shared/chunk/topic-parser-csv-intro.htm"></MadCap:snippetBlock>
+
+<h6 name="example-csv-parser" oldrole="example">Example: Segmenting hostnames separated with a dash</h6>
+<p oldrole="para">The following example separates hostnames like <span class="Code" oldrole="userinput">example-1</span> and <span class="Code" oldrole="userinput">example-2</span> into two parts.</p>
+<pre class="Code" oldrole="synopsis">parser p_hostname_segmentation {
     csv-parser(columns("HOSTNAME.NAME", "HOSTNAME.ID")
     delimiters("-")
     flags(escape-none)
     template("${HOST}"));
 };
 destination d_file { file("/var/log/messages-${HOSTNAME.NAME:-examplehost}"); };
-log { source(s_local); parser(p_hostname_segmentation); destination(d_file);};
-  </p>
-  <h6 name="example-parser-apache" oldrole="example">
-   Example:
-   Parsing Apache log files
-  </h6>
-  <p oldrole="para">
-   The following parser processes the log of Apache web servers and separates them into different fields. Apache log messages can be formatted like:
-  </p>
-  <p class="Code" oldrole="synopsis">
-   "%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\" %T %v"
-  </p>
-  <p oldrole="para">
-   Here is a sample message:
-  </p>
-  <p class="Code" oldrole="synopsis">
-   192.168.1.1 - - [31/Dec/2007:00:17:10 +0100] "GET /cgi-bin/example.cgi HTTP/1.1" 200 2708 "-" "curl/7.15.5 (i4 86-pc-linux-gnu) libcurl/7.15.5 OpenSSL/0.9.8c zlib/1.2.3 libidn/0.6.5" 2 example.balabit
-  </p>
-  <p oldrole="para">
-   To parse such logs, the delimiter character is set to a single whitespace (
-   <span class="Code" oldrole="userinput">
-    delimiters(" ")
-   </span>
-   ). Whitespaces between quotes and brackets are ignored (
-   <span class="Code" oldrole="userinput">
-    quote-pairs('""[]')
-   </span>
-   ).
-  </p>
-  <p class="Code" oldrole="synopsis">
-   parser p_apache {
+log { source(s_local); parser(p_hostname_segmentation); destination(d_file);};</pre>
+
+
+<h6 name="example-parser-apache" oldrole="example">Example: Parsing Apache log files</h6>
+<p oldrole="para">The following parser processes the log of Apache web servers and separates them into different fields. Apache log messages can be formatted like:</p>
+<pre class="Code" oldrole="synopsis">"%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\" %T %v"</pre>
+<p oldrole="para">Here is a sample message:</p>
+<pre class="Code" oldrole="synopsis">192.168.1.1 - - [31/Dec/2007:00:17:10 +0100] "GET /cgi-bin/example.cgi HTTP/1.1" 200 2708 "-" "curl/7.15.5 (i4 86-pc-linux-gnu) libcurl/7.15.5 OpenSSL/0.9.8c zlib/1.2.3 libidn/0.6.5" 2 example.balabit</pre>
+<p oldrole="para">To parse such logs, the delimiter character is set to a single whitespace (<span class="Code" oldrole="userinput">delimiters(" ")</span>). Whitespaces between quotes and brackets are ignored (<span class="Code" oldrole="userinput">quote-pairs('""[]')</span>).</p>
+<pre class="Code" oldrole="synopsis">parser p_apache {
     csv-parser(columns("APACHE.CLIENT_IP", "APACHE.IDENT_NAME", "APACHE.USER_NAME",
         "APACHE.TIMESTAMP", "APACHE.REQUEST_URL", "APACHE.REQUEST_STATUS",
         "APACHE.CONTENT_LENGTH", "APACHE.REFERER", "APACHE.USER_AGENT",
@@ -77,583 +36,236 @@ log { source(s_local); parser(p_hostname_segmentation); destination(d_file);};
          delimiters(" ")
          quote-pairs('""[]')
          );
-};
-  </p>
-  <p oldrole="para">
-   The results can be used for example to separate log messages into different files based on the APACHE.USER_NAME field. If the field is empty, the
-   <span class="Code" oldrole="userinput">
-    nouser
-   </span>
-   name is assigned.
-  </p>
-  <p class="Code" oldrole="synopsis">
-   log { source(s_local);
+};</pre>
+<p oldrole="para">The results can be used for example to separate log messages into different files based on the APACHE.USER_NAME field. If the field is empty, the <span class="Code" oldrole="userinput">nouser</span> name is assigned.</p>
+<pre class="Code" oldrole="synopsis">log { source(s_local);
     parser(p_apache); destination(d_file);};
 };
-destination d_file { file("/var/log/messages-${APACHE.USER_NAME:-nouser}"); };
-  </p>
-  <h6 name="example-parser-multiple" oldrole="example">
-   Example:
-   Segmenting a part of a message
-  </h6>
-  <p oldrole="para">
-   Multiple parsers can be used to split a part of an already parsed message into further segments. The following example splits the timestamp of a parsed Apache log message into separate fields.
-  </p>
-  <p class="Code" oldrole="synopsis">
-   parser p_apache_timestamp {
+destination d_file { file("/var/log/messages-${APACHE.USER_NAME:-nouser}"); };</pre>
+
+
+<h6 name="example-parser-multiple" oldrole="example">Example: Segmenting a part of a message</h6>
+<p oldrole="para">Multiple parsers can be used to split a part of an already parsed message into further segments. The following example splits the timestamp of a parsed Apache log message into separate fields.</p>
+<pre class="Code" oldrole="synopsis">parser p_apache_timestamp {
     csv-parser(columns("APACHE.TIMESTAMP.DAY", "APACHE.TIMESTAMP.MONTH", "APACHE.TIMESTAMP.YEAR", "APACHE.TIMESTAMP.HOUR", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.ZONE")
     delimiters("/: ")
     flags(escape-none)
     template("${APACHE.TIMESTAMP}"));
     };
 log { source(s_local); parser(p_apache); parser(p_apache_timestamp); destination(d_file);
-};
-  </p>
-  <p>
-   <b oldrole="formalpara">
-    Further examples:
-   </b>
-  </p>
-  <p oldrole="para">
-  </p>
-  <ul oldrole="itemizedlist">
-   <li oldrole="listitem">
-    <p oldrole="para">
-     For an example on using the
-     <span class="Code" oldrole="parameter">
-      greedy
-     </span>
-     option, see
-     <MadCap:xref href="parser-csv.htm#example-parser-greedy">
-     </MadCap:xref>
-     .
-    </p>
-   </li>
-  </ul>
-  <h2 name="reference-parsers-csv">
-   Options of CSV parsers
-  </h2>
-  <MadCap:keyword term="segmenting messages">
-  </MadCap:keyword>
-  <MadCap:keyword term="CSV parsers">
-  </MadCap:keyword>
-  <MadCap:keyword term="splitting messages">
-  </MadCap:keyword>
-  <MadCap:snippetBlock src="../../shared/chunk/topic-parser-csv-intro.htm">
-  </MadCap:snippetBlock>
-  <h6 name="parser-options" oldrole="simplesect">
-   columns()
-  </h6>
-  <MadCap:keyword term="columns()">
-  </MadCap:keyword>
-  <table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
-   <tbody>
-    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-     <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-      Synopsis:
-     </td>
-     <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-      columns("PARSER.COLUMN1", "PARSER.COLUMN2", ...)
-     </td>
-    </tr>
-   </tbody>
-   <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
-   </col>
-  </table>
-  <p oldrole="para">
-   <i oldrole="emphasis" role="bold">
-    Description:
-   </i>
-   Specifies the name of the columns to separate messages to. These names will be automatically available as macros. The values of these macros do not include the delimiters.
-  </p>
-  <simplesect xml:id="csv-parser-delimiter">
-   <title>
-    delimiters()
-   </title>
-   <indexterm>
-    <primary>
-     delimiters()
-    </primary>
-   </indexterm>
-   <table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
-    <tbody>
-     <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-      <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-       Synopsis:
-      </td>
-      <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-       <p oldrole="para">
-        delimiters(chars("&lt;delimiter_characters&gt;"))
-        <i oldrole="emphasis">
-         or
-         <span class="Code" oldrole="parameter">
-          delimiters("&lt;delimiter_characters&gt;")
-         </span>
-        </i>
-       </p>
-       <p oldrole="para">
-        delimiters(strings("&lt;delimiter_string1&gt;", "&lt;delimiter_string2&gt;", ...)")
-       </p>
-       <p oldrole="para">
-        delimiters(chars("&lt;delimiter_characters&gt;"), strings("&lt;delimiter_string1&gt;"))
-       </p>
-      </td>
-     </tr>
-    </tbody>
-    <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
-    </col>
-   </table>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    The delimiter is the character or string that separates the columns in the message. If you specify multiple characters using the
-    <span class="Code" oldrole="userinput">
-     delimiters(chars("&lt;delimiter_characters&gt;"))
-    </span>
-    option, every character will be treated as a delimiter. To separate the columns at the tabulator (tab character), specify
-    <span class="Code" oldrole="userinput">
-     \t
-    </span>
-    . For example, to separate the text at every hyphen (-) and colon (:) character, use
-    <span class="Code" oldrole="userinput">
-     delimiters(chars("-:"))
-    </span>
-    , Note that the delimiters will not be included in the column values.
-   </p>
-   <p>
-    <b oldrole="formalpara">
-     String delimiters:
-    </b>
-   </p>
-   <p oldrole="para">
-    If you have to use a string as a delimiter, list your string delimiters in the
-    <span class="Code" oldrole="userinput">
-     delimiters(strings("&lt;delimiter_string1&gt;", "&lt;delimiter_string2&gt;", ...)")
-    </span>
-    format.
-   </p>
-   <p oldrole="para">
-    By default,
-    <entity>
-     abbrev
-    </entity>
-    uses space as a delimiter. If you want to use only the strings as delimiters, you have to disable the space delimiter, for example:
-    <span class="Code" oldrole="userinput">
-     delimiters(chars(""), strings("&lt;delimiter_string&gt;"))
-    </span>
-   </p>
-   <p>
-    <b oldrole="formalpara">
-     Multiple delimiters:
-    </b>
-   </p>
-   <p oldrole="para">
-    If you use more than one delimiter, note the following points:
-   </p>
-   <ul oldrole="itemizedlist">
-    <li oldrole="listitem">
-     <p oldrole="para">
-      <entity>
-       abbrev
-      </entity>
-      will split the message at the nearest possible delimiter. The order of the delimiters in the configuration file does not matter.
-     </p>
-    </li>
-    <li oldrole="listitem">
-     <p oldrole="para">
-      You can use both string delimiters and character delimiters in a parser.
-     </p>
-    </li>
-    <li oldrole="listitem">
-     <p oldrole="para">
-      The string delimiters can include characters that are also used as character delimiters.
-     </p>
-    </li>
-    <li oldrole="listitem">
-     <p oldrole="para">
-      If a string delimiter and a character delimiter both match at the same position of the message,
-      <entity>
-       abbrev
-      </entity>
-      uses the string delimiter.
-     </p>
-    </li>
-   </ul>
-  </simplesect>
-  <simplesect xml:id="csv-parser-dialect">
-   <title>
-    dialect()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     dialect()
-    </primary>
-   </indexterm>
-   <table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
-    <tbody>
-     <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-      <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-       Synopsis:
-      </td>
-      <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-       escape-none|escape-backslash|escape-double-char
-      </td>
-     </tr>
-    </tbody>
-    <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
-    </col>
-   </table>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Specifies how to handle escaping in the parsed message. The following values are available. Default value:
-    <span class="Code" oldrole="parameter">
-     escape-none
-    </span>
-   </p>
-   <ul oldrole="itemizedlist">
-    <MadCap:snippetBlock src="../../shared/chunk/option-escaping.htm">
-    </MadCap:snippetBlock>
-   </ul>
-   <p class="Code" oldrole="synopsis">
-    parser p_demo_parser {
+};</pre>
+
+
+<p><b oldrole="formalpara">Further examples:</b></p>
+
+
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">For an example on using the <span class="Code" oldrole="parameter">greedy</span> option, see <MadCap:xref href="parser-csv.htm#example-parser-greedy"></MadCap:xref>.</p>
+</li>
+</ul>
+
+<h2 name="reference-parsers-csv">Options of CSV parsers</h2>
+<MadCap:keyword term="segmenting messages"></MadCap:keyword>
+<MadCap:keyword term="CSV parsers"></MadCap:keyword>
+<MadCap:keyword term="splitting messages"></MadCap:keyword>
+<MadCap:snippetBlock src="../../shared/chunk/topic-parser-csv-intro.htm"></MadCap:snippetBlock>
+
+<h6 name="parser-options" oldrole="simplesect">columns()</h6>
+<MadCap:keyword term="columns()"></MadCap:keyword>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+
+
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Synopsis: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">columns("PARSER.COLUMN1", "PARSER.COLUMN2", ...)</td>
+</tr>
+</tbody>
+
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Specifies the name of the columns to separate messages to. These names will be automatically available as macros. The values of these macros do not include the delimiters.</p>
+
+<simplesect xml:id="csv-parser-delimiter">
+<title>delimiters()</title>
+<indexterm>
+<primary>delimiters()</primary>
+</indexterm>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+
+
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Synopsis: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<p oldrole="para">delimiters(chars("&lt;delimiter_characters&gt;")) <i oldrole="emphasis">or <span class="Code" oldrole="parameter">delimiters("&lt;delimiter_characters&gt;")</span></i></p>
+<p oldrole="para">delimiters(strings("&lt;delimiter_string1&gt;", "&lt;delimiter_string2&gt;", ...)")</p>
+<p oldrole="para">delimiters(chars("&lt;delimiter_characters&gt;"), strings("&lt;delimiter_string1&gt;"))</p>
+</td>
+</tr>
+</tbody>
+
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The delimiter is the character or string that separates the columns in the message. If you specify multiple characters using the <span class="Code" oldrole="userinput">delimiters(chars("&lt;delimiter_characters&gt;"))</span> option, every character will be treated as a delimiter. To separate the columns at the tabulator (tab character), specify <span class="Code" oldrole="userinput">\t</span>. For example, to separate the text at every hyphen (-) and colon (:) character, use <span class="Code" oldrole="userinput">delimiters(chars("-:"))</span>, Note that the delimiters will not be included in the column values.</p>
+
+<p><b oldrole="formalpara">String delimiters:</b></p>
+<p oldrole="para">If you have to use a string as a delimiter, list your string delimiters in the <span class="Code" oldrole="userinput">delimiters(strings("&lt;delimiter_string1&gt;", "&lt;delimiter_string2&gt;", ...)")</span> format.</p>
+
+<p oldrole="para">By default, <entity>abbrev</entity> uses space as a delimiter. If you want to use only the strings as delimiters, you have to disable the space delimiter, for example: <span class="Code" oldrole="userinput">delimiters(chars(""), strings("&lt;delimiter_string&gt;"))</span></p>
+
+<p><b oldrole="formalpara">Multiple delimiters:</b></p>
+<p oldrole="para">If you use more than one delimiter, note the following points:</p>
+
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para"><entity>abbrev</entity> will split the message at the nearest possible delimiter. The order of the delimiters in the configuration file does not matter.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">You can use both string delimiters and character delimiters in a parser.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The string delimiters can include characters that are also used as character delimiters.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">If a string delimiter and a character delimiter both match at the same position of the message, <entity>abbrev</entity> uses the string delimiter.</p>
+</li>
+</ul>
+</simplesect>
+<simplesect xml:id="csv-parser-dialect">
+<title>dialect()</title>
+<indexterm type="parameter">
+<primary>dialect()</primary>
+</indexterm>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+
+
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Synopsis: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">escape-none|escape-backslash|escape-double-char</td>
+</tr>
+</tbody>
+
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Specifies how to handle escaping in the parsed message. The following values are available. Default value: <span class="Code" oldrole="parameter">escape-none</span></p>
+<ul oldrole="itemizedlist">
+<MadCap:snippetBlock src="../../shared/chunk/option-escaping.htm"></MadCap:snippetBlock>
+</ul>
+<pre class="Code" oldrole="synopsis">parser p_demo_parser {
     csv-parsercsv-parser(
         prefix(".csv.")
         delimiters(" ")
         dialect(escape-backslash)
         flags(strip-whitespace, greedy)
         columns("column1", "column2", "column3"));
-};
-   </p>
-  </simplesect>
-  <simplesect xml:id="csv-parser-flags">
-   <title>
-    flags()
-   </title>
-   <indexterm>
-    <primary>
-     flags()
-    </primary>
-   </indexterm>
-   <table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
-    <tbody>
-     <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-      <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-       Synopsis:
-      </td>
-      <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-       drop-invalid, escape-none, escape-backslash, escape-double-char, greedy, strip-whitespace
-      </td>
-     </tr>
-    </tbody>
-    <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
-    </col>
-   </table>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Specifies various options for parsing the message. The following flags are available:
-   </p>
-   <ul oldrole="itemizedlist">
-    <li oldrole="listitem">
-     <indexterm>
-      <primary>
-       drop-invalid
-      </primary>
-     </indexterm>
-     <p oldrole="para">
-      <i oldrole="emphasis">
-       drop-invalid
-      </i>
-      : When the
-      <span class="Code" oldrole="parameter">
-       drop-invalid
-      </span>
-      option is set, the parser does not process messages that do not match the parser. For example, a message does not match the parser if it has less columns than specified in the parser, or it has more columns but the
-      <span class="Code" oldrole="parameter">
-       greedy
-      </span>
-      flag is not enabled. Using the
-      <span class="Code" oldrole="parameter">
-       drop-invalid
-      </span>
-      option practically turns the parser into a special filter, that matches messages that have the predefined number of columns (using the specified delimiters).
-     </p>
-     <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="tip" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
-      <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
-      </col>
-      <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
-      </col>
-      <tbody>
-       <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
-        <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
-         <p>
-          <img src="../../Resources/Images/Common/note.png"/>
-         </p>
-        </td>
-        <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
-         <span class="AllNoteStyles">
-          TIP:
-         </span>
-         <p oldrole="para">
-          Messages dropped as invalid can be processed by a
-          <span class="Code" oldrole="parameter">
-           fallback
-          </span>
-          log path. For details on the
-          <span class="Code" oldrole="parameter">
-           fallback
-          </span>
-          option, see
-          <xref linkend="reference-logflags">
-          </xref>
-          .
-         </p>
-        </td>
-       </tr>
-      </tbody>
-     </table>
-    </li>
-    <MadCap:snippetBlock src="../../shared/chunk/option-escaping.htm">
-    </MadCap:snippetBlock>
-    <li oldrole="listitem">
-     <indexterm>
-      <primary>
-       greedy
-      </primary>
-     </indexterm>
-     <p oldrole="para">
-      <i oldrole="emphasis">
-       greedy
-      </i>
-      : The
-      <span class="Code" oldrole="parameter">
-       greedy
-      </span>
-      option assigns the remainder of the message to the last column, regardless of the delimiter characters set. You can use this option to process messages where the number of columns varies.
-     </p>
-     <example xml:id="example-parser-greedy">
-      <title>
-       Adding the end of the message to the last column
-      </title>
-      <p oldrole="para">
-       If the
-       <span class="Code" oldrole="parameter">
-        greedy
-       </span>
-       option is enabled, the syslog-ng application adds the not-yet-parsed part of the message to the last column, ignoring any delimiter characters that may appear in this part of the message.
-      </p>
-      <p oldrole="para">
-       For example, you receive the following comma-separated message:
-       <span class="Code" oldrole="userinput">
-        example 1, example2, example3
-       </span>
-       , and you segment it with the following parser:
-      </p>
-      <p class="Code" oldrole="synopsis">
-       csv-parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(","));
-      </p>
-      <p oldrole="para">
-       The
-       <span class="Code" oldrole="userinput">
-        COLUMN1
-       </span>
-       ,
-       <span class="Code" oldrole="userinput">
-        COLUMN2
-       </span>
-       , and
-       <span class="Code" oldrole="userinput">
-        COLUMN3
-       </span>
-       variables will contain the strings
-       <span class="Code" oldrole="userinput">
-        example1
-       </span>
-       ,
-       <span class="Code" oldrole="userinput">
-        example2
-       </span>
-       , and
-       <span class="Code" oldrole="userinput">
-        example3
-       </span>
-       , respectively. If the message looks like
-       <span class="Code" oldrole="userinput">
-        example 1, example2, example3, some more information
-       </span>
-       , then any text appearing after the third comma (that is,
-       <span class="Code" oldrole="userinput">
-        some more information
-       </span>
-       ) is not parsed, and possibly lost if you use only the variables to reconstruct the message (for example, to send it to different columns of an SQL table).
-      </p>
-      <p oldrole="para">
-       Using the
-       <span class="Code" oldrole="parameter">
-        greedy
-       </span>
-       flag will assign the remainder of the message to the last column, so that the
-       <span class="Code" oldrole="userinput">
-        COLUMN1
-       </span>
-       ,
-       <span class="Code" oldrole="userinput">
-        COLUMN2
-       </span>
-       , and
-       <span class="Code" oldrole="userinput">
-        COLUMN3
-       </span>
-       variables will contain the strings
-       <span class="Code" oldrole="userinput">
-        example1
-       </span>
-       ,
-       <span class="Code" oldrole="userinput">
-        example2
-       </span>
-       , and
-       <span class="Code" oldrole="userinput">
-        example3, some more information
-       </span>
-       .
-      </p>
-      <p class="Code" oldrole="synopsis">
-       csv-parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(",") flags(greedy));
-      </p>
-     </example>
-    </li>
-    <li oldrole="listitem">
-     <indexterm>
-      <primary>
-       strip-whitespace
-      </primary>
-     </indexterm>
-     <p oldrole="para">
-      <i oldrole="emphasis">
-       strip-whitespace
-      </i>
-      : The
-      <span class="Code" oldrole="parameter">
-       strip-whitespace
-      </span>
-      flag removes leading and trailing whitespaces from all columns.
-     </p>
-    </li>
-   </ul>
-  </simplesect>
-  <simplesect xml:id="csv-parser-null">
-   <title>
-    null()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     null()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="50pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Synopsis:
-       </entry>
-       <entry>
-        string
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    If the value of a column is the value of the
-    <span class="Code" oldrole="parameter">
-     null()
-    </span>
-    parameter,
-    <entity>
-     abbrev
-    </entity>
-    changes the value of the column to an empty string. For example, if the columns of the message contain the "N/A" string to represent empty values, you can use the
-    <span class="Code" oldrole="userinput">
-     null("N/A")
-    </span>
-    option to change these values to empty stings.
-   </p>
-  </simplesect>
-  <simplesect xml:id="csv-parser-prefix">
-   <MadCap:snippetBlock src="../../shared/chunk/option-parser-prefix.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect xml:id="csv-parser-quote-pairs">
-   <title>
-    quote-pairs()
-   </title>
-   <indexterm>
-    <primary>
-     quote-pairs()
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     quote_pairs()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="50pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Synopsis:
-       </entry>
-       <entry>
-        quote-pairs('&lt;quote_pairs&gt;')
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    List quote-pairs between single quotes. Delimiter characters or strings enclosed between quote characters are ignored. Note that the beginning and ending quote character does not have to be identical, for example
-    <span class="Code" oldrole="userinput">
-     [}
-    </span>
-    can also be a quote-pair. For an example of using
-    <span class="Code" oldrole="parameter">
-     quote-pairs()
-    </span>
-    to parse Apache log files, see
-    <xref linkend="example-parser-apache">
-    </xref>
-    .
-   </p>
-  </simplesect>
-  <simplesect xml:id="csv-parser-template">
-   <MadCap:snippetBlock src="../../shared/chunk/option-parser-template.htm">
-   </MadCap:snippetBlock>
-   <p oldrole="para">
-    For examples, see
-    <xref linkend="example-csv-parser">
-    </xref>
-    and
-    <xref linkend="example-parser-multiple">
-    </xref>
-    .
-   </p>
-  </simplesect>
- </body>
-</html>
+};</pre>
+</simplesect>
+<simplesect xml:id="csv-parser-flags">
+<title>flags()</title>
+<indexterm>
+<primary>flags()</primary>
+</indexterm>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+
+
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Synopsis: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">drop-invalid, escape-none, escape-backslash, escape-double-char, greedy, strip-whitespace</td>
+</tr>
+</tbody>
+
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Specifies various options for parsing the message. The following flags are available:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<indexterm>
+<primary>drop-invalid</primary>
+</indexterm>
+<p oldrole="para"><i oldrole="emphasis">drop-invalid</i>: When the <span class="Code" oldrole="parameter">drop-invalid</span> option is set, the parser does not process messages that do not match the parser. For example, a message does not match the parser if it has less columns than specified in the parser, or it has more columns but the <span class="Code" oldrole="parameter">greedy</span> flag is not enabled. Using the <span class="Code" oldrole="parameter">drop-invalid</span> option practically turns the parser into a special filter, that matches messages that have the predefined number of columns (using the specified delimiters).</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="tip" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">TIP: </span><p oldrole="para">Messages dropped as invalid can be processed by a <span class="Code" oldrole="parameter">fallback</span> log path. For details on the <span class="Code" oldrole="parameter">fallback</span> option, see <xref linkend="reference-logflags"></xref>.</p></td></tr></tbody></table>
+</li>
+<MadCap:snippetBlock src="../../shared/chunk/option-escaping.htm"></MadCap:snippetBlock>
+<li oldrole="listitem">
+<indexterm>
+<primary>greedy</primary>
+</indexterm>
+<p oldrole="para"><i oldrole="emphasis">greedy</i>: The <span class="Code" oldrole="parameter">greedy</span> option assigns the remainder of the message to the last column, regardless of the delimiter characters set. You can use this option to process messages where the number of columns varies.</p>
+<example xml:id="example-parser-greedy">
+<title>Adding the end of the message to the last column</title>
+<p oldrole="para">If the <span class="Code" oldrole="parameter">greedy</span> option is enabled, the syslog-ng application adds the not-yet-parsed part of the message to the last column, ignoring any delimiter characters that may appear in this part of the message.</p>
+<p oldrole="para">For example, you receive the following comma-separated message: <span class="Code" oldrole="userinput">example 1, example2, example3</span>, and you segment it with the following parser:</p>
+<pre class="Code" oldrole="synopsis">csv-parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(","));</pre>
+<p oldrole="para">The <span class="Code" oldrole="userinput">COLUMN1</span>, <span class="Code" oldrole="userinput">COLUMN2</span>, and <span class="Code" oldrole="userinput">COLUMN3</span> variables will contain the strings <span class="Code" oldrole="userinput">example1</span>, <span class="Code" oldrole="userinput">example2</span>, and <span class="Code" oldrole="userinput">example3</span>, respectively. If the message looks like <span class="Code" oldrole="userinput">example 1, example2, example3, some more information</span>, then any text appearing after the third comma (that is, <span class="Code" oldrole="userinput">some more information</span>) is not parsed, and possibly lost if you use only the variables to reconstruct the message (for example, to send it to different columns of an SQL table).</p>
+<p oldrole="para">Using the <span class="Code" oldrole="parameter">greedy</span> flag will assign the remainder of the message to the last column, so that the <span class="Code" oldrole="userinput">COLUMN1</span>, <span class="Code" oldrole="userinput">COLUMN2</span>, and <span class="Code" oldrole="userinput">COLUMN3</span> variables will contain the strings <span class="Code" oldrole="userinput">example1</span>, <span class="Code" oldrole="userinput">example2</span>, and <span class="Code" oldrole="userinput">example3, some more information</span>.</p>
+<pre class="Code" oldrole="synopsis">csv-parser(columns("COLUMN1", "COLUMN2", "COLUMN3") delimiters(",") flags(greedy));</pre>
+</example>
+</li>
+<li oldrole="listitem">
+<indexterm>
+<primary>strip-whitespace</primary>
+</indexterm>
+<p oldrole="para"><i oldrole="emphasis">strip-whitespace</i>: The <span class="Code" oldrole="parameter">strip-whitespace</span> flag removes leading and trailing whitespaces from all columns.</p>
+</li>
+</ul>
+</simplesect>
+<simplesect xml:id="csv-parser-null">
+<title>null()</title>
+<indexterm type="parameter">
+<primary>null()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="50pt"></colspec>
+<tbody>
+<row>
+<entry>Synopsis: 
+
+                            </entry>
+<entry>string</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> If the value of a column is the value of the <span class="Code" oldrole="parameter">null()</span> parameter, <entity>abbrev</entity> changes the value of the column to an empty string. For example, if the columns of the message contain the "N/A" string to represent empty values, you can use the <span class="Code" oldrole="userinput">null("N/A")</span> option to change these values to empty stings.</p>
+</simplesect>
+<simplesect xml:id="csv-parser-prefix">
+<MadCap:snippetBlock src="../../shared/chunk/option-parser-prefix.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect xml:id="csv-parser-quote-pairs">
+<title>quote-pairs()</title>
+<indexterm>
+<primary>quote-pairs()</primary>
+</indexterm>
+<indexterm>
+<primary>quote_pairs()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="50pt"></colspec>
+<tbody>
+<row>
+<entry>Synopsis: 
+
+                            </entry>
+<entry>quote-pairs('&lt;quote_pairs&gt;')</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> List quote-pairs between single quotes. Delimiter characters or strings enclosed between quote characters are ignored. Note that the beginning and ending quote character does not have to be identical, for example <span class="Code" oldrole="userinput">[}</span> can also be a quote-pair. For an example of using <span class="Code" oldrole="parameter">quote-pairs()</span> to parse Apache log files, see <xref linkend="example-parser-apache"></xref>.</p>
+</simplesect>
+<simplesect xml:id="csv-parser-template">
+<MadCap:snippetBlock src="../../shared/chunk/option-parser-template.htm"></MadCap:snippetBlock>
+<p oldrole="para">For examples, see <xref linkend="example-csv-parser"></xref> and <xref linkend="example-parser-multiple"></xref>.</p>
+</simplesect>
+
+</body></html>

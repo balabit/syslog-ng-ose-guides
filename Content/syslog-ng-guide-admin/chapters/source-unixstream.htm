@@ -1,252 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
-%entities;]&gt;
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
- <body condition="ose" name="source-unixstream" oldrole="section">
-  <h1 condition="ose" name="source-unixstream" oldrole="section">
-   <span class="Code" oldrole="parameter">
-    unix-stream
-   </span>
-   ,
-   <span class="Code" oldrole="parameter">
-    unix-dgram
-   </span>
-   : Collecting messages from UNIX domain sockets
-  </h1>
-  <p oldrole="para">
-   The
-   <span class="Code" oldrole="parameter">
-    unix-stream()
-   </span>
-   and
-   <span class="Code" oldrole="parameter">
-    unix-dgram()
-   </span>
-   drivers open an
-   <span class="Code" oldrole="parameter">
-    AF_UNIX
-   </span>
-   socket and start listening on it for messages. The
-   <span class="Code" oldrole="parameter">
-    unix-stream()
-   </span>
-   driver is primarily used on Linux and uses
-   <span class="Code" oldrole="parameter">
-    SOCK_STREAM
-   </span>
-   semantics (connection oriented, no messages are lost), while
-   <span class="Code" oldrole="parameter">
-    unix-dgram()
-   </span>
-   is used on BSDs and uses
-   <span class="Code" oldrole="parameter">
-    SOCK_DGRAM
-   </span>
-   semantics: this may result in lost local messages if the system is overloaded.
-  </p>
-  <p oldrole="para">
-   To avoid denial of service attacks when using connection-oriented protocols, the number of simultaneously accepted connections should be limited. This can be achieved using the
-   <span class="Code" oldrole="parameter">
-    max-connections()
-   </span>
-   parameter. The default value of this parameter is quite strict, you might have to increase it on a busy system.
-  </p>
-  <p oldrole="para">
-   Both unix-stream and unix-dgram have a single required argument that specifies the filename of the socket to create. For the list of available optional parameters, see
-   <MadCap:xref href="source-unixstream.htm#reference-source-unixstream">
-   </MadCap:xref>
-  </p>
-  <p>
-   <b oldrole="formalpara">
-    Declaration:
-   </b>
-  </p>
-  <p oldrole="para">
-  </p>
-  <p class="Code" oldrole="synopsis">
-   unix-stream(filename [options]);
-unix-dgram(filename [options]);
-  </p>
-  <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
-   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
-   </col>
-   <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
-   </col>
-   <tbody>
-    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
-     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
-      <p>
-       <img src="../../Resources/Images/Common/note.png"/>
-      </p>
-     </td>
-     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1">
-      <span class="AllNoteStyles">
-       NOTE:
-      </span>
-      <p oldrole="para">
-       <span class="Code" oldrole="parameter">
-        syslogd
-       </span>
-       on Linux originally used
-       <span class="Code" oldrole="parameter">
-        SOCK_STREAM
-       </span>
-       sockets, but some distributions switched to
-       <span class="Code" oldrole="parameter">
-        SOCK_DGRAM
-       </span>
-       around 1999 to fix a possible DoS problem. On Linux you can choose to use whichever driver you like as syslog clients automatically detect the socket type being used.
-      </p>
-     </td>
-    </tr>
-   </tbody>
-  </table>
-  <h6 name="example-source-unixstream" oldrole="example">
-   Example:
-   Using the unix-stream() and unix-dgram() drivers
-  </h6>
-  <p class="Code" oldrole="synopsis">
-   source s_stream { unix-stream("/dev/log" max-connections(10)); };
-  </p>
-  <p class="Code" oldrole="synopsis">
-   source s_dgram { unix-dgram("/var/run/log"); };
-  </p>
-  <h2 name="unixstream-unix-credentials">
-   UNIX credentials and other metadata
-  </h2>
-  <MadCap:keyword term="UNIX credentials">
-  </MadCap:keyword>
-  <p oldrole="para">
-   Starting with
-   <MadCap:variable name="General.abbrev">
-    abbrev
-   </MadCap:variable>
-   <MadCap:conditionaltext MadCap:conditions="ose">
-    3.6
-   </MadCap:conditionaltext>
-   <MadCap:conditionaltext MadCap:conditions="pe">
-    5.2
-   </MadCap:conditionaltext>
-   , the
-   <span class="Code" oldrole="parameter">
-    unix-stream()
-   </span>
-   and
-   <span class="Code" oldrole="parameter">
-    unix-dgram()
-   </span>
-   sources automatically extract the available UNIX credentials and other metainformation from the received log messages. The
-   <MadCap:variable name="General.abbrev">
-    abbrev
-   </MadCap:variable>
-   application can extract the following information on Linux and FreeBSD platforms (examples show the value of the macro for the
-   <span class="Code" oldrole="userinput">
-    su - myuser
-   </span>
-   command). Similar information is available for the
-   <a href="source-journal.htm">
-    systemd-journal
-   </a>
-   source.
-  </p>
-  <table>
-   <title>
-    UNIX credentials available via UNIX domain sockets
-   </title>
-   <tgroup cols="2">
-    <thead>
-     <row>
-      <entry align="center">
-       Macro
-      </entry>
-      <entry align="center">
-       Description
-      </entry>
-     </row>
-    </thead>
-    <tbody>
-     <row>
-      <entry>
-       <span class="Code" oldrole="parameter">
-        ${.unix.cmdline}
-       </span>
-      </entry>
-      <entry>
-       The name (without the path) and command-line options of the executable belonging to the PID that sent the message. For example,
-       <span class="Code" oldrole="userinput">
-        su - myuser
-       </span>
-      </entry>
-     </row>
-     <row>
-      <entry>
-       <span class="Code" oldrole="parameter">
-        ${.unix.exe}
-       </span>
-      </entry>
-      <entry>
-       The path of the executable belonging to the PID that sent the message. For example,
-       <span class="Code" oldrole="userinput">
-        /usr/bin/su
-       </span>
-      </entry>
-     </row>
-     <row>
-      <entry>
-       <span class="Code" oldrole="parameter">
-        ${.unix.gid}
-       </span>
-      </entry>
-      <entry>
-       The group ID (GID) corresponding to the UID of the application that sent the log message. Note that this is the ID number of the group, not its human-readable name. For example,
-       <span class="Code" oldrole="userinput">
-        0
-       </span>
-      </entry>
-     </row>
-     <row>
-      <entry>
-       <span class="Code" oldrole="parameter">
-        ${.unix.pid}
-       </span>
-      </entry>
-      <entry>
-       <p oldrole="para">
-        The process ID (PID) of the application that sent the log message. For example,
-        <span class="Code" oldrole="userinput">
-         774
-        </span>
-        .
-       </p>
-       <p oldrole="para">
-        Note that on every UNIX platforms, if the
-        <span class="Code" oldrole="parameter">
-         system()
-        </span>
-        source uses sockets, it will overwrite the PID macro with the value of
-        <span class="Code" oldrole="parameter">
-         ${.unix.pid}
-        </span>
-        , if it is available.
-       </p>
-      </entry>
-     </row>
-     <row>
-      <entry>
-       <span class="Code" oldrole="parameter">
-        ${.unix.uid}
-       </span>
-      </entry>
-      <entry>
-       The user ID (UID) of the application that sent the log message. Note that this is the ID number of the user, not its human-readable name. For example,
-       <span class="Code" oldrole="userinput">
-        0
-       </span>
-      </entry>
-     </row>
-    </tbody>
-   </tgroup>
-  </table>
-  <!-- FIXME a correct comparison should be added, based on info from Geller Sanyi:
+
+ %entities;]&gt;
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body condition="ose" name="source-unixstream" oldrole="section">
+<h1 condition="ose" name="source-unixstream" oldrole="section"><span class="Code" oldrole="parameter">unix-stream</span>, <span class="Code" oldrole="parameter">unix-dgram</span>: Collecting messages from UNIX domain sockets</h1>
+<p oldrole="para">The <span class="Code" oldrole="parameter">unix-stream()</span> and <span class="Code" oldrole="parameter">unix-dgram()</span> drivers open an <span class="Code" oldrole="parameter">AF_UNIX</span> socket and start listening on it for messages. The <span class="Code" oldrole="parameter">unix-stream()</span> driver is primarily used on Linux and uses <span class="Code" oldrole="parameter">SOCK_STREAM</span> semantics (connection oriented, no messages are lost), while <span class="Code" oldrole="parameter">unix-dgram()</span> is used on BSDs and uses <span class="Code" oldrole="parameter">SOCK_DGRAM</span> semantics: this may result in lost local messages if the system is overloaded.</p>
+<p oldrole="para">To avoid denial of service attacks when using connection-oriented protocols, the number of simultaneously accepted connections should be limited. This can be achieved using the <span class="Code" oldrole="parameter">max-connections()</span> parameter. The default value of this parameter is quite strict, you might have to increase it on a busy system.</p>
+<p oldrole="para">Both unix-stream and unix-dgram have a single required argument that specifies the filename of the socket to create. For the list of available optional parameters, see <MadCap:xref href="source-unixstream.htm#reference-source-unixstream"></MadCap:xref></p>
+
+<p><b oldrole="formalpara">Declaration:</b></p>
+
+
+<pre class="Code" oldrole="synopsis">unix-stream(filename [options]);
+unix-dgram(filename [options]);</pre>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para"><span class="Code" oldrole="parameter">syslogd</span> on Linux originally used <span class="Code" oldrole="parameter">SOCK_STREAM</span> sockets, but some distributions switched to <span class="Code" oldrole="parameter">SOCK_DGRAM</span> around 1999 to fix a possible DoS problem. On Linux you can choose to use whichever driver you like as syslog clients automatically detect the socket type being used.</p></td></tr></tbody></table>
+
+<h6 name="example-source-unixstream" oldrole="example">Example: Using the unix-stream() and unix-dgram() drivers</h6>
+<pre class="Code" oldrole="synopsis">source s_stream { unix-stream("/dev/log" max-connections(10)); };</pre>
+<pre class="Code" oldrole="synopsis">source s_dgram { unix-dgram("/var/run/log"); };</pre>
+
+
+<h2 name="unixstream-unix-credentials">UNIX credentials and other metadata</h2>
+<MadCap:keyword term="UNIX credentials"></MadCap:keyword>
+<p oldrole="para">Starting with <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="ose">3.6</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">5.2</MadCap:conditionaltext>, the <span class="Code" oldrole="parameter">unix-stream()</span> and <span class="Code" oldrole="parameter">unix-dgram()</span> sources automatically extract the available UNIX credentials and other metainformation from the received log messages. The <MadCap:variable name="General.abbrev"></MadCap:variable> application can extract the following information on Linux and FreeBSD platforms (examples show the value of the macro for the <span class="Code" oldrole="userinput">su - myuser</span> command). Similar information is available for the <a href="source-journal.htm">systemd-journal</a> source.</p>
+<table>
+<title>UNIX credentials available via UNIX domain sockets</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry align="center">Macro</entry>
+<entry align="center">Description</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry><span class="Code" oldrole="parameter">${.unix.cmdline}</span>
+</entry>
+<entry>The name (without the path) and command-line options of the executable belonging to the PID that sent the message. For example, <span class="Code" oldrole="userinput">su - myuser</span>
+</entry>
+</row>
+<row>
+<entry><span class="Code" oldrole="parameter">${.unix.exe}</span>
+</entry>
+<entry>The path of the executable belonging to the PID that sent the message. For example, <span class="Code" oldrole="userinput">/usr/bin/su</span>
+</entry>
+</row>
+<row>
+<entry><span class="Code" oldrole="parameter">${.unix.gid}</span>
+</entry>
+<entry>The group ID (GID) corresponding to the UID of the application that sent the log message. Note that this is the ID number of the group, not its human-readable name. For example, <span class="Code" oldrole="userinput">0</span>
+</entry>
+</row>
+<row>
+<entry><span class="Code" oldrole="parameter">${.unix.pid}</span>
+</entry>
+<entry>
+<p oldrole="para">The process ID (PID) of the application that sent the log message. For example, <span class="Code" oldrole="userinput">774</span>.</p>
+<p oldrole="para">Note that on every UNIX platforms, if the <span class="Code" oldrole="parameter">system()</span> source uses sockets, it will overwrite the PID macro with the value of <span class="Code" oldrole="parameter">${.unix.pid}</span>, if it is available.</p>
+</entry>
+</row>
+<row>
+<entry><span class="Code" oldrole="parameter">${.unix.uid}</span>
+</entry>
+<entry>The user ID (UID) of the application that sent the log message. Note that this is the ID number of the user, not its human-readable name. For example, <span class="Code" oldrole="userinput">0</span>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+
+<!-- FIXME a correct comparison should be added, based on info from Geller Sanyi:
         unix-dgram is superiot to unix-stream:
         (it does not need 1 fd per client, does not lose messages, blocks the sender just like in stream, keeps the order of messages, and 1 read() is enough to read a complete message)
         
@@ -279,359 +101,214 @@ unix-dgram(filename [options]);
         </itemizedlist>
         <para>However, the client does not notice if a message is lost when using the unix-dgram
             driver.</para>-->
-  <h2 name="reference-source-unixstream">
-   unix-stream() and unix-dgram() source options
-  </h2>
-  <indexterm>
-   <primary>
-    source drivers
-   </primary>
-   <secondary>
-    <span class="Code" oldrole="parameter">
-     unix-stream()
-    </span>
-    driver
-   </secondary>
-  </indexterm>
-  <indexterm>
-   <primary>
-    source drivers
-   </primary>
-   <secondary>
-    <span class="Code" oldrole="parameter">
-     unix-dgram()
-    </span>
-    driver
-   </secondary>
-  </indexterm>
-  <p oldrole="para">
-   These two drivers behave similarly: they open an
-   <span class="Code" oldrole="parameter">
-    AF_UNIX
-   </span>
-   socket and start listening on it for messages. The following options can be specified for these drivers:
-  </p>
-  <simplesect>
-   <title>
-    create-dirs()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     create-dirs()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="40pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Type:
-       </entry>
-       <entry>
-        yes or no
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        no
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Enable creating non-existing directories when creating the socket files.
-   </p>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-encoding.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-flags.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <title>
-    group()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     group()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="40pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Type:
-       </entry>
-       <entry>
-        string
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        root
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Set the gid of the socket.
-   </p>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-host-override.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <title>
-    keep-alive()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     keep-alive()
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     keep_alive()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="40pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Type:
-       </entry>
-       <entry>
-        yes or no
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        yes
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Selects whether to keep connections open when syslog-ng is restarted, cannot be used with
-    <span class="Code" oldrole="parameter">
-     unix-dgram()
-    </span>
-    .
-   </p>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-keep-timestamp.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-listen-backlog.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-log-fetch-limit.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-log-iw-size.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-log-msg-size.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-log-prefix.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <title>
-    max-connections()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     max-connections()
-    </primary>
-   </indexterm>
-   <indexterm>
-    <primary>
-     max_connections()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="40pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Type:
-       </entry>
-       <entry>
-        number (simultaneous connections)
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        256
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Limits the number of simultaneously open connections. Cannot be used with
-    <span class="Code" oldrole="parameter">
-     unix-dgram()
-    </span>
-    .
-   </p>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-optional.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <title>
-    owner()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     owner()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="40pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Type:
-       </entry>
-       <entry>
-        string
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        root
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Set the uid of the socket.
-   </p>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-pad-size.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <title>
-    perm()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     perm()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="40pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Type:
-       </entry>
-       <entry>
-        number (octal notation)
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-        0666
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Set the permission mask. For octal numbers prefix the number with '0', for example: use 0755 for rwxr-xr-x.
-   </p>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-program-override.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-so-keepalive.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-so-rcvbuf.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-tags.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
-  <simplesect>
-   <MadCap:snippetBlock src="../../shared/chunk/option-source-time-zone.htm">
-   </MadCap:snippetBlock>
-  </simplesect>
- </body>
-</html>
+
+<h2 name="reference-source-unixstream">unix-stream() and unix-dgram() source options</h2>
+<indexterm>
+<primary>source drivers</primary>
+<secondary><span class="Code" oldrole="parameter">unix-stream()</span> driver</secondary>
+</indexterm>
+<indexterm>
+<primary>source drivers</primary>
+<secondary><span class="Code" oldrole="parameter">unix-dgram()</span> driver</secondary>
+</indexterm>
+<p oldrole="para">These two drivers behave similarly: they open an <span class="Code" oldrole="parameter">AF_UNIX</span> socket and start listening on it for messages. The following options can be specified for these drivers:</p>
+<simplesect>
+<title>create-dirs()</title>
+<indexterm type="parameter">
+<primary>create-dirs()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="40pt"></colspec>
+<tbody>
+<row>
+<entry>Type: 
+                                 </entry>
+<entry>yes or no</entry>
+</row>
+<row>
+<entry>Default: 
+                                 </entry>
+<entry>no</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Enable creating non-existing directories when creating the socket files.</p>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-encoding.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-flags.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<title>group()</title>
+<indexterm type="parameter">
+<primary>group()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="40pt"></colspec>
+<tbody>
+<row>
+<entry>Type: 
+                                 </entry>
+<entry>string</entry>
+</row>
+<row>
+<entry>Default: 
+                                 </entry>
+<entry>root</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Set the gid of the socket.</p>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-host-override.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<title>keep-alive()</title>
+<indexterm type="parameter">
+<primary>keep-alive()</primary>
+</indexterm>
+<indexterm>
+<primary>keep_alive()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="40pt"></colspec>
+<tbody>
+<row>
+<entry>Type: 
+                                 </entry>
+<entry>yes or no</entry>
+</row>
+<row>
+<entry>Default: 
+                                 </entry>
+<entry>yes</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Selects whether to keep connections open when syslog-ng is restarted, cannot be used with <span class="Code" oldrole="parameter">unix-dgram()</span>.</p>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-keep-timestamp.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-listen-backlog.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-log-fetch-limit.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-log-iw-size.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-log-msg-size.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-log-prefix.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<title>max-connections()</title>
+<indexterm type="parameter">
+<primary>max-connections()</primary>
+</indexterm>
+<indexterm>
+<primary>max_connections()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="40pt"></colspec>
+<tbody>
+<row>
+<entry>Type: 
+                                 </entry>
+<entry>number (simultaneous connections)</entry>
+</row>
+<row>
+<entry>Default: 
+                                 </entry>
+<entry>256</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Limits the number of simultaneously open connections. Cannot be used with <span class="Code" oldrole="parameter">unix-dgram()</span>.</p>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-optional.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<title>owner()</title>
+<indexterm type="parameter">
+<primary>owner()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="40pt"></colspec>
+<tbody>
+<row>
+<entry>Type: 
+                                 </entry>
+<entry>string</entry>
+</row>
+<row>
+<entry>Default: 
+                                 </entry>
+<entry>root</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Set the uid of the socket.</p>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-pad-size.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<title>perm()</title>
+<indexterm type="parameter">
+<primary>perm()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="40pt"></colspec>
+<tbody>
+<row>
+<entry>Type: 
+                                 </entry>
+<entry>number (octal notation)</entry>
+</row>
+<row>
+<entry>Default: 
+                                 </entry>
+<entry>0666</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Set the permission mask. For octal numbers prefix the number with '0', for example: use 0755 for rwxr-xr-x.</p>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-program-override.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-so-keepalive.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-so-rcvbuf.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-tags.htm"></MadCap:snippetBlock>
+</simplesect>
+<simplesect>
+<MadCap:snippetBlock src="../../shared/chunk/option-source-time-zone.htm"></MadCap:snippetBlock>
+</simplesect>
+
+</body></html>

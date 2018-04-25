@@ -1,74 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-%entities;]&gt;
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
- <body name="configuring-destinations-loggly" oldrole="section">
-  <h1 name="configuring-destinations-loggly" oldrole="section">
-   <span class="Code" oldrole="parameter">
-    loggly
-   </span>
-   : Using Loggly
-  </h1>
-  <MadCap:keyword term="destination drivers:['loggly()']">
-  </MadCap:keyword>
-  <p oldrole="para">
-   The
-   <span class="Code" oldrole="parameter">
-    loggly()
-   </span>
-   destination sends log messages to the
-   <a href="https://www.loggly.com/">
-    Loggly
-   </a>
-   Logging-as-a-Service provider. You can send log messages over TCP, or encrypted with TLS.
-  </p>
-  <p>
-   <b oldrole="formalpara">
-    Declaration:
-   </b>
-  </p>
-  <p oldrole="para">
-  </p>
-  <p class="Code" oldrole="synopsis">
-   loggly(token());
-  </p>
-  <example xml:id="example-destination-loggly">
-   <title>
-    Using the loggly() driver
-   </title>
-   <p oldrole="para">
-    To use the loggly() destination, the only mandatory parameter is your user token. The following example sends every log from the
-    <span class="Code" oldrole="parameter">
-     system()
-    </span>
-    source to your Loggly account.
-   </p>
-   <p class="Code" oldrole="synopsis">
-    log {
+
+ %entities;]&gt;
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="configuring-destinations-loggly" oldrole="section">
+<h1 name="configuring-destinations-loggly" oldrole="section"><span class="Code" oldrole="parameter">loggly</span>: Using Loggly</h1>
+<MadCap:keyword term="destination drivers:['loggly()']"></MadCap:keyword>
+<p oldrole="para">The <span class="Code" oldrole="parameter">loggly()</span> destination sends log messages to the <a href="https://www.loggly.com/">Loggly</a> Logging-as-a-Service provider. You can send log messages over TCP, or encrypted with TLS.</p>
+
+<p><b oldrole="formalpara">Declaration:</b></p>
+<p oldrole="para"></p>
+
+<pre class="Code" oldrole="synopsis">loggly(token());</pre>
+<example xml:id="example-destination-loggly">
+<title>Using the loggly() driver</title>
+<p oldrole="para">To use the loggly() destination, the only mandatory parameter is your user token. The following example sends every log from the <span class="Code" oldrole="parameter">system()</span> source to your Loggly account.</p>
+<pre class="Code" oldrole="synopsis">log {
     source { system(); };
     destination { loggly(token("&lt;USER-TOKEN-AS-PROVIDED-BY-LOGGLY&gt;")); };
-};
-   </p>
-   <p oldrole="para">
-    The following example uses TLS encryption. Before using it, download the CA certificate of Loggly and copy it to your hosts (for example, into the
-    <span class="Code" oldrole="filename">
-     /etc/ssl/certs/
-    </span>
-    directory.
-   </p>
-   <p class="Code" oldrole="synopsis">
-    log {
+};</pre>
+<p oldrole="para">The following example uses TLS encryption. Before using it, download the CA certificate of Loggly and copy it to your hosts (for example, into the <span class="Code" oldrole="filename">/etc/ssl/certs/</span> directory.</p>
+<pre class="Code" oldrole="synopsis">log {
     destination {
         loggly(token("&lt;USER-TOKEN-AS-PROVIDED-BY-LOGGLY&gt;") port(6514)
             tls(peer-verify(required-trusted) ca-dir('/etc/ssl/certs'))
         );
     };
-};
-   </p>
-   <p oldrole="para">
-    The following example parses the access logs of an Apache webserver from a file and sends them to Loggly in JSON format.
-   </p>
-   <p class="Code" oldrole="synopsis">
-    log {
+};</pre>
+<p oldrole="para">The following example parses the access logs of an Apache webserver from a file and sends them to Loggly in JSON format.</p>
+<pre class="Code" oldrole="synopsis">log {
     source { file("/var/log/apache2/access.log" flags(no-parse)); };
     parser { apache-accesslog-parser(); };
     destination {
@@ -76,108 +34,39 @@
            tag(apache)
            template("$(format-json .apache.* timestamp=${ISODATE})"));
     };
-}
-   </p>
-  </example>
-  <p oldrole="para">
-   To use the
-   <span class="Code" oldrole="parameter">
-    loggly()
-   </span>
-   driver, the
-   <span class="Code" oldrole="filename">
-    scl.conf
-   </span>
-   file must be included in your
-   <entity>
-    abbrev
-   </entity>
-   configuration:
-  </p>
-  <p class="Code" oldrole="synopsis">
-   @include "scl.conf"
-  </p>
-  <p oldrole="para">
-   The
-   <span class="Code" oldrole="parameter">
-    loggly()
-   </span>
-   driver is actually a reusable configuration snippet configured to send log messages using the
-   <span class="Code" oldrole="parameter">
-    tcp()
-   </span>
-   driver using a template. For details on using or writing such configuration snippets, see
-   <xref linkend="config-blocks">
-   </xref>
-   . You can find the source of this configuration snippet on
-   <a href="https://github.com/balabit/syslog-ng/blob/master/scl/loggly/loggly.conf">
-    GitHub
-   </a>
-   .
-  </p>
-  <h2 name="reference-destination-loggly">
-   loggly() destination options
-  </h2>
-  <indexterm>
-   <primary>
-    destination drivers
-   </primary>
-   <secondary>
-    <span class="Code" oldrole="parameter">
-     loggly()
-    </span>
-    driver
-   </secondary>
-  </indexterm>
-  <p oldrole="para">
-   The
-   <span class="Code" oldrole="parameter">
-    loggly()
-   </span>
-   destination has the following options. You can also set other options of the underlying
-   <span class="Code" oldrole="parameter">
-    tcp()
-   </span>
-   driver (for example, port number or TLS-encryption).
-  </p>
-  <simplesect xml:id="loggly-option-token">
-   <title>
-    token()
-   </title>
-   <indexterm type="parameter">
-    <primary>
-     token()
-    </primary>
-   </indexterm>
-   <informaltable colsep="0" frame="topbot" rowsep="0">
-    <tgroup cols="2">
-     <colspec colnum="1" colwidth="40pt">
-     </colspec>
-     <tbody>
-      <row>
-       <entry>
-        Type:
-       </entry>
-       <entry>
-        string
-       </entry>
-      </row>
-      <row>
-       <entry>
-        Default:
-       </entry>
-       <entry>
-       </entry>
-      </row>
-     </tbody>
-    </tgroup>
-   </informaltable>
-   <p oldrole="para">
-    <i oldrole="emphasis" role="bold">
-     Description:
-    </i>
-    Your Customer Token that you received from Loggly.
-   </p>
-  </simplesect>
- </body>
-</html>
+}</pre>
+</example>
+<p oldrole="para">To use the <span class="Code" oldrole="parameter">loggly()</span> driver, the <span class="Code" oldrole="filename">scl.conf</span> file must be included in your <entity>abbrev</entity> configuration:</p>
+<pre class="Code" oldrole="synopsis">@include "scl.conf"</pre>
+<p oldrole="para">The <span class="Code" oldrole="parameter">loggly()</span> driver is actually a reusable configuration snippet configured to send log messages using the <span class="Code" oldrole="parameter">tcp()</span> driver using a template. For details on using or writing such configuration snippets, see <xref linkend="config-blocks"></xref>. You can find the source of this configuration snippet on <a href="https://github.com/balabit/syslog-ng/blob/master/scl/loggly/loggly.conf">GitHub</a>.</p>
+
+<h2 name="reference-destination-loggly">loggly() destination options</h2>
+<indexterm>
+<primary>destination drivers</primary>
+<secondary><span class="Code" oldrole="parameter">loggly()</span> driver</secondary>
+</indexterm>
+<p oldrole="para">The <span class="Code" oldrole="parameter">loggly()</span> destination has the following options. You can also set other options of the underlying <span class="Code" oldrole="parameter">tcp()</span> driver (for example, port number or TLS-encryption).</p>
+<simplesect xml:id="loggly-option-token">
+<title>token()</title>
+<indexterm type="parameter">
+<primary>token()</primary>
+</indexterm>
+<informaltable colsep="0" frame="topbot" rowsep="0">
+<tgroup cols="2">
+<colspec colnum="1" colwidth="40pt"></colspec>
+<tbody>
+<row>
+<entry>Type:</entry>
+<entry>string</entry>
+</row>
+<row>
+<entry>Default:</entry>
+<entry></entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Your Customer Token that you received from Loggly.</p>
+</simplesect>
+
+</body></html>
