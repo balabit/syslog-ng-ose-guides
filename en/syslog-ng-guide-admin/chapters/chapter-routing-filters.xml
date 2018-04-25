@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter
- [  <!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+ [  <!ENTITY % entities SYSTEM "../../shared/syslog-ng-entities.ent">
  %entities;]>
 <chapter xml:id="chapter-routing-filters" xmlns="http://docbook.org/ns/docbook" version="5.0">
     <title>Routing messages: log paths, flags, and filters</title>
@@ -11,14 +11,14 @@
         <para>Log paths determine what happens with the incoming log messages. Messages coming from the sources listed in the log statement and matching all the filters are sent to the listed destinations.</para>
         <para>To define a log path, add a log statement to the syslog-ng configuration file using the following syntax:</para>
         <indexterm> <primary>log paths</primary> <secondary>defining</secondary> </indexterm>
-        <xi:include href="../../common/chunk/synopsis-log-path.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="../../shared/chunk/synopsis-log-path.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <warning>
             <para>Log statements are processed in the order they appear in the configuration file, thus the order of log paths may influence what happens to a message, especially when using filters and log flags.</para>
         </warning>
-        <xi:include href="../../common/wnt/note-element-order.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="../../shared/wnt/note-element-order.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <example xml:id="log-statement-example">
             <title>A simple log statement</title>
-            <xi:include href="../../common/chunk/log-statement.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../shared/chunk/log-statement.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         </example>
         <para>All matching log statements are processed by default, and the messages are sent to <emphasis>every</emphasis> matching destination by default. So a single log message might be sent to the same destination several times, provided the destination is listed in several log statements, and it can be also sent to several different destinations.</para>
         <indexterm> <primary>log paths</primary> <secondary>flags</secondary> </indexterm>
@@ -157,11 +157,11 @@
                         <row>
                             <entry>fallback <indexterm type="parameter"> <primary>fallback</primary> </indexterm> </entry>
                             <!-- FIXME figure/illustration/flow charts needed -->
-                            <entry> <para>This flag makes a log statement 'fallback'. Fallback log statements process messages that were not processed by other, 'non-fallback' log statements.</para> <xi:include href="../../common/chunk/para-flags-processed.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/> </entry>
+                            <entry> <para>This flag makes a log statement 'fallback'. Fallback log statements process messages that were not processed by other, 'non-fallback' log statements.</para> <xi:include href="../../shared/chunk/para-flags-processed.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/> </entry>
                         </row>
                         <row>
                             <entry>final <indexterm type="parameter"> <primary>final</primary> </indexterm> </entry>
-                            <entry> <para>This flag means that the processing of log messages processed by the log statement ends here, other log statements appearing later in the configuration file will not process the messages processed by the log statement labeled as 'final'. Note that this does not necessarily mean that matching messages will be stored only once, as there can be matching log statements processed before the current one (&abbrev; evaluates log statements in the order they appear in the configuration file).</para> <xi:include href="../../common/chunk/para-flags-processed.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/> </entry>
+                            <entry> <para>This flag means that the processing of log messages processed by the log statement ends here, other log statements appearing later in the configuration file will not process the messages processed by the log statement labeled as 'final'. Note that this does not necessarily mean that matching messages will be stored only once, as there can be matching log statements processed before the current one (&abbrev; evaluates log statements in the order they appear in the configuration file).</para> <xi:include href="../../shared/chunk/para-flags-processed.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/> </entry>
                         </row>
                         <row>
                             <entry>flow-control <indexterm type="parameter"> <primary>flow-control</primary> </indexterm> </entry>
@@ -344,7 +344,7 @@ log { source(s_file); destination(d_file); destination(d_tcp); flags(flow-contro
                 </example>
             </listitem>
         </itemizedlist>
-        <xi:include href="../../common/chunk/flow-control-multiple-destinations.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="../../shared/chunk/flow-control-multiple-destinations.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <section xml:id="configuring-flow-control">
             <title>Configuring flow-control</title>
             <indexterm> <primary>log paths</primary> <secondary>flow-control</secondary> </indexterm>
@@ -417,7 +417,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         <note>
             <para>Disk-based buffering can be used in conjunction with flow-control. For details on flow-control, see <xref linkend="concepts-flow-control"/>.</para>
         </note>
-        <xi:include href="../../common/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="../../shared/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <para>Every such destination uses a separate disk buffer (similarly to the output buffers controlled by <parameter>log-fifo-size()</parameter>). The hard disk space is not pre-allocated, so ensure that there is always enough free space to store the disk buffers even when the disk buffers are full.</para>
         <para>If &abbrev; is restarted (using the <command>/etc/init.d/syslog-ng restart</command> command, or another appropriate command on your platform), it automatically saves any unsent messages from the disk buffer and the output queue. After the restart, &abbrev; sends the saved messages to the destination. In other words, the disk buffer is persistent. The disk buffer is also resistant to &abbrev; crashes.</para>
         <para>The &abbrev; application supports two types of disk buffering: reliable and normal. For details, see <xref linkend="configuring-diskbuffer-reliable"/> and <xref linkend="configuring-diskbuffer-normal"/>, respectively.</para>
@@ -461,7 +461,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         <para>The <parameter>mem-buf-size()</parameter> option determines when flow-control is triggered. All messages arriving to the log path that includes the destination using the disk-buffer are written into the disk-buffer, until the size of the disk-buffer reaches (<parameter>disk-buf-size()</parameter> minus <parameter>mem-buf-size()</parameter>). Above that size, messages are written into both the disk-buffer and the memory-buffer, indicating that flow-control needs to slow down the message source. These messages are not taken out from the control window (governed by <parameter>log-iw-size()</parameter>), causing the control window to fill up. If the control window is full, the flow-control completely stops reading incoming messages from the source. (As a result, <parameter>mem-buf-size()</parameter> must be at least as large as <parameter>log-iw-size()</parameter>.)</para>
         <section xml:id="configuring-diskbuffer-reliable">
             <title>Enabling reliable disk-based buffering</title>
-            <xi:include href="../../common/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../shared/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <para>To enable reliable disk-based buffering, use the <userinput>disk-buffer(reliable(yes))</userinput> parameter in the destination. Use reliable disk-based buffering if you do not want to lose logs in case of reload/restart, unreachable destination or &abbrev; crash. This solution provides a slower, but reliable disk-buffer option. It is created and initialized at startup and gradually grows as new messages arrive. The filename of the reliable disk buffer file is the following: <filename>&lt;syslog-ng path&gt;/var/syslog-ng-00000.rqf</filename>.</para>
             <example>
                 <title>Example for using reliable disk-based buffering</title>
@@ -481,7 +481,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         </section>
         <section xml:id="configuring-diskbuffer-normal">
             <title>Enabling normal disk-based buffering</title>
-            <xi:include href="../../common/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../shared/chunk/p-disk-buffer-drivers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <para>To enable normal disk-based buffering, use the <userinput>disk-buffer(reliable(no))</userinput> parameter in the destination. Use normal disk-based buffering if you want a solution that is faster than the reliable disk-based buffering. In this case, disk buffering will be less reliable and it is possible to lose logs in case of &abbrev; crash. The filename of the normal disk buffer file is the following: <filename>&lt;syslog-ng path&gt;/var/syslog-ng-00000.qf</filename>.</para>
             <example>
                 <title>Example for using normal disk-based buffering</title>
@@ -516,7 +516,7 @@ log { source(s_localhost); destination(d_tcp); flags(flow-control); };</synopsis
         </section>
         <section xml:id="about-disk-buffer-files">
             <title>About disk queue files</title>
-            <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../common/chunk/topic-about-disk-queue-files.xml"/>
+            <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../shared/chunk/topic-about-disk-queue-files.xml"/>
         </section>
     </section>
     <section xml:id="concepts-failover" condition="pe">
@@ -774,7 +774,7 @@ log {
             <title>Filter functions</title>
             <indexterm> <primary>filters</primary> <secondary>reference</secondary> </indexterm>
             <para>The following functions may be used in the filter statement, as described in <xref linkend="filters"/>.</para>
-            <xi:include href="../../common/chunk/table-filter-functions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+            <xi:include href="../../shared/chunk/table-filter-functions.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             <simplesect xml:id="filter-facility">
                 <title>facility()</title>
                 <indexterm type="parameter"> <primary>facility()</primary> </indexterm>
@@ -1158,7 +1158,7 @@ filter f_router {
     tags("router");
 };</synopsis>
                 </example>
-                <xi:include href="../../common/wnt/note-patterndb-class-tag.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+                <xi:include href="../../shared/wnt/note-patterndb-class-tag.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
             </simplesect>
         </section>
     </section>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter
 [
-<!ENTITY % entities SYSTEM "../../common/syslog-ng-entities.ent">
+<!ENTITY % entities SYSTEM "../../shared/syslog-ng-entities.ent">
   %entities;]>
 <chapter xml:id="chapter-configuration" xmlns="http://docbook.org/ns/docbook" version="5.0">
     <title>How to configure the &agentabbrev;</title>
@@ -20,159 +20,8 @@
             <para>For details on how to configure &agentabbrev; from file, see <xref linkend="windows-xml-config"/>.</para>
         </listitem>
     </itemizedlist>
-    <procedure xml:id="windows-configure-standalone">
-        <title>Configuring a standalone &agentabbrev;</title>
-        <indexterm>
-            <primary>configuring syslog-ng</primary>
-            <secondary>&agentabbrev;</secondary>
-        </indexterm>
-        <formalpara>
-            <title>Purpose:</title>
-            <para/>
-        </formalpara>
-        <para>To configure an already installed standalone &agentabbrev;, perform the following steps.</para>
-        <formalpara>
-            <title>Steps:</title>
-            <para/>
-        </formalpara>
-        <step>
-            <xi:include href="../../common/chunk/windows-start-agent-interface.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        </step>
-        <step>
-            <para>Select <guimenu>Local Settings</guimenu>, and configure the &agentabbrev; as needed for your environment.</para>
-        </step>
-        <step>
-            <para>After modifying its configuration, you have to restart the <parameter>syslog-ng Agent</parameter> service for the changes to take effect. To restart the &agentabbrev; service, select <guimenu>Start Menu > Run</guimenu> enter <parameter>services.msc</parameter> and restart the <guimenu>syslog-ng Agent</guimenu> service.</para>
-        </step>
-    </procedure>
-    <section xml:id="windows-configure-domain">
-        <title>Configuring the &agentabbrev;s of a domain</title>
-        <para>This section describes how to configure the &agent; application in domain mode.</para>
-        <itemizedlist>
-            <listitem>
-                <para>For details on how to configure the &agentabbrev;s of the domain hosts, see <xref linkend="windows-configure-domain-hosts"/>.</para>
-            </listitem>
-            <listitem>
-                <para>For details on how to configure the &agentabbrev;s of the domain controllers, see <xref linkend="windows-configure-domain-controllers"/>.</para>
-            </listitem>
-            <listitem>
-                <para>For details on the relationship of different group-policy levels, see <xref linkend="windows-inheritance"/>.</para>
-            </listitem>
-        </itemizedlist>
-        <procedure xml:id="windows-configure-domain-hosts">
-            <title>Configuring the &agentabbrev;s of the domain hosts</title>
-            <indexterm>
-                <primary>&agentabbrev;</primary>
-                <secondary>configuring domain hosts</secondary>
-            </indexterm>
-            <formalpara>
-                <title>Purpose:</title>
-                <para/>
-            </formalpara>
-            <para>To configure an already installed &agentabbrev; from the domain controller, perform the following steps.</para>
-            <formalpara>
-                <title>Steps:</title>
-                <para/>
-            </formalpara>
-            <step>
-                <xi:include href="../../common/chunk/windows-start-agent-interface.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </step>
-            <step>
-                <para>Navigate to <guimenu>Client Group Policy</guimenu>, and select the Group Policy you want to modify (for example, the <guimenu>Default Domain Policy</guimenu>).</para>
-            </step>
-            <step>
-                <para>Configure the &agentabbrev; as needed for the domain hosts. The changes will take affect when the domain hosts update their settings from the domain controller. By default, this happens every 90 minutes, depending on your domain settings. To download the configuration earlier, execute the <command>gpupdate</command> command on the members of the domain.</para>
-                <note>
-                    <para>When the domain hosts update their settings, the &agentabbrev; will be automatically restarted to load the new settings, except when there is no difference between the old and the new settings.</para>
-                </note>
-            </step>
-        </procedure>
-        <procedure xml:id="windows-configure-domain-controllers">
-            <title>Configuring the &agentabbrev;s of the domain controllers</title>
-            <indexterm>
-                <primary>&agentabbrev;</primary>
-                <secondary>configuring domain controllers</secondary>
-            </indexterm>
-            <formalpara>
-                <title>Purpose:</title>
-                <para/>
-            </formalpara>
-            <para>To configure the &agentabbrev; running on the domain controllers, perform the following steps.</para>
-            <formalpara>
-                <title>Steps:</title>
-                <para/>
-            </formalpara>
-            <step>
-                <xi:include href="../../common/chunk/windows-start-agent-interface.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            </step>
-            <step>
-                <itemizedlist>
-                    <listitem>
-                        <para>To configure &abbrev; only on a single domain controller, select <guimenu>Local Settings</guimenu>. Note that if you have configured &abbrev; also in a Group Policy that affects domain controllers, the settings of the Group Policy will override these local settings.</para>
-                    </listitem>
-                    <listitem>
-                        <para>To configure &abbrev; on every domain controller, select <guimenu>Client Group Policy</guimenu>, then select the appropriate Group Policy of ypur domain controllers (for example, <guimenu>Default Domain Controllers Policy</guimenu>).</para>
-                    </listitem>
-                </itemizedlist>
-            </step>
-            <step>
-                <para>Configure the &agentabbrev; as needed for the domain controllers. If you have multiple domain controllers, the changes will take affect when the other domain controllers update their settings from this domain controller. By default, this happens every 5 minutes, depending on your domain settings. To download the configuration earlier, execute the <command>gpupdate</command> command on the domain controllers.</para>
-                <note>
-                    <para>When the domain controllers receive the new settings, the &agentabbrev; will be automatically restarted to load the new settings, except when there is no difference between the old and the new settings.</para>
-                </note>
-            </step>
-        </procedure>
-        <section xml:id="windows-inheritance">
-            <title>Domain versus local settings</title>
-            <indexterm>
-                <primary>inheriting settings on Windows</primary>
-            </indexterm>
-            <indexterm>
-                <primary>&agentabbrev;</primary>
-                <secondary>inheriting settings</secondary>
-            </indexterm>
-            <para>The &agentabbrev; follows the standard policy-inheritance methods of Windows:</para>
-            <para>GPOs (Group Policy Objects) from parent containers are inherited by default. When multiple GPOs apply to these computers, the settings in the GPOs are aggregated. The final value of a given policy setting is set only by the highest precedent GPO that contains the setting. (However, the final value for a few settings will actually be the combination of values across GPOs.) In this processing order, sites are applied first, but have the least precedence. OUs (Organization Units) are processed last, but have the highest precedence.</para>
-            <para>When multiple group policy objects are assigned, the group policies are applied in the following order:</para>
-            <orderedlist>
-                <listitem>
-                    <para>The local group policy object is applied.</para>
-                </listitem>
-                <listitem>
-                    <para>The group policy objects linked to sites are applied. If multiple GPOs exist for a site, they are applied in the order specified by the administrator.</para>
-                </listitem>
-                <listitem>
-                    <para>GPOs linked to the domains are applied in the specified order.</para>
-                </listitem>
-                <listitem>
-                    <para>GPOs linked to OUs are applied. The OU group policy objects are set from the largest to the smallest organizational unit; that is, first the parent OU and then the child OU. By default, a policy applied later overwrites a policy that was applied earlier. Hence, the settings in a child OU can override the settings in the parent OU.</para>
-                </listitem>
-                <listitem>
-                    <para>If any group policy is not configured, the &agentabbrev; checks its local policy settings, and uses the local setting if available.</para>
-                </listitem>
-            </orderedlist>
-            <para>The following are the rules regarding group policy settings inheritance:</para>
-            <itemizedlist>
-                <listitem>
-                    <para>A policy setting is configured (<guimenu>Enabled</guimenu> or <guimenu>Disabled</guimenu>) for a parent OU, and the same policy setting is not configured for its child OUs. The child OUs inherit the parent’s policy.</para>
-                </listitem>
-                <listitem>
-                    <para>A policy setting is configured (<guimenu>Enabled</guimenu> or <guimenu>Disabled</guimenu>) for a parent OU, and the same policy setting is configured for its child OUs. The child OUs settings override the settings inherited from the parent’s OU. There is a specific case, when the type of this setting is list:</para>
-                    <itemizedlist>
-                        <listitem>
-                            <para>The &agentabbrev; will aggregate the contents of these lists and will use the same elements only once.</para>
-                        </listitem>
-                        <listitem>
-                            <para>If any policy is not configured (<guimenu>Not Configured</guimenu>), no inheritance takes place.</para>
-                        </listitem>
-                    </itemizedlist>
-                </listitem>
-            </itemizedlist>
-            <note>
-                <para>Do not use setting <guimenu>Not Configured</guimenu> in local settings, because in that case, it can still use previously configured values. Use settings <guimenu>Enabled</guimenu> or <guimenu>Disabled</guimenu> instead.</para>
-            </note>
-        </section>
-    </section>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="windows-configure-standalone.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="windows-configure-domain.xml"/>
     <section xml:id="windows-xml-config">
         <title>Using an XML-based configuration file</title>
         <indexterm>
@@ -188,49 +37,11 @@
             <para>Do not manually edit or modify the exported XML file.</para>
             <para>In case you want to validate the XML file, use the <filename>syslog-ng-agent-conf.xsd</filename> file located in the installation directory of &agent;.</para>
         </warning>
-        <xi:include href="../../common/wnt/warning-windows-mmc-xml.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-        <procedure xml:id="windows-xml-config-create">
-            <title>Creating an XML configuration file for the &agentabbrev;</title>
-            <formalpara>
-                <title>Purpose:</title>
-                <para/>
-            </formalpara>
-            <para>To create an XML configuration file that can be used by other &agentabbrev; configurations, perform the following steps.</para>
-            <formalpara>
-                <title>Steps:</title>
-                <para/>
-            </formalpara>
-            <step>
-                <para>Install the &agent; application on a host.</para>
-            </step>
-            <step>
-                <para>Create the configuration you want to use on other hosts using the graphical interface. The &agent; application will store this configuration in the registry.</para>
-            </step>
-            <step>
-                <para>Right-click on <guimenu>syslog-ng Agent Settings</guimenu> and select <guimenu>Export</guimenu> to export the configuration of &agentabbrev; from the registry to an XML file. Select where to save the XML file.</para>
-                <para>Alternatively, you can export the configuration of &agentabbrev; from the command line using the <command>configmanager.exe -export &lt;source&gt; "destination xml file"</command> command. The &lt;source&gt; parameter determines which configuration is exported:</para>
-                <itemizedlist>
-                    <listitem>
-                        <para><parameter>{GPO ID}</parameter>: Export the configuration related to the specified Group Policy Object ID (for example, <parameter>{99AF1185-AB80-40B2-B4B8-41A1E907F329}</parameter>).</para>
-                    </listitem>
-                    <listitem>
-                        <para><parameter>localsettings</parameter>: Export the local settings of the host.</para>
-                    </listitem>
-                    <listitem>
-                        <para><parameter>domainsettings</parameter>: Export the settings the host received from the domain controller.</para>
-                    </listitem>
-                </itemizedlist>
-                <note>
-                    <para>To overwrite the XML configuration file, use the /F option. This will force export even if the file already exists.</para>
-                </note>
-            </step>
-            <step>
-                <para>Use the configuration file on other hosts. For details on the different options, see <xref linkend="windows-xml-config-import"/>.</para>
-            </step>
-        </procedure>
+        <xi:include href="../../shared/wnt/warning-windows-mmc-xml.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="windows-xml-config-create.xml"/>
         <section xml:id="windows-xml-config-import">
             <title>Configuring &agentabbrev; from an XML file</title>
-<!-- FIXME ezt meglinkelni az install reszekbol, vagy atrakni oket oda -->
+            <!-- FIXME ezt meglinkelni az install reszekbol, vagy atrakni oket oda -->
             <para>How you configure the &agentabbrev; application to use an XML configuration file depends on your environment. The following list describes the available possibilities.</para>
             <warning>
                 <itemizedlist>

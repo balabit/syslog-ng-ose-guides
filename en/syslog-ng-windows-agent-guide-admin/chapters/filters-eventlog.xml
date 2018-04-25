@@ -1,0 +1,170 @@
+<!DOCTYPE chapter
+[
+<!ENTITY % entities SYSTEM "../../shared/syslog-ng-entities.ent">
+  %entities;]>
+<procedure xml:id="filters-eventlog" xmlns="http://docbook.org/ns/docbook">
+    <title>Filtering eventlog messages</title>
+    <indexterm>
+        <primary>message filtering</primary>
+        <secondary>eventlog messages</secondary>
+    </indexterm>
+    <formalpara>
+        <title>Purpose:</title>
+        <para/>
+    </formalpara>
+    <para>The following types of filters are available for eventlog sources. Unless described otherwise, the filters match only if the same string appears in the related field of the message.</para>
+    <note>
+        <para>When filtering on the message source, the values of the <guimenu>Source</guimenu> field can be incorrect in some cases. Check the <parameter>EVENT_SOURCE</parameter> field of a message to avoid any problems.</para>
+    </note>
+    <itemizedlist>
+        <listitem>
+            <para><emphasis>Sources</emphasis>: Filter on the source (application) that created the message. Corresponds with the <link linkend="EVENT-SOURCE"><parameter>EVENT_SOURCE</parameter></link> macro.</para>
+        </listitem>
+        <listitem>
+            <para><emphasis>Sources and Event ID</emphasis>: Filter on the source (application) that created the message, and optionally on the identification number of the event. Corresponds with the <link linkend="EVENT-SOURCE"><parameter>EVENT_SOURCE</parameter></link> and <link linkend="EVENT-ID"><parameter>EVENT_ID</parameter></link> macros.</para>
+        </listitem>
+        <listitem>
+            <para><emphasis>Message Contents</emphasis>: Filter the text of the message, that is, the contents of the <link linkend="EVENT-MESSAGE"><parameter>EVENT_MESSAGE</parameter></link> macro. In this filter you can use regular expressions.</para>
+        </listitem>
+        <listitem>
+            <para><emphasis>Sources and Categories</emphasis>: Filter on the source (application) that created the message, and optionally on the category of the event. Corresponds with the <link linkend="EVENT-SOURCE"><parameter>EVENT_SOURCE</parameter></link> and <link linkend="EVENT-CATEGORY"><parameter>EVENT_CATEGORY</parameter></link> macros.</para>
+            <example>
+                <title>Filtering on Sources and Categories</title>
+                <para>For example, you want to filter the following message:</para>
+                <synopsis>Source: Microsoft Windows security auditing
+Category: Process Creation
+New Process Name: C:\Windows\System32\SearchProtocolHost.exe</synopsis>
+                <para>Set the <guimenu>Source</guimenu> to <parameter>Microsoft Windows security auditing</parameter>, and <guimenu>Category</guimenu> to <parameter>Process Creation</parameter>.</para>
+            </example>
+        </listitem>
+        <listitem>
+            <para><emphasis>Users</emphasis>: Filter on the username associated with the event. Corresponds with the <link linkend="EVENT-USERNAME"><parameter>EVENT_USERNAME</parameter></link> macro.</para>
+        </listitem>
+        <listitem>
+            <para><emphasis>Computers</emphasis>: Filter on the name of the computer (host) that created the event. Corresponds with the <link linkend="HOST"><parameter>HOST</parameter></link> macro.</para>
+        </listitem>
+        <listitem>
+            <para><emphasis>Event Types</emphasis>: Filter on the type of the event. Corresponds with the <link linkend="EVENT-TYPE"><parameter>EVENT_TYPE</parameter></link> macro.</para>
+        </listitem>
+    </itemizedlist>
+    <para>To modify the filters used for eventlog messages, complete the following procedure:</para>
+    <formalpara>
+        <title>Steps:</title>
+        <para/>
+    </formalpara>
+    <step>
+        <para>If you want to filter on the source of the message, complete the following steps.</para>
+        <substeps>
+            <step>
+                <para>Start the Event Viewer application and find a message from the source that you want to filter.</para>
+            </step>
+            <step>
+                <para>Select the <guimenu>General</guimenu> tab, and right-click on the value of the <guimenu>Source</guimenu> field.</para>
+                <figure>
+                    <title>Finding the name of the Event Source</title>
+                    <mediaobject>
+                        <imageobject role="html">
+                            <imagedata format="PNG" fileref="win-event-filter-source-name.png"/>
+                        </imageobject>
+                        <imageobject role="fo">
+                            <imagedata format="PNG" fileref="&imgroot;/win-event-filter-source-name.png" contentwidth="&screenshotsize_small;"/>
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+            </step>
+            <step>
+                <para>Select <guimenu>Copy</guimenu>. Save the saved value somewhere, you will need it later to configure the filter in &agentabbrev;.</para>
+                <note>
+                    <para>It is important to use this method, because the actual value of the Source field can be longer than what the Event Viewer displays. (For example, for security messages, the displayed source is often <userinput>Microsoft Windows security</userinput>, while the full name of the source is <userinput>Microsoft Windows security auditing.</userinput> which includes the dot character at the end.)</para>
+                    <para>Hovering your mouse over the value of the Source field also displays the full name of the source.</para>
+                </note>
+            </step>
+        </substeps>
+    </step>
+    <step>
+        <para>Start the configuration interface of the &agent; application.</para>
+    </step>
+    <step>
+        <itemizedlist>
+            <listitem>
+                <para>To apply filters globally to every eventlog message, select <guimenu>syslog-ng Agent Settings > Destinations > Global Event Filters</guimenu>, and right-click <guimenu>Global Event Filters</guimenu>.</para>
+            </listitem>
+            <listitem>
+                <para>To apply filters only to a specific destination, select <guimenu>syslog-ng Agent Settings > Destinations</guimenu>, select the destination server, then select <guimenu>Event Filters</guimenu>. Right-click <guimenu>Event Filters</guimenu>.</para>
+            </listitem>
+        </itemizedlist>
+        <note>
+            <para>If you want to use both global and local (server side) filtering, first global filters will be applied to the eventlog messages and then the local filters.</para>
+        </note>
+    </step>
+    <step>
+        <para>Select <guimenu>Properties > Enable > OK</guimenu>.</para>
+        <figure>
+            <title>Global event filters</title>
+            <mediaobject>
+                <imageobject role="html">
+                    <imagedata format="PNG" fileref="win-global-event-filters-properties.png"/>
+                </imageobject>
+                <imageobject role="fo">
+                    <imagedata format="PNG" fileref="&imgroot;/win-global-event-filters-properties.png" contentwidth="10cm"/>
+                </imageobject>
+            </mediaobject>
+        </figure>
+    </step>
+    <step>
+        <para>To use whitelist-filtering, select <guimenu>White List Filtering</guimenu>. By default, &agentabbrev; uses blacklist filtering.</para>
+    </step>
+    <step>
+        <para>On the right-hand pane, double-click on the type of filter you want to create.</para>
+    </step>
+    <step>
+        <itemizedlist>
+            <listitem>
+                <para>To ignore messages sent by a specific application, or messages of the application with a specific event ID, double-click on <guimenu>Sources and Event ID</guimenu>, select <guimenu>Add</guimenu>, and enter the name of the source (application) whose messages you want to ignore into the <guimenu>Source Name</guimenu> field. To ignore only specific messages of the application, enter the ID of the event into the <guimenu>Event ID</guimenu> field. Select <guimenu>Add > Apply</guimenu>.</para>
+                <figure>
+                    <title>Sources and Event ID</title>
+                    <mediaobject>
+                        <imageobject role="html">
+                            <imagedata format="PNG" fileref="win-sources-and-event-ids-properties.png"/>
+                        </imageobject>
+                        <imageobject role="fo">
+                            <imagedata format="PNG" fileref="&imgroot;/win-sources-and-event-ids-properties.png" contentwidth="10cm"/>
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+            </listitem>
+            <listitem>
+                <para>To ignore messages that contain a specific string or text, double-click on <guimenu>Message Contents</guimenu>, enter the search term or a POSIX regular expression into the <guimenu>Regular Expression</guimenu> field, then select <guimenu>Add > Apply</guimenu>.</para>
+                <figure>
+                    <title>Message Contents</title>
+                    <mediaobject>
+                        <imageobject role="html">
+                            <imagedata format="PNG" fileref="win-message-contents-properties.png"/>
+                        </imageobject>
+                        <imageobject role="fo">
+                            <imagedata format="PNG" fileref="&imgroot;/win-message-contents-properties.png" contentwidth="10cm"/>
+                        </imageobject>
+                    </mediaobject>
+                </figure>
+            </listitem>
+            <listitem>
+                <para>To ignore messages sent by a specific application, or messages of the application that fall into a specific category, double-click on <guimenu>Sources and Categories</guimenu>, select <guimenu>Add</guimenu>, and select the name of the application whose messages you want to ignore from the <guimenu>Application Name</guimenu> field. To ignore only those messages of the application that fall into a specific category, enter the name of the category into the <guimenu>Category</guimenu> field. Select <guimenu>Add > Apply</guimenu>.</para>
+            </listitem>
+            <listitem>
+                <para>To ignore messages sent by a specific user, double-click on <guimenu>Users</guimenu>, enter the name of the user into the <guimenu>User</guimenu> field, then select <guimenu>Add > Apply</guimenu>.</para>
+            </listitem>
+            <listitem>
+                <para>To ignore messages sent by a specific computer (host), double-click on <guimenu>Computers</guimenu>, enter the name of the user into the <guimenu>Computer</guimenu> field, then select <guimenu>Add > Apply</guimenu>.</para>
+            </listitem>
+            <listitem>
+                <para><emphasis>Event Types</emphasis>: To ignore messages of a specific event-type, double-click on <guimenu>Event Types</guimenu>, select the event types to ignore, and select <guimenu>Ok > Apply</guimenu>.</para>
+                <note>
+                    <para>Under Windows Vista and Server 2008, Windows labels certain messages as level 3 and the Event Viewer labels such messages as warnings. This is against the official specification: level 3 should not be used; and only level 2 messages are warnings. To filter these events, you have to manually add a new event type to the registry and set its value to 3, for example <parameter>HKEY_LOCAL_MACHINE\SOFTWARE\BalaBit\syslog-ng Agent\Local Settings\EventSources\Filter\Type\Rule0\Type=3</parameter></para>
+                </note>
+            </listitem>
+        </itemizedlist>
+    </step>
+    <step>
+        <para>Select <guimenu>Apply</guimenu>, then <guimenu>OK</guimenu>. To activate the changes, restart the &agentabbrev; service.</para>
+    </step>
+</procedure>
