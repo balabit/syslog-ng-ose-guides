@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter
+ [  <!ENTITY % entities SYSTEM "../../shared/syslog-ng-entities.ent">
+ %entities;]>
+<simplesect xml:id="simplesect-pem" xmlns="http://docbook.org/ns/docbook">
+    <title>PEM routines:PEM_read_bio:no start line</title>
+    <indexterm>
+        <primary>troubleshooting</primary>
+        <secondary>PEM routines:PEM_read_bio:no start line</secondary>
+    </indexterm>
+    <informaltable frame="topbot" colsep="0" rowsep="0">
+        <tgroup cols="2">
+            <colspec colnum="1" colwidth="40pt"/>
+            <tbody>
+                <row>
+                    <entry>Error message: <?dbhtml bgcolor="#D4D6EB" ?>
+                        <?dbfo bgcolor="#D4D6EB" ?>
+                    </entry>
+                    <entry>
+                        <synopsis>testuser@thor-x1:~/cert_no_start_line/certs$ openssl x509 -in cert.pem -text
+unable to load certificate
+140178126276248:error:0906D06C:PEM routines:PEM_read_bio:no start 
+line:pem_lib.c:701:Expecting: TRUSTED CERTIFICATE</synopsis>
+                    </entry>
+                </row>
+                <row>
+                    <entry>Description: <?dbhtml bgcolor="#D4D6EB" ?>
+                        <?dbfo bgcolor="#D4D6EB" ?>
+                    </entry>
+                    <entry>
+                        <para>The error message is displayed when using Transport Layer Security (TLS). The syslog-ng application uses OpenSSL for TLS and this message indicates that the certificate contains characters that OpenSSL cannot process. </para>
+                        <para>The error occurs when the certificate comes from Windows and you want to use it on a Linux-based computer. On Windows, the end of line (EOL) character is different (\r\n) compared to Linux (\n). </para>
+                        <para>To verify this, open the certificate in a text editor, for example, MCEdit. Notice the <code>^M</code> characters as shown in the image below:</para>
+                        <para>
+                            <figure>
+                                <title>Example of OpenSSL character processing error</title>
+                                <mediaobject>
+                                    <imageobject role="html">
+                                        <imagedata format="PNG" fileref="wrong_linex.png" contentwidth="&webscreenshotscale;"/>
+                                    </imageobject>
+                                    <imageobject role="fo">
+                                        <imagedata format="PNG" fileref="&imgroot;/wrong_linex.png" contentwidth="&screenshotsize;"/>
+                                    </imageobject>
+                                </mediaobject>
+                            </figure>
+                        </para>
+                    </entry>
+                </row>
+                <row>
+                    <entry>Solution: <?dbhtml bgcolor="#D4D6EB" ?>
+                        <?dbfo bgcolor="#D4D6EB" ?>
+                    </entry>
+                    <entry>
+                        <itemizedlist>
+                            <listitem>
+                                <para>On Windows, save the certificate using UTF-8, for example, using Notepad++. </para>
+                                <note>
+                                    <para>Windows Notepad is not able to save the file in normal UTF-8, even if you select it.</para>
+                                </note>
+                                <orderedlist>
+                                    <listitem>
+                                        <para>In Notepad++, from the menu, select <guibutton>Encoding</guibutton>.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para>Change the value from <guibutton>UTF-8-BOM</guibutton> to <guibutton>UTF-8</guibutton>.</para>
+                                    </listitem>
+                                    <listitem>
+                                        <para>Save.</para>
+                                    </listitem>
+                                </orderedlist>
+                            </listitem>
+                            <listitem>
+                                <para>On Linux, run dos2unix cert.pem. This will convert the file to a Linux-compatible style. </para>
+                                <para>Alternatively, replace the EOL characters in the file manually.</para>
+                            </listitem>
+                        </itemizedlist>
+                    </entry>
+                </row>
+            </tbody>
+        </tgroup>
+    </informaltable>
+</simplesect>
