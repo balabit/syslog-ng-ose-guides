@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="chapter-multithreading" oldrole="chapter">
-<h1 name="chapter-multithreading" oldrole="chapter">Multithreading and scaling in <MadCap:variable name="General.abbrev"></MadCap:variable></h1>
+<h1 name="chapter-multithreading" version="5.0" xmlns="http://docbook.org/ns/docbook">Multithreading and scaling in <MadCap:variable name="General.abbrev"></MadCap:variable></h1>
 
 <MadCap:keyword term="scaling to multiple CPUs"></MadCap:keyword>
 <MadCap:keyword term="threading"></MadCap:keyword>
 <MadCap:keyword term="performance:['using multithreading']"></MadCap:keyword>
 <p oldrole="para">Starting with version <MadCap:conditionaltext MadCap:conditions="pe">4 F1</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="ose">3.3</MadCap:conditionaltext>, <MadCap:variable name="General.abbrev"></MadCap:variable> can process sources and destinations in multithreaded mode to scale to multiple CPUs or cores for increased performance. Starting with version <MadCap:conditionaltext MadCap:conditions="ose">3.6</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">5 F4</MadCap:conditionaltext>, this multithreaded mode is the default.</p>
-
 <h2 name="multithreading-in-syslog-ng">Multithreading concepts of <MadCap:variable name="General.abbrev"></MadCap:variable></h2>
 <p oldrole="para">This section is a brief overview on how <MadCap:variable name="General.abbrev"></MadCap:variable> works in multithreaded mode. It is mainly for illustration purposes: the concept has been somewhat simplified and may not completely match reality.</p>
 <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">The way <MadCap:variable name="General.abbrev"></MadCap:variable> uses multithreading may change in future releases. The current documentation applies to version <MadCap:variable name="Version.version"></MadCap:variable>.</p></td></tr></tbody></table>
@@ -33,10 +32,8 @@
 <p oldrole="para">Writer threads take the messages from the queue of the destination and send them to the destination, that is, write the messages into a file, or send them to the syslog server over the network. The writer thread starts to process messages from the queue only if the destination is writable, and there are enough messages in the queue, as set in the <span class="Code" oldrole="parameter">flush-lines()</span> and the <span class="Code" oldrole="parameter">flush-timeout()</span> options. Writer threads stop processing messages when the destination becomes unavailable, or there are no more messages in the queue.</p>
 </li>
 </ul>
-
 <h6 oldrole="formalpara">Sources and destinations affected by multithreading</h6>
 <p oldrole="para">The following list describes which sources and destinations can use multiple threads. Changing the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option changes the number of threads available to these sources and destinations.</p>
-
 <ul oldrole="itemizedlist">
 <li oldrole="listitem">
 <p oldrole="para">The <span class="Code" oldrole="parameter">tcp</span> and <span class="Code" oldrole="userinput">syslog(tcp)</span> sources can process independent connections in separate threads. The number of independent connections is limited by the <span class="Code" oldrole="parameter">max-connections()</span> option of the source. Separate sources are processed by separate thread, for example, if you have two separate <span class="Code" oldrole="parameter">tcp</span> sources defined that receive messages on different IP addresses or port, <MadCap:variable name="General.abbrev"></MadCap:variable> will use separate threads for these sources even if they both have only a single active connection.</p>
@@ -51,10 +48,8 @@
 <p oldrole="para">The <span class="Code" oldrole="parameter">file</span> destination uses a single thread for writing the destination file, but may use a separate thread for each destination file if the filename includes macros.</p>
 </li>
 </ul>
-
 <h6 oldrole="formalpara">Sources and destinations not affected by multithreading</h6>
 <p oldrole="para">The following list describes sources and destinations that use a separate thread even if you disable multithreading in <MadCap:variable name="General.abbrev"></MadCap:variable>, in addition to the limit set in the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option.</p>
-
 <ul oldrole="itemizedlist">
 <li condition="pe" oldrole="listitem">
 <p oldrole="para">The <span class="Code" oldrole="parameter">logstore</span> destination uses separate threads for writing the messages from the journal to the logstore files, and also for timestamping. These threads are independent from the setting of the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option.</p>
@@ -66,8 +61,6 @@
 <p oldrole="para">The <span class="Code" oldrole="parameter">java</span> destinations use one thread, even if there are multiple Java-based destinations configured. This thread is independent from the setting of the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option.</p>
 </li>
 </ul>
-
-
 <h2 name="configuring-multithreading">Configuring multithreading</h2>
 <p oldrole="para">Starting with version <MadCap:conditionaltext MadCap:conditions="ose">3.6</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">5 F4</MadCap:conditionaltext>, <MadCap:variable name="General.abbrev"></MadCap:variable> runs in multithreaded mode by default. You can enable multithreading in <MadCap:variable name="General.abbrev"></MadCap:variable> using the following methods:</p>
 <ul oldrole="itemizedlist">
@@ -85,8 +78,6 @@
 <p oldrole="para">To enable multithreading only for a selected source or destination, use the <span class="Code" oldrole="userinput">flags("threaded")</span> option:</p>
 <pre class="Code" oldrole="synopsis">source s_tcp_syslog { network(ip(127.0.0.1) port(1999) flags("syslog-protocol", "threaded") ); };</pre>
 
-
-
 <h2 name="optimize-syslog-ng-performance">Optimizing multithreaded performance</h2>
 <MadCap:keyword term="performance:['optimizing multithreading']"></MadCap:keyword>
 <p oldrole="para">Destinations that have a queue process that queue in a single thread. Multiple sources can send messages to the same queue, so the queue can scale to multiple CPUs. However, when the writer thread writes the queue contents to the destination, it will be single-threaded.</p>
@@ -103,5 +94,4 @@
 <p oldrole="para">On the destination side, when sending messages to a syslog-ng server, you can use multiple connections to the server if you configure the syslog-ng server to receive messages on multiple ports, and configure separate destinations on the clients to use both ports.</p>
 </li>
 </ul>
-
 </body></html>
