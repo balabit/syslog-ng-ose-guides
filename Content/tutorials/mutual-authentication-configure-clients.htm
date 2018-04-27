@@ -1,25 +1,32 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="mutual-authentication-configure-clients" oldrole="procedure">
-<h1 name="mutual-authentication-configure-clients" xmlns="http://docbook.org/ns/docbook">Configuring <MadCap:variable name="General.abbrev"></MadCap:variable> clients</h1>
-<h6 oldrole="formalpara">Purpose:</h6>
-
-<p oldrole="para">Configuring the client side is similar to the server, the difference is in the configuration part. In the following example <span class="Code" oldrole="filename">syslog-ng.conf</span> is under <span class="Code" oldrole="filename">/etc/syslog-ng</span>, but it could be <span class="Code" oldrole="filename">/opt/syslog-ng/etc/</span>, <span class="Code" oldrole="filename">/usr/local/etc/syslog-ng/</span> or any other directory on your system, so adopt the configuration example accordingly.</p>
-<h6 oldrole="formalpara">Steps:</h6>
-
-<ol oldrole="procedure"><li oldrole="step">
-<p oldrole="para">As a first step, create two new directories under the <MadCap:variable name="General.abbrev"></MadCap:variable> configuration directory:</p>
-<p oldrole="para"><b oldrole="command">mkdir cert.d ca.d</b></p>
-</li><li oldrole="step">
-<p oldrole="para">Copy <span class="Code" oldrole="filename">clientkey.pem</span> and <span class="Code" oldrole="filename">clientcert.pem</span> to <span class="Code" oldrole="filename">cert.d</span>. Copy <span class="Code" oldrole="filename">cacert.pem</span> to <span class="Code" oldrole="filename">ca.d</span> and issue the following command on the certificate:</p>
-<p oldrole="para"><b oldrole="command">openssl x509 -noout -hash -in cacert.pem</b></p>
-<p oldrole="para">The result is a hash (for example 6d2962a8), a series of alphanumeric characters based on the Distinguished Name of the certificate.</p>
-</li><li oldrole="step">
-<p oldrole="para">Issue the following command to create a symbolic link to the certificate that uses the hash returned by the previous command and the <span class="Code" oldrole="filename">.0</span> suffix.</p>
-<p oldrole="para"><b oldrole="command">ln -s cacert.pem 6d2962a8.0</b></p>
-</li><li oldrole="step">
-<p oldrole="para">Adopt the following configuration example to your <span class="Code" oldrole="filename">syslog-ng.conf</span> by changing the IP and port parameters and directories to your local environment. In the log statement replace “<span class="Code" oldrole="filename">src</span>” with an actual log source name in your configuration.</p>
-<pre class="Code" oldrole="synopsis">destination demo_tls_destination {
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="mutual-authentication-configure-clients" oldrole="procedure">
+        <h1 name="mutual-authentication-configure-clients" xmlns="http://docbook.org/ns/docbook">Configuring <MadCap:variable name="General.abbrev"></MadCap:variable> clients</h1>
+        <h6 oldrole="formalpara">Purpose:</h6>
+        <p oldrole="para">Configuring the client side is similar to the server, the difference is in the configuration part. In the following example <span class="Code" oldrole="filename">syslog-ng.conf</span> is under <span class="Code" oldrole="filename">/etc/syslog-ng</span>, but it could be <span class="Code" oldrole="filename">/opt/syslog-ng/etc/</span>, <span class="Code" oldrole="filename">/usr/local/etc/syslog-ng/</span> or any other directory on your system, so adopt the configuration example accordingly.</p>
+        <h6 oldrole="formalpara">Steps:</h6>
+        <ol oldrole="procedure">
+            <li oldrole="step">
+                <p oldrole="para">As a first step, create two new directories under the <MadCap:variable name="General.abbrev"></MadCap:variable> configuration directory:</p>
+                <p oldrole="para"><b oldrole="command">mkdir cert.d ca.d</b>
+                </p>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Copy <span class="Code" oldrole="filename">clientkey.pem</span> and <span class="Code" oldrole="filename">clientcert.pem</span> to <span class="Code" oldrole="filename">cert.d</span>. Copy <span class="Code" oldrole="filename">cacert.pem</span> to <span class="Code" oldrole="filename">ca.d</span> and issue the following command on the certificate:</p>
+                <p oldrole="para"><b oldrole="command">openssl x509 -noout -hash -in cacert.pem</b>
+                </p>
+                <p oldrole="para">The result is a hash (for example 6d2962a8), a series of alphanumeric characters based on the Distinguished Name of the certificate.</p>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Issue the following command to create a symbolic link to the certificate that uses the hash returned by the previous command and the <span class="Code" oldrole="filename">.0</span> suffix.</p>
+                <p oldrole="para"><b oldrole="command">ln -s cacert.pem 6d2962a8.0</b>
+                </p>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Adopt the following configuration example to your <span class="Code" oldrole="filename">syslog-ng.conf</span> by changing the IP and port parameters and directories to your local environment. In the log statement replace “<span class="Code" oldrole="filename">src</span>” with an actual log source name in your configuration.</p><pre class="Code" oldrole="synopsis">destination demo_tls_destination {
     network("172.16.177.147" port(6514)
     transport("tls")
     tls( ca_dir("/etc/syslog-ng/ca.d")
@@ -28,6 +35,10 @@
     ); };
 
 log { source(src); destination(demo_tls_destination); };</pre>
-</li><li oldrole="step">
-<p oldrole="para">Finally, restart <MadCap:variable name="General.abbrev"></MadCap:variable> for the configuration changes to take effect.</p>
-</li></ol></body></html>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Finally, restart <MadCap:variable name="General.abbrev"></MadCap:variable> for the configuration changes to take effect.</p>
+            </li>
+        </ol>
+    </body>
+</html>

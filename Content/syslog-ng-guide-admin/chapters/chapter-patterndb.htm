@@ -1,219 +1,292 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="chapter-patterndb" oldrole="chapter">
-<h1 name="chapter-patterndb" version="5.0" xmlns="http://docbook.org/ns/docbook">Processing message content with a pattern database</h1>
-<!-- FIXME find a better title -->
-<!-- FIXME describe the various ways patterndb can be used: message classification and tagging, content extraction, message correlation, ... -->
-<h2 name="concepts-pattern-databases">Classifying log messages</h2>
-<MadCap:keyword term="classifying messages:['concepts of']"></MadCap:keyword>
-<MadCap:keyword term="pattern database:['concepts of']"></MadCap:keyword>
-<p oldrole="para">The syslog-ng application can compare the contents of the received log messages to predefined message patterns. By comparing the messages to the known patterns, syslog-ng is able to identify the exact type of the messages, and sort them into message classes. The message classes can be used to classify the type of the event described in the log message. The message classes can be customized, and for example can label the messages as user login, application crash, file transfer, and so on events.</p>
-<p oldrole="para">To find the pattern that matches a particular message, syslog-ng uses a method called longest prefix match radix tree. This means that syslog-ng creates a tree structure of the available patterns, where the different characters available in the patterns for a given position are the branches of the tree.</p>
-<!-- FIXME missing figure -->
-<p oldrole="para">To classify a message, syslog-ng selects the first character of the message (the text of message, not the header), and selects the patterns starting with this character, other patterns are ignored for the rest of the process. After that, the second character of the message is compared to the second character of the selected patterns. Again, matching patterns are selected, and the others discarded. This process is repeated until a single pattern completely matches the message, or no match is found. In the latter case, the message is classified as unknown, otherwise the class of the matching pattern is assigned to the message.</p>
-<p oldrole="para">To make the message classification more flexible and robust, the patterns can contain pattern parsers: elements that match on a set of characters. For example, the NUMBER parser matches on any integer or hexadecimal number (for example 1, 123, 894054, 0xFFFF, and so on). Other pattern parsers match on various strings and IP addresses. For the details of available pattern parsers, see <MadCap:xref href="../../shared/syslog-ng-patterndb-using-parsers.htm#syslog-ng-patterndb-using-parsers"></MadCap:xref>.</p>
-<p oldrole="para">The functionality of the pattern database is similar to that of the logcheck project, but it is much easier to write and maintain the patterns used by syslog-ng, than the regular expressions used by logcheck. Also, it is much easier to understand syslog-ng pattens than regular expressions.</p>
-<p oldrole="para">Pattern matching based on regular expressions is computationally very intensive, especially when the number of patterns increases. The solution used by syslog-ng can be performed real-time, and is independent from the number of patterns, so it scales much better. The following patterns describe the same message: <span class="Code" oldrole="userinput">Accepted password for bazsi from 10.50.0.247 port 42156 ssh2</span></p>
-<p oldrole="para">A regular expression matching this message from the logcheck project: <span class="Code" oldrole="userinput">Accepted (gssapi(-with-mic|-keyex)?|rsa|dsa|password|publickey|keyboard-interactive/pam) for [^[:space:]]+ from [^[:space:]]+ port [0-9]+( (ssh|ssh2))?</span></p>
-<p oldrole="para">A syslog-ng database pattern for this message: <span class="Code" oldrole="userinput">Accepted @QSTRING:auth_method: @ for@QSTRING:username: @from @QSTRING:client_addr: @port @NUMBER:port:@ ssh2</span></p>
-<p oldrole="para">For details on using pattern databases to classify log messages, see <MadCap:xref href="chapter-patterndb.htm#configuring-pattern-databases"></MadCap:xref>.</p>
-<MadCap:snippetBlock src="../../shared/syslog-ng-patterndb-structure.htm"></MadCap:snippetBlock>
-<MadCap:snippetBlock src="../../shared/syslog-ng-patterndb-operation.htm"></MadCap:snippetBlock>
-<h2 name="concepts-artificial-ignorance">Artificial ignorance</h2>
-<p oldrole="para">Artificial ignorance is a method to detect anomalies. When applied to log analysis, it means that you ignore the regular, common log messages - these are the result of the regular behavior of your system, and therefore are not too interesting. However, new messages that have not appeared in the logs before can sign important events, and should be therefore investigated. "By definition, something we have never seen before is anomalous" (Marcus J. Ranum). </p>
-<p oldrole="para">The syslog-ng application can classify messages using a pattern database: messages that do not match any pattern are classified as unknown. This provides a way to use artificial ignorance to review your log messages. You can periodically review the unknown messages <MadCap:variable name="General.mdash"></MadCap:variable> syslog-ng can send them to a separate destination, and add patterns for them to the pattern database. By reviewing and manually classifying the unknown messages, you can iteratively classify more and more messages, until only the really anomalous messages show up as unknown.</p>
-<p oldrole="para">Obviously, for this to work, a large number of message patterns are required. The radix-tree matching method used for message classification is very effective, can be performed very fast, and scales very well. Basically the time required to perform a pattern matching is independent from the number of patterns in the database. For sample pattern databases, see <MadCap:xref href="chapter-patterndb.htm#patterndb-download"></MadCap:xref>.</p>
-<h2 name="configuring-pattern-databases">Using pattern databases</h2>
-<MadCap:keyword term="parsers"></MadCap:keyword>
-<MadCap:keyword term="message parsing"></MadCap:keyword>
-<MadCap:keyword term="parsing messages"></MadCap:keyword>
-<MadCap:keyword term="pattern database"></MadCap:keyword>
-<MadCap:keyword term="classifying messages:['configuration']"></MadCap:keyword>
-<MadCap:keyword term="message classification"></MadCap:keyword>
-<p oldrole="para">To classify messages using a pattern database, include a <span class="Code" oldrole="parameter">db-parser()</span> statement in your syslog-ng configuration file using the following syntax:</p>
-<h6 oldrole="formalpara">Declaration:</h6>
-
-<pre class="Code" oldrole="synopsis">parser &lt;identifier&gt; {db-parser(file("&lt;database_filename&gt;"));};</pre>
-<p oldrole="para">Note that using the parser in a log statement only performs the classification, but does not automatically do anything with the results of the classification.</p>
-
-<h6 oldrole="example">Example: Defining pattern databases</h6>
-<p oldrole="para">The following statement uses the database located at <span class="Code" oldrole="filename">/opt/syslog-ng/var/db/patterndb.xml</span>.</p>
-<pre class="Code" oldrole="synopsis">parser pattern_db {
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" MadCap:lastBlockDepth="10" MadCap:lastHeight="24352" MadCap:lastWidth="1414">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="chapter-patterndb" oldrole="chapter">
+        <h1 name="chapter-patterndb" version="5.0" xmlns="http://docbook.org/ns/docbook">Processing message content with a pattern database</h1>
+        <!-- FIXME find a better title -->
+        <!-- FIXME describe the various ways patterndb can be used: message classification and tagging, content extraction, message correlation, ... -->
+        <h2 name="concepts-pattern-databases">Classifying log messages</h2>
+        <MadCap:keyword term="classifying messages:['concepts of']">
+        </MadCap:keyword>
+        <MadCap:keyword term="pattern database:['concepts of']">
+        </MadCap:keyword>
+        <p oldrole="para">The syslog-ng application can compare the contents of the received log messages to predefined message patterns. By comparing the messages to the known patterns, syslog-ng is able to identify the exact type of the messages, and sort them into message classes. The message classes can be used to classify the type of the event described in the log message. The message classes can be customized, and for example can label the messages as user login, application crash, file transfer, and so on events.</p>
+        <p oldrole="para">To find the pattern that matches a particular message, syslog-ng uses a method called longest prefix match radix tree. This means that syslog-ng creates a tree structure of the available patterns, where the different characters available in the patterns for a given position are the branches of the tree.</p>
+        <!-- FIXME missing figure -->
+        <p oldrole="para">To classify a message, syslog-ng selects the first character of the message (the text of message, not the header), and selects the patterns starting with this character, other patterns are ignored for the rest of the process. After that, the second character of the message is compared to the second character of the selected patterns. Again, matching patterns are selected, and the others discarded. This process is repeated until a single pattern completely matches the message, or no match is found. In the latter case, the message is classified as unknown, otherwise the class of the matching pattern is assigned to the message.</p>
+        <p oldrole="para">To make the message classification more flexible and robust, the patterns can contain pattern parsers: elements that match on a set of characters. For example, the NUMBER parser matches on any integer or hexadecimal number (for example 1, 123, 894054, 0xFFFF, and so on). Other pattern parsers match on various strings and IP addresses. For the details of available pattern parsers, see <MadCap:xref href="../../shared/syslog-ng-patterndb-using-parsers.htm#syslog-ng-patterndb-using-parsers"></MadCap:xref>.</p>
+        <p oldrole="para">The functionality of the pattern database is similar to that of the logcheck project, but it is much easier to write and maintain the patterns used by syslog-ng, than the regular expressions used by logcheck. Also, it is much easier to understand syslog-ng pattens than regular expressions.</p>
+        <p oldrole="para">Pattern matching based on regular expressions is computationally very intensive, especially when the number of patterns increases. The solution used by syslog-ng can be performed real-time, and is independent from the number of patterns, so it scales much better. The following patterns describe the same message: <span class="Code" oldrole="userinput">Accepted password for bazsi from 10.50.0.247 port 42156 ssh2</span></p>
+        <p oldrole="para">A regular expression matching this message from the logcheck project: <span class="Code" oldrole="userinput">Accepted (gssapi(-with-mic|-keyex)?|rsa|dsa|password|publickey|keyboard-interactive/pam) for [^[:space:]]+ from [^[:space:]]+ port [0-9]+( (ssh|ssh2))?</span></p>
+        <p oldrole="para">A syslog-ng database pattern for this message: <span class="Code" oldrole="userinput">Accepted @QSTRING:auth_method: @ for@QSTRING:username: @from @QSTRING:client_addr: @port @NUMBER:port:@ ssh2</span></p>
+        <p oldrole="para">For details on using pattern databases to classify log messages, see <MadCap:xref href="chapter-patterndb.htm#configuring-pattern-databases"></MadCap:xref>.</p>
+        <MadCap:snippetBlock src="../../shared/syslog-ng-patterndb-structure.htm">
+        </MadCap:snippetBlock>
+        <MadCap:snippetBlock src="../../shared/syslog-ng-patterndb-operation.htm">
+        </MadCap:snippetBlock>
+        <h2 name="concepts-artificial-ignorance">Artificial ignorance</h2>
+        <p oldrole="para">Artificial ignorance is a method to detect anomalies. When applied to log analysis, it means that you ignore the regular, common log messages - these are the result of the regular behavior of your system, and therefore are not too interesting. However, new messages that have not appeared in the logs before can sign important events, and should be therefore investigated. "By definition, something we have never seen before is anomalous" (Marcus J. Ranum).&#160;</p>
+        <p oldrole="para">The syslog-ng application can classify messages using a pattern database: messages that do not match any pattern are classified as unknown. This provides a way to use artificial ignorance to review your log messages. You can periodically review the unknown messages <MadCap:variable name="General.mdash"></MadCap:variable> syslog-ng can send them to a separate destination, and add patterns for them to the pattern database. By reviewing and manually classifying the unknown messages, you can iteratively classify more and more messages, until only the really anomalous messages show up as unknown.</p>
+        <p oldrole="para">Obviously, for this to work, a large number of message patterns are required. The radix-tree matching method used for message classification is very effective, can be performed very fast, and scales very well. Basically the time required to perform a pattern matching is independent from the number of patterns in the database. For sample pattern databases, see <MadCap:xref href="chapter-patterndb.htm#patterndb-download"></MadCap:xref>.</p>
+        <h2 name="configuring-pattern-databases">Using pattern databases</h2>
+        <MadCap:keyword term="parsers">
+        </MadCap:keyword>
+        <MadCap:keyword term="message parsing">
+        </MadCap:keyword>
+        <MadCap:keyword term="parsing messages">
+        </MadCap:keyword>
+        <MadCap:keyword term="pattern database">
+        </MadCap:keyword>
+        <MadCap:keyword term="classifying messages:['configuration']">
+        </MadCap:keyword>
+        <MadCap:keyword term="message classification">
+        </MadCap:keyword>
+        <p oldrole="para">To classify messages using a pattern database, include a <span class="Code" oldrole="parameter">db-parser()</span> statement in your syslog-ng configuration file using the following syntax:</p>
+        <h6 oldrole="formalpara">Declaration:</h6><pre class="Code" oldrole="synopsis">parser &lt;identifier&gt; {db-parser(file("&lt;database_filename&gt;"));};</pre>
+        <p oldrole="para">Note that using the parser in a log statement only performs the classification, but does not automatically do anything with the results of the classification.</p>
+        <h6 oldrole="example">Example: Defining pattern databases</h6>
+        <p oldrole="para">The following statement uses the database located at <span class="Code" oldrole="filename">/opt/syslog-ng/var/db/patterndb.xml</span>.</p><pre class="Code" oldrole="synopsis">parser pattern_db {
             db-parser(
                 file("/opt/syslog-ng/var/db/patterndb.xml")
             );
             };</pre>
-<p oldrole="para">To apply the patterns on the incoming messages, include the parser in a log statement:</p>
-<pre class="Code" oldrole="synopsis">log {
+        <p oldrole="para">To apply the patterns on the incoming messages, include the parser in a log statement:</p><pre class="Code" oldrole="synopsis">log {
         source(s_all);
         parser(pattern_db);
         destination( di_messages_class);
         };</pre>
-
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">The default location of the pattern database file is <span class="Code" oldrole="filename">/opt/syslog-ng/var/run/patterndb.xml</span>. The <span class="Code" oldrole="parameter">file</span> option of the <span class="Code" oldrole="parameter">db-parser()</span> statement can be used to specify a different file, thus different db-parser statements can use different pattern databases. Later versions of syslog-ng will be able to dynamically generate a main database from separate pattern database files.</p></td></tr></tbody></table>
-
-<h6 oldrole="example">Example: Using classification results</h6>
-<p oldrole="para">The following destination separates the log messages into different files based on the class assigned to the pattern that matches the message (for example Violation and Security type messages are stored in a separate file), and also adds the ID of the matching rule to the message:</p>
-<pre class="Code" oldrole="synopsis">destination di_messages_class {
+        <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+            </col>
+            <tbody>
+                <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                        <p>
+                            <img src="../../Resources/Images/Common/note.png" />
+                        </p>
+                    </td>
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                        <p oldrole="para">The default location of the pattern database file is <span class="Code" oldrole="filename">/opt/syslog-ng/var/run/patterndb.xml</span>. The <span class="Code" oldrole="parameter">file</span> option of the <span class="Code" oldrole="parameter">db-parser()</span> statement can be used to specify a different file, thus different db-parser statements can use different pattern databases. Later versions of syslog-ng will be able to dynamically generate a main database from separate pattern database files.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h6 oldrole="example">Example: Using classification results</h6>
+        <p oldrole="para">The following destination separates the log messages into different files based on the class assigned to the pattern that matches the message (for example Violation and Security type messages are stored in a separate file), and also adds the ID of the matching rule to the message:</p><pre class="Code" oldrole="synopsis">destination di_messages_class {
         file("/var/log/messages-${.classifier.class}"
         template("${.classifier.rule_id};${S_UNIXTIME};${SOURCEIP};${HOST};${PROGRAM};${PID};${MSG}\n")
         template-escape(no)
     );
 };</pre>
-
-<p oldrole="para">For details on how to create your own pattern databases see <MadCap:xref href="chapter-patterndb.htm#reference-patterndb-schemes"></MadCap:xref>.</p>
-<h2 name="patterndb-filters">Using parser results in filters and templates</h2>
-<MadCap:keyword term="pattern database:['using the results']"></MadCap:keyword>
-<MadCap:keyword term="message filtering:['using parsers']"></MadCap:keyword>
-<MadCap:keyword term="parsing messages:['filtering parsed messages']"></MadCap:keyword>
-<MadCap:keyword term="parsers"></MadCap:keyword>
-<MadCap:keyword term="message parsing"></MadCap:keyword>
-<MadCap:keyword term="parsing messages"></MadCap:keyword>
-<MadCap:keyword term="pattern database"></MadCap:keyword>
-<MadCap:keyword term="classifying messages:['filtering']"></MadCap:keyword>
-<MadCap:keyword term="message classification"></MadCap:keyword>
-<p oldrole="para">The results of message classification and parsing can be used in custom filters and templates, for example, in file and database templates. The following built-in macros allow you to use the results of the classification:</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para">The <span class="Code" oldrole="parameter">.classifier.class</span> macro contains the class assigned to the message (for example violation, security, or unknown).</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">The <span class="Code" oldrole="parameter">.classifier.rule_id</span> macro contains the identifier of the message pattern that matched the message.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">The <span class="Code" oldrole="parameter">.classifier.context_id</span> macro contains the identifier of the context for messages that were correlated. For details on correlating messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref>.</p>
-</li>
-</ul>
-<MadCap:keyword term="filtering:['on message class']"></MadCap:keyword>
-<MadCap:keyword term="filtering:['.classifier_class']"></MadCap:keyword>
-
-<h6 oldrole="example">Example: Using classification results for filtering messages</h6>
-<p oldrole="para">To filter on a specific message class, create a filter that checks the <span class="Code" oldrole="parameter">.classifier_class</span> macro, and use this filter in a log statement.</p>
-<pre class="Code" oldrole="synopsis">filter fi_class_violation {
+        <p oldrole="para">For details on how to create your own pattern databases see <MadCap:xref href="chapter-patterndb.htm#reference-patterndb-schemes"></MadCap:xref>.</p>
+        <h2 name="patterndb-filters">Using parser results in filters and templates</h2>
+        <MadCap:keyword term="pattern database:['using the results']">
+        </MadCap:keyword>
+        <MadCap:keyword term="message filtering:['using parsers']">
+        </MadCap:keyword>
+        <MadCap:keyword term="parsing messages:['filtering parsed messages']">
+        </MadCap:keyword>
+        <MadCap:keyword term="parsers">
+        </MadCap:keyword>
+        <MadCap:keyword term="message parsing">
+        </MadCap:keyword>
+        <MadCap:keyword term="parsing messages">
+        </MadCap:keyword>
+        <MadCap:keyword term="pattern database">
+        </MadCap:keyword>
+        <MadCap:keyword term="classifying messages:['filtering']">
+        </MadCap:keyword>
+        <MadCap:keyword term="message classification">
+        </MadCap:keyword>
+        <p oldrole="para">The results of message classification and parsing can be used in custom filters and templates, for example, in file and database templates. The following built-in macros allow you to use the results of the classification:</p>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para">The <span class="Code" oldrole="parameter">.classifier.class</span> macro contains the class assigned to the message (for example violation, security, or unknown).</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">The <span class="Code" oldrole="parameter">.classifier.rule_id</span> macro contains the identifier of the message pattern that matched the message.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">The <span class="Code" oldrole="parameter">.classifier.context_id</span> macro contains the identifier of the context for messages that were correlated. For details on correlating messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref>.</p>
+            </li>
+        </ul>
+        <MadCap:keyword term="filtering:['on message class']">
+        </MadCap:keyword>
+        <MadCap:keyword term="filtering:['.classifier_class']">
+        </MadCap:keyword>
+        <h6 oldrole="example">Example: Using classification results for filtering messages</h6>
+        <p oldrole="para">To filter on a specific message class, create a filter that checks the <span class="Code" oldrole="parameter">.classifier_class</span> macro, and use this filter in a log statement.</p><pre class="Code" oldrole="synopsis">filter fi_class_violation {
                     match("violation"
                     value(".classifier.class")
                     type("string")
                     );
-                    };</pre>
-<pre class="Code" oldrole="synopsis">log {
+                    };</pre><pre class="Code" oldrole="synopsis">log {
                     source(s_all);
                     parser(pattern_db);
                     filter(fi_class_violation);
                     destination(di_class_violation);
                     };</pre>
-<p oldrole="para">Filtering on the <span class="Code" oldrole="parameter">unknown</span> class selects messages that did not match any rule of the pattern database. Routing these messages into a separate file allows you to periodically review new or unknown messages.</p>
-<p oldrole="para">To filter on messages matching a specific classification rule, create a filter that checks the <span class="Code" oldrole="parameter">.classifier.rule_id</span> macro. The unique identifier of the rule (for example <span class="Code" oldrole="userinput">e1e9c0d8-13bb-11de-8293-000c2922ed0a</span>) is the <span class="Code" oldrole="userinput">id</span> attribute of the rule in the XML database.</p>
-<pre class="Code" oldrole="synopsis">filter fi_class_rule {
+        <p oldrole="para">Filtering on the <span class="Code" oldrole="parameter">unknown</span> class selects messages that did not match any rule of the pattern database. Routing these messages into a separate file allows you to periodically review new or unknown messages.</p>
+        <p oldrole="para">To filter on messages matching a specific classification rule, create a filter that checks the <span class="Code" oldrole="parameter">.classifier.rule_id</span> macro. The unique identifier of the rule (for example <span class="Code" oldrole="userinput">e1e9c0d8-13bb-11de-8293-000c2922ed0a</span>) is the <span class="Code" oldrole="userinput">id</span> attribute of the rule in the XML database.</p><pre class="Code" oldrole="synopsis">filter fi_class_rule {
                     match("e1e9c0d8-13bb-11de-8293-000c2922ed0a"
                     value(".classifier.rule_id")
                     type("string")
                     );
                     };</pre>
-
-<p oldrole="para">Pattern database rules can assign tags to messages. These tags can be used to select tagged messages using the <span class="Code" oldrole="parameter">tags()</span> filter function.</p>
-<MadCap:keyword term="tags()"></MadCap:keyword>
-<MadCap:snippetBlock src="../../shared/wnt/note-patterndb-class-tag.htm"></MadCap:snippetBlock>
-<p oldrole="para">The message-segments parsed by the pattern parsers can also be used as macros as well. To accomplish this, you have to add a name to the parser, and then you can use this name as a macro that refers to the parsed value of the message.</p>
-
-<h6 oldrole="example">Example: Using pattern parsers as macros</h6>
-<p oldrole="para">For example, you want to parse messages of an application that look like <span class="Code" oldrole="userinput">"Transaction: &lt;type&gt;."</span>, where &lt;type&gt; is a string that has different values (for example refused, accepted, incomplete, and so on). To parse these messages, you can use the following pattern:</p>
-<pre class="Code" oldrole="synopsis">'Transaction: @ESTRING::.@'</pre>
-<p oldrole="para">Here the @ESTRING@ parser parses the message until the next full stop character. To use the results in a filter or a filename template, include a name in the parser of the pattern, for example:</p>
-<pre class="Code" oldrole="synopsis">'Transaction: @ESTRING:TRANSACTIONTYPE:.@'</pre>
-<p oldrole="para">After that, add a custom template to the log path that uses this template. For example, to select every <span class="Code" oldrole="userinput">accepted</span> transaction, use the following custom filter in the log path:</p>
-<pre class="Code" oldrole="synopsis">match("accepted" value("TRANSACTIONTYPE"));</pre>
-
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">The above macros can be used in database columns and filename templates as well, if you create custom templates for the destination or logspace.</p><p oldrole="para">Use a consistent naming scheme for your macros, for example, <span class="Code" oldrole="userinput">APPLICATIONNAME_MACRONAME</span>.</p></td></tr></tbody></table>
-<h2 name="patterndb-download">Downloading sample pattern databases</h2>
-<MadCap:keyword term="patterndb:['download']"></MadCap:keyword>
-<MadCap:keyword term="download:['pattern databases']"></MadCap:keyword>
-<p oldrole="para">To simplify the building of pattern databases, <MadCap:variable name="General.vendor"></MadCap:variable> has released (and will continue to release) sample databases. You can download sample pattern databases from the <a href="https://github.com/balabit/syslog-ng-patterndb/"><MadCap:variable name="General.vendor"></MadCap:variable> GitHub page</a> (older samples are temporarily available <a href="https://my.balabit.com/downloads/patterndb-snapshot/">here</a>).</p>
-<p oldrole="para">Note that these pattern databases are only samples and experimental databases. They are not officially supported, and may or may not work in your environment.</p>
-<p oldrole="para">The syslog-ng pattern databases are available under the Creative Commons Attribution-Share Alike 3.0 (CC by-SA) license. This includes every pattern database written by community contributors or the Balabit staff. It means that:</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para">You are free to use and modify the patterns for your needs.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">If you redistribute the pattern databases, you must distribute your modifications under the same license.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">If you redistribute the pattern databases, you must make it obvious that the source of the original syslog-ng pattern databases is the <a href="https://github.com/balabit/syslog-ng-patterndb/">Balabit GitHub page</a>.</p>
-</li>
-</ul>
-<p oldrole="para">For legal details, the full text of the license is <a href="https://creativecommons.org/licenses/by-sa/3.0/us/legalcode">available here</a>.</p>
-<p oldrole="para">If you create patterns that are not available in the GitHub repository, consider sharing them with us and the syslog-ng community, and send them to the <a href="https://lists.balabit.hu/mailman/listinfo/syslog-ng/">syslog-ng mailing list</a>, or to the following e-mail address:<email>patterndb@balabit.com</email></p>
-<h2 name="patterndb-correlation">Correlating log messages using pattern databases</h2>
-<MadCap:keyword term="message correlation"></MadCap:keyword>
-<MadCap:keyword term="correlating messages"></MadCap:keyword>
-<MadCap:keyword term="pattern databases:['correlating messages']"></MadCap:keyword>
-<MadCap:keyword term="message context"></MadCap:keyword>
-<MadCap:keyword term="context of messages"></MadCap:keyword>
-<p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application can correlate log messages identified using <a href="chapter-patterndb.htm">pattern databases</a>. Alternatively, you can also correlate log messages using the <span class="Code" oldrole="parameter">grouping-by()</span> parser. For details, see <MadCap:xref href="parser-grouping-by.htm#grouping-by-parser"></MadCap:xref>.</p>
-<MadCap:snippetBlock src="../../shared/chunk/correlation-intro.htm"></MadCap:snippetBlock>
-<p oldrole="para">(For details on triggering actions and generating messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref>.)</p>
-<p oldrole="para">There are two attributes for pattern database rules that determine if a message matching the rule is added to a context: <span class="Code" oldrole="parameter">context-scope</span> and <span class="Code" oldrole="parameter">context-id</span>. The <span class="Code" oldrole="parameter">context-scope</span> attribute acts as an early filter, selecting messages sent by the same process (${HOST}${PROGRAM}${PID} is identical), application (${HOST}${PROGRAM} is identical), or host, while the <span class="Code" oldrole="parameter">context-id</span> actually adds the message to the context specified in the id. The <span class="Code" oldrole="parameter">context-id</span> can be a simple string, or can contain macros or values extracted from the log messages for further filtering. If a message is added to a context, <MadCap:variable name="General.abbrev"></MadCap:variable> automatically adds the identifier of the context to the <span class="Code" oldrole="parameter">.classifier.context_id</span> macro of the message.</p>
-<MadCap:snippetBlock src="../../shared/wnt/note-message-context.htm"></MadCap:snippetBlock>
-<p oldrole="para">Another parameter of a rule is the <span class="Code" oldrole="parameter">context-timeout</span> attribute, which determines how long a context is stored, that is, how long <MadCap:variable name="General.abbrev"></MadCap:variable> waits for related messages to arrive.</p>
-<MadCap:snippetBlock src="../../shared/chunk/correlation-context-timeout.htm"></MadCap:snippetBlock>
-
-<h6 oldrole="example">Example: Using message correlation</h6>
-<pre class="Code" oldrole="synopsis">&lt;rule xml:id="..." context-id="ssh-session" context-timeout="86400" context-scope="process"&gt;
+        <p oldrole="para">Pattern database rules can assign tags to messages. These tags can be used to select tagged messages using the <span class="Code" oldrole="parameter">tags()</span> filter function.</p>
+        <MadCap:keyword term="tags()">
+        </MadCap:keyword>
+        <MadCap:snippetBlock src="../../shared/wnt/note-patterndb-class-tag.htm">
+        </MadCap:snippetBlock>
+        <p oldrole="para">The message-segments parsed by the pattern parsers can also be used as macros as well. To accomplish this, you have to add a name to the parser, and then you can use this name as a macro that refers to the parsed value of the message.</p>
+        <h6 oldrole="example">Example: Using pattern parsers as macros</h6>
+        <p oldrole="para">For example, you want to parse messages of an application that look like <span class="Code" oldrole="userinput">"Transaction: &lt;type&gt;."</span>, where &lt;type&gt; is a string that has different values (for example refused, accepted, incomplete, and so on). To parse these messages, you can use the following pattern:</p><pre class="Code" oldrole="synopsis">'Transaction: @ESTRING::.@'</pre>
+        <p oldrole="para">Here the @ESTRING@ parser parses the message until the next full stop character. To use the results in a filter or a filename template, include a name in the parser of the pattern, for example:</p><pre class="Code" oldrole="synopsis">'Transaction: @ESTRING:TRANSACTIONTYPE:.@'</pre>
+        <p oldrole="para">After that, add a custom template to the log path that uses this template. For example, to select every <span class="Code" oldrole="userinput">accepted</span> transaction, use the following custom filter in the log path:</p><pre class="Code" oldrole="synopsis">match("accepted" value("TRANSACTIONTYPE"));</pre>
+        <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+            </col>
+            <tbody>
+                <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                        <p>
+                            <img src="../../Resources/Images/Common/note.png" />
+                        </p>
+                    </td>
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                        <p oldrole="para">The above macros can be used in database columns and filename templates as well, if you create custom templates for the destination or logspace.</p>
+                        <p oldrole="para">Use a consistent naming scheme for your macros, for example, <span class="Code" oldrole="userinput">APPLICATIONNAME_MACRONAME</span>.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h2 name="patterndb-download">Downloading sample pattern databases</h2>
+        <MadCap:keyword term="patterndb:['download']">
+        </MadCap:keyword>
+        <MadCap:keyword term="download:['pattern databases']">
+        </MadCap:keyword>
+        <p oldrole="para">To simplify the building of pattern databases, <MadCap:variable name="General.vendor"></MadCap:variable> has released (and will continue to release) sample databases. You can download sample pattern databases from the <a href="https://github.com/balabit/syslog-ng-patterndb/"><MadCap:variable name="General.vendor"></MadCap:variable> GitHub page</a> (older samples are temporarily available <a href="https://my.balabit.com/downloads/patterndb-snapshot/">here</a>).</p>
+        <p oldrole="para">Note that these pattern databases are only samples and experimental databases. They are not officially supported, and may or may not work in your environment.</p>
+        <p oldrole="para">The syslog-ng pattern databases are available under the Creative Commons Attribution-Share Alike 3.0 (CC by-SA) license. This includes every pattern database written by community contributors or the Balabit staff. It means that:</p>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para">You are free to use and modify the patterns for your needs.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">If you redistribute the pattern databases, you must distribute your modifications under the same license.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">If you redistribute the pattern databases, you must make it obvious that the source of the original syslog-ng pattern databases is the <a href="https://github.com/balabit/syslog-ng-patterndb/">Balabit GitHub page</a>.</p>
+            </li>
+        </ul>
+        <p oldrole="para">For legal details, the full text of the license is <a href="https://creativecommons.org/licenses/by-sa/3.0/us/legalcode">available here</a>.</p>
+        <p oldrole="para">If you create patterns that are not available in the GitHub repository, consider sharing them with us and the syslog-ng community, and send them to the <a href="https://lists.balabit.hu/mailman/listinfo/syslog-ng/">syslog-ng mailing list</a>, or to the following e-mail address:<email>patterndb@balabit.com</email></p>
+        <h2 name="patterndb-correlation">Correlating log messages using pattern databases</h2>
+        <MadCap:keyword term="message correlation">
+        </MadCap:keyword>
+        <MadCap:keyword term="correlating messages">
+        </MadCap:keyword>
+        <MadCap:keyword term="pattern databases:['correlating messages']">
+        </MadCap:keyword>
+        <MadCap:keyword term="message context">
+        </MadCap:keyword>
+        <MadCap:keyword term="context of messages">
+        </MadCap:keyword>
+        <p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application can correlate log messages identified using <a href="chapter-patterndb.htm">pattern databases</a>. Alternatively, you can also correlate log messages using the <span class="Code" oldrole="parameter">grouping-by()</span> parser. For details, see <MadCap:xref href="parser-grouping-by.htm#grouping-by-parser"></MadCap:xref>.</p>
+        <MadCap:snippetBlock src="../../shared/chunk/correlation-intro.htm">
+        </MadCap:snippetBlock>
+        <p oldrole="para">(For details on triggering actions and generating messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref>.)</p>
+        <p oldrole="para">There are two attributes for pattern database rules that determine if a message matching the rule is added to a context: <span class="Code" oldrole="parameter">context-scope</span> and <span class="Code" oldrole="parameter">context-id</span>. The <span class="Code" oldrole="parameter">context-scope</span> attribute acts as an early filter, selecting messages sent by the same process (${HOST}${PROGRAM}${PID} is identical), application (${HOST}${PROGRAM} is identical), or host, while the <span class="Code" oldrole="parameter">context-id</span> actually adds the message to the context specified in the id. The <span class="Code" oldrole="parameter">context-id</span> can be a simple string, or can contain macros or values extracted from the log messages for further filtering. If a message is added to a context, <MadCap:variable name="General.abbrev"></MadCap:variable> automatically adds the identifier of the context to the <span class="Code" oldrole="parameter">.classifier.context_id</span> macro of the message.</p>
+        <MadCap:snippetBlock src="../../shared/wnt/note-message-context.htm">
+        </MadCap:snippetBlock>
+        <p oldrole="para">Another parameter of a rule is the <span class="Code" oldrole="parameter">context-timeout</span> attribute, which determines how long a context is stored, that is, how long <MadCap:variable name="General.abbrev"></MadCap:variable> waits for related messages to arrive.</p>
+        <MadCap:snippetBlock src="../../shared/chunk/correlation-context-timeout.htm">
+        </MadCap:snippetBlock>
+        <h6 oldrole="example">Example: Using message correlation</h6><pre class="Code" oldrole="synopsis">&lt;rule xml:id="..." context-id="ssh-session" context-timeout="86400" context-scope="process"&gt;
     &lt;patterns&gt;
         &lt;pattern&gt;Accepted @ESTRING:usracct.authmethod: @for @ESTRING:usracct.username: @from @ESTRING:usracct.device: @port @ESTRING:: @@ANYSTRING:usracct.service@&lt;/pattern&gt;
     &lt;/patterns&gt;
 ...
 &lt;/rule&gt;</pre>
-
-<p oldrole="para">For details on configuring message correlation, see the <a href="chapter-patterndb.htm">context-id, context-timeout, and context-scope</a> attributes of pattern database rules.</p>
-<h2 name="referencing-previous-messages">Referencing earlier messages of the context</h2>
-<MadCap:keyword term="@distance"></MadCap:keyword>
-<p oldrole="para">When using the <span class="Code" oldrole="userinput">&lt;value&gt;</span> element in pattern database rules together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <span class="Code" oldrole="userinput">@&lt;distance-of-referenced-message-from-the-current&gt;</span> suffix to the macro. For example, if there are three log messages in a context, and you are creating a generated message for the third log message, the <span class="Code" oldrole="userinput">${HOST}@1</span> expression refers to the host field of the current (third) message in the context, the <span class="Code" oldrole="userinput">${HOST}@2</span> expression refers to the host field of the previous (second) message in the context, <span class="Code" oldrole="userinput">${PID}@3</span> to the PID of the first message, and so on. For example, the following message can be created from SSH login/logout messages (for details on generating new messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref>): <span class="Code" oldrole="userinput">An SSH session for ${SSH_USERNAME}@1 from ${SSH_CLIENT_ADDRESS}@2 closed. Session lasted from ${DATE}@2 to ${DATE}</span>.</p>
-<table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');"><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/caution.png"/></p></td><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span><p oldrole="para">When referencing an earlier message of the context, always enclose the field name between braces, for example, <span class="Code" oldrole="userinput">${PID}@3</span>. The reference will not work if you omit the braces.</p></td></tr></tbody></table>
-<MadCap:snippetBlock src="../../shared/wnt/note-escape-at.htm"></MadCap:snippetBlock>
-<MadCap:snippetBlock src="../../shared/chunk/example-patterndb-referencing-earlier-values.htm"></MadCap:snippetBlock>
-<p oldrole="para">If you do not know in which message of the context contains the information you need, you can use the <span class="Code" oldrole="parameter">grep</span> template function. For details, see <MadCap:xref href="reference-template-functions.htm#template-function-grep"></MadCap:xref>.</p>
-<MadCap:snippetBlock src="../../shared/chunk/example-grep-template-function.htm"></MadCap:snippetBlock>
-<p oldrole="para">To perform calculations on fields that have numerical values, see <MadCap:xref href="reference-template-functions.htm#template-function-numerical"></MadCap:xref>.</p>
-<h2 name="patterndb-triggers-actions">Triggering actions for identified messages</h2>
-<MadCap:keyword term="alerting"></MadCap:keyword>
-<MadCap:keyword term="actions"></MadCap:keyword>
-<MadCap:keyword term="secondary messages"></MadCap:keyword>
-<MadCap:keyword term="generating alerts"></MadCap:keyword>
-<MadCap:keyword term="triggers"></MadCap:keyword>
-<MadCap:keyword term="triggered messages"></MadCap:keyword>
-<MadCap:keyword term="message triggers"></MadCap:keyword>
-<p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application can generate (trigger) messages automatically if certain events occur, for example, a specific log message is received, or the correlation timeout of a message expires. Basically, you can define messages for every pattern database rule that are emitted when a message matching the rule is received. Triggering messages is often used together with message correlation, but can also be used separately. When used together with message correlation, you can also create a new correlation context when a new message is received.</p>
-<MadCap:keyword term="inject-mode"></MadCap:keyword>
-<p oldrole="para">The generated message is injected into the same place where the <span class="Code" oldrole="parameter">db-parser()</span> statement is referenced in the log path. To post the generated message into the <span class="Code" oldrole="parameter">internal()</span> source instead, use the <span class="Code" oldrole="parameter">inject-mode()</span> option in the definition of the parser.</p>
-
-<h6 oldrole="example">Example: Sending triggered messages to the <span class="Code" oldrole="parameter">internal()</span> source</h6>
-<p oldrole="para">To send the generated messages to the <span class="Code" oldrole="parameter">internal</span> source, use the <span class="Code" oldrole="userinput">inject-mode(internal)</span> option:</p>
-<pre class="Code" oldrole="synopsis">parser p_db {db-parser(
+        <p oldrole="para">For details on configuring message correlation, see the <a href="chapter-patterndb.htm">context-id, context-timeout, and context-scope</a> attributes of pattern database rules.</p>
+        <h2 name="referencing-previous-messages">Referencing earlier messages of the context</h2>
+        <MadCap:keyword term="@distance">
+        </MadCap:keyword>
+        <p oldrole="para">When using the <span class="Code" oldrole="userinput">&lt;value&gt;</span> element in pattern database rules together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <span class="Code" oldrole="userinput">@&lt;distance-of-referenced-message-from-the-current&gt;</span> suffix to the macro. For example, if there are three log messages in a context, and you are creating a generated message for the third log message, the <span class="Code" oldrole="userinput">${HOST}@1</span> expression refers to the host field of the current (third) message in the context, the <span class="Code" oldrole="userinput">${HOST}@2</span> expression refers to the host field of the previous (second) message in the context, <span class="Code" oldrole="userinput">${PID}@3</span> to the PID of the first message, and so on. For example, the following message can be created from SSH login/logout messages (for details on generating new messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref>): <span class="Code" oldrole="userinput">An SSH session for ${SSH_USERNAME}@1 from ${SSH_CLIENT_ADDRESS}@2 closed. Session lasted from ${DATE}@2 to ${DATE}</span>.</p>
+        <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
+            <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+            <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2">
+            </col>
+            <tbody>
+                <tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1">
+                        <p>
+                            <img src="../../Resources/Images/Common/caution.png" />
+                        </p>
+                    </td>
+                    <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span>
+                        <p oldrole="para">When referencing an earlier message of the context, always enclose the field name between braces, for example, <span class="Code" oldrole="userinput">${PID}@3</span>. The reference will not work if you omit the braces.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <MadCap:snippetBlock src="../../shared/wnt/note-escape-at.htm">
+        </MadCap:snippetBlock>
+        <MadCap:snippetBlock src="../../shared/chunk/example-patterndb-referencing-earlier-values.htm">
+        </MadCap:snippetBlock>
+        <p oldrole="para">If you do not know in which message of the context contains the information you need, you can use the <span class="Code" oldrole="parameter">grep</span> template function. For details, see <MadCap:xref href="reference-template-functions.htm#template-function-grep"></MadCap:xref>.</p>
+        <MadCap:snippetBlock src="../../shared/chunk/example-grep-template-function.htm">
+        </MadCap:snippetBlock>
+        <p oldrole="para">To perform calculations on fields that have numerical values, see <MadCap:xref href="reference-template-functions.htm#template-function-numerical"></MadCap:xref>.</p>
+        <h2 name="patterndb-triggers-actions">Triggering actions for identified messages</h2>
+        <MadCap:keyword term="alerting">
+        </MadCap:keyword>
+        <MadCap:keyword term="actions">
+        </MadCap:keyword>
+        <MadCap:keyword term="secondary messages">
+        </MadCap:keyword>
+        <MadCap:keyword term="generating alerts">
+        </MadCap:keyword>
+        <MadCap:keyword term="triggers">
+        </MadCap:keyword>
+        <MadCap:keyword term="triggered messages">
+        </MadCap:keyword>
+        <MadCap:keyword term="message triggers">
+        </MadCap:keyword>
+        <p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application can generate (trigger) messages automatically if certain events occur, for example, a specific log message is received, or the correlation timeout of a message expires. Basically, you can define messages for every pattern database rule that are emitted when a message matching the rule is received. Triggering messages is often used together with message correlation, but can also be used separately. When used together with message correlation, you can also create a new correlation context when a new message is received.</p>
+        <MadCap:keyword term="inject-mode">
+        </MadCap:keyword>
+        <p oldrole="para">The generated message is injected into the same place where the <span class="Code" oldrole="parameter">db-parser()</span> statement is referenced in the log path. To post the generated message into the <span class="Code" oldrole="parameter">internal()</span> source instead, use the <span class="Code" oldrole="parameter">inject-mode()</span> option in the definition of the parser.</p>
+        <h6 oldrole="example">Example: Sending triggered messages to the <span class="Code" oldrole="parameter">internal()</span> source</h6>
+        <p oldrole="para">To send the generated messages to the <span class="Code" oldrole="parameter">internal</span> source, use the <span class="Code" oldrole="userinput">inject-mode(internal)</span> option:</p><pre class="Code" oldrole="synopsis">parser p_db {db-parser(
     file("mypatterndbfile.xml")
     inject-mode(internal)
 );}; </pre>
-<p oldrole="para">To inject the generated messages where the pattern database is referenced, use the <span class="Code" oldrole="userinput">inject-mode(pass-through)</span> option:</p>
-<pre class="Code" oldrole="synopsis">parser p_db {db-parser(
+        <p oldrole="para">To inject the generated messages where the pattern database is referenced, use the <span class="Code" oldrole="userinput">inject-mode(pass-through)</span> option:</p><pre class="Code" oldrole="synopsis">parser p_db {db-parser(
     file("mypatterndbfile.xml")
     inject-mode(pass-through)
 );}; </pre>
-
-<p oldrole="para">The generated message must be configured in the pattern database rule. It is possible to create an entire message, use macros and values extracted from the original message with pattern database, and so on.</p>
-<MadCap:snippetBlock src="../../shared/chunk/example-patterndb-actions.htm"></MadCap:snippetBlock>
-
-<h6 oldrole="example">Example: Creating a new context from an action</h6>
-<p oldrole="para">In <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="ose">3.8</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7</MadCap:conditionaltext> and newer, you can create a new context as an action. For details, see <MadCap:xref href="chapter-patterndb.htm#element-patterndb-create-context"></MadCap:xref>.</p>
-<MadCap:snippetBlock src="../../shared/chunk/example-create-context-action.htm"></MadCap:snippetBlock>
-
-<p oldrole="para">For details on configuring actions, see the description of the <a href="chapter-patterndb.htm">pattern database format</a>.</p>
-<h2 name="patterndb-actions-conditional">Conditional actions</h2>
-<MadCap:keyword term="actions:['conditional actions']"></MadCap:keyword>
-<p oldrole="para">To limit when a message is triggered, use the <span class="Code" oldrole="parameter">condition</span> attribute and specify a filter expression: the action will be executed only if the condition is met. For example, the following action is executed only if the message was sent by the host called <span class="Code" oldrole="userinput">myhost</span>.</p>
-<pre class="Code" oldrole="synopsis">&lt;action condition="'${HOST}' == 'myhost'"&gt;</pre>
-<p oldrole="para">You can use the same operators in the condition that can be used in filters. For details, see <MadCap:xref href="chapter-routing-filters.htm#filters-comparing"></MadCap:xref>.</p>
-<p oldrole="para">The following action can be used to log the length of an SSH session (the time difference between a login and a logout message in the context):</p>
-<pre class="Code" oldrole="synopsis">&lt;actions&gt;
+        <p oldrole="para">The generated message must be configured in the pattern database rule. It is possible to create an entire message, use macros and values extracted from the original message with pattern database, and so on.</p>
+        <MadCap:snippetBlock src="../../shared/chunk/example-patterndb-actions.htm">
+        </MadCap:snippetBlock>
+        <h6 oldrole="example">Example: Creating a new context from an action</h6>
+        <p oldrole="para">In <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="ose">3.8</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7</MadCap:conditionaltext> and newer, you can create a new context as an action. For details, see <MadCap:xref href="chapter-patterndb.htm#element-patterndb-create-context"></MadCap:xref>.</p>
+        <MadCap:snippetBlock src="../../shared/chunk/example-create-context-action.htm">
+        </MadCap:snippetBlock>
+        <p oldrole="para">For details on configuring actions, see the description of the <a href="chapter-patterndb.htm">pattern database format</a>.</p>
+        <h2 name="patterndb-actions-conditional">Conditional actions</h2>
+        <MadCap:keyword term="actions:['conditional actions']">
+        </MadCap:keyword>
+        <p oldrole="para">To limit when a message is triggered, use the <span class="Code" oldrole="parameter">condition</span> attribute and specify a filter expression: the action will be executed only if the condition is met. For example, the following action is executed only if the message was sent by the host called <span class="Code" oldrole="userinput">myhost</span>.</p><pre class="Code" oldrole="synopsis">&lt;action condition="'${HOST}' == 'myhost'"&gt;</pre>
+        <p oldrole="para">You can use the same operators in the condition that can be used in filters. For details, see <MadCap:xref href="chapter-routing-filters.htm#filters-comparing"></MadCap:xref>.</p>
+        <p oldrole="para">The following action can be used to log the length of an SSH session (the time difference between a login and a logout message in the context):</p><pre class="Code" oldrole="synopsis">&lt;actions&gt;
     &lt;action&gt;
         &lt;message&gt;
             &lt;values&gt;
@@ -222,12 +295,12 @@
         &lt;/message&gt;
     &lt;/action&gt;
 &lt;/actions&gt;</pre>
-
-<h6 oldrole="example">Example: Actions based on the number of messages</h6>
-<MadCap:keyword term="actions:[]"></MadCap:keyword>
-<MadCap:keyword term="$(context-length)"></MadCap:keyword>
-<p oldrole="para">The following example triggers different actions based on the number of messages in the context. This way you can check if the context contains enough messages for the event to be complete, and execute a different action if it does not.</p>
-<pre class="Code" oldrole="synopsis">&lt;actions&gt;
+        <h6 oldrole="example">Example: Actions based on the number of messages</h6>
+        <MadCap:keyword term="actions:[]">
+        </MadCap:keyword>
+        <MadCap:keyword term="$(context-length)">
+        </MadCap:keyword>
+        <p oldrole="para">The following example triggers different actions based on the number of messages in the context. This way you can check if the context contains enough messages for the event to be complete, and execute a different action if it does not.</p><pre class="Code" oldrole="synopsis">&lt;actions&gt;
     &lt;action condition='"$(context-length)" &gt;= "4"'&gt;
         &lt;message&gt;
             &lt;values&gt;
@@ -245,63 +318,54 @@
         &lt;/message&gt;
     &lt;/action&gt;
 &lt;/actions&gt;</pre>
-
-<h2 name="patterndb-actions-external">External actions</h2>
-<MadCap:keyword term="actions:['external actions']"></MadCap:keyword>
-<p oldrole="para">To perform an external action when a message is triggered, for example, to send the message in an e-mail, you have to route the generated messages to an external application using the <span class="Code" oldrole="parameter">program()</span> destination.</p>
-
-<h6 name="example-trigger-email" oldrole="example">Example: Sending triggered messages to external applications</h6>
-<p oldrole="para">The following sample configuration selects the triggered messages and sends them to an external script.</p>
-<ol oldrole="orderedlist">
-<li oldrole="listitem">
-<p oldrole="para">Set a field in the triggered message that is easy to identify and filter. For example:</p>
-<pre class="Code" oldrole="synopsis">&lt;values&gt;
+        <h2 name="patterndb-actions-external">External actions</h2>
+        <MadCap:keyword term="actions:['external actions']">
+        </MadCap:keyword>
+        <p oldrole="para">To perform an external action when a message is triggered, for example, to send the message in an e-mail, you have to route the generated messages to an external application using the <span class="Code" oldrole="parameter">program()</span> destination.</p>
+        <h6 name="example-trigger-email" oldrole="example">Example: Sending triggered messages to external applications</h6>
+        <p oldrole="para">The following sample configuration selects the triggered messages and sends them to an external script.</p>
+        <ol oldrole="orderedlist">
+            <li oldrole="listitem">
+                <p oldrole="para">Set a field in the triggered message that is easy to identify and filter. For example:</p><pre class="Code" oldrole="synopsis">&lt;values&gt;
     &lt;value name="MESSAGE"&gt;A log message from ${HOST} matched rule number $.classifier.rule_id&lt;/value&gt;
     &lt;value name="TRIGGER"&gt;yes&lt;/value&gt;
 &lt;/values&gt;</pre>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">Create a destination that will process the triggered messages.</p>
-<pre class="Code" oldrole="synopsis">destination d_triggers { program("/bin/myscript"; ); };</pre>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">Create a filter that selects the triggered messages from the internal source.</p>
-<pre class="Code" oldrole="synopsis">filter f_triggers {match("yes" value ("TRIGGER") type(string));};</pre>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">Create a logpath that selects the triggered messages from the internal source and sends them to the script:</p>
-<pre class="Code" oldrole="synopsis">log { source(s_local); filter(f_triggers); destination(d_triggers); };</pre>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">Create a script that will actually process the generated messages, for example:</p>
-<pre class="Code" oldrole="synopsis">#!/usr/bin/perl
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">Create a destination that will process the triggered messages.</p><pre class="Code" oldrole="synopsis">destination d_triggers { program("/bin/myscript"; ); };</pre>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">Create a filter that selects the triggered messages from the internal source.</p><pre class="Code" oldrole="synopsis">filter f_triggers {match("yes" value ("TRIGGER") type(string));};</pre>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">Create a logpath that selects the triggered messages from the internal source and sends them to the script:</p><pre class="Code" oldrole="synopsis">log { source(s_local); filter(f_triggers); destination(d_triggers); };</pre>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">Create a script that will actually process the generated messages, for example:</p><pre class="Code" oldrole="synopsis">#!/usr/bin/perl
 while (&lt;&gt;) {
         # body of the script to send emails, snmp traps, and so on
 }</pre>
-</li>
-</ol>
-
-<h2 name="patterndb-actions-correlation">Actions and message correlation</h2>
-<MadCap:keyword term="actions:['message correlation']"></MadCap:keyword>
-<p oldrole="para">Certain features of generating messages can be used only if message correlation is used as well. For details on correlating messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref>.</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application automatically fills the fields for the generated message based on the scope of the context, for example, the HOST and PROGRAM fields if the <span class="Code" oldrole="parameter">context-scope</span> is <span class="Code" oldrole="userinput">program</span>.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">When used together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <span class="Code" oldrole="userinput">@&lt;distance-of-referenced-message-from-the-current&gt;</span> suffix to the macro. For details, see <MadCap:xref href="chapter-patterndb.htm#referencing-previous-messages"></MadCap:xref>.</p>
-<MadCap:snippetBlock src="../../shared/chunk/example-patterndb-referencing-earlier-values.htm"></MadCap:snippetBlock>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">You can use the name-value pairs of other messages of the context. If you set the <span class="Code" oldrole="parameter">inherit-properties</span> attribute of the generated message to <span class="Code" oldrole="parameter">context</span>, <MadCap:variable name="General.abbrev"></MadCap:variable> collects every name-value pair from each message stored in the context, and includes them in the generated message. This means that you can refer to a name-value pair without having to know which message of the context included it. If a name-value pair appears in multiple messages of the context, the value in the latest message will be used. To refer to an earlier value, use the <span class="Code" oldrole="userinput">@&lt;distance-of-referenced-message-from-the-current&gt;</span> suffix format.</p>
-<pre class="Code" oldrole="synopsis">&lt;action&gt;
+            </li>
+        </ol>
+        <h2 name="patterndb-actions-correlation">Actions and message correlation</h2>
+        <MadCap:keyword term="actions:['message correlation']">
+        </MadCap:keyword>
+        <p oldrole="para">Certain features of generating messages can be used only if message correlation is used as well. For details on correlating messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref>.</p>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application automatically fills the fields for the generated message based on the scope of the context, for example, the HOST and PROGRAM fields if the <span class="Code" oldrole="parameter">context-scope</span> is <span class="Code" oldrole="userinput">program</span>.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">When used together with message correlation, you can also refer to fields and values of earlier messages of the context by adding the <span class="Code" oldrole="userinput">@&lt;distance-of-referenced-message-from-the-current&gt;</span> suffix to the macro. For details, see <MadCap:xref href="chapter-patterndb.htm#referencing-previous-messages"></MadCap:xref>.</p>
+                <MadCap:snippetBlock src="../../shared/chunk/example-patterndb-referencing-earlier-values.htm">
+                </MadCap:snippetBlock>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">You can use the name-value pairs of other messages of the context. If you set the <span class="Code" oldrole="parameter">inherit-properties</span> attribute of the generated message to <span class="Code" oldrole="parameter">context</span>, <MadCap:variable name="General.abbrev"></MadCap:variable> collects every name-value pair from each message stored in the context, and includes them in the generated message. This means that you can refer to a name-value pair without having to know which message of the context included it. If a name-value pair appears in multiple messages of the context, the value in the latest message will be used. To refer to an earlier value, use the <span class="Code" oldrole="userinput">@&lt;distance-of-referenced-message-from-the-current&gt;</span> suffix format.</p><pre class="Code" oldrole="synopsis">&lt;action&gt;
     &lt;message inherit-properties='context'&gt;</pre>
-
-<h6 name="patterndb-inherit-properties" oldrole="example">Example: Using the <span class="Code" oldrole="parameter">inherit-properties</span> option</h6>
-<p oldrole="para">For example, if <span class="Code" oldrole="parameter">inherit-properties</span> is set to <span class="Code" oldrole="userinput">context</span>, and you have a rule that collects SSH login and logout messages to the same context, you can use the following value to generate a message collecting the most important information form both messages, including the beginning and end date.</p>
-<pre class="Code" oldrole="synopsis">&lt;value name="MESSAGE"&gt;An SSH session for ${SSH_USERNAME} from ${SSH_CLIENT_ADDRESS} closed. Session lasted from ${DATE}@2 to $DATE pid: $PID.&lt;/value&gt;</pre>
-<p oldrole="para">The following is a detailed rule for this purpose.</p>
-<pre class="Code" oldrole="synopsis">&lt;patterndb version='4' pub_date='2015-04-13'&gt;
+                <h6 name="patterndb-inherit-properties" oldrole="example">Example: Using the <span class="Code" oldrole="parameter">inherit-properties</span> option</h6>
+                <p oldrole="para">For example, if <span class="Code" oldrole="parameter">inherit-properties</span> is set to <span class="Code" oldrole="userinput">context</span>, and you have a rule that collects SSH login and logout messages to the same context, you can use the following value to generate a message collecting the most important information form both messages, including the beginning and end date.</p><pre class="Code" oldrole="synopsis">&lt;value name="MESSAGE"&gt;An SSH session for ${SSH_USERNAME} from ${SSH_CLIENT_ADDRESS} closed. Session lasted from ${DATE}@2 to $DATE pid: $PID.&lt;/value&gt;</pre>
+                <p oldrole="para">The following is a detailed rule for this purpose.</p><pre class="Code" oldrole="synopsis">&lt;patterndb version='4' pub_date='2015-04-13'&gt;
     &lt;ruleset name='sshd' id='12345678'&gt;
         &lt;pattern&gt;sshd&lt;/pattern&gt;
             &lt;rules&gt;
@@ -346,62 +410,79 @@ while (&lt;&gt;) {
             &lt;/rules&gt;
     &lt;/ruleset&gt;
 &lt;/patterndb&gt;</pre>
-
-</li>
-<li oldrole="listitem">
-<p oldrole="para">It is possible to generate a message when the <span class="Code" oldrole="parameter">context-timeout</span> of the original message expires and no new message is added to the context during this time. To accomplish this, include the <span class="Code" oldrole="userinput">trigger="timeout"</span> attribute in the action element:</p>
-<pre class="Code" oldrole="synopsis">&lt;action trigger="timeout"&gt;</pre>
-
-<h6 name="patterndb-timeout-action" oldrole="example">Example: Sending alert when a client disappears</h6>
-<p oldrole="para">The following example shows how to combine various features of <MadCap:variable name="General.abbrev"></MadCap:variable> to send an e-mail alert if a client stops sending messages.</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para">Configure your clients to send MARK messages periodically. It is enough to configure MARK messages for the destination that forwards your log messages to your <MadCap:variable name="General.abbrev"></MadCap:variable> server (<span class="Code" oldrole="userinput">mark-mode(periodical)</span>).</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">On your <MadCap:variable name="General.abbrev"></MadCap:variable> server, create a pattern database rule that matches on the incoming MARK messages. In the rule, set the <span class="Code" oldrole="parameter">context-scope</span> attribute to <span class="Code" oldrole="userinput">host</span>, and the <span class="Code" oldrole="parameter">context-timeout</span> attribute to a value that is higher than the <span class="Code" oldrole="parameter">mark-freq</span> value set on your clients (by default, <span class="Code" oldrole="userinput">mark-freq</span> is 1200 seconds, so set <span class="Code" oldrole="userinput">context-timeout</span> at least to 1500 seconds, but you might want to use a higher value, depending on your environment).</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">Add an action to this rule that sends you an e-mail alert if the <span class="Code" oldrole="userinput">context-timeout</span> expires, and the server does not receive a new MARK message (<span class="Code" oldrole="userinput">&lt;action trigger="timeout"&gt;</span>).</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">On your <MadCap:variable name="General.abbrev"></MadCap:variable> server, use the pattern database in the log path that handles incoming log messages.</p>
-</li>
-</ul>
-
-</li>
-</ul>
-<h2 name="reference-parsers-pattern-databases">Creating pattern databases</h2>
-<MadCap:snippetBlock src="../../shared/syslog-ng-patterndb-using-parsers.htm"></MadCap:snippetBlock>
-<h2 name="what-is-new-patterndb-v5">What's new in the syslog-ng pattern database format V5</h2>
-<p oldrole="para">The V5 database format has the following differences compared to the V4 format:</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para">The &lt;ruleset&gt; element can now store multiple reference URLs using the new &lt;rule_urls&gt; element. For details, see <MadCap:xref href="chapter-patterndb.htm#element-patterndb-ruleset"></MadCap:xref>.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">In an &lt;action&gt;, you can now initialize a new context. As a result, the &lt;message&gt; element is not required. For details, see <MadCap:xref href="chapter-patterndb.htm#element-patterndb-create-context"></MadCap:xref>.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">The <span class="Code" oldrole="parameter">inherit-properties</span> attribute is deprecated, use the <span class="Code" oldrole="parameter">inherit-mode</span> attribute instead. For details, see <MadCap:xref href="chapter-patterndb.htm#element-patterndb-action"></MadCap:xref>.</p>
-</li>
-</ul>
-<h2 name="reference-patterndb-schemes">The syslog-ng pattern database format</h2>
-<MadCap:keyword term="pattern database"></MadCap:keyword>
-<MadCap:keyword term="classifying messages:['creating databases']"></MadCap:keyword>
-<MadCap:keyword term="message classification"></MadCap:keyword>
-<MadCap:keyword term="pattern database schema"></MadCap:keyword>
-<p oldrole="para">Pattern databases are XML files that contain rules describing the message patterns. For sample pattern databases, see <MadCap:xref href="chapter-patterndb.htm#patterndb-download"></MadCap:xref>.</p>
-<p oldrole="para">The following scheme describes the V5 format of the pattern database. This format is backwards-compatible with the earlier formats.</p>
-<p oldrole="para">For a sample database containing only a single pattern, see <MadCap:xref href="chapter-patterndb.htm#example-pattern-database"></MadCap:xref>.</p>
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="tip" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">TIP: </span><p oldrole="para">Use the <b oldrole="command">pdbtool</b> utility that is bundled with syslog-ng to test message patterns and convert existing databases to the latest format. For details, see <MadCap:xref href="#pdbtool.1"></MadCap:xref>.</p><p oldrole="para">To automatically create an initial pattern database from an existing log file, use the <b oldrole="command">pdbtool patternize</b> command. For details, see <MadCap:xref href="#pdbtool-patternize"></MadCap:xref>.</p></td></tr></tbody></table>
-
-<h6 name="example-pattern-database" oldrole="example">Example: A pattern database containing a single rule</h6>
-<MadCap:keyword term="pattern database"></MadCap:keyword>
-<p oldrole="para">The following pattern database contains a single rule that matches a log message of the <span class="Code" oldrole="userinput">ssh</span> application. A sample log message looks like:</p>
-<pre class="Code" oldrole="synopsis">Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2</pre>
-<p oldrole="para">The following is a simple pattern database containing a matching rule.</p>
-<pre class="Code" oldrole="synopsis">&lt;patterndb version='5' pub_date='2010-10-17'&gt;
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">It is possible to generate a message when the <span class="Code" oldrole="parameter">context-timeout</span> of the original message expires and no new message is added to the context during this time. To accomplish this, include the <span class="Code" oldrole="userinput">trigger="timeout"</span> attribute in the action element:</p><pre class="Code" oldrole="synopsis">&lt;action trigger="timeout"&gt;</pre>
+                <h6 name="patterndb-timeout-action" oldrole="example">Example: Sending alert when a client disappears</h6>
+                <p oldrole="para">The following example shows how to combine various features of <MadCap:variable name="General.abbrev"></MadCap:variable> to send an e-mail alert if a client stops sending messages.</p>
+                <ul oldrole="itemizedlist">
+                    <li oldrole="listitem">
+                        <p oldrole="para">Configure your clients to send MARK messages periodically. It is enough to configure MARK messages for the destination that forwards your log messages to your <MadCap:variable name="General.abbrev"></MadCap:variable> server (<span class="Code" oldrole="userinput">mark-mode(periodical)</span>).</p>
+                    </li>
+                    <li oldrole="listitem">
+                        <p oldrole="para">On your <MadCap:variable name="General.abbrev"></MadCap:variable> server, create a pattern database rule that matches on the incoming MARK messages. In the rule, set the <span class="Code" oldrole="parameter">context-scope</span> attribute to <span class="Code" oldrole="userinput">host</span>, and the <span class="Code" oldrole="parameter">context-timeout</span> attribute to a value that is higher than the <span class="Code" oldrole="parameter">mark-freq</span> value set on your clients (by default, <span class="Code" oldrole="userinput">mark-freq</span> is 1200 seconds, so set <span class="Code" oldrole="userinput">context-timeout</span> at least to 1500 seconds, but you might want to use a higher value, depending on your environment).</p>
+                    </li>
+                    <li oldrole="listitem">
+                        <p oldrole="para">Add an action to this rule that sends you an e-mail alert if the <span class="Code" oldrole="userinput">context-timeout</span> expires, and the server does not receive a new MARK message (<span class="Code" oldrole="userinput">&lt;action trigger="timeout"&gt;</span>).</p>
+                    </li>
+                    <li oldrole="listitem">
+                        <p oldrole="para">On your <MadCap:variable name="General.abbrev"></MadCap:variable> server, use the pattern database in the log path that handles incoming log messages.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <h2 name="reference-parsers-pattern-databases">Creating pattern databases</h2>
+        <MadCap:snippetBlock src="../../shared/syslog-ng-patterndb-using-parsers.htm">
+        </MadCap:snippetBlock>
+        <h2 name="what-is-new-patterndb-v5">What's new in the syslog-ng pattern database format V5</h2>
+        <p oldrole="para">The V5 database format has the following differences compared to the V4 format:</p>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para">The &lt;ruleset&gt; element can now store multiple reference URLs using the new &lt;rule_urls&gt; element. For details, see <MadCap:xref href="chapter-patterndb.htm#element-patterndb-ruleset"></MadCap:xref>.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">In an &lt;action&gt;, you can now initialize a new context. As a result, the &lt;message&gt; element is not required. For details, see <MadCap:xref href="chapter-patterndb.htm#element-patterndb-create-context"></MadCap:xref>.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">The <span class="Code" oldrole="parameter">inherit-properties</span> attribute is deprecated, use the <span class="Code" oldrole="parameter">inherit-mode</span> attribute instead. For details, see <MadCap:xref href="chapter-patterndb.htm#element-patterndb-action"></MadCap:xref>.</p>
+            </li>
+        </ul>
+        <h2 name="reference-patterndb-schemes">The syslog-ng pattern database format</h2>
+        <MadCap:keyword term="pattern database">
+        </MadCap:keyword>
+        <MadCap:keyword term="classifying messages:['creating databases']">
+        </MadCap:keyword>
+        <MadCap:keyword term="message classification">
+        </MadCap:keyword>
+        <MadCap:keyword term="pattern database schema">
+        </MadCap:keyword>
+        <p oldrole="para">Pattern databases are XML files that contain rules describing the message patterns. For sample pattern databases, see <MadCap:xref href="chapter-patterndb.htm#patterndb-download"></MadCap:xref>.</p>
+        <p oldrole="para">The following scheme describes the V5 format of the pattern database. This format is backwards-compatible with the earlier formats.</p>
+        <p oldrole="para">For a sample database containing only a single pattern, see <MadCap:xref href="chapter-patterndb.htm#example-pattern-database"></MadCap:xref>.</p>
+        <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="tip" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+            </col>
+            <tbody>
+                <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                        <p>
+                            <img src="../../Resources/Images/Common/note.png" />
+                        </p>
+                    </td>
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">TIP: </span>
+                        <p oldrole="para">Use the <b oldrole="command">pdbtool</b> utility that is bundled with syslog-ng to test message patterns and convert existing databases to the latest format. For details, see <MadCap:xref href="#pdbtool.1"></MadCap:xref>.</p>
+                        <p oldrole="para">To automatically create an initial pattern database from an existing log file, use the <b oldrole="command">pdbtool patternize</b> command. For details, see <MadCap:xref href="#pdbtool-patternize"></MadCap:xref>.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h6 name="example-pattern-database" oldrole="example">Example: A pattern database containing a single rule</h6>
+        <MadCap:keyword term="pattern database">
+        </MadCap:keyword>
+        <p oldrole="para">The following pattern database contains a single rule that matches a log message of the <span class="Code" oldrole="userinput">ssh</span> application. A sample log message looks like:</p><pre class="Code" oldrole="synopsis">Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2</pre>
+        <p oldrole="para">The following is a simple pattern database containing a matching rule.</p><pre class="Code" oldrole="synopsis">&lt;patterndb version='5' pub_date='2010-10-17'&gt;
     &lt;ruleset name='ssh' id='123456678'&gt;
         &lt;pattern&gt;ssh&lt;/pattern&gt;
             &lt;rules&gt;
@@ -413,9 +494,8 @@ while (&lt;&gt;) {
             &lt;/rules&gt;
     &lt;/ruleset&gt;
 &lt;/patterndb&gt;</pre>
-<p oldrole="para">Note that the rule uses macros that refer to parts of the message, for example, you can use the <span class="Code" oldrole="userinput">${SSH_USERNAME}</span> macro refer to the username used in the connection.</p>
-<p oldrole="para">The following is the same example, but with a test message and test values for the parsers.</p>
-<pre class="Code" oldrole="synopsis">&lt;patterndb version='4' pub_date='2010-10-17'&gt;
+        <p oldrole="para">Note that the rule uses macros that refer to parts of the message, for example, you can use the <span class="Code" oldrole="userinput">${SSH_USERNAME}</span> macro refer to the username used in the connection.</p>
+        <p oldrole="para">The following is the same example, but with a test message and test values for the parsers.</p><pre class="Code" oldrole="synopsis">&lt;patterndb version='4' pub_date='2010-10-17'&gt;
     &lt;ruleset name='ssh' id='123456678'&gt;
         &lt;pattern&gt;ssh&lt;/pattern&gt;
             &lt;rules&gt;
@@ -438,329 +518,292 @@ while (&lt;&gt;) {
             &lt;/rules&gt;
     &lt;/ruleset&gt;
 &lt;/patterndb&gt;</pre>
-
-<h2 name="element-patterndb-patterndb">Element: patterndb</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<i oldrole="emphasis" role="bold">patterndb</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">The container element of the pattern database.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">version</i>: The schema version of the pattern database. The current version is <span class="Code" oldrole="userinput">4</span>.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">pubdate</i>: The publication date of the XML file.</p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">ruleset</i></a></p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<pre class="Code" oldrole="synopsis">&lt;patterndb version='4' pub_date='2010-10-25'&gt;</pre>
-
-<h2 name="element-patterndb-ruleset">Element: ruleset</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<i oldrole="emphasis" role="bold">ruleset</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">A container element to group log patterns for an application or program. A <span class="Code" oldrole="userinput">&lt;patterndb&gt;</span> element may contain any number of <span class="Code" oldrole="userinput">&lt;ruleset&gt;</span> elements.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">name</i>: The name of the application. Note that the function of this attribute is to make the database more readable, syslog-ng uses the <span class="Code" oldrole="userinput">&lt;pattern&gt;</span> element to identify the applications sending log messages.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">id</i>: A unique ID of the application, for example, the md5 sum of the <span class="Code" oldrole="userinput">name</span> attribute.</p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">patterns</i></a></p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">rules</i></a></p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">actions</i></a></p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">tags</i></a></p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">description</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A description of the ruleset or the application.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">url</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> An URL referring to further information about the ruleset or the application.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">rule_urls</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> To list multiple URLs referring to further information about the ruleset or the application, enclose the &lt;url&gt; elements into an &lt;urls&gt; element.</p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<pre class="Code" oldrole="synopsis">&lt;ruleset name='su' id='480de478-d4a6-4a7f-bea4-0c0245d361e1'&gt;</pre>
-
-<h2 name="patterndb-schema-patterns">Element: patterns</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<i oldrole="emphasis" role="bold">patterns</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">A container element. A <span class="Code" oldrole="userinput">&lt;patterns&gt;</span> element may contain any number of <span class="Code" oldrole="userinput">&lt;pattern&gt;</span> elements.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<p oldrole="para">N/A</p>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">pattern</i>: The name of the application <MadCap:variable name="General.mdash"></MadCap:variable> syslog-ng matches this value to the ${PROGRAM} header of the syslog message to find the rulesets applicable to the syslog message.</p>
-<p oldrole="para">Specifying multiple patterns is useful if two or more applications have different names (that is, different ${PROGRAM} fields), but otherwise send identical log messages.</p>
-<p oldrole="para">It is not necessary to use multiple patterns if only the end of the ${PROGRAM} fields is different, use only the beginning of the ${PROGRAM} field as the <span class="Code" oldrole="userinput">pattern</span>. For example, the Postfix e-mail server sends messages using different process names, but all of them begin with the <span class="Code" oldrole="userinput">postfix</span> string.</p>
-<p oldrole="para">You can also use parsers in the program pattern if needed, and use the parsed results later. For example: <span class="Code" oldrole="parameter">&lt;pattern&gt;postfix\@ESTRING:.postfix.component:[@&lt;/pattern&gt;</span></p>
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">If the <span class="Code" oldrole="userinput">&lt;pattern&gt;</span> element of a ruleset is not specified, &amp;abbrev; will use this ruleset as a fallback ruleset: it will apply the ruleset to messages that have an empty PROGRAM header, or if none of the program patterns matched the PROGRAM header of the incoming message.</p></td></tr></tbody></table>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<pre class="Code" oldrole="synopsis">&lt;patterns&gt;
+        <h2 name="element-patterndb-patterndb">Element: patterndb</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<i oldrole="emphasis" role="bold">patterndb</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">The container element of the pattern database.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">version</i>: The schema version of the pattern database. The current version is <span class="Code" oldrole="userinput">4</span>.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">pubdate</i>: The publication date of the XML file.</p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">ruleset</i></a>
+                </p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6><pre class="Code" oldrole="synopsis">&lt;patterndb version='4' pub_date='2010-10-25'&gt;</pre>
+        <h2 name="element-patterndb-ruleset">Element: ruleset</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<i oldrole="emphasis" role="bold">ruleset</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">A container element to group log patterns for an application or program. A <span class="Code" oldrole="userinput">&lt;patterndb&gt;</span> element may contain any number of <span class="Code" oldrole="userinput">&lt;ruleset&gt;</span> elements.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">name</i>: The name of the application. Note that the function of this attribute is to make the database more readable, syslog-ng uses the <span class="Code" oldrole="userinput">&lt;pattern&gt;</span> element to identify the applications sending log messages.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">id</i>: A unique ID of the application, for example, the md5 sum of the <span class="Code" oldrole="userinput">name</span> attribute.</p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">patterns</i></a>
+                </p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">rules</i></a>
+                </p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">actions</i></a>
+                </p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">tags</i></a>
+                </p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">description</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A description of the ruleset or the application.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">url</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> An URL referring to further information about the ruleset or the application.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">rule_urls</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> To list multiple URLs referring to further information about the ruleset or the application, enclose the &lt;url&gt; elements into an &lt;urls&gt; element.</p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6><pre class="Code" oldrole="synopsis">&lt;ruleset name='su' id='480de478-d4a6-4a7f-bea4-0c0245d361e1'&gt;</pre>
+        <h2 name="patterndb-schema-patterns">Element: patterns</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<i oldrole="emphasis" role="bold">patterns</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">A container element. A <span class="Code" oldrole="userinput">&lt;patterns&gt;</span> element may contain any number of <span class="Code" oldrole="userinput">&lt;pattern&gt;</span> elements.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <p oldrole="para">N/A</p>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">pattern</i>: The name of the application <MadCap:variable name="General.mdash"></MadCap:variable> syslog-ng matches this value to the ${PROGRAM} header of the syslog message to find the rulesets applicable to the syslog message.</p>
+                <p oldrole="para">Specifying multiple patterns is useful if two or more applications have different names (that is, different ${PROGRAM} fields), but otherwise send identical log messages.</p>
+                <p oldrole="para">It is not necessary to use multiple patterns if only the end of the ${PROGRAM} fields is different, use only the beginning of the ${PROGRAM} field as the <span class="Code" oldrole="userinput">pattern</span>. For example, the Postfix e-mail server sends messages using different process names, but all of them begin with the <span class="Code" oldrole="userinput">postfix</span> string.</p>
+                <p oldrole="para">You can also use parsers in the program pattern if needed, and use the parsed results later. For example: <span class="Code" oldrole="parameter">&lt;pattern&gt;postfix\@ESTRING:.postfix.component:[@&lt;/pattern&gt;</span></p>
+                <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                    </col>
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+                    </col>
+                    <tbody>
+                        <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                                <p>
+                                    <img src="../../Resources/Images/Common/note.png" />
+                                </p>
+                            </td>
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                                <p oldrole="para">If the <span class="Code" oldrole="userinput">&lt;pattern&gt;</span> element of a ruleset is not specified, &amp;abbrev; will use this ruleset as a fallback ruleset: it will apply the ruleset to messages that have an empty PROGRAM header, or if none of the program patterns matched the PROGRAM header of the incoming message.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6><pre class="Code" oldrole="synopsis">&lt;patterns&gt;
     &lt;pattern&gt;firstapplication&lt;/pattern&gt;
     &lt;pattern&gt;otherapplication&lt;/pattern&gt;
 &lt;/patterns&gt;</pre>
-<p oldrole="para">Using parsers in the program pattern:</p>
-<pre class="Code" oldrole="synopsis">&lt;pattern&gt;postfix\@ESTRING:.postfix.component:[@&lt;/pattern&gt;</pre>
-
-<h2 name="element-patterndb-rules">Element: rules</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<i oldrole="emphasis" role="bold">rules</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">A container element for the rules of the ruleset.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<p oldrole="para">N/A</p>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">rule</i></a></p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<pre class="Code" oldrole="synopsis">&lt;rules&gt;
+        <p oldrole="para">Using parsers in the program pattern:</p><pre class="Code" oldrole="synopsis">&lt;pattern&gt;postfix\@ESTRING:.postfix.component:[@&lt;/pattern&gt;</pre>
+        <h2 name="element-patterndb-rules">Element: rules</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<i oldrole="emphasis" role="bold">rules</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">A container element for the rules of the ruleset.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <p oldrole="para">N/A</p>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">rule</i></a>
+                </p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6><pre class="Code" oldrole="synopsis">&lt;rules&gt;
     &lt;rule provider='me' id='182437592347598' class='system'&gt;
         &lt;patterns&gt;
             &lt;pattern&gt;Accepted @QSTRING:SSH.AUTH_METHOD: @ for@QSTRING:SSH_USERNAME: @from\ @QSTRING:SSH_CLIENT_ADDRESS: @port @NUMBER:SSH_PORT_NUMBER:@ ssh2&lt;/pattern&gt;
         &lt;/patterns&gt;
     &lt;/rule&gt;
 &lt;/rules&gt;</pre>
-
-<h2 name="element-patterndb-rule">Element: rule</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<i oldrole="emphasis" role="bold">rule</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">An element containing message patterns and how a message that matches these patterns is classified.</p>
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">If the following characters appear in the message, they must be escaped in the rule as follows:</p><ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><span class="Code" oldrole="userinput">@</span>: Use @@, for example <span class="Code" oldrole="userinput">user@@example.com</span></p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis">&lt;</i>: Use <span class="Code" oldrole="userinput">&amp;lt;</span></p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis">&gt;</i>: Use <span class="Code" oldrole="userinput">&amp;gt;</span></p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">&amp;: Use <span class="Code" oldrole="userinput">&amp;amp;</span></p>
-</li>
-</ul></td></tr></tbody></table>
-<p oldrole="para">The <i oldrole="emphasis" role="bold">&lt;rules&gt;</i> element may contain any number of <i oldrole="emphasis" role="bold">&lt;rule&gt;</i> elements.</p>
-
-
-<h6 name="element-patterndb-rule-attributes" oldrole="simplesect" xreflabel="Attributes of the rule element">Attributes</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">provider</i>: The provider of the rule. This is used to distinguish between who supplied the rule, that is, if it has been created by <MadCap:variable name="General.vendor"></MadCap:variable>, or added to the XML by a local user.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">id</i>: The globally unique ID of the rule.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">class</i>: The class of the rule <MadCap:variable name="General.mdash"></MadCap:variable> syslog-ng assigns this class to the messages matching a pattern of this rule.</p>
-</li>
-<MadCap:snippetBlock src="../../shared/chunk/patterndb-context-attributes.htm"></MadCap:snippetBlock>
-</ul>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">patterns</i></a></p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<pre class="Code" oldrole="synopsis">&lt;rule provider='balabit' id='f57196aa-75fd-11dd-9bba-001e6806451b' class='violation'&gt;</pre>
-<p oldrole="para">The following example specifies attributes for correlating messages as well. For details on correlating messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref>.</p>
-<pre class="Code" oldrole="synopsis">&lt;rule provider='balabit' id='f57196aa-75fd-11dd-9bba-001e6806451b' class='violation' context-id='same-session' context-scope='process' context-timeout='360'&gt;</pre>
-
-<h2 name="element-patterndb-rule-patterns">Element: patterns</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<a href="chapter-patterndb.htm">rule</a>/<i oldrole="emphasis" role="bold">patterns</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">An element containing the patterns of the rule. If a <i oldrole="emphasis" role="bold">&lt;patterns&gt;</i> element contains multiple <i oldrole="emphasis" role="bold">&lt;pattern&gt;</i> elements, the class of the <i oldrole="emphasis" role="bold">&lt;rule&gt;</i> is assigned to every syslog message matching any of the patterns.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<p oldrole="para">N/A</p>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">pattern</i>: A pattern describing a log message. This element is also called <span class="Code" oldrole="userinput">message pattern</span>. For example:<pre class="Code" oldrole="synopsis">&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</pre></p>
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">Support for XML entities is limited, you can use only the following entities: <span class="Code" oldrole="userinput">&amp;amp; &amp;lt; &amp;gt; &amp;quot; &amp;apos;</span>. User-defined entities are not supported.</p></td></tr></tbody></table>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">description</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A description of the pattern or the log message matching the pattern.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">urls</i></a></p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">values</i></a></p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">examples</i></a></p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<pre class="Code" oldrole="synopsis">&lt;patterns&gt;
+        <h2 name="element-patterndb-rule">Element: rule</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<i oldrole="emphasis" role="bold">rule</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">An element containing message patterns and how a message that matches these patterns is classified.</p>
+        <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+            </col>
+            <tbody>
+                <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                        <p>
+                            <img src="../../Resources/Images/Common/note.png" />
+                        </p>
+                    </td>
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                        <p oldrole="para">If the following characters appear in the message, they must be escaped in the rule as follows:</p>
+                        <ul oldrole="itemizedlist">
+                            <li oldrole="listitem">
+                                <p oldrole="para"><span class="Code" oldrole="userinput">@</span>: Use @@, for example <span class="Code" oldrole="userinput">user@@example.com</span></p>
+                            </li>
+                            <li oldrole="listitem">
+                                <p oldrole="para"><i oldrole="emphasis">&lt;</i>: Use <span class="Code" oldrole="userinput">&amp;lt;</span></p>
+                            </li>
+                            <li oldrole="listitem">
+                                <p oldrole="para"><i oldrole="emphasis">&gt;</i>: Use <span class="Code" oldrole="userinput">&amp;gt;</span></p>
+                            </li>
+                            <li oldrole="listitem">
+                                <p oldrole="para">&amp;: Use <span class="Code" oldrole="userinput">&amp;amp;</span></p>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p oldrole="para">The <i oldrole="emphasis" role="bold">&lt;rules&gt;</i> element may contain any number of <i oldrole="emphasis" role="bold">&lt;rule&gt;</i> elements.</p>
+        <h6 name="element-patterndb-rule-attributes" oldrole="simplesect" xreflabel="Attributes of the rule element">Attributes</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">provider</i>: The provider of the rule. This is used to distinguish between who supplied the rule, that is, if it has been created by <MadCap:variable name="General.vendor"></MadCap:variable>, or added to the XML by a local user.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">id</i>: The globally unique ID of the rule.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">class</i>: The class of the rule <MadCap:variable name="General.mdash"></MadCap:variable> syslog-ng assigns this class to the messages matching a pattern of this rule.</p>
+            </li>
+            <MadCap:snippetBlock src="../../shared/chunk/patterndb-context-attributes.htm">
+            </MadCap:snippetBlock>
+        </ul>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">patterns</i></a>
+                </p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6><pre class="Code" oldrole="synopsis">&lt;rule provider='balabit' id='f57196aa-75fd-11dd-9bba-001e6806451b' class='violation'&gt;</pre>
+        <p oldrole="para">The following example specifies attributes for correlating messages as well. For details on correlating messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref>.</p><pre class="Code" oldrole="synopsis">&lt;rule provider='balabit' id='f57196aa-75fd-11dd-9bba-001e6806451b' class='violation' context-id='same-session' context-scope='process' context-timeout='360'&gt;</pre>
+        <h2 name="element-patterndb-rule-patterns">Element: patterns</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<a href="chapter-patterndb.htm">rule</a>/<i oldrole="emphasis" role="bold">patterns</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">An element containing the patterns of the rule. If a <i oldrole="emphasis" role="bold">&lt;patterns&gt;</i> element contains multiple <i oldrole="emphasis" role="bold">&lt;pattern&gt;</i> elements, the class of the <i oldrole="emphasis" role="bold">&lt;rule&gt;</i> is assigned to every syslog message matching any of the patterns.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <p oldrole="para">N/A</p>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">pattern</i>: A pattern describing a log message. This element is also called <span class="Code" oldrole="userinput">message pattern</span>. For example:<pre class="Code" oldrole="synopsis">&lt;pattern&gt;+ ??? root-&lt;/pattern&gt;</pre></p>
+                <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                    </col>
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+                    </col>
+                    <tbody>
+                        <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                                <p>
+                                    <img src="../../Resources/Images/Common/note.png" />
+                                </p>
+                            </td>
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                                <p oldrole="para">Support for XML entities is limited, you can use only the following entities: <span class="Code" oldrole="userinput">&amp;amp; &amp;lt; &amp;gt; &amp;quot; &amp;apos;</span>. User-defined entities are not supported.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">description</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A description of the pattern or the log message matching the pattern.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">urls</i></a>
+                </p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">values</i></a>
+                </p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">examples</i></a>
+                </p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6><pre class="Code" oldrole="synopsis">&lt;patterns&gt;
     &lt;pattern&gt;Accepted @QSTRING:SSH.AUTH_METHOD: @ for@QSTRING:SSH_USERNAME: @from\ @QSTRING:SSH_CLIENT_ADDRESS: @port @NUMBER:SSH_PORT_NUMBER:@ ssh2&lt;/pattern&gt;
 &lt;/patterns&gt;</pre>
-
-<h2 name="element-patterndb-urls">Element: urls</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<a href="chapter-patterndb.htm">rule</a>/<a href="chapter-patterndb.htm">patterns</a>/<i oldrole="emphasis" role="bold">urls</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> An element containing one or more URLs referring to further information about the patterns or the matching log messages.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<p oldrole="para">N/A</p>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">url</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> An URL referring to further information about the patterns or the matching log messages.</p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<p oldrole="para">N/A</p>
-
-<h2 name="element-patterndb-values">Element: values</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<a href="chapter-patterndb.htm">rule</a>/<a href="chapter-patterndb.htm">patterns</a>/<i oldrole="emphasis" role="bold">values</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> Name-value pairs that are assigned to messages matching the patterns, for example, the representation of the event in the message according to the Common Event Format (CEF) or Common Event Exchange (CEE). The names can be used as macros to reference the assigned values.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<p oldrole="para">N/A</p>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis" role="bold">value</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> Contains the value of the name-value pair that is assigned to the message.</p>
-<p oldrole="para">The &lt;value&gt; element of name-value pairs can include template functions. For details, see <MadCap:xref href="chapter-manipulating-messages.htm#template-functions"></MadCap:xref>, for examples, see <MadCap:xref href="reference-template-functions.htm#template-function-if"></MadCap:xref>.</p>
-<p oldrole="para">When used together with message correlation, the &lt;value&gt; element of name-value pairs can include references to the values of earlier messages from the same context. For details, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref>.</p>
-</li>
-<li oldrole="listitem">
-
-<p oldrole="para"><i oldrole="emphasis">name</i>: The name of the name-value pair. It can also be used as a macro to reference the assigned value.</p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<pre class="Code" oldrole="synopsis">&lt;values&gt;
+        <h2 name="element-patterndb-urls">Element: urls</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<a href="chapter-patterndb.htm">rule</a>/<a href="chapter-patterndb.htm">patterns</a>/<i oldrole="emphasis" role="bold">urls</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> An element containing one or more URLs referring to further information about the patterns or the matching log messages.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <p oldrole="para">N/A</p>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">url</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> An URL referring to further information about the patterns or the matching log messages.</p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6>
+        <p oldrole="para">N/A</p>
+        <h2 name="element-patterndb-values">Element: values</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<a href="chapter-patterndb.htm">rule</a>/<a href="chapter-patterndb.htm">patterns</a>/<i oldrole="emphasis" role="bold">values</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> Name-value pairs that are assigned to messages matching the patterns, for example, the representation of the event in the message according to the Common Event Format (CEF) or Common Event Exchange (CEE). The names can be used as macros to reference the assigned values.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <p oldrole="para">N/A</p>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">value</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> Contains the value of the name-value pair that is assigned to the message.</p>
+                <p oldrole="para">The &lt;value&gt; element of name-value pairs can include template functions. For details, see <MadCap:xref href="chapter-manipulating-messages.htm#template-functions"></MadCap:xref>, for examples, see <MadCap:xref href="reference-template-functions.htm#template-function-if"></MadCap:xref>.</p>
+                <p oldrole="para">When used together with message correlation, the &lt;value&gt; element of name-value pairs can include references to the values of earlier messages from the same context. For details, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref>.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis">name</i>: The name of the name-value pair. It can also be used as a macro to reference the assigned value.</p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6><pre class="Code" oldrole="synopsis">&lt;values&gt;
     &lt;value name=".classifier.outcome"&gt;/Success&lt;/value&gt;
 &lt;/values&gt;</pre>
-
-<h2 name="element-patterndb-examples">Element: examples</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<a href="chapter-patterndb.htm">rule</a>/<a href="chapter-patterndb.htm">patterns</a>/<i oldrole="emphasis" role="bold">examples</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A container element for sample log messages that should be recognized by the pattern. These messages can be used also to test the patterns and the parsers.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<p oldrole="para">N/A</p>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">example</i></a></p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<pre class="Code" oldrole="synopsis">&lt;examples&gt;
+        <h2 name="element-patterndb-examples">Element: examples</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<a href="chapter-patterndb.htm">rule</a>/<a href="chapter-patterndb.htm">patterns</a>/<i oldrole="emphasis" role="bold">examples</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A container element for sample log messages that should be recognized by the pattern. These messages can be used also to test the patterns and the parsers.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <p oldrole="para">N/A</p>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">example</i></a>
+                </p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6><pre class="Code" oldrole="synopsis">&lt;examples&gt;
     &lt;example&gt;
         &lt;test_message&gt;Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2&lt;/test_message&gt;
         &lt;test_values&gt;
@@ -771,53 +814,44 @@ while (&lt;&gt;) {
         &lt;/test_values&gt;
     &lt;/example&gt;
 &lt;/examples&gt;</pre>
-
-<h2 name="element-patterndb-example">Element: example</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<a href="chapter-patterndb.htm">rule</a>/<a href="chapter-patterndb.htm">patterns</a>/<a href="chapter-patterndb.htm">examples</a>/<i oldrole="emphasis" role="bold">example</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A container element for a sample log message.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<p oldrole="para">N/A</p>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<MadCap:keyword term="test_message"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis" role="bold">test_message</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A sample log message that should match this pattern. For example:<pre class="Code" oldrole="synopsis">&lt;test_message program="myapplication"&gt;Content filter has been enabled&lt;/test_message&gt;</pre></p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><i oldrole="emphasis">program</i>: The program pattern of the test message. For example:<pre class="Code" oldrole="synopsis">&lt;test_message program="proftpd"&gt;ubuntu (::ffff:192.168.2.179[::ffff:192.168.2.179]) - FTP session closed.&lt;/test_message&gt;</pre></p>
-</li>
-</ul>
-</li>
-<li oldrole="listitem">
-<MadCap:keyword term="test_values"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis" role="bold">test_values</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A container element to test the results of the parsers used in the pattern.</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<MadCap:keyword term="test_value"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis" role="bold">test_value</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> The expected value of the parser when matching the pattern to the test message. For example:<pre class="Code" oldrole="synopsis">&lt;test_value name=".dict.ContentFilter"&gt;enabled&lt;/test_value&gt;</pre></p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-
-<p oldrole="para"><i oldrole="emphasis">name</i>: The name of the parser to test.</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<pre class="Code" oldrole="synopsis">&lt;examples&gt;
+        <h2 name="element-patterndb-example">Element: example</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">rules</a>/<a href="chapter-patterndb.htm">rule</a>/<a href="chapter-patterndb.htm">patterns</a>/<a href="chapter-patterndb.htm">examples</a>/<i oldrole="emphasis" role="bold">example</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A container element for a sample log message.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <p oldrole="para">N/A</p>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <MadCap:keyword term="test_message">
+                </MadCap:keyword>
+                <p oldrole="para"><i oldrole="emphasis" role="bold">test_message</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A sample log message that should match this pattern. For example:<pre class="Code" oldrole="synopsis">&lt;test_message program="myapplication"&gt;Content filter has been enabled&lt;/test_message&gt;</pre></p>
+                <ul oldrole="itemizedlist">
+                    <li oldrole="listitem">
+                        <p oldrole="para"><i oldrole="emphasis">program</i>: The program pattern of the test message. For example:<pre class="Code" oldrole="synopsis">&lt;test_message program="proftpd"&gt;ubuntu (::ffff:192.168.2.179[::ffff:192.168.2.179]) - FTP session closed.&lt;/test_message&gt;</pre></p>
+                    </li>
+                </ul>
+            </li>
+            <li oldrole="listitem">
+                <MadCap:keyword term="test_values">
+                </MadCap:keyword>
+                <p oldrole="para"><i oldrole="emphasis" role="bold">test_values</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A container element to test the results of the parsers used in the pattern.</p>
+                <ul oldrole="itemizedlist">
+                    <li oldrole="listitem">
+                        <MadCap:keyword term="test_value">
+                        </MadCap:keyword>
+                        <p oldrole="para"><i oldrole="emphasis" role="bold">test_value</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> The expected value of the parser when matching the pattern to the test message. For example:<pre class="Code" oldrole="synopsis">&lt;test_value name=".dict.ContentFilter"&gt;enabled&lt;/test_value&gt;</pre></p>
+                        <ul oldrole="itemizedlist">
+                            <li oldrole="listitem">
+                                <p oldrole="para"><i oldrole="emphasis">name</i>: The name of the parser to test.</p>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6><pre class="Code" oldrole="synopsis">&lt;examples&gt;
     &lt;example&gt;
         &lt;test_message&gt;Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2&lt;/test_message&gt;
         &lt;test_values&gt;
@@ -828,184 +862,161 @@ while (&lt;&gt;) {
         &lt;/test_values&gt;
     &lt;/example&gt;
 &lt;/examples&gt;</pre>
-
-<h2 name="patterndb-schema-actions">Element: actions</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<i oldrole="emphasis" role="bold">actions</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A container element for actions that are performed if a message is recognized by the pattern. For details on actions, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref>.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<p oldrole="para">N/A</p>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">action</i></a></p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<MadCap:snippetBlock src="../../shared/chunk/example-patterndb-actions.htm"></MadCap:snippetBlock>
-
-<h2 name="element-patterndb-action">Element: action</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">actions</a>/<i oldrole="emphasis" role="bold">action</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A container element describing an action that is performed when a message matching the rule is received.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<MadCap:keyword term="condition"></MadCap:keyword>
-<MadCap:keyword term="$(context-length)"></MadCap:keyword>
-<MadCap:keyword term="actions:['context-length']"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis">condition</i>: A syslog-ng filter expression. The action is performed only if the message matches the filter. The filter can include macros and name-value pairs extracted from the message. When using actions together with message-correlation, you can also use the <span class="Code" oldrole="parameter">$(context-length)</span> macro, which returns the number of messages in the current context. For example, this can be used to determine if the expected number of messages has arrived to the context: <span class="Code" oldrole="parameter">condition='"$(context-length)" &gt;= "5"'</span></p>
-</li>
-<li oldrole="listitem">
-<MadCap:keyword term="rate"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis">rate</i>: Specifies maximum how many messages should be generated in the specified time period in the following format: <span class="Code" oldrole="userinput">&lt;number-of-messages&gt;/&lt;period-in-seconds&gt;</span>. For example: <span class="Code" oldrole="userinput">1/60</span> allows 1 message per minute. Rates apply within the scope of the context, that is, if <span class="Code" oldrole="userinput">context-scope="host"</span> and <span class="Code" oldrole="userinput">rate="1/60"</span>, then maximum one message is generated per minute for every host that sends a log message matching the rule. Excess messages are dropped. Note that when applying the rate to the generated messages, &amp;abbrev; uses the timestamps of the log messages, similarly to calculating the <span class="Code" oldrole="parameter">context-timeout</span>. That way <span class="Code" oldrole="userinput">rate</span> is applied correctly even if the log messages are processed offline.</p>
-</li>
-<li oldrole="listitem">
-<MadCap:keyword term="trigger"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis">trigger</i>: Specifies when the action is executed. The <span class="Code" oldrole="parameter">trigger</span> attribute has the following possible values:</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<MadCap:keyword term="match"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis">match</i>: Execute the action immediately when a message matching the rule is received.</p>
-</li>
-<li oldrole="listitem">
-<MadCap:keyword term="timeout"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis">timeout</i>: Execute the action when the correlation timer (<a href="chapter-patterndb.htm"><span class="Code" oldrole="parameter">context-timeout</span></a>) of the pattern database rule expires. This is available only if actions are used together with correlating messages.</p>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">create-context</i></a></p>
-</li>
-<li oldrole="listitem">
-<MadCap:keyword term="message"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis" role="bold">message</i>: A container element storing the message to be sent when the action is executed. Currently <MadCap:variable name="General.abbrev"></MadCap:variable> sends these messages to the <span class="Code" oldrole="parameter">internal()</span> destination.</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<MadCap:keyword term="inherit-mode"></MadCap:keyword>
-<MadCap:snippetBlock src="../../shared/chunk/option-inherit-mode.htm"></MadCap:snippetBlock>
-<p oldrole="para">For details on the message context, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref> and <MadCap:xref href="chapter-patterndb.htm#patterndb-actions-correlation"></MadCap:xref>. For details on triggering messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref></p>
-<p oldrole="para">This option is available in <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="ose">3.8</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7.0</MadCap:conditionaltext> and later.</p>
-</li>
-</ul>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<MadCap:keyword term="inherit-properties"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis">inherit-properties</i>: This attribute is deprecated. Use the <span class="Code" oldrole="parameter">inherit-mode</span> attribute instead.</p>
-<p oldrole="para">If set to <span class="Code" oldrole="userinput">TRUE</span>, the original message that triggered the action is cloned, including its name-value pairs and tags.</p>
-<p oldrole="para">If set to <span class="Code" oldrole="parameter">context</span>, <MadCap:variable name="General.abbrev"></MadCap:variable> collects every name-value pair from each message stored in the context, and includes them in the generated message. If a name-value pair appears in multiple messages of the context, the value in the latest message will be used. Note that tags are not merged, the generated message will inherit the tags assigned to the last message of the context.</p>
-<p oldrole="para">For details on the message context, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref> and <MadCap:xref href="chapter-patterndb.htm#patterndb-actions-correlation"></MadCap:xref>. For details on triggering messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref></p>
-<p condition="pe" oldrole="para">This option is available in <MadCap:variable name="General.abbrev"></MadCap:variable> 5.3.2 and later.</p>
-</li>
-</ul>
-</li>
-<li oldrole="listitem">
-
-<p oldrole="para"><i oldrole="emphasis" role="bold">values</i>: A container element for values and fields that are used to create the message generated by the action.</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-
-<p oldrole="para"><i oldrole="emphasis" role="bold">value</i>: Sets the value of the message field specified in the <span class="Code" oldrole="parameter">name</span> attribute of the element. For example, to specify the body of the generated message, use the following syntax:</p>
-<pre class="Code" oldrole="synopsis">&lt;value name="MESSAGE"&gt;A log message matched rule number $.classifier.rule_id&lt;/value&gt;</pre>
-<p oldrole="para">Note that currently it is not possible to add DATE, FACILITY, or SEVERITY fields to the message.</p>
-<p oldrole="para">When the action is used together with message correlation, the <MadCap:variable name="General.abbrev"></MadCap:variable> application automatically adds fields to the message based on the <span class="Code" oldrole="parameter">context-scope</span> parameter. For example, using <span class="Code" oldrole="userinput">context-scope="process"</span> automatically fills the HOST, PROGRAM, and PID fields of the generated message.</p>
-</li>
-<li oldrole="listitem">
-
-<p oldrole="para"><i oldrole="emphasis">name</i>: Name of the message field set by the <span class="Code" oldrole="parameter">value</span> element.</p>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<MadCap:snippetBlock src="../../shared/chunk/example-patterndb-actions.htm"></MadCap:snippetBlock>
-
-<h2 name="element-patterndb-create-context">Element: create-context</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">actions</a>/<a href="chapter-patterndb.htm">action</a>/<i oldrole="emphasis" role="bold">create-context</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> Creates a new correlation context from the current message and its associated context. This can be used to "split" a context.</p>
-<p oldrole="para">Available in <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="ose">3.8</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7</MadCap:conditionaltext> and later.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<MadCap:keyword term="context-id"></MadCap:keyword>
-<MadCap:keyword term="context-scope"></MadCap:keyword>
-<MadCap:keyword term="context-timeout"></MadCap:keyword>
-<ul oldrole="itemizedlist">
-<MadCap:snippetBlock src="../../shared/chunk/patterndb-context-attributes.htm"></MadCap:snippetBlock>
-</ul>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<MadCap:keyword term="message"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis" role="bold">message</i>: A container element storing the message that is added to the new context when the action is executed.</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<MadCap:keyword term="inherit-mode"></MadCap:keyword>
-<MadCap:snippetBlock src="../../shared/chunk/option-inherit-mode.htm"></MadCap:snippetBlock>
-<p oldrole="para">For details on the message context, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref> and <MadCap:xref href="chapter-patterndb.htm#patterndb-actions-correlation"></MadCap:xref>. For details on triggering messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref></p>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<MadCap:snippetBlock src="../../shared/chunk/example-create-context-action.htm"></MadCap:snippetBlock>
-
-<h2 name="element-patterndb-tags">Element: tags</h2>
-
-<h6 oldrole="simplesect">Location</h6>
-<p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<i oldrole="emphasis" role="bold">tags</i></p>
-
-
-<h6 oldrole="simplesect">Description</h6>
-<p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> An element containing custom keywords (tags) about the messages matching the patterns. The tags can be used to label specific events (for example user logons). It is also possible to filter on these tags later (for details, see <MadCap:xref href="chapter-routing-filters.htm#tagging-messages"></MadCap:xref>). Starting with <MadCap:variable name="General.product"></MadCap:variable> 3.2, the list of tags assigned to a message can be referenced with the <span class="Code" oldrole="parameter">${TAGS}</span> macro.</p>
-
-
-<h6 oldrole="simplesect">Attributes</h6>
-<p oldrole="para">N/A</p>
-
-
-<h6 oldrole="simplesect">Children</h6>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-
-<p oldrole="para"><i oldrole="emphasis" role="bold">tag</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A keyword or tags applied to messages matching the rule.</p>
-</li>
-</ul>
-
-
-<h6 oldrole="simplesect">Example</h6>
-<pre class="Code" oldrole="synopsis">&lt;tags&gt;&lt;tag&gt;UserLogin&lt;/tag&gt;&lt;/tags&gt;</pre>
-
-</body></html>
+        <h2 name="patterndb-schema-actions">Element: actions</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<i oldrole="emphasis" role="bold">actions</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A container element for actions that are performed if a message is recognized by the pattern. For details on actions, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref>.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <p oldrole="para">N/A</p>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">action</i></a>
+                </p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6>
+        <MadCap:snippetBlock src="../../shared/chunk/example-patterndb-actions.htm">
+        </MadCap:snippetBlock>
+        <h2 name="element-patterndb-action">Element: action</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">actions</a>/<i oldrole="emphasis" role="bold">action</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A container element describing an action that is performed when a message matching the rule is received.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <MadCap:keyword term="condition">
+                </MadCap:keyword>
+                <MadCap:keyword term="$(context-length)">
+                </MadCap:keyword>
+                <MadCap:keyword term="actions:['context-length']">
+                </MadCap:keyword>
+                <p oldrole="para"><i oldrole="emphasis">condition</i>: A syslog-ng filter expression. The action is performed only if the message matches the filter. The filter can include macros and name-value pairs extracted from the message. When using actions together with message-correlation, you can also use the <span class="Code" oldrole="parameter">$(context-length)</span> macro, which returns the number of messages in the current context. For example, this can be used to determine if the expected number of messages has arrived to the context: <span class="Code" oldrole="parameter">condition='"$(context-length)" &gt;= "5"'</span></p>
+            </li>
+            <li oldrole="listitem">
+                <MadCap:keyword term="rate">
+                </MadCap:keyword>
+                <p oldrole="para"><i oldrole="emphasis">rate</i>: Specifies maximum how many messages should be generated in the specified time period in the following format: <span class="Code" oldrole="userinput">&lt;number-of-messages&gt;/&lt;period-in-seconds&gt;</span>. For example: <span class="Code" oldrole="userinput">1/60</span> allows 1 message per minute. Rates apply within the scope of the context, that is, if <span class="Code" oldrole="userinput">context-scope="host"</span> and <span class="Code" oldrole="userinput">rate="1/60"</span>, then maximum one message is generated per minute for every host that sends a log message matching the rule. Excess messages are dropped. Note that when applying the rate to the generated messages, &amp;abbrev; uses the timestamps of the log messages, similarly to calculating the <span class="Code" oldrole="parameter">context-timeout</span>. That way <span class="Code" oldrole="userinput">rate</span> is applied correctly even if the log messages are processed offline.</p>
+            </li>
+            <li oldrole="listitem">
+                <MadCap:keyword term="trigger">
+                </MadCap:keyword>
+                <p oldrole="para"><i oldrole="emphasis">trigger</i>: Specifies when the action is executed. The <span class="Code" oldrole="parameter">trigger</span> attribute has the following possible values:</p>
+                <ul oldrole="itemizedlist">
+                    <li oldrole="listitem">
+                        <MadCap:keyword term="match">
+                        </MadCap:keyword>
+                        <p oldrole="para"><i oldrole="emphasis">match</i>: Execute the action immediately when a message matching the rule is received.</p>
+                    </li>
+                    <li oldrole="listitem">
+                        <MadCap:keyword term="timeout">
+                        </MadCap:keyword>
+                        <p oldrole="para"><i oldrole="emphasis">timeout</i>: Execute the action when the correlation timer (<a href="chapter-patterndb.htm"><span class="Code" oldrole="parameter">context-timeout</span></a>) of the pattern database rule expires. This is available only if actions are used together with correlating messages.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><a href="chapter-patterndb.htm"><i oldrole="emphasis" role="bold">create-context</i></a>
+                </p>
+            </li>
+            <li oldrole="listitem">
+                <MadCap:keyword term="message">
+                </MadCap:keyword>
+                <p oldrole="para"><i oldrole="emphasis" role="bold">message</i>: A container element storing the message to be sent when the action is executed. Currently <MadCap:variable name="General.abbrev"></MadCap:variable> sends these messages to the <span class="Code" oldrole="parameter">internal()</span> destination.</p>
+                <ul oldrole="itemizedlist">
+                    <li oldrole="listitem">
+                        <MadCap:keyword term="inherit-mode">
+                        </MadCap:keyword>
+                        <MadCap:snippetBlock src="../../shared/chunk/option-inherit-mode.htm">
+                        </MadCap:snippetBlock>
+                        <p oldrole="para">For details on the message context, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref> and <MadCap:xref href="chapter-patterndb.htm#patterndb-actions-correlation"></MadCap:xref>. For details on triggering messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref></p>
+                        <p oldrole="para">This option is available in <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="ose">3.8</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7.0</MadCap:conditionaltext> and later.</p>
+                    </li>
+                </ul>
+                <ul oldrole="itemizedlist">
+                    <li oldrole="listitem">
+                        <MadCap:keyword term="inherit-properties">
+                        </MadCap:keyword>
+                        <p oldrole="para"><i oldrole="emphasis">inherit-properties</i>: This attribute is deprecated. Use the <span class="Code" oldrole="parameter">inherit-mode</span> attribute instead.</p>
+                        <p oldrole="para">If set to <span class="Code" oldrole="userinput">TRUE</span>, the original message that triggered the action is cloned, including its name-value pairs and tags.</p>
+                        <p oldrole="para">If set to <span class="Code" oldrole="parameter">context</span>, <MadCap:variable name="General.abbrev"></MadCap:variable> collects every name-value pair from each message stored in the context, and includes them in the generated message. If a name-value pair appears in multiple messages of the context, the value in the latest message will be used. Note that tags are not merged, the generated message will inherit the tags assigned to the last message of the context.</p>
+                        <p oldrole="para">For details on the message context, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref> and <MadCap:xref href="chapter-patterndb.htm#patterndb-actions-correlation"></MadCap:xref>. For details on triggering messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref></p>
+                        <p condition="pe" oldrole="para">This option is available in <MadCap:variable name="General.abbrev"></MadCap:variable> 5.3.2 and later.</p>
+                    </li>
+                </ul>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">values</i>: A container element for values and fields that are used to create the message generated by the action.</p>
+                <ul oldrole="itemizedlist">
+                    <li oldrole="listitem">
+                        <p oldrole="para"><i oldrole="emphasis" role="bold">value</i>: Sets the value of the message field specified in the <span class="Code" oldrole="parameter">name</span> attribute of the element. For example, to specify the body of the generated message, use the following syntax:</p><pre class="Code" oldrole="synopsis">&lt;value name="MESSAGE"&gt;A log message matched rule number $.classifier.rule_id&lt;/value&gt;</pre>
+                        <p oldrole="para">Note that currently it is not possible to add DATE, FACILITY, or SEVERITY fields to the message.</p>
+                        <p oldrole="para">When the action is used together with message correlation, the <MadCap:variable name="General.abbrev"></MadCap:variable> application automatically adds fields to the message based on the <span class="Code" oldrole="parameter">context-scope</span> parameter. For example, using <span class="Code" oldrole="userinput">context-scope="process"</span> automatically fills the HOST, PROGRAM, and PID fields of the generated message.</p>
+                    </li>
+                    <li oldrole="listitem">
+                        <p oldrole="para"><i oldrole="emphasis">name</i>: Name of the message field set by the <span class="Code" oldrole="parameter">value</span> element.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6>
+        <MadCap:snippetBlock src="../../shared/chunk/example-patterndb-actions.htm">
+        </MadCap:snippetBlock>
+        <h2 name="element-patterndb-create-context">Element: create-context</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<a href="chapter-patterndb.htm">actions</a>/<a href="chapter-patterndb.htm">action</a>/<i oldrole="emphasis" role="bold">create-context</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> Creates a new correlation context from the current message and its associated context. This can be used to "split" a context.</p>
+        <p oldrole="para">Available in <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="ose">3.8</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7</MadCap:conditionaltext> and later.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <MadCap:keyword term="context-id">
+        </MadCap:keyword>
+        <MadCap:keyword term="context-scope">
+        </MadCap:keyword>
+        <MadCap:keyword term="context-timeout">
+        </MadCap:keyword>
+        <ul oldrole="itemizedlist">
+            <MadCap:snippetBlock src="../../shared/chunk/patterndb-context-attributes.htm">
+            </MadCap:snippetBlock>
+        </ul>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <MadCap:keyword term="message">
+                </MadCap:keyword>
+                <p oldrole="para"><i oldrole="emphasis" role="bold">message</i>: A container element storing the message that is added to the new context when the action is executed.</p>
+                <ul oldrole="itemizedlist">
+                    <li oldrole="listitem">
+                        <MadCap:keyword term="inherit-mode">
+                        </MadCap:keyword>
+                        <MadCap:snippetBlock src="../../shared/chunk/option-inherit-mode.htm">
+                        </MadCap:snippetBlock>
+                        <p oldrole="para">For details on the message context, see <MadCap:xref href="chapter-patterndb.htm#patterndb-correlation"></MadCap:xref> and <MadCap:xref href="chapter-patterndb.htm#patterndb-actions-correlation"></MadCap:xref>. For details on triggering messages, see <MadCap:xref href="chapter-patterndb.htm#patterndb-triggers-actions"></MadCap:xref></p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6>
+        <MadCap:snippetBlock src="../../shared/chunk/example-create-context-action.htm">
+        </MadCap:snippetBlock>
+        <h2 name="element-patterndb-tags">Element: tags</h2>
+        <h6 oldrole="simplesect">Location</h6>
+        <p oldrole="para">/<a href="chapter-patterndb.htm">patterndb</a>/<a href="chapter-patterndb.htm">ruleset</a>/<i oldrole="emphasis" role="bold">tags</i></p>
+        <h6 oldrole="simplesect">Description</h6>
+        <p oldrole="para">OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> An element containing custom keywords (tags) about the messages matching the patterns. The tags can be used to label specific events (for example user logons). It is also possible to filter on these tags later (for details, see <MadCap:xref href="chapter-routing-filters.htm#tagging-messages"></MadCap:xref>). Starting with <MadCap:variable name="General.product"></MadCap:variable> 3.2, the list of tags assigned to a message can be referenced with the <span class="Code" oldrole="parameter">${TAGS}</span> macro.</p>
+        <h6 oldrole="simplesect">Attributes</h6>
+        <p oldrole="para">N/A</p>
+        <h6 oldrole="simplesect">Children</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para"><i oldrole="emphasis" role="bold">tag</i>: OPTIONAL <MadCap:variable name="General.mdash"></MadCap:variable> A keyword or tags applied to messages matching the rule.</p>
+            </li>
+        </ul>
+        <h6 oldrole="simplesect">Example</h6><pre class="Code" oldrole="synopsis">&lt;tags&gt;&lt;tag&gt;UserLogin&lt;/tag&gt;&lt;/tags&gt;</pre>
+    </body>
+</html>

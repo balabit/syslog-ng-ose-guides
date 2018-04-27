@@ -1,33 +1,42 @@
-
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="proc-conf-relay" oldrole="procedure">
-<h1 name="proc-conf-relay" xmlns="http://docbook.org/ns/docbook">syslog-ng PE as a relay</h1>
-<h6 oldrole="formalpara">Purpose:</h6>
-
-<p oldrole="para">As mentioned earlier, <MadCap:variable name="General.abbrev"></MadCap:variable> can be turned into a relay. This functionality is often used on larger networks, or when logs are collected from network devices using UDP and forwarded to a central location using the more reliable TCP or RLTP protocols. When used as a relay, <MadCap:variable name="General.abbrev"></MadCap:variable> does not store the logs locally, but forwards them immediately to the central <MadCap:variable name="General.abbrev"></MadCap:variable> server.</p>
-<p oldrole="para">In this example, a <MadCap:variable name="General.abbrev"></MadCap:variable> Linux client is reconfigured as a relay.</p>
-<h6 oldrole="formalpara">Steps:</h6>
-
-<ol oldrole="procedure"><li oldrole="step">
-<p oldrole="para">Open <span class="Code" oldrole="filename">/opt/syslog-ng/etc/syslog-ng.conf</span> in a text editor</p>
-</li><li oldrole="step">
-<p oldrole="para">Remove the current log statement: starting with line <b oldrole="command">log {</b>, delete everything until the end of the file</p>
-</li><li oldrole="step">
-<p oldrole="para">Add a new UDP source for router logs:</p>
-<pre class="Code" oldrole="synopsis">source s_udp {udp();}; </pre>
-</li><li oldrole="step">
-<p oldrole="para">Add a new log path for storing local logs locally:</p>
-<pre class="Code" oldrole="synopsis">log { source(s_local); destination(d_messages); };</pre>
-</li><li oldrole="step">
-<p oldrole="para">Add a new log path for sending both local messages and logs collected from the UDP source to the central server:</p>
-<pre class="Code" oldrole="synopsis">log {
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="proc-conf-relay" oldrole="procedure">
+        <h1 name="proc-conf-relay" xmlns="http://docbook.org/ns/docbook">syslog-ng PE as a relay</h1>
+        <h6 oldrole="formalpara">Purpose:</h6>
+        <p oldrole="para">As mentioned earlier, <MadCap:variable name="General.abbrev"></MadCap:variable> can be turned into a relay. This functionality is often used on larger networks, or when logs are collected from network devices using UDP and forwarded to a central location using the more reliable TCP or RLTP protocols. When used as a relay, <MadCap:variable name="General.abbrev"></MadCap:variable> does not store the logs locally, but forwards them immediately to the central <MadCap:variable name="General.abbrev"></MadCap:variable> server.</p>
+        <p oldrole="para">In this example, a <MadCap:variable name="General.abbrev"></MadCap:variable> Linux client is reconfigured as a relay.</p>
+        <h6 oldrole="formalpara">Steps:</h6>
+        <ol oldrole="procedure">
+            <li oldrole="step">
+                <p oldrole="para">Open <span class="Code" oldrole="filename">/opt/syslog-ng/etc/syslog-ng.conf</span> in a text editor</p>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Remove the current log statement: starting with line <b oldrole="command">log {</b>, delete everything until the end of the file</p>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Add a new UDP source for router logs:</p><pre class="Code" oldrole="synopsis">source s_udp {udp();}; </pre>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Add a new log path for storing local logs locally:</p><pre class="Code" oldrole="synopsis">log { source(s_local); destination(d_messages); };</pre>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Add a new log path for sending both local messages and logs collected from the UDP source to the central server:</p><pre class="Code" oldrole="synopsis">log {
     source(s_local);
     source(s_udp);
     destination(d_logserver);
 };</pre>
-</li><li oldrole="step">
-<p oldrole="para"><i oldrole="emphasis">Validating the changes</i></p>
-<p oldrole="para">Test the relay by executing the following command on the relay machine:</p>
-<p oldrole="para"><b oldrole="command">/opt/syslog-ng/bin/loggen -i -D localhost 514</b></p>
-<p oldrole="para">It generates about a thousand messages a second and sends to the UDP port of the local <MadCap:variable name="General.abbrev"></MadCap:variable> relay. Executing <b oldrole="command">tail /var/log/messages</b> should not show any of the generated messages on the relay, but doing the same on the server machine should show a large number of similar lines:</p>
-<pre class="Code" oldrole="synopsis">Sep 20 21:18:09 relayhost prg00000[1234]: seq: 0000009458, thread: 0000, runid: 1379704679, stamp: 2013-09-20T21:18:09 PADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADD</pre>
-</li></ol></body></html>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para"><i oldrole="emphasis">Validating the changes</i>
+                </p>
+                <p oldrole="para">Test the relay by executing the following command on the relay machine:</p>
+                <p oldrole="para"><b oldrole="command">/opt/syslog-ng/bin/loggen -i -D localhost 514</b>
+                </p>
+                <p oldrole="para">It generates about a thousand messages a second and sends to the UDP port of the local <MadCap:variable name="General.abbrev"></MadCap:variable> relay. Executing <b oldrole="command">tail /var/log/messages</b> should not show any of the generated messages on the relay, but doing the same on the server machine should show a large number of similar lines:</p><pre class="Code" oldrole="synopsis">Sep 20 21:18:09 relayhost prg00000[1234]: seq: 0000009458, thread: 0000, runid: 1379704679, stamp: 2013-09-20T21:18:09 PADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADD</pre>
+            </li>
+        </ol>
+    </body>
+</html>
