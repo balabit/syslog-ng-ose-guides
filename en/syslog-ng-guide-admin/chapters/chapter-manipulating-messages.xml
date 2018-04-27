@@ -38,10 +38,18 @@
         </itemizedlist>
         <section xml:id="concepts-macro">
             <title>Formatting messages, filenames, directories, and tablenames</title>
-            <indexterm> <primary>formatting messages</primary> </indexterm>
-            <indexterm> <primary>templates</primary> </indexterm>
-            <indexterm> <primary>message templates</primary> </indexterm>
-            <indexterm> <primary>macros</primary> </indexterm>
+            <indexterm>
+                <primary>formatting messages</primary>
+            </indexterm>
+            <indexterm>
+                <primary>templates</primary>
+            </indexterm>
+            <indexterm>
+                <primary>message templates</primary>
+            </indexterm>
+            <indexterm>
+                <primary>macros</primary>
+            </indexterm>
             <para>The &abbrev; application can dynamically create filenames, directories, or names of database tables using macros that help you organize your log messages. Macros refer to a property or a part of the log message, for example, the <parameter>${HOST}</parameter> macro refers to the name or IP address of the client that sent the log message, while <parameter>${DAY}</parameter> is the day of the month when syslog-ng has received the message. Using these macros in the path of the destination log files allows you for example to collect the logs of every host into separate files for every day.</para>
             <para>A set of macros can be defined as a template object and used in multiple destinations.</para>
             <para>Another use of macros and templates is to customize the format of the syslog message, for example, to add elements of the message header to the message text.</para>
@@ -60,14 +68,19 @@
         </section>
         <section xml:id="configuring-macros">
             <title>Templates and macros</title>
-            <!-- FIXME the template+macro, parser and rewrite sections should be moved into a common section -->
-            <indexterm significance="preferred"> <primary>templates</primary> </indexterm>
+<!-- FIXME the template+macro, parser and rewrite sections should be moved into a common section -->
+            <indexterm significance="preferred">
+                <primary>templates</primary>
+            </indexterm>
             <para>The &abbrev; application allows you to define message templates, and reference them from every object that can use a template. Templates can include strings, macros (for example date, the hostname, and so on), and template functions. For example, you can use templates to create standard message formats or filenames. For a list of macros available in &product;, see <xref linkend="reference-macros"/>.<phrase condition="pe6"> For the macros of the syslog-ng Agent for Windows application, see <olink targetdoc="syslog-ng-windows-agent-guide-admin" targetptr="chapter-format"/>.</phrase> Fields from the structured data (SD) part of messages using the new IETF-syslog standard can also be used as macros.</para>
             <formalpara>
                 <title>Declaration:</title>
                 <para/>
             </formalpara>
-            <indexterm> <primary>templates</primary> <secondary>defining</secondary> </indexterm>
+            <indexterm>
+                <primary>templates</primary>
+                <secondary>defining</secondary>
+            </indexterm>
             <synopsis>template &lt;template-name&gt; {
     template("&lt;template-expression&gt;") &lt;template-escape(yes)&gt;;
 };</synopsis>
@@ -82,17 +95,29 @@ template second-template "The result of the first-template is: $(template first-
     file ("/var/log/messages" template("${ISODATE} ${HOST} ${MSG}\n") );
 };</synopsis>
             <para>Macros can be included by prefixing the macro name with a <userinput>$</userinput> sign, just like in Bourne compatible shells. Although using braces around macro names is not mandatory, and the <userinput>"$MSG"</userinput> and <userinput>"${MSG}"</userinput> formats are equivalent, using the <userinput>"${MSG}"</userinput> format is recommended for clarity.</para>
-            <indexterm> <primary>templates</primary> <secondary>literal $</secondary> </indexterm>
-            <indexterm> <primary>templates</primary> <secondary>escaping</secondary> </indexterm>
+            <indexterm>
+                <primary>templates</primary>
+                <secondary>literal $</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>templates</primary>
+                <secondary>escaping</secondary>
+            </indexterm>
             <para>To use a literal <userinput>$</userinput> character in a template, you have to escape it. In &abbrev; versions <phrase condition="pe">4.0-4.2</phrase><phrase condition="ose">3.4 and earlier</phrase>, use a backslash (<userinput>\$</userinput>). In version <phrase condition="pe">5.0</phrase><phrase condition="ose">3.5</phrase> and later, use <userinput>$$</userinput>.</para>
             <xi:include href="../../shared/wnt/note-escape-at.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-            <indexterm> <primary>macros</primary> <secondary>default value</secondary> </indexterm>
+            <indexterm>
+                <primary>macros</primary>
+                <secondary>default value</secondary>
+            </indexterm>
             <para>Default values for macros can also be specified by appending the <userinput>:-</userinput> characters and the default value of the macro. If a message does not contain the field referred to by the macro, or it is empty, the default value will be used when expanding the macro. For example, if a message does not contain a hostname, the following macro can specify a default hostname.</para>
             <synopsis>${HOST:-default_hostname}</synopsis>
             <para>By default, syslog-ng sends messages using the following template: <userinput>${ISODATE} ${HOST} ${MSGHDR}${MSG}\n</userinput>. (The <userinput>${MSGHDR}${MSG}</userinput> part is written together because the <parameter>${MSGHDR}</parameter> macro includes a trailing whitespace.)</para>
             <example>
                 <title>Using templates and macros</title>
-                <indexterm> <primary>templates</primary> <secondary>example</secondary> </indexterm>
+                <indexterm>
+                    <primary>templates</primary>
+                    <secondary>example</secondary>
+                </indexterm>
                 <para>The following template (<userinput>t_demo_filetemplate</userinput>) adds the date of the message and the name of the host sending the message to the beginning of the message text. The template is then used in a file destination: messages sent to this destination (<userinput>d_file</userinput>) will use the message format defined in the template.</para>
                 <synopsis>template t_demo_filetemplate {
     template("${ISODATE} ${HOST} ${MSG}\n"); };
@@ -108,7 +133,10 @@ template t_demo_template-without-braces "${ISODATE} ${HOST} ${MSG}\n";
                 <synopsis>destination d_file {
     file ("/var/log/messages" template("${ISODATE} ${HOST} ${MSG}\n") );
 };</synopsis>
-                <indexterm> <primary>macros</primary> <secondary>in filenames</secondary> </indexterm>
+                <indexterm>
+                    <primary>macros</primary>
+                    <secondary>in filenames</secondary>
+                </indexterm>
                 <para>The following file destination uses macros to daily create separate logfiles for every client host.</para>
                 <synopsis>destination d_file {
         file("/var/log/${YEAR}.${MONTH}.${DAY}/${HOST}.log");
@@ -120,7 +148,10 @@ template t_demo_template-without-braces "${ISODATE} ${HOST} ${MSG}\n";
         </section>
         <section xml:id="date-macros">
             <title>Date-related macros</title>
-            <indexterm> <primary>macros</primary> <secondary>date-related</secondary> </indexterm>
+            <indexterm>
+                <primary>macros</primary>
+                <secondary>date-related</secondary>
+            </indexterm>
             <para>The macros related to the date of the message (for example: <parameter>${ISODATE}</parameter>, <parameter>${HOUR}</parameter>, and so on) have three further variants each:</para>
             <itemizedlist>
                 <listitem>
@@ -210,9 +241,16 @@ template t_demo_template-without-braces "${ISODATE} ${HOST} ${MSG}\n";
         </section>
         <section xml:id="macros-hard-vs-soft">
             <title>Hard vs. soft macros</title>
-            <indexterm> <primary>macros</primary> <secondary>hard and soft macros</secondary> </indexterm>
-            <indexterm> <primary>hard macros</primary> </indexterm>
-            <indexterm> <primary>soft macros</primary> </indexterm>
+            <indexterm>
+                <primary>macros</primary>
+                <secondary>hard and soft macros</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>hard macros</primary>
+            </indexterm>
+            <indexterm>
+                <primary>soft macros</primary>
+            </indexterm>
             <para>Hard macros contain data that is directly derived from the log message, for example, the ${MONTH} macro derives its value from the timestamp. Hard macros are read-only. Soft macros (sometimes also called name-value pairs) are either built-in macros automatically generated from the log message (for example, ${HOST}), or custom user-created macros generated by using the syslog-ng pattern database or a CSV-parser. In contrast to hard macros, soft macros are writable and can be modified within &abbrev;, for example, using rewrite rules.</para>
             <para>Hard and soft macros are rather similar and often treated as equivalent. Macros are most commonly used in filters and templates, which does not modify the value of the macro, so both soft and hard macros can be used. However, it is not possible to change the values of hard macros in rewrite rules or via any other means.</para>
             <para>The following macros in &abbrev; are hard macros and cannot be modified: <parameter>BSDTAG</parameter>, <parameter>CONTEXT_ID</parameter>, <parameter>DATE</parameter>, <parameter>DAY</parameter>, <parameter>FACILITY_NUM</parameter>, <parameter>FACILITY</parameter>, <parameter>FULLDATE</parameter>, <parameter>HOUR</parameter>, <parameter>ISODATE</parameter>, <parameter>LEVEL_NUM</parameter>, <parameter>LEVEL</parameter>, <parameter>MIN</parameter>, <parameter>MONTH_ABBREV</parameter>, <parameter>MONTH_NAME</parameter>, <parameter>MONTH</parameter>, <parameter>MONTH_WEEK</parameter>, <parameter/>, <parameter>PRIORITY</parameter>, <parameter>PRI</parameter>, <parameter>RCPTID</parameter>, <parameter>SDATA</parameter>, <parameter>SEC</parameter>, <parameter>SEQNUM</parameter>, <parameter>SOURCEIP</parameter>, <parameter>STAMP</parameter>, <parameter>TAG</parameter>, <parameter>TAGS</parameter>, <parameter>TZOFFSET</parameter>, <parameter>TZ</parameter>, <parameter>UNIXTIME</parameter>, <parameter>WEEK_DAY_ABBREV</parameter>, <parameter>WEEK_DAY_NAME</parameter>, <parameter>WEEK_DAY</parameter>, <parameter>WEEK</parameter>, <parameter>YEAR_DAY</parameter>, <parameter>YEAR</parameter>.</para>
@@ -221,8 +259,13 @@ template t_demo_template-without-braces "${ISODATE} ${HOST} ${MSG}\n";
         <xi:include href="reference-macros.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <section xml:id="template-functions">
             <title>Using template functions</title>
-            <indexterm> <primary>template functions</primary> </indexterm>
-            <indexterm> <primary>templates</primary> <secondary>template functions</secondary> </indexterm>
+            <indexterm>
+                <primary>template functions</primary>
+            </indexterm>
+            <indexterm>
+                <primary>templates</primary>
+                <secondary>template functions</secondary>
+            </indexterm>
             <para>A template function is a transformation: it modifies the way macros or name-value pairs are expanded. Template functions can be used in template definitions, or when macros are used in the configuration of &abbrev;. Template functions use the following syntax:</para>
             <synopsis>$(function-name parameter1 parameter2 parameter3 ...)</synopsis>
             <para>For example, the <parameter>$(echo)</parameter> template function simply returns the value of the macro it receives as a parameter, thus <userinput>$(echo ${HOST})</userinput> is equivalent to <parameter>${HOST}</parameter>.</para>
@@ -269,22 +312,37 @@ template-function my-template-function "$(my-custom-header-template) message-len
     </section>
     <section xml:id="modifying-messages">
         <title>Modifying messages using rewrite rules</title>
-        <indexterm> <primary>rewriting messages</primary> <secondary>concepts of</secondary> </indexterm>
-        <indexterm> <primary>rewrite rules</primary> </indexterm>
-        <indexterm> <primary>rewriting messages</primary> </indexterm>
-        <indexterm> <primary>sedding messages</primary> </indexterm>
-        <indexterm> <primary>replacing message text</primary> </indexterm>
+        <indexterm>
+            <primary>rewriting messages</primary>
+            <secondary>concepts of</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>rewrite rules</primary>
+        </indexterm>
+        <indexterm>
+            <primary>rewriting messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>sedding messages</primary>
+        </indexterm>
+        <indexterm>
+            <primary>replacing message text</primary>
+        </indexterm>
         <para>The syslog-ng application can rewrite parts of the messages using rewrite rules. Rewrite rules are global objects similar to parsers and filters and can be used in log paths. The syslog-ng application has two methods to rewrite parts of the log messages: substituting (setting) a part of the message to a fix value, and a general search-and-replace mode.</para>
         <para>Substitution completely replaces a specific part of the message that is referenced using a built-in or user-defined macro.</para>
         <para>General rewriting searches for a string in the entire message (or only a part of the message specified by a macro) and replaces it with another string. Optionally, this replacement string can be a template that contains macros.</para>
         <para>Rewriting messages is often used in conjunction with message parsing <xref linkend="chapter-parsers"/>.</para>
         <para>Rewrite rules are similar to filters: they must be defined in the syslog-ng configuration file and used in the log statement. You can also define the rewrite rule inline in the log path.</para>
-        <!-- FIXME options should be restructured to simplesects -->
+<!-- FIXME options should be restructured to simplesects -->
         <xi:include href="../../shared/wnt/note-element-order.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
         <section xml:id="rewrite-replace">
             <title>Replacing message parts</title>
-            <indexterm type="parameter"> <primary>rewrite()</primary> </indexterm>
-            <indexterm type="parameter"> <primary>subst()</primary> </indexterm>
+            <indexterm type="parameter">
+                <primary>rewrite()</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>subst()</primary>
+            </indexterm>
             <para>To replace a part of the log message, you have to:</para>
             <itemizedlist>
                 <listitem>
@@ -329,8 +387,12 @@ template-function my-template-function "$(my-custom-header-template) message-len
         </section>
         <section xml:id="rewrite-set">
             <title>Setting message fields to specific values</title>
-            <indexterm> <primary>setting message fields</primary> </indexterm>
-            <indexterm type="parameter"> <primary>set()</primary> </indexterm>
+            <indexterm>
+                <primary>setting message fields</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>set()</primary>
+            </indexterm>
             <para>To set a field of the message to a specific value, you have to:</para>
             <itemizedlist>
                 <listitem>
@@ -381,8 +443,12 @@ template-function my-template-function "$(my-custom-header-template) message-len
         </section>
         <section xml:id="rewrite-unset" condition="pe">
             <title>Unsetting message fields</title>
-            <indexterm> <primary>unsetting message fields</primary> </indexterm>
-            <indexterm type="parameter"> <primary>unset()</primary> </indexterm>
+            <indexterm>
+                <primary>unsetting message fields</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>unset()</primary>
+            </indexterm>
             <para>You can unset a macro or a field of the message, including any user-defined macros created using parsers (for details, see <xref linkend="chapter-parsers"/> and <xref linkend="chapter-patterndb"/>). Hard macros cannot be modified. For details on hard and soft macros, see <xref linkend="macros-hard-vs-soft"/>). Note that the unset operation completely deletes any previous value of the field that you apply it on. Use the following syntax:</para>
             <formalpara>
                 <title>Declaration:</title>
@@ -412,9 +478,15 @@ template-function my-template-function "$(my-custom-header-template) message-len
         </section>
         <section xml:id="custom-sdata-fields">
             <title>Creating custom SDATA fields</title>
-            <indexterm> <primary>setting message fields</primary> </indexterm>
-            <indexterm> <primary>creating SDATA fields</primary> </indexterm>
-            <indexterm> <primary>modifying SDATA</primary> </indexterm>
+            <indexterm>
+                <primary>setting message fields</primary>
+            </indexterm>
+            <indexterm>
+                <primary>creating SDATA fields</primary>
+            </indexterm>
+            <indexterm>
+                <primary>modifying SDATA</primary>
+            </indexterm>
             <para>If you use RFC5424-formatted (IETF-syslog) messages, you can also create custom fields in the SDATA part of the message (For details on the SDATA message part, see <xref linkend="ietfsyslog-structureddata"/>). According to RFC5424, the name of the field (its SD-ID) must not contain the <userinput>@</userinput> character for reserved SD-IDs. Custom SDATA fields must be in the following format: <userinput>.SDATA.group-name@&lt;private enterprise number>.field-name</userinput>, for example, <userinput>.SDATA.mySDATA-field-group@18372.4.mySDATA-field</userinput>. (18372.4 is the private enterprise number of &fullvendor;, the developer of &abbrev;.)</para>
             <example>
                 <title>Rewriting custom SDATA fields</title>
@@ -433,8 +505,13 @@ template-function my-template-function "$(my-custom-header-template) message-len
         </section>
         <section xml:id="rewrite-groupset">
             <title>Setting multiple message fields to specific values</title>
-            <indexterm> <primary>setting message fields</primary> <secondary>setting multiple fields</secondary> </indexterm>
-            <indexterm type="parameter"> <primary>groupset()</primary> </indexterm>
+            <indexterm>
+                <primary>setting message fields</primary>
+                <secondary>setting multiple fields</secondary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>groupset()</primary>
+            </indexterm>
             <para>The <parameter>groupset()</parameter> rewrite rule allows you to modify the value of multiple message fields at once, for example, to change the value of sensitive fields extracted using patterndb, or received in a JSON format.</para>
             <itemizedlist>
                 <listitem>
@@ -486,11 +563,22 @@ template-function my-template-function "$(my-custom-header-template) message-len
         </section>
         <section xml:id="conditional-rewrite">
             <title>Conditional rewrites</title>
-            <indexterm type="parameter"> <primary>condition()</primary> </indexterm>
-            <indexterm> <primary>conditional rewrites</primary> </indexterm>
-            <indexterm> <primary>rewrite if</primary> </indexterm>
-            <indexterm> <primary>rewriting messages</primary> <secondary>conditional rewrites</secondary> </indexterm>
-            <indexterm> <primary>filtering rewrites</primary> </indexterm>
+            <indexterm type="parameter">
+                <primary>condition()</primary>
+            </indexterm>
+            <indexterm>
+                <primary>conditional rewrites</primary>
+            </indexterm>
+            <indexterm>
+                <primary>rewrite if</primary>
+            </indexterm>
+            <indexterm>
+                <primary>rewriting messages</primary>
+                <secondary>conditional rewrites</secondary>
+            </indexterm>
+            <indexterm>
+                <primary>filtering rewrites</primary>
+            </indexterm>
             <para>Starting with <phrase condition="pe">4 F1</phrase><phrase condition="ose">3.2</phrase>, it is possible to apply a rewrite rule to a message only if certain conditions are met. The <parameter>condition()</parameter> option effectively embeds a filter expression into the rewrite rule: the message is modified only if the message passes the filter. If the condition is not met, the message is passed to the next element of the log path (that is, the element following the rewrite rule in the log statement, for example, the destination). Any filter expression normally used in filters can be used as a rewrite condition. Existing filter statements can be referenced using the <parameter>filter()</parameter> function within the condition. For details on filters, see <xref linkend="filters"/>.</para>
             <tip>
                 <para>Using conditions in rewrite rules can simplify your &abbrev; configuration file, as you do not need to create separate log paths to modify certain messages.</para>
@@ -507,11 +595,22 @@ rewrite r_rewrite_set{set("myhost", value("HOST") condition(filter(f_rewritefilt
         </section>
         <section xml:id="rewrite-tags" condition="ose">
             <title>Adding and deleting tags</title>
-            <indexterm type="parameter"> <primary>set-tag()</primary> </indexterm>
-            <indexterm type="parameter"> <primary>clear-tag()</primary> </indexterm>
-            <indexterm type="parameter"> <primary>rewrite()</primary> </indexterm>
-            <indexterm> <primary>manipulating tags</primary> <see>modifying tags</see> </indexterm>
-            <indexterm> <primary>modifying tags</primary> </indexterm>
+            <indexterm type="parameter">
+                <primary>set-tag()</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>clear-tag()</primary>
+            </indexterm>
+            <indexterm type="parameter">
+                <primary>rewrite()</primary>
+            </indexterm>
+            <indexterm>
+                <primary>manipulating tags</primary>
+                <see>modifying tags</see>
+            </indexterm>
+            <indexterm>
+                <primary>modifying tags</primary>
+            </indexterm>
             <para>To add or delete a tag, you can use rewrite rules. To add a tag, use the following syntax:</para>
             <synopsis>rewrite &lt;name_of_the_rule&gt; {
     set-tag("&lt;tag-to-add&gt;");
@@ -526,8 +625,12 @@ rewrite r_rewrite_set{set("myhost", value("HOST") condition(filter(f_rewritefilt
     </section>
     <section xml:id="regular-expressions">
         <title>Regular expressions</title>
-        <indexterm significance="preferred"> <primary>regular expressions</primary> </indexterm>
-        <indexterm type="parameter"> <primary>type()</primary> </indexterm>
+        <indexterm significance="preferred">
+            <primary>regular expressions</primary>
+        </indexterm>
+        <indexterm type="parameter">
+            <primary>type()</primary>
+        </indexterm>
         <para>Filters and substitution rewrite rules can use regular expressions. In regular expressions, the characters <userinput>()[].*?+^$|\</userinput> are used as special symbols. Depending on how you want to use these characters and which quotation mark you use, these characters must be used differently, as summarized below.</para>
         <itemizedlist>
             <listitem>
@@ -547,9 +650,17 @@ rewrite r_rewrite_set{set("myhost", value("HOST") condition(filter(f_rewritefilt
                 </note>
             </listitem>
         </itemizedlist>
-        <indexterm> <primary>regular expressions</primary> <secondary>case-insensitive</secondary> </indexterm>
-        <indexterm> <primary>regular expressions</primary> <secondary>escaping</secondary> </indexterm>
-        <indexterm> <primary>escaping special characters</primary> </indexterm>
+        <indexterm>
+            <primary>regular expressions</primary>
+            <secondary>case-insensitive</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>regular expressions</primary>
+            <secondary>escaping</secondary>
+        </indexterm>
+        <indexterm>
+            <primary>escaping special characters</primary>
+        </indexterm>
         <para>By default, all regular expressions are case sensitive. To disable the case sensitivity of the expression, add the <userinput>flags(ignore-case)</userinput> option to the regular expression.</para>
         <synopsis>filter demo_regexp_insensitive { host("system" flags(ignore-case)); };</synopsis>
         <para>The regular expressions can use up to 255 regexp matches (<userinput>${1} ... ${255}</userinput>), but only from the last filter and only if the <userinput>flags("store-matches")</userinput> flag was set for the filter. For case-insensitive searches, use the <userinput>flags("ignore-case")</userinput> option.</para>
@@ -570,33 +681,48 @@ rewrite r_rewrite_set{set("myhost", value("HOST") condition(filter(f_rewritefilt
             </itemizedlist>
             <simplesect xml:id="reference-regexp-pcre">
                 <title>pcre</title>
-                <indexterm type="parameter"> <primary>pcre</primary> </indexterm>
-                <indexterm> <primary>regular expressions</primary> <secondary>pcre</secondary> </indexterm>
+                <indexterm type="parameter">
+                    <primary>pcre</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>regular expressions</primary>
+                    <secondary>pcre</secondary>
+                </indexterm>
                 <para><emphasis role="bold">Description:</emphasis> Use Perl Compatible Regular Expressions (PCRE).<phrase condition="pe"> Starting with &abbrev; version 3.1, PCRE expressions are supported on every platform.</phrase> If the <parameter>type()</parameter> parameter is not specified, syslog-ng uses PCRE regular expressions by default.</para>
                 <para>PCRE regular expressions have the following flag options:</para>
                 <formalpara>
                     <title>global:</title>
-                    <indexterm type="parameter"> <primary>global</primary> </indexterm>
+                    <indexterm type="parameter">
+                        <primary>global</primary>
+                    </indexterm>
                     <para>Usable only in rewrite rules: match for every occurrence of the expression, not only the first one.</para>
                 </formalpara>
                 <formalpara>
                     <title>ignore-case:</title>
-                    <indexterm type="parameter"> <primary>ignore-case</primary> </indexterm>
+                    <indexterm type="parameter">
+                        <primary>ignore-case</primary>
+                    </indexterm>
                     <para>Disable case-sensitivity.</para>
                 </formalpara>
                 <formalpara>
                     <title>store-matches:</title>
-                    <indexterm type="parameter"> <primary>store-matches</primary> </indexterm>
+                    <indexterm type="parameter">
+                        <primary>store-matches</primary>
+                    </indexterm>
                     <para>Store the matches of the regular expression into the <userinput>$0, ... $255</userinput> variables. The <userinput>$0</userinput> stores the entire match, <userinput>$1</userinput> is the first group of the match (parentheses), and so on. Named matches (also called named subpatterns), for example <userinput>(?&lt;name&gt;...)</userinput>, are stored as well. Matches from the last filter expression can be referenced in regular expressions.</para>
                 </formalpara>
                 <formalpara>
                     <title>unicode:</title>
-                    <indexterm type="parameter"> <primary>unicode</primary> </indexterm>
+                    <indexterm type="parameter">
+                        <primary>unicode</primary>
+                    </indexterm>
                     <para>Use Unicode support for UTF-8 matches: UTF-8 character sequences are handled as single characters.</para>
                 </formalpara>
                 <formalpara>
                     <title>utf8:</title>
-                    <indexterm type="parameter"> <primary>utf8</primary> </indexterm>
+                    <indexterm type="parameter">
+                        <primary>utf8</primary>
+                    </indexterm>
                     <para>An alias for the <parameter>unicode</parameter> flag.</para>
                 </formalpara>
                 <example xml:id="example-regexp-pcre">
@@ -607,23 +733,31 @@ rewrite r_rewrite_set{set("myhost", value("HOST") condition(filter(f_rewritefilt
             </simplesect>
             <simplesect xml:id="reference-regexp-string">
                 <title>string</title>
-                <indexterm type="parameter"> <primary>string</primary> </indexterm>
+                <indexterm type="parameter">
+                    <primary>string</primary>
+                </indexterm>
                 <para><emphasis role="bold">Description:</emphasis> Match the strings literally, without regular expression support. By default, only identical strings are matched. For partial matches, use the <userinput>flags("prefix")</userinput> or the <userinput>flags("substring")</userinput> flags.</para>
             </simplesect>
             <simplesect xml:id="reference-regexp-glob">
                 <title>glob</title>
-                <indexterm type="parameter"> <primary>glob</primary> </indexterm>
-                <indexterm> <primary>glob patterns</primary> </indexterm>
+                <indexterm type="parameter">
+                    <primary>glob</primary>
+                </indexterm>
+                <indexterm>
+                    <primary>glob patterns</primary>
+                </indexterm>
                 <para><emphasis role="bold">Description:</emphasis> Match the strings against a pattern containing '*' and '?' wildcards, without regular expression and character range support. The advantage of glob patterns to regular expressions is that globs can be processed much faster.</para>
                 <variablelist>
                     <varlistentry>
-                        <term><command>*</command> </term>
+                        <term><command>*</command>
+                        </term>
                         <listitem>
                             <para>matches an arbitrary string, including an empty string</para>
                         </listitem>
                     </varlistentry>
                     <varlistentry>
-                        <term><command>?</command> </term>
+                        <term><command>?</command>
+                        </term>
                         <listitem>
                             <para>matches an arbitrary character</para>
                         </listitem>
@@ -643,10 +777,19 @@ rewrite r_rewrite_set{set("myhost", value("HOST") condition(filter(f_rewritefilt
         </section>
         <section xml:id="optimizing-regular-expressions">
             <title>Optimizing regular expressions</title>
-            <indexterm> <primary>filters</primary> </indexterm>
-            <indexterm> <primary>regular expressions</primary> </indexterm>
-            <indexterm> <primary>optimizing regular expressions</primary> </indexterm>
-            <indexterm> <primary>optimizing syslog-ng performance</primary> <secondary>regular expressions</secondary> </indexterm>
+            <indexterm>
+                <primary>filters</primary>
+            </indexterm>
+            <indexterm>
+                <primary>regular expressions</primary>
+            </indexterm>
+            <indexterm>
+                <primary>optimizing regular expressions</primary>
+            </indexterm>
+            <indexterm>
+                <primary>optimizing syslog-ng performance</primary>
+                <secondary>regular expressions</secondary>
+            </indexterm>
             <para>The <parameter>host()</parameter>, <parameter>match()</parameter>, and <parameter>program()</parameter> filter functions and some other syslog-ng objects accept regular expressions as parameters. But evaluating general regular expressions puts a high load on the CPU, which can cause problems when the message traffic is very high. Often the regular expression can be replaced with simple filter functions and logical operators. Using simple filters and logical operators, the same effect can be achieved at a much lower CPU load.</para>
             <example>
                 <title>Optimizing regular expressions in filters</title>
