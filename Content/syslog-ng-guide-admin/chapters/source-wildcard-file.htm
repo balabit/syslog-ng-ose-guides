@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+
+
+
+ %entities;]&gt;
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="configuring-sources-wildcard-file" oldrole="section">
+<h1 name="configuring-sources-wildcard-file" version="5.0" xmlns="http://docbook.org/ns/docbook"><span class="Code" oldrole="parameter">wildcard-file</span>: Collecting messages from multiple text files</h1>
+<MadCap:keyword term="source drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;file()&lt;/span&gt;, ' driver']"></MadCap:keyword>
+<MadCap:keyword term="source drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;wildcard-file()&lt;/span&gt;, ' driver']"></MadCap:keyword>
+<p oldrole="para">The <span class="Code" oldrole="parameter">wildcard-file()</span> source collects log messages from multiple plain-text files from multiple directories. The <span class="Code" oldrole="parameter">wildcard-file()</span> source is available in <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="ose">3.10</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7.0.3</MadCap:conditionaltext> and later.</p>
+<p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application notices if a file is renamed or replaced with a new file, so it can correctly follow the file even if logrotation is used. When <MadCap:variable name="General.abbrev"></MadCap:variable> is restarted, it records the position of the last sent log message in the <span class="Code" oldrole="filename">/opt/syslog-ng/var/syslog-ng.persist</span> file, and continues to send messages from this position after the restart.</p>
+<h6 oldrole="formalpara">Declaration:</h6>
+
+<pre class="Code" oldrole="synopsis">wildcard-file(
+    base-dir("&lt;pathname&gt;")
+    file-pattern("&lt;filename&gt;")
+);</pre>
+<p oldrole="para">Note the following important points:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">You can use the <span class="Code" oldrole="userinput">*</span> and <span class="Code" oldrole="userinput">?</span> wildcard characters in the filename (the <span class="Code" oldrole="parameter">file-pattern()</span> option), but not in the path (the <span class="Code" oldrole="parameter">base-dir()</span> option).</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">When using the <span class="Code" oldrole="parameter">wildcard-file()</span> source, always set how often <MadCap:variable name="General.abbrev"></MadCap:variable> should check the files for new messages using the <span class="Code" oldrole="parameter">follow-freq()</span> parameter.</p>
+</li>
+<li oldrole="listitem">
+<MadCap:sinppetBlock src="../../shared/wnt/warning-wildcard-overlapping-files.htm"></MadCap:sinppetBlock>
+</li>
+<li oldrole="listitem">
+<MadCap:sinppetBlock src="../../shared/chunk/para-wildcard-file-source-max-files.htm"></MadCap:sinppetBlock>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">If the message does not have a proper syslog header, <MadCap:variable name="General.abbrev"></MadCap:variable> treats messages received from files as sent by the <span class="Code" oldrole="parameter">kern</span> facility. Use the <span class="Code" oldrole="parameter">default-facility()</span> and <span class="Code" oldrole="parameter">default-priority()</span> options in the source definition to assign a different facility if needed.</p>
+</li>
+</ul>
+<p oldrole="para">Required parameters: <span class="Code" oldrole="parameter">base-dir()</span>, <span class="Code" oldrole="parameter">file-pattern()</span>. For the list of available optional parameters, see <MadCap:xref href="source-wildcard-file.htm#reference-source-wildcard-file"></MadCap:xref>.</p>
+
+<h6 oldrole="example">Example: Using the wildcard-file() driver</h6>
+<p oldrole="para">The following example monitors every file with the <span class="Code" oldrole="filename">.log</span> extension in the <span class="Code" oldrole="filename">/var/log</span> directory for log messages.</p>
+<MadCap:sinppetBlock src="../../shared/chunk/synopsis-wildcard-file-source-example.htm"></MadCap:sinppetBlock>
+
+<h2 name="reference-source-wildcard-file">wildcard-file() source options</h2>
+<MadCap:keyword term="source drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;wildcard-file()&lt;/span&gt;, ' driver']"></MadCap:keyword>
+<p oldrole="para">The <span class="Code" oldrole="parameter">wildcard-file()</span> driver has the following options:</p>
+
+<h6 name="source-wildcard-file-base-dir" oldrole="simplesect">base-dir()</h6>
+<MadCap:keyword term="base-dir()"></MadCap:keyword>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Type: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">path without filename</td>
+</tr>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1"></td>
+</tr>
+</tbody>
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The path to the directory that contains the log files to monitor, for example, <span class="Code" oldrole="userinput">base-dir("/var/log")</span>. To monitor also the subdirectories of the base directory, use the <span class="Code" oldrole="userinput">recursive(yes)</span> option. For details, see <MadCap:xref href="source-wildcard-file.htm#source-wildcard-file-recursive"></MadCap:xref>.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');"><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/caution.png"/></p></td><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span><MadCap:sinppetBlock src="../../shared/wnt/warning-wildcard-overlapping-files.htm"></MadCap:sinppetBlock></td></tr></tbody></table>
+<MadCap:sinppetBlock src="../../shared/chunk/synopsis-wildcard-file-source-example.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-default-facility.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-default-priority.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-encoding.htm"></MadCap:sinppetBlock>
+
+
+<h6 name="source-wildcard-file-file-pattern" oldrole="simplesect">file-pattern()</h6>
+<MadCap:keyword term="file-pattern()"></MadCap:keyword>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Type: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">filename without path</td>
+</tr>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1"></td>
+</tr>
+</tbody>
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<MadCap:keyword term="glob"></MadCap:keyword>
+<MadCap:keyword term="glob patterns"></MadCap:keyword>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The filename to read messages from, without the path. You can use the <span class="Code" oldrole="userinput">*</span> and <span class="Code" oldrole="userinput">?</span> wildcard characters, without regular expression and character range support. You cannot use the <span class="Code" oldrole="userinput">*</span> and <span class="Code" oldrole="userinput">?</span> literally in the pattern.</p>
+<p oldrole="para">For example, <span class="Code" oldrole="userinput">file-pattern("*.log")</span> matches the <span class="Code" oldrole="filename">syslog.log</span> and <span class="Code" oldrole="filename">auth.log</span> files, but does not match the <span class="Code" oldrole="filename">access_log</span> file. The <span class="Code" oldrole="userinput">file-pattern("*log")</span> pattern matches all three.</p>
+<ul oldrole="variablelist">
+<li oldrole="varlistentry">
+<b oldrole="command">*</b>
+<li oldrole="listitem">
+<p oldrole="para">matches an arbitrary string, including an empty string</p>
+</li>
+</li>
+<li oldrole="varlistentry">
+<b oldrole="command">?</b>
+<li oldrole="listitem">
+<p oldrole="para">matches an arbitrary character</p>
+</li>
+</li>
+</ul>
+<table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');"><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/caution.png"/></p></td><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span><MadCap:sinppetBlock src="../../shared/wnt/warning-wildcard-overlapping-files.htm"></MadCap:sinppetBlock></td></tr></tbody></table>
+<MadCap:sinppetBlock src="../../shared/chunk/synopsis-wildcard-file-source-example.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-flags.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-follow-freq.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-keep-timestamp.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-log-fetch-limit.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-file-log-iw-size.htm"></MadCap:sinppetBlock>
+<p oldrole="para">When using wildcards in the filenames, <MadCap:variable name="General.abbrev"></MadCap:variable> attempts to read <span class="Code" oldrole="parameter">log-fetch-limit()</span> number of messages from each file. For optimal performance, make sure that <span class="Code" oldrole="parameter">log-iw-size()</span> is greater than <span class="Code" oldrole="userinput">log-fetch-limit()*max-files()</span>. Note that to avoid performance problems, if <span class="Code" oldrole="userinput">log-iw-size()/max-files()</span> is smaller than 100, <MadCap:variable name="General.abbrev"></MadCap:variable> automatically sets <span class="Code" oldrole="userinput">log-iw-size()</span> to <span class="Code" oldrole="userinput">max-files()*100</span>.</p>
+
+<h6 oldrole="example">Example: Initial window size of file sources</h6>
+<p oldrole="para">If <span class="Code" oldrole="userinput">log-fetch-limit()</span> is 100, and your wildcard file source has 200 files, then <span class="Code" oldrole="parameter">log-iw-size()</span> should be at least 20000.</p>
+
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-log-msg-size.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-log-prefix.htm"></MadCap:sinppetBlock>
+
+
+<h6 name="source-wildcard-file-max-files" oldrole="simplesect">max-files()</h6>
+<MadCap:keyword term="max-files()"></MadCap:keyword>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Type: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">integer</td>
+</tr>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">100 </td>
+</tr>
+</tbody>
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Limits the number of files that the wildcard-file source monitors.</p>
+<MadCap:sinppetBlock src="../../shared/chunk/para-wildcard-file-source-max-files.htm"></MadCap:sinppetBlock>
+
+
+<h6 name="source-wildcard-file-monitor-method" oldrole="simplesect">monitor-method()</h6>
+<MadCap:keyword term="monitor-method()"></MadCap:keyword>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Type: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">auto | inotify | poll</td>
+</tr>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">auto </td>
+</tr>
+</tbody>
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<MadCap:keyword term="polling files"></MadCap:keyword>
+<MadCap:keyword term="inotify"></MadCap:keyword>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> If the platform supports inotify, <MadCap:variable name="General.abbrev"></MadCap:variable> uses it automatically to detect changes to the source files. If inotify is not available, <MadCap:variable name="General.abbrev"></MadCap:variable> polls the files as set in the <a href="source-wildcard-file.htm"><span class="Code" oldrole="parameter">follow-freq()</span></a> option. To force <MadCap:variable name="General.abbrev"></MadCap:variable> poll the files even if inotify is available, set this option to <span class="Code" oldrole="userinput">poll</span>.</p>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-multi-line-garbage.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-multi-line-mode.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-multi-line-prefix.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-multi-line-suffix.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-pad-size.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-program-override.htm"></MadCap:sinppetBlock>
+
+
+<h6 name="source-wildcard-file-recursive" oldrole="simplesect">recursive()</h6>
+<MadCap:keyword term="recursive()"></MadCap:keyword>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Type: 
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">yes | no</td>
+</tr>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default: 
+ no </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1"></td>
+</tr>
+</tbody>
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> When enabled, <MadCap:variable name="General.abbrev"></MadCap:variable> monitors every subdirectory of the <a href="source-wildcard-file.htm">path set in the <span class="Code" oldrole="parameter">base-dir()</span> option</a>, and reads log messages from files with matching filenames. The <span class="Code" oldrole="parameter">recursive</span> option can be used together with wildcards in the filename.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');"><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/caution.png"/></p></td><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span><MadCap:sinppetBlock src="../../shared/wnt/warning-wildcard-overlapping-files.htm"></MadCap:sinppetBlock></td></tr></tbody></table>
+
+<h6 name="example-source-wildcard-file-recursive" oldrole="example">Example: Monitoring multiple directories</h6>
+<p oldrole="para">The following example reads files having the <span class="Code" oldrole="filename">.log</span> extension from the <span class="Code" oldrole="filename">/var/log/</span> directory and its subdirectories, including for example the <span class="Code" oldrole="filename">/var/log/apt/history.log</span> file.</p>
+<pre class="Code" oldrole="synopsis">source s_file_subdirectories { wildcard-file(
+    base-dir("/var/log")
+    file-pattern("*.log")
+    recursive(yes)
+    follow-freq(1)
+    log-fetch-limit(100)
+    );};</pre>
+
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-tags.htm"></MadCap:sinppetBlock>
+
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-source-time-zone.htm"></MadCap:sinppetBlock>
+
+</body></html>

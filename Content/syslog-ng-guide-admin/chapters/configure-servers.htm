@@ -1,0 +1,60 @@
+
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="configure-servers" oldrole="procedure">
+<h1 name="configure-servers" xmlns="http://docbook.org/ns/docbook">Configuring syslog-ng on server hosts</h1>
+<MadCap:keyword term="syslog-ng servers:['configuring']"></MadCap:keyword>
+<h6 oldrole="formalpara">Purpose:</h6>
+
+<p oldrole="para">To configure syslog-ng on a server host, complete the following steps.</p>
+<h6 oldrole="formalpara">Steps:</h6>
+
+<ol oldrole="procedure"><li oldrole="step">
+<p oldrole="para">Install the syslog-ng application on the host. For details installing syslog-ng on specific operating systems, see <MadCap:xref href="chapter-install.htm#chapter-install"></MadCap:xref>.</p>
+</li><li oldrole="step">
+<p oldrole="para">Starting with version 3.2, <MadCap:variable name="General.abbrev"></MadCap:variable> automatically collects the log messages that use the native system logging method of the platform, for example, messages from <span class="Code" oldrole="filename">/dev/log</span> on Linux, or <span class="Code" oldrole="filename">/dev/klog</span> on FreeBSD. For a complete list of messages that are collected automatically, see <MadCap:xref href="configuring-source-system.htm#configuring-source-system"></MadCap:xref>.</p>
+</li><li oldrole="step">
+<p oldrole="para">Configure the network sources that collect the log messages sent by the clients and relays. How the network sources should be configured depends also on the capabilities of your client hosts: many older networking devices support only the legacy BSD-syslog protocol (RFC3164) using UDP transport:</p>
+<pre class="Code" oldrole="synopsis">source s_network { syslog(ip(10.1.2.3) transport("udp")); };</pre>
+<p oldrole="para">However, if possible, use the much more reliable TCP transport:</p>
+<pre class="Code" oldrole="synopsis">source s_network { syslog(ip(10.1.2.3) transport("tcp")); };</pre>
+<p oldrole="para">For other options, see <MadCap:xref href="configuring-sources-syslog.htm#configuring-sources-syslog"></MadCap:xref> and <MadCap:xref href="source-tcpudp.htm#configuring-sources-tcpudp"></MadCap:xref>.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">Starting with <MadCap:variable name="General.abbrev"></MadCap:variable> version 3.2, the <span class="Code" oldrole="parameter">syslog()</span> source driver can handle both BSD-syslog (RFC 3164) and IETF-syslog (RFC 5424-26) messages.</p></td></tr></tbody></table>
+</li><li oldrole="step">
+<p oldrole="para">Create local destinations that will store the log messages, for example file- or program destinations. The default configuration of <MadCap:variable name="General.abbrev"></MadCap:variable> places the collected messages into the <span class="Code" oldrole="filename">/var/log/messages</span> file:</p>
+<pre class="Code" oldrole="synopsis">destination d_local {
+    file("/var/log/messages"); };</pre>
+<p oldrole="para">If you want to create separate logfiles for every client host, use the <span class="Code" oldrole="parameter">${HOST}</span> macro when specifying the filename, for example:</p>
+<pre class="Code" oldrole="synopsis">destination d_local {
+    file("/var/log/messages_${HOST}"); };</pre>
+<p oldrole="para">For details on further macros and how to use them, see <MadCap:xref href="chapter-manipulating-messages.htm#chapter-manipulating-messages"></MadCap:xref>.</p>
+</li><li oldrole="step">
+<p oldrole="para">Create a log statement connecting the sources to the local destinations.</p>
+<pre class="Code" oldrole="synopsis">log {
+        source(s_local); source(s_network); destination(d_local); };</pre>
+</li><li oldrole="step">
+<p oldrole="para">Set filters, options (for example TLS encryption) and other advanced features as necessary.</p>
+<MadCap:sinppetBlock src="../../shared/wnt/note-relaying-hostname.htm"></MadCap:sinppetBlock>
+
+<h6 name="example-serverconfig" oldrole="example">Example: A simple configuration for servers</h6>
+<p oldrole="para">The following is a simple configuration file for <MadCap:variable name="General.product"></MadCap:variable> that collects incoming log messages and stores them in a text file.</p>
+<pre class="Code" oldrole="synopsis">@version: <MadCap:variable name="Version.techversion"></MadCap:variable>
+@include "scl.conf"
+    options {
+        time-reap(30);
+        mark-freq(10);
+        keep-hostname(yes);
+        };
+    source s_local { system(); internal(); };
+    source s_network {
+        syslog(transport(tcp));
+        };
+    destination d_logs {
+        file(
+            "/var/log/syslog-ng/logs.txt"
+            owner("root")
+            group("root")
+            perm(0777)
+            ); };
+    log { source(s_local); source(s_network); destination(d_logs); };</pre>
+
+<p oldrole="para">If you experience difficulties, see <MadCap:xref href="chapter-troubleshooting.htm#chapter-troubleshooting-syslog-ng"></MadCap:xref> for tips on solving common problems.</p>
+</li></ol></body></html>

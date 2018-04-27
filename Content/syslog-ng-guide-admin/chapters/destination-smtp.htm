@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="configuring-destinations-smtp" oldrole="section">
+<h1 name="configuring-destinations-smtp" version="5.0" xmlns="http://docbook.org/ns/docbook"><span class="Code" oldrole="parameter">smtp</span>: Generating SMTP messages (e-mail) from logs</h1>
+<MadCap:keyword term="destination drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;smtp()&lt;/span&gt;, ' driver']"></MadCap:keyword>
+<p oldrole="para">The destination is aimed at a fully controlled local, or near-local, trusted SMTP server. The goal is to send mail to trusted recipients, through a controlled channel. It hands mails over to an SMTP server, and that is all it does, therefore the resulting solution is as reliable as sending an e-mail in general. For example, <MadCap:variable name="General.abbrev"></MadCap:variable> does not verify whether the recipient exists.</p>
+<p oldrole="para">The <span class="Code" oldrole="parameter">smtp()</span> driver sends e-mail messages triggered by log messages. The <span class="Code" oldrole="parameter">smtp()</span> driver uses SMTP, without needing external applications. You can customize the main fields of the e-mail, add extra headers, send the e-mail to multiple recipients, and so on.</p>
+<p oldrole="para">The <span class="Code" oldrole="parameter">subject()</span>, <span class="Code" oldrole="parameter">body()</span>, and <span class="Code" oldrole="parameter">header()</span> fields may include macros which get expanded in the e-mail. For more information on available macros see <MadCap:xref href="reference-macros.htm#reference-macros"></MadCap:xref>.</p>
+<p oldrole="para">The <span class="Code" oldrole="parameter">smtp()</span> driver has the following required parameters: <span class="Code" oldrole="parameter">host()</span>, <span class="Code" oldrole="parameter">port()</span>, <span class="Code" oldrole="parameter">from()</span>, <span class="Code" oldrole="parameter">to()</span>, <span class="Code" oldrole="parameter">subject()</span>, and <span class="Code" oldrole="parameter">body()</span>. For the list of available optional parameters, see <MadCap:xref href="destination-smtp.htm#reference-destination-smtp"></MadCap:xref>.</p>
+<MadCap:sinppetBlock src="../../shared/wnt/note-server-mode-only.htm"></MadCap:sinppetBlock>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">The <span class="Code" oldrole="parameter">smtp()</span> destination driver is available only in <MadCap:conditionaltext MadCap:conditions="ose"><MadCap:variable name="General.abbrev"></MadCap:variable> 3.4</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">5 F2</MadCap:conditionaltext> and later.</p></td></tr></tbody></table>
+<h6 oldrole="formalpara">Declaration:</h6>
+
+<pre class="Code" oldrole="synopsis">smtp(host() port() from() to() subject() body() options());</pre>
+
+<h6 name="example-destination-smtp" oldrole="example">Example: Using the smtp() driver</h6>
+<p oldrole="para">The following example defines an <span class="Code" oldrole="parameter">smtp()</span> destination using only the required parameters.</p>
+<pre class="Code" oldrole="synopsis">destination d_smtp {
+    smtp(
+        host("localhost")
+        port(25)
+        from("syslog-ng alert service" "noreply@example.com")
+        to("Admin #1" "admin1@example.com")
+        subject("[ALERT] Important log message of $LEVEL condition received from $HOST/$PROGRAM!")
+        body("Hi!\nThe syslog-ng alerting service detected the following important log message:\n $MSG\n-- \nsyslog-ng\n")
+    );
+};</pre>
+<p oldrole="para">The following example sets some optional parameters as well.</p>
+<pre class="Code" oldrole="synopsis">destination d_smtp {
+    smtp(
+        host("localhost")
+        port(25)
+        from("syslog-ng alert service" "noreply@example.com")
+        to("Admin #1" "admin1@example.com")
+        to("Admin #2" "admin2@example.com")
+        cc("Admin BOSS" "admin.boss@example.com")
+        bcc("Blind CC" "blindcc@example.com")
+        subject("[ALERT] Important log message of $LEVEL condition received from $HOST/$PROGRAM!")
+        body("Hi!\nThe syslog-ng alerting service detected the following important log message:\n $MSG\n-- \nsyslog-ng\n")
+        header("X-Program", "$PROGRAM")
+        );
+};</pre>
+
+
+<h6 name="example-destination-smtp-alerting" oldrole="example">Example: Simple e-mail alerting with the <span class="Code" oldrole="parameter">smtp()</span> driver</h6>
+<p oldrole="para">The following example sends an e-mail alert if the eth0 network interface of the host is down.</p>
+<pre class="Code" oldrole="synopsis">filter f_linkdown {
+    match("eth0: link down" value("MESSAGE"));
+};
+destination d_alert {
+    smtp(
+        host("localhost") port(25)
+        from("syslog-ng alert service" "syslog@localhost")
+        reply-to("Admins" "root@localhost")
+        to("Ennekem" "me@localhost")
+        subject("[SYSLOG ALERT]: eth0 link down")
+        body("Syslog received an alert:\n$MSG")
+        );
+};
+
+log {
+    source(s_local);
+    filter(f_linkdown);
+    destination(d_alert);
+};</pre>
+
+<h2 name="reference-destination-smtp">smtp() destination options</h2>
+<MadCap:keyword term="destination drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;smtp()&lt;/span&gt;, ' driver']"></MadCap:keyword>
+<p oldrole="para">The <span class="Code" oldrole="parameter">smtp()</span> sends e-mail messages using SMTP, without needing external applications. The <span class="Code" oldrole="parameter">smtp()</span> destination has the following options:</p>
+<MadCap:sinppetBlock src="smtp-option-body.htm"></MadCap:sinppetBlock>
+<MadCap:sinppetBlock src="smtp-option-bcc.htm"></MadCap:sinppetBlock>
+<MadCap:sinppetBlock src="smtp-option-cc.htm"></MadCap:sinppetBlock>
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-destination-diskbuffer.htm"></MadCap:sinppetBlock>
+
+<MadCap:sinppetBlock src="smtp-option-from.htm"></MadCap:sinppetBlock>
+<MadCap:sinppetBlock src="smtp-option-header.htm"></MadCap:sinppetBlock>
+<MadCap:sinppetBlock src="smtp-option-host.htm"></MadCap:sinppetBlock>
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-destination-log-fifo-size.htm"></MadCap:sinppetBlock>
+
+<MadCap:sinppetBlock src="smtp-option-port.htm"></MadCap:sinppetBlock>
+<MadCap:sinppetBlock src="smtp-option-reply-to.htm"></MadCap:sinppetBlock>
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-destination-retries.htm"></MadCap:sinppetBlock>
+
+<MadCap:sinppetBlock src="smtp-option-subject.htm"></MadCap:sinppetBlock>
+
+<MadCap:sinppetBlock src="../../shared/chunk/option-destination-throttle.htm"></MadCap:sinppetBlock>
+
+<MadCap:sinppetBlock src="smtp-option-to.htm"></MadCap:sinppetBlock>
+<h2>Error handling</h2>
+<p oldrole="para">If the connection fails, <MadCap:variable name="General.abbrev"></MadCap:variable> repeatedly attempts to reconnect in intervals specified in <span class="Code" oldrole="parameter">time-reopen()</span>.</p>
+<p oldrole="para">If the connection is successful, but the message is not accepted, <MadCap:variable name="General.abbrev"></MadCap:variable> attempts to resend the message N times regardless of the reject being a hard or a soft reject. The number of attempts is specified with the option <span class="Code" oldrole="parameter">retries()</span>.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">If the message was sent to two addresses and only one address fails, the retry will still apply for both addresses. The assumption is that the destination will be used with a local SMTP server acting as a relay, and the local server will handle all the edge cases.</p></td></tr></tbody></table>
+</body></html>

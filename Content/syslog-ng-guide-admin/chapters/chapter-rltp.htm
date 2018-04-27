@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body condition="pe6" name="chapter-rltp" oldrole="chapter">
+<h1 condition="pe6" name="chapter-rltp" version="5.0" xmlns="http://docbook.org/ns/docbook"><trademark>Reliable Log Transfer Protocol</trademark>
+</h1>
+<!-- FIXME jumplist -->
+<h2 name="concepts-rltp">Logging using <trademark>RLTP</trademark>
+</h2>
+<MadCap:keyword term="RLTP"></MadCap:keyword>
+<MadCap:keyword term="log transfer protocol:['reliable']"></MadCap:keyword>
+<MadCap:keyword term="transport:['TCP']"></MadCap:keyword>
+<p name="para-rltp-intro" oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application can send and receive log messages in a reliable way over the TCP transport layer using the <trademark>Reliable Log Transfer Protocol</trademark> (<trademark>RLTP</trademark>). <trademark>RLTP</trademark> is a proprietary transport protocol that prevents message loss during connection breaks. The transport is used between <MadCap:variable name="General.abbrev"></MadCap:variable> hosts (for example, a client and a server, or a client-simplesect--server), and interoperates with the flow-control and reliable disk-buffer mechanisms of <MadCap:variable name="General.abbrev"></MadCap:variable>, thus providing the best way to prevent message loss. The sender detects which messages has the receiver successfully received. If messages are lost during the transfer, the sender resends the missing messages, starting from the last successfully received message. Therefore, messages are not duplicated at the receiving end in case of a connection break (however, in failover mode this is not completely ensured). <trademark>RLTP</trademark> also allows to receive encrypted and non-encrypted connections on the same port, using a single source driver.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">Because of the communication overhead, the <trademark>RLTP</trademark> protocol is slower than other transport protocols, which might be a problem if you need to collect a high amount (over 200000 messages per second) of log messages on your log server. For performance details of <MadCap:variable name="General.abbrev"></MadCap:variable> see the <i oldrole="emphasis">syslog-ng Premium Edition Performance Guideline</i> at the <MadCap:variable name="General.doc-site"></MadCap:variable>.</p></td></tr></tbody></table>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">Make sure that you have set the value of the <span class="Code" oldrole="parameter">log_msg_size()</span> parameter large enough in your configuration. If its size is less than the size of the sent messages, it might result in disk fill-up and no incoming logs.</p></td></tr></tbody></table>
+<table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');"><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/caution.png"/></p></td><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span><MadCap:sinppetBlock src="../../shared/chunk/rltp-losing-messages.htm"></MadCap:sinppetBlock></td></tr></tbody></table>
+<p oldrole="para">The <trademark>RLTP</trademark> protocol works on top of TCP, and can use STARTTLS for encryption. <trademark>RLTP</trademark> supports IPv4 and IPv6 addresses. Inside the <trademark>RLTP</trademark> message, the message can use any format, for example, RFC3164 (BSD-syslog) or RFC5424 (IETF-syslog). The default port of <trademark>RLTP</trademark> is <span class="Code" oldrole="userinput">35514</span>.</p>
+<p oldrole="para"><trademark>RLTP</trademark> can be added to the configuration like a transport protocol within the <span class="Code" oldrole="parameter">syslog()</span> driver and the <span class="Code" oldrole="parameter">network()</span> driver.</p>
+<MadCap:sinppetBlock src="procedure-rltp-concepts.htm"></MadCap:sinppetBlock>
+<h2 name="rltp-client-simplesect--server">Using <trademark>RLTP</trademark> in a client-simplesect--server scenario</h2>
+<p oldrole="para">You can use <trademark>RLTP</trademark> between multiple <MadCap:variable name="General.abbrev"></MadCap:variable> hosts, for example, in a client-simplesect--server scenario. In such case, the communication described in <MadCap:xref href="procedure-rltp-concepts.htm#procedure-rltp-concepts"></MadCap:xref> applies both between the client and the simplesect-, and the simplesect- and the server. However, note the following points:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">Unless you use disk-buffer on the simplesect-, the simplesect- waits for acknowledgement from the server before acknowledging the messages to the client. If you send the messages in large batches, and the server can process the messages slowly (or the network connection is slow), you might have to adjust the <span class="Code" oldrole="parameter">message-acknowledgement-timeout()</span> on the client.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">If you use reliable disk-buffer on the simplesect-, the simplesect- will acknowledge the messages when the messages are written to the disk-buffer. That way, the client does not have to wait while the server acknowledges the messages.</p>
+</li>
+</ul>
+<h2 name="rltp-options"><trademark>RLTP</trademark> options</h2>
+<p oldrole="para">The following options are specific to the <trademark>RLTP</trademark> protocol. Note that when using <trademark>RLTP</trademark> in a source or a destination, the options of the <span class="Code" oldrole="parameter">syslog()</span> or the <span class="Code" oldrole="parameter">network()</span> driver can be used as well.</p>
+<MadCap:sinppetBlock src="simplesect-allow.htm"></MadCap:sinppetBlock>
+<MadCap:sinppetBlock src="simplesect-message.htm"></MadCap:sinppetBlock>
+<MadCap:sinppetBlock src="simplesect-response.htm"></MadCap:sinppetBlock>
+<MadCap:sinppetBlock src="simplesect-tls.htm"></MadCap:sinppetBlock>
+<h2 name="rltp-examples">Examples for using <trademark>RLTP</trademark>
+</h2>
+
+<h6 oldrole="example">Example: Simple <trademark>RLTP</trademark> connection</h6>
+<p oldrole="para">The sender and the receiver use <trademark>RLTP</trademark> over the <span class="Code" oldrole="parameter">network()</span> protocol. Since the <span class="Code" oldrole="userinput">tls()</span> option is not configured neither on the sender nor on the receiver, the communication will be unencrypted.</p>
+<p oldrole="para"><i oldrole="emphasis">Receiver configuration (<MadCap:variable name="General.abbrev"></MadCap:variable> server)</i>:</p>
+<pre class="Code" oldrole="synopsis">source s_network_rltp {
+        network(
+            ip("127.0.0.1")
+            port("5555")
+            transport(rltp)
+            ip-protocol(4)
+        );
+};</pre>
+<p oldrole="para"><i oldrole="emphasis">Sender configuration (<MadCap:variable name="General.abbrev"></MadCap:variable> client)</i>:</p>
+<pre class="Code" oldrole="synopsis">destination d_network_rltp {
+        network(
+            "127.0.0.1"
+            port("5555")
+            transport(rltp)
+            ip-protocol(4)
+        );
+};</pre>
+
+
+<h6 oldrole="example">Example: <trademark>RLTP</trademark> with TLS encryption</h6>
+<p oldrole="para">The following example configure a sender and a receiver to communicate using <trademark>RLTP</trademark>. Since the <span class="Code" oldrole="parameter">tls-required()</span> option is set to <span class="Code" oldrole="userinput">optional</span> on the receiver and <span class="Code" oldrole="userinput">yes</span> on the sender, and the <span class="Code" oldrole="parameter">tls()</span> option is configured, the communication will be TLS-encrypted. For the sender (<MadCap:variable name="General.abbrev"></MadCap:variable> client), reliable disk-buffering is enabled to prevent data loss.</p>
+<p oldrole="para"><i oldrole="emphasis">Receiver configuration (<MadCap:variable name="General.abbrev"></MadCap:variable> server)</i>:</p>
+<pre class="Code" oldrole="synopsis">source s_syslog_rltp {
+        syslog(
+            ip("127.0.0.1")
+            port("4444")
+            transport(rltp(tls-required(optional)))
+            ip-protocol(4)
+            tls(
+                peer-verify(required-trusted)
+                ca-dir("/var/tmp/client/")
+                key-file("/var/tmp/server/server_priv.key")
+                cert-file("/var/tmp/server/server.crt")
+            )
+        );
+};</pre>
+<p oldrole="para"><i oldrole="emphasis">Sender configuration (<MadCap:variable name="General.abbrev"></MadCap:variable> client)</i>:</p>
+<pre class="Code" oldrole="synopsis">destination d_syslog_rltp {
+        syslog(
+            "127.0.0.1"
+            port("4444")
+            transport(rltp(tls-required(yes)))
+            ip-protocol(4)
+            disk-buffer( mem-buf-size(200000) disk-buf-size(2000000) reliable(yes) )
+            tls(
+                peer-verify(required-trusted)
+                ca-dir("/var/tmp/server/")
+                key-file("/var/tmp/client/client_priv.key")
+                cert-file("/var/tmp/client/client.crt")
+            )
+        );
+};</pre>
+
+</body></html>

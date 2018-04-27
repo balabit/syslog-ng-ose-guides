@@ -1,0 +1,72 @@
+
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="create-client-certificate" oldrole="procedure">
+<h1 name="create-client-certificate" xmlns="http://docbook.org/ns/docbook">Creating a client certificate</h1>
+<h6 oldrole="formalpara">Purpose:</h6>
+
+<p oldrole="para">To create a client certificate, complete the following steps:</p>
+<h6 oldrole="formalpara">Steps:</h6>
+
+<ol oldrole="procedure"><li oldrole="step">
+<p oldrole="para">The steps for the client(s) are very similar, only the file names and the embedded common name (host identifier: FQDN or IP address) are different. If you have multiple clients, make sure that each has the right host identifier.</p>
+<p oldrole="para"><b oldrole="command">openssl req -nodes -new -x509 -keyout clientkey.pem -out clientreq.pem -days 365 -config openssl.cnf</b></p>
+</li><li oldrole="step">
+<p oldrole="para">The following will be displayed. Answer the questions as in the example:</p>
+<pre class="Code" oldrole="synopsis">Generating a 1024 bit RSA private key
+.................................................................................++++++
+...............................++++++
+writing new private key to 'clientkey.pem'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:HU
+State or Province Name (full name) [Some-State]:Budapest
+Locality Name (eg, city) []:Budapest
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Balabit
+Organizational Unit Name (eg, section) []:.
+Common Name (e.g. server FQDN or YOUR name) []:172.16.177.129
+Email Address []:
+
+czanik@linux-modi:~/CA&gt; openssl x509 -x509toreq -in clientreq.pem -signkey clientkey.pem -out tmp.pem
+Getting request Private Key
+Generating certificate request
+czanik@linux-modi:~/CA&gt; openssl ca -config openssl.cnf -policy policy_anything -out clientcert.pem -infiles tmp.pem
+Using configuration from openssl.cnf
+Enter pass phrase for ./private/cakey.pem:
+Check that the request matches the signature
+Signature ok
+Certificate Details:
+        Serial Number: 2 (0x2)
+        Validity
+            Not Before: Jun 25 10:28:49 2014 GMT
+            Not After : Jun 25 10:28:49 2015 GMT
+        Subject:
+            countryName               = HU
+            stateOrProvinceName       = Budapest
+            localityName              = Budapest
+            organizationName          = Balabit
+            commonName                = 172.16.177.129
+        X509v3 extensions:
+            X509v3 Basic Constraints:
+                CA:FALSE
+            Netscape Comment:
+                OpenSSL Generated Certificate
+            X509v3 Subject Key Identifier:
+                91:D9:99:95:F2:0D:22:BF:72:95:56:9A:C0:DF:A3:07:5C:E2:3F:63
+            X509v3 Authority Key Identifier:
+                keyid:D1:FF:ED:B4:0B:66:E6:45:EE:70:4F:DC:6C:C5:34:48:42:38:E9:38
+
+Certificate is to be certified until Jun 25 10:28:49 2015 GMT (365 days)
+Sign the certificate? [y/n]:y
+
+1 out of 1 certificate requests certified, commit? [y/n]y
+Write out database with 1 new entries
+Data Base Updated</pre>
+</li><li oldrole="step">
+<p oldrole="para">Enter the following:</p>
+<p oldrole="para"><b oldrole="command">rm tmp.pem</b></p>
+</li></ol></body></html>
