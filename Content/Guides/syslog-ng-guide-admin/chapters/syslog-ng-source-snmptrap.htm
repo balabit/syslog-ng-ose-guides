@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="syslog-ng-source-snmptrap" oldrole="section">
+<h1 name="syslog-ng-source-snmptrap" version="5.0"><span class="Code" oldrole="parameter">snmptrap</span>: Read Net-SNMP traps</h1>
+<MadCap:keyword term="source drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;snmptrap()&lt;/span&gt;, ' driver']"></MadCap:keyword>
+<MadCap:keyword term="NET-SNMP"></MadCap:keyword>
+<MadCap:keyword term="snmptrapd"></MadCap:keyword>
+<p oldrole="para">Using the <span class="Code" oldrole="parameter">snmptrap()</span> source, you can read and parse the SNMP traps of the <a href="http://www.net-snmp.org">Net-SNMP</a>'s <b oldrole="command">snmptrapd</b> application. <MadCap:variable name="General.abbrev"></MadCap:variable> can read these traps from a log file, and extract their content into name-value pairs, making it easy to forward them as a structured log message (for example, in JSON format). The <MadCap:variable name="General.abbrev"></MadCap:variable> application automatically adds the <span class="Code" oldrole="parameter">.snmp.</span> prefix to the name of the fields the extracted from the message.</p>
+<p oldrole="para">The <span class="Code" oldrole="parameter">snmptrap()</span> source is available in <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="ose">3.10</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7.0.3</MadCap:conditionaltext> and later.</p>
+<h6 oldrole="formalpara">Limitations:</h6>
+
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">The <span class="Code" oldrole="parameter">snmptrap()</span> source has only the options listed in <MadCap:xref href="reference-source-snmptrap.htm#reference-source-snmptrap"></MadCap:xref>. Other options commonly available in other source drivers are not supported.</p>
+</li>
+<li oldrole="listitem">
+<MadCap:snippetBlock src="../../shared/chunk/para-snmptrap-discards-messages.htm"></MadCap:snippetBlock>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application cannot resolve OIDs, you have to configure <b oldrole="command">snmptrapd</b> to do so. Note that because of a bug, if <b oldrole="command">snmptrapd</b> does not escape String values in the VarBindList if it can resolve an OID to a symbolic name. As a result, <MadCap:variable name="General.abbrev"></MadCap:variable> cannot process traps that contain the <span class="Code" oldrole="userinput">=</span> in the value of the string. To overcome this problem, disable resolving OIDs in <b oldrole="command">snmptrapd</b>. For details, see the documentation of <b oldrole="command">snmptrapd</b>.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The colon (<span class="Code" oldrole="userinput">:</span>) character is commonly used in SNMP traps. However, this character cannot be used in the name of <MadCap:variable name="General.abbrev"></MadCap:variable> macros (name-value pairs). Therefore, the <MadCap:variable name="General.abbrev"></MadCap:variable> application automatically replaces all consecutive <span class="Code" oldrole="userinput">:</span> characters with a single underscore (<span class="Code" oldrole="userinput">_</span>) character. For example, you can reference the value of the <span class="Code" oldrole="userinput">NET-SNMP-EXAMPLES-MIB::netSnmpExampleString</span> key using the <span class="Code" oldrole="userinput">${NET-SNMP-EXAMPLES-MIB_netSnmpExampleString}</span> macro.</p>
+<p oldrole="para">Note that this affects only name-value pairs (macros). The generated message always contains the original name of the key.</p>
+</li>
+</ul>
+<h6 oldrole="formalpara">Prerequisites:</h6>
+
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">Configure <b oldrole="command">snmptrapd</b> to log into a file.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">If you use SMIv1 traps, include the following format string in the configuration file of <b oldrole="command">snmptrapd</b>:</p>
+<pre class="Code" oldrole="synopsis">format1 %.4y-%.2m-%.2l %.2h:%.2j:%.2k %B [%b]: %N\n\t%W Trap (%q) Uptime: %#T\n%v\n</pre>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">If you use SMIv2 traps, use the default format. The <span class="Code" oldrole="parameter">snmptrap()</span> source of <MadCap:variable name="General.abbrev"></MadCap:variable> expects this default format:</p>
+<pre class="Code" oldrole="synopsis">format2 %.4y-%.2m-%.2l %.2h:%.2j:%.2k %B [%b]:\n%v\n</pre>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">Beacause of an <b oldrole="command">snmptrapd</b> bug, if you specify the filename in the configuration file with <span class="Code" oldrole="userinput">logOption</span>, you must also specify another output as a command line argument (-Lf, -Ls). Otherwise, <b oldrole="command">snmptrapd</b> will not apply the the trap format.</p>
+</li>
+</ul>
+<p oldrole="para">To use the <span class="Code" oldrole="parameter">snmptrap()</span> driver, the <span class="Code" oldrole="filename">scl.conf</span> file must be included in your <MadCap:variable name="General.abbrev"></MadCap:variable> configuration:</p>
+<pre class="Code" oldrole="synopsis">@include "scl.conf"</pre>
+
+<h6 name="example-source-snmptrap" oldrole="example">Example: Using the snmptrap() driver</h6>
+<p oldrole="para">A sample <span class="Code" oldrole="filename">snmptrapd</span> configuration:</p>
+<pre class="Code" oldrole="synopsis">authCommunity log,execute,net public
+format1 %.4y-%.2m-%.2l %.2h:%.2j:%.2k %B [%b]: %N\n\t%W Trap (%q) Uptime: %#T\n%v\n
+outputOption s</pre>
+<p oldrole="para">Starting <span class="Code" oldrole="filename">snmptrapd</span>: <b oldrole="command">snmptrapd -A -Lf /var/log/snmptrapd.log</b></p>
+<p oldrole="para">Sending a sample V2 trap message: <b oldrole="command">snmptrap -v2c -c public 127.0.0.1 666 NET-SNMP-EXAMPLES-MIB::netSnmpExampleHeartbeatNotification netSnmpExampleHeartbeatRate i 60 netSnmpExampleString s "string"</b>. From this trap, <MadCap:variable name="General.abbrev"></MadCap:variable> receives the following input:</p>
+<pre class="Code" oldrole="synopsis">2017-05-23 15:29:40 localhost [UDP: [127.0.0.1]:59993-&gt;[127.0.0.1]:162]:
+SNMPv2-SMI::mib-2.1.3.0 = Timeticks: (666) 0:00:06.66   SNMPv2-SMI::snmpModules.1.1.4.1.0 = OID: NET-SNMP-EXAMPLES-MIB::netSnmpExampleHeartbeatNotification     NET-SNMP-EXAMPLES-MIB::netSnmpExampleHeartbeatRate = INTEGER: 60        NET-SNMP-EXAMPLES-MIB::netSnmpExampleString = STRING: string</pre>
+<p oldrole="para">The following <MadCap:variable name="General.abbrev"></MadCap:variable> configuration sample uses the default settings of the driver, reading SNMP traps from the <span class="Code" oldrole="filename">/var/log/snmptrapd.log</span> file, and writes the log messages generated from the traps into a file.</p>
+<pre class="Code" oldrole="synopsis">@include "scl.conf"
+log {
+  source {
+    snmptrap(filename("/var/log/snmptrapd.log"));
+  };
+  destination {
+    file("/var/log/example.log");
+  };
+};</pre>
+<p oldrole="para">From the trap, <MadCap:variable name="General.abbrev"></MadCap:variable> writes the following into the log file:</p>
+<pre class="Code" oldrole="synopsis">May 23 15:29:40 myhostname snmptrapd: hostname='localhost', transport_info='UDP: [127.0.0.1]:59993-&gt;[127.0.0.1]:162', SNMPv2-SMI::mib-2.1.3.0='(666) 0:00:06.66', SNMPv2-SMI::snmpModules.1.1.4.1.0='NET-SNMP-EXAMPLES-MIB::netSnmpExampleHeartbeatNotification', NET-SNMP-EXAMPLES-MIB::netSnmpExampleHeartbeatRate='60', NET-SNMP-EXAMPLES-MIB::netSnmpExampleString='string'</pre>
+<p oldrole="para">Using the same input trap, the following configuration example formats the SNMP traps as JSON messages.</p>
+<pre class="Code" oldrole="synopsis">@include "scl.conf"
+log {
+  source {
+    snmptrap(
+      filename("/var/log/snmptrapd.log")
+      set-message-macro(no)
+    );
+  };
+
+  destination {
+    file("/var/log/example.log" template("$(format-json --scope dot-nv-pairs)\n"));
+  };
+};</pre>
+<p oldrole="para">The previous trap formatted as JSON:</p>
+<pre class="Code" oldrole="synopsis">{
+   "_snmp":{
+      "transport_info":"UDP: [127.0.0.1]:59993-&gt;[127.0.0.1]:162",
+      "hostname":"localhost",
+      "SNMPv2-SMI_snmpModules":{
+         "1":{
+            "1":{
+               "4":{
+                  "1":{
+                     "0":"NET-SNMP-EXAMPLES-MIB::netSnmpExampleHeartbeatNotification"
+                  }
+               }
+            }
+         }
+      },
+      "SNMPv2-SMI_mib-2":{
+         "1":{
+            "3":{
+               "0":"(666) 0:00:06.66"
+            }
+         }
+      },
+      "NET-SNMP-EXAMPLES-MIB_netSnmpExampleString":"string",
+      "NET-SNMP-EXAMPLES-MIB_netSnmpExampleHeartbeatRate":"60"
+   }
+}</pre>
+
+</body></html>

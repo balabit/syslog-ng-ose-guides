@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="configuring-destinations-osquery" oldrole="section">
+<h1 name="configuring-destinations-osquery" version="5.0"><span class="Code" oldrole="parameter">osquery</span>: Sending log messages to osquery's syslog table</h1>
+<p oldrole="para">The <span class="Code" oldrole="parameter">osquery()</span> driver sends log messages to osquery's syslog table.</p>
+<p oldrole="para">The syslog table contains logs forwarded over a named pipe from syslog-ng. When an osquery process that supports the syslog table starts up, it creates (and properly sets permissions for) a named pipe for syslog-ng to write to.</p>
+
+<h6 oldrole="example">Example: Using the osquery() destination driver</h6>
+<p oldrole="para">Run osqueryi:</p>
+<pre class="Code" oldrole="synopsis">osqueryi --enable_syslog
+         --disable-events=false</pre>
+<p oldrole="para">To store the database on disk:</p>
+<pre class="Code" oldrole="synopsis">osqueryi --enable_syslog
+         --disable-events=false
+         <i oldrole="emphasis" role="bold">--database_path=/tmp/osquery.db</i></pre>
+<p oldrole="para">To set up a custom named pipe:</p>
+<pre class="Code" oldrole="synopsis">osqueryi --enable_syslog
+         --disable-events=false
+         --database_path=/tmp/osquery.db
+         <i oldrole="emphasis" role="bold">--syslog_pipe_path=/tmp/osq.pipe</i></pre>
+<p oldrole="para">Example configuration:</p>
+<pre class="Code" oldrole="synopsis">@version: 3.12
+@include "scl.conf"
+
+source s_net {
+  network(port(5514));
+};
+
+destination d_osquery {
+  # custom pipe path:
+  #osquery(pipe("/tmp/osq.pipe"));
+
+  # backup outgoing logs:
+  #osquery(file("/var/log/osquery_inserts.log" template(t_osquery)));
+
+  # defaults
+  osquery();
+};
+
+log {
+ source(s_net);
+ destination(d_osquery);
+ flags(flow-control);
+};</pre>
+
+</body></html>

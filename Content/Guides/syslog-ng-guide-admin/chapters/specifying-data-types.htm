@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="specifying-data-types" oldrole="section">
+<h1 name="specifying-data-types">Specifying data types in value-pairs</h1>
+<MadCap:keyword term="data types"></MadCap:keyword>
+<MadCap:keyword term="type-hinting"></MadCap:keyword>
+<MadCap:keyword term="type-casting"></MadCap:keyword>
+<MadCap:keyword term="typecasting{see}['type-casting']"></MadCap:keyword>
+<p oldrole="para">By default, <MadCap:variable name="General.abbrev"></MadCap:variable> handles every data as strings. However, certain destinations and data formats (for example, SQL, MongoDB, JSON<MadCap:conditionaltext MadCap:conditions="ose">, AMQP</MadCap:conditionaltext>) support other types of data as well, for example, numbers or dates. The <MadCap:variable name="General.abbrev"></MadCap:variable> application allows you to specify the data type in templates (this is also called type-hinting). If the destination driver supports data types, it converts the incoming data to the specified data type. For example, this allows you to store integer numbers as numbers in MongoDB, instead of strings.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');"><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/caution.png"/></p></td><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span><p oldrole="para">Hazard of data loss! If <MadCap:variable name="General.abbrev"></MadCap:variable> cannot convert the data into the specified type, an error occurs, and <MadCap:variable name="General.abbrev"></MadCap:variable> drops the message by default. To change how <MadCap:variable name="General.abbrev"></MadCap:variable> handles data-conversion errors, see <MadCap:xref href="reference-options.htm#global-option-typecasting-on-error"></MadCap:xref>.</p></td></tr></tbody></table>
+<p oldrole="para">To use type-hinting, enclose the macro or template containing the data with the type: <span class="Code" oldrole="userinput">&lt;datatype&gt;("&lt;macro&gt;")</span>, for example: <span class="Code" oldrole="userinput">int("$PID")</span>.</p>
+<p oldrole="para">Currently the <span class="Code" oldrole="parameter">mongodb()</span> destination and the <span class="Code" oldrole="parameter">format-json</span> template function supports data types.</p>
+
+<h6 oldrole="example">Example: Using type-hinting</h6>
+<MadCap:keyword term="mongodb{see}['type-casting']"></MadCap:keyword>
+<p oldrole="para">The following example stores the MESSAGE, PID, DATE, and PROGRAM fields of a log message in a MongoDB database. The DATE and PID parts are stored as numbers instead of strings.</p>
+<pre class="Code" oldrole="synopsis">mongodb(
+    value-pairs(pair("date", datetime("$UNIXTIME"))
+            pair("pid", int64("$PID"))
+            pair("program", "$PROGRAM"))
+            pair("message", "$MESSAGE"))
+             )
+);</pre>
+<p oldrole="para">The following example formats the same fields into JSON.</p>
+<pre class="Code" oldrole="synopsis">$(format-json date=datetime($UNIXTIME) pid=int64($PID) program=$PROGRAM message=$MESSAGE)</pre>
+
+<p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application currently supports the following data-types.</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para"><span class="Code" oldrole="parameter">boolean</span>: Converts the data to a boolean value. Anything that begins with a <span class="Code" oldrole="userinput">t</span> or <span class="Code" oldrole="userinput">1</span> is converted to true, anything that begins with an <span class="Code" oldrole="userinput">f</span> or <span class="Code" oldrole="userinput">0</span> is converted to false.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para"><span class="Code" oldrole="parameter">datetime</span>: Use it only with UNIX timestamps, anything else will likely result in an error. This means that currently you can use only the <span class="Code" oldrole="parameter">$UNIXTIME</span> macro for this purpose.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para"><span class="Code" oldrole="parameter">double</span>: A floating-point number.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para"><span class="Code" oldrole="parameter">literal</span>: The data as a literal string, without adding any quotes or escape characters.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para"><span class="Code" oldrole="parameter">int</span> or <span class="Code" oldrole="parameter">int32</span>: 32-bit integer.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para"><span class="Code" oldrole="parameter">int64</span>: 64-bit integer.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para"><span class="Code" oldrole="parameter">string</span>: The data as a string.</p>
+</li>
+</ul>
+</body></html>

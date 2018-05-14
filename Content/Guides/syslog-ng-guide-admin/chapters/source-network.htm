@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="configuring-sources-network" oldrole="section">
+<h1 name="configuring-sources-network" version="5.0"><span class="Code" oldrole="parameter">network</span>: Collecting messages using the RFC3164 protocol (network() driver)</h1>
+<p oldrole="para">The network() source driver can receive syslog messages conforming to RFC3164 from the network using the TCP, TLS, and UDP networking protocols.</p>
+<p condition="pe" oldrole="para">You can use the <trademark>RLTP</trademark> protocol as well. For details about the <trademark>RLTP</trademark> protocol, see <MadCap:xref href="#chapter-rltp"></MadCap:xref>.</p>
+<MadCap:snippetBlock src="../../shared/chunk/topic-network-driver-protocols.htm"></MadCap:snippetBlock>
+<h6 oldrole="formalpara">Declaration:</h6>
+
+<pre class="Code" oldrole="synopsis">network([options]);</pre>
+<p oldrole="para">By default, the <span class="Code" oldrole="parameter">network()</span> driver binds to <span class="Code" oldrole="userinput">0.0.0.0</span>, meaning that it listens on every available IPV4 interface on the TCP/601 port. To limit accepted connections to only one interface, use the <span class="Code" oldrole="parameter">localip()</span> parameter. To listen on IPv6 addresses, use the <span class="Code" oldrole="userinput">ip-protocol(6)</span> option.</p>
+
+<h6 name="example-source-network" oldrole="example">Example: Using the network() driver</h6>
+<p oldrole="para">Using only the default settings: listen on every available IPV4 interface on the TCP/601 port.</p>
+<pre class="Code" oldrole="synopsis">source s_network {
+    network();
+};</pre>
+<p oldrole="para">UDP source listening on <span class="Code" oldrole="userinput">192.168.1.1</span> (the default port for UDP is 514):</p>
+<pre class="Code" oldrole="synopsis">source s_network {
+    network(
+        ip("192.168.1.1")
+        transport("udp")
+        );
+};</pre>
+<p oldrole="para">TCP source listening on the IPv6 localhost, port 2222:</p>
+<pre class="Code" oldrole="synopsis">source s_network6 {
+        network(
+            ip("::1")
+            transport("tcp")
+            port(2222)
+            ip-protocol(6)
+        );
+};</pre>
+<p oldrole="para">A TCP source listening on a TLS-encrypted channel.</p>
+<pre class="Code" oldrole="synopsis">source s_network {
+    network(
+        transport("tcp")
+        port(2222)
+        tls(peer-verify("required-trusted")
+            key-file("/opt/syslog-ng/etc/syslog-ng/syslog-ng.key")
+            cert-file("/opt/syslog-ng/etc/syslog-ng/syslog-ng.crt")
+            );
+    );
+};</pre>
+<p oldrole="para">A TCP source listening for messages using the IETF-syslog message format. Note that for transferring IETF-syslog messages, generally you are recommended to use the <span class="Code" oldrole="parameter">syslog()</span> driver on both the client and the server, as it uses both the IETF-syslog message format and the protocol. For details, see <MadCap:xref href="source-syslog.htm#source-syslog"></MadCap:xref>.</p>
+<pre class="Code" oldrole="synopsis">source s_tcp_syslog {
+    network(
+        ip("127.0.0.1")
+        flags(syslog-protocol)
+    );
+};</pre>
+
+<p oldrole="para">For details on the options of the <span class="Code" oldrole="parameter">network()</span> source, see <MadCap:xref href="source-network.htm#reference-source-network"></MadCap:xref>.</p>
+<h2 name="reference-source-network">network() source options</h2>
+<MadCap:keyword term="source drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;network()&lt;/span&gt;, ' driver']"></MadCap:keyword>
+<MadCap:keyword term="TLS"></MadCap:keyword>
+<p oldrole="para">The <span class="Code" oldrole="parameter">network()</span> driver has the following options.</p>
+<MadCap:snippetBlock src="../../shared/chunk/source-syslog-options.htm"></MadCap:snippetBlock>
+</body></html>

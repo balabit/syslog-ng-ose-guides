@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body oldrole="section">
+<h1>Transferring your logs to Elasticsearch using GeoIP2</h1>
+<p oldrole="para">If you are transferring your log messages into Elasticsearch, use the following rewrite rule to combine the longitude and latitude information into a single value (called <span class="Code" oldrole="userinput">geoip2.location</span>), and set the mapping in Elasticsearch accordingly. Do not forget to include the rewrite in your log path. These examples assume that you used <span class="Code" oldrole="userinput">prefix("geoip2.")</span> instead of the default for the <span class="Code" oldrole="parameter">geoip2</span> parser. For details on transferring your log messages to Elasticsearch, see <MadCap:xref href="configuring-destinations-elasticsearch2.htm#configuring-destinations-elasticsearch2"></MadCap:xref>.</p>
+<MadCap:keyword term="geoip2:['elasticsearch']"></MadCap:keyword>
+<MadCap:keyword term="elasticsearch:['transferring geoip2 data']"></MadCap:keyword>
+<pre class="Code" oldrole="synopsis">rewrite r_geoip2 {
+    set(
+        "${geoip2.location.latitude},${geoip2.location.longitude}",
+        value( "geoip2.location2" ),
+        condition(not "${geoip2.location.latitude}" == "")
+    );
+};</pre>
+<p oldrole="para">In your Elasticsearch configuration, set the appropriate mappings:</p>
+<pre class="Code" oldrole="synopsis">{
+   "mappings" : {
+      "_default_" : {
+         "properties" : {
+            "geoip2" : {
+               "properties" : {
+                  "location2" : {
+                     "type" : "geo_point"
+                  }
+               }
+            }
+         }
+      }
+   }
+}</pre>
+</body></html>

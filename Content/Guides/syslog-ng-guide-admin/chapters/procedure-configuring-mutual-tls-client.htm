@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="procedure-configuring-mutual-tls-client" oldrole="procedure">
+<h1 name="procedure-configuring-mutual-tls-client" version="5.0">Configuring TLS on the syslog-ng clients</h1>
+<h6 oldrole="formalpara">Purpose:</h6>
+
+<p oldrole="para">Complete the following steps on every syslog-ng client host. Examples are provided using both the legacy BSD-syslog protocol (using the <span class="Code" oldrole="parameter">network()</span> driver) and the new IETF-syslog protocol standard (using the <span class="Code" oldrole="parameter">syslog()</span> driver):</p>
+<h6 oldrole="formalpara">Steps:</h6>
+
+<ol oldrole="procedure"><li oldrole="step">
+<p oldrole="para">Create an X.509 certificate for the syslog-ng client.<!--The
+                        <parameter>subject_alt_name</parameter> parameter (or the <parameter>Common
+                        Name</parameter> parameter if the <parameter>subject_alt_name</parameter>
+                    parameter is empty) must contain the hostname or the IP address (as resolved
+                    from the syslog-ng clients and relays) of the client.--></p>
+</li><li oldrole="step">
+<p oldrole="para">Copy the certificate (for example <span class="Code" oldrole="filename">client_cert.pem</span>) and the matching private key (for example <span class="Code" oldrole="filename">client.key</span>) to the syslog-ng client host, for example into the <span class="Code" oldrole="filename">/opt/syslog-ng/etc/syslog-ng/cert.d</span> directory. The certificate must be a valid X.509 certificate in PEM format. If you want to use a password-protected key, see <MadCap:xref href="tls-password-protected-keys.htm#tls-password-protected-keys"></MadCap:xref>.</p>
+</li><li oldrole="step">
+<p oldrole="para">Copy the CA certificate of the Certificate Authority (for example <span class="Code" oldrole="filename">cacert.pem</span>) that issued the certificate of the syslog-ng server (or the self-signed certificate of the syslog-ng server) to the syslog-ng client hosts, for example into the <span class="Code" oldrole="filename">/opt/syslog-ng/etc/syslog-ng/ca.d</span> directory.</p>
+<p oldrole="para">Issue the following command on the certificate: <b oldrole="command">openssl x509 -noout -hash -in cacert.pem</b> The result is a hash (for example <span class="Code" oldrole="userinput">6d2962a8</span>), a series of alphanumeric characters based on the Distinguished Name of the certificate.</p>
+<p oldrole="para">Issue the following command to create a symbolic link to the certificate that uses the hash returned by the previous command and the <span class="Code" oldrole="userinput">.0</span> suffix.</p>
+<p oldrole="para"><b oldrole="command">ln -s cacert.pem 6d2962a8.0</b></p>
+</li><li oldrole="step">
+<p oldrole="para">Add a destination statement to the syslog-ng configuration file that uses the <span class="Code" oldrole="userinput">tls( ca-dir(path_to_ca_directory) )</span> option and specify the directory using the CA certificate. The destination must use the <span class="Code" oldrole="parameter">network()</span> or the <span class="Code" oldrole="parameter">syslog()</span> destination driver, and the IP address and port parameters of the driver must point to the syslog-ng server. Include the client's certificate and private key in the <span class="Code" oldrole="parameter">tls()</span> options.</p>
+
+<h6 oldrole="example">Example: A destination statement using mutual authentication</h6>
+<p oldrole="para">The following destination encrypts the log messages using TLS and sends them to the <span class="Code" oldrole="userinput">1999/TCP</span> port of the syslog-ng server having the <span class="Code" oldrole="userinput">10.1.2.3</span> IP address. The private key and the certificate file authenticating the client is also specified.</p>
+<pre class="Code" oldrole="synopsis">destination demo_tls_destination {
+    network("10.1.2.3" port(1999)
+        transport("tls")
+        tls( ca-dir("/opt/syslog-ng/etc/syslog-ng/ca.d")
+             key-file("/opt/syslog-ng/etc/syslog-ng/key.d/client.key")
+             cert-file("/opt/syslog-ng/etc/syslog-ng/cert.d/client_cert.pem")) ); };</pre>
+<pre class="Code" oldrole="synopsis">destination demo_tls_syslog_destination {
+    syslog("10.1.2.3" port(1999)
+        transport("tls")
+            tls( ca-dir("/opt/syslog-ng/etc/syslog-ng/ca.d")
+                 key-file("/opt/syslog-ng/etc/syslog-ng/key.d/client.key")
+                 cert-file("/opt/syslog-ng/etc/syslog-ng/cert.d/client_cert.pem")) ); };</pre>
+
+</li><li oldrole="step">
+<p oldrole="para">Include the destination created in Step 2 in a log statement.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');"><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/caution.png"/></p></td><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span><p oldrole="para">The encrypted connection between the server and the client fails if the <span class="Code" oldrole="parameter">Common Name</span> or the <span class="Code" oldrole="parameter">subject_alt_name</span> parameter of the server certificate does not the hostname or the IP address (as resolved from the syslog-ng clients and relays) of the server.</p><p oldrole="para">Do not forget to update the certificate files when they expire.</p></td></tr></tbody></table>
+</li></ol></body></html>

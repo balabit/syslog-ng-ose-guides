@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="relaying-log-messages" oldrole="section">
+<h1 name="relaying-log-messages" version="5.0">Configuring syslog-ng relays</h1>
+<p oldrole="para">This section describes how to configure <MadCap:variable name="General.abbrev"></MadCap:variable> as a relay.</p>
+<MadCap:snippetBlock src="procedure-configuring-syslog-ng-relays.htm"></MadCap:snippetBlock>
+<h2 name="example-how-relaying-works">How relaying log messages works</h2>
+<p oldrole="para">Depending on your exact needs about relaying log messages, there are many scenarios and <MadCap:variable name="General.abbrev"></MadCap:variable> options that influence how the log message will look like on the logserver. Some of the most common cases are summarized in the following example.</p>
+<p oldrole="para">Consider the following example: <i oldrole="emphasis">client-host &gt; syslog-ng-relay &gt; syslog-ng-server</i>, where the IP address of <span class="Code" oldrole="parameter">client-host</span> is <span class="Code" oldrole="userinput">192.168.1.2</span>. The <span class="Code" oldrole="parameter">client-host</span> device sends a syslog message to <span class="Code" oldrole="parameter">syslog-ng-relay</span>. Depending on the settings of <span class="Code" oldrole="parameter">syslog-ng-relay</span>, the following can happen.</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">By default, the <span class="Code" oldrole="parameter">keep-hostname()</span> option is disabled, so <span class="Code" oldrole="parameter">syslog-ng-relay</span> writes the IP address of the sender host (in this case, <span class="Code" oldrole="userinput">192.168.1.2</span>) to the HOST field of the syslog message, discarding any IP address or hostname that was originally in the message.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">If the <span class="Code" oldrole="parameter">keep-hostname()</span> option is enabled on <span class="Code" oldrole="parameter">syslog-ng-relay</span>, but name resolution is disabled (the <span class="Code" oldrole="parameter">use-dns()</span> option is set to <span class="Code" oldrole="userinput">no</span>), <span class="Code" oldrole="parameter">syslog-ng-relay</span> uses the HOST field of the message as-is, which is probably <span class="Code" oldrole="userinput">192.168.1.2</span>.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">To resolve the <span class="Code" oldrole="userinput">192.168.1.2</span> IP address to a hostname on <span class="Code" oldrole="parameter">syslog-ng-relay</span> using a DNS server, use the <span class="Code" oldrole="userinput">keep-hostname(no)</span> and <span class="Code" oldrole="userinput">use-dns(yes)</span> options. If the DNS server is properly configured and reverse DNS lookup is available for the <span class="Code" oldrole="userinput">192.168.1.2</span> address, <MadCap:variable name="General.abbrev"></MadCap:variable> will rewrite the HOST field of the log message to <span class="Code" oldrole="parameter">client-host</span>.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">It is also possible to resolve IP addresses locally, without relying on the DNS server. For details on local name resolution, see <MadCap:xref href="example-local-dns.htm#example-local-dns"></MadCap:xref>.</p></td></tr></tbody></table>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The above points apply to the <MadCap:variable name="General.abbrev"></MadCap:variable> server (<span class="Code" oldrole="parameter">syslog-ng-server</span>) as well, so if <span class="Code" oldrole="parameter">syslog-ng-relay</span> is configured properly, use the <span class="Code" oldrole="userinput">keep-hostname(yes)</span> option on <span class="Code" oldrole="parameter">syslog-ng-server</span> to retain the proper HOST field. Setting <span class="Code" oldrole="userinput">keep-hostname(no)</span> on <span class="Code" oldrole="parameter">syslog-ng-server</span> would result in <MadCap:variable name="General.abbrev"></MadCap:variable> rewriting the HOST field to the address of the host that sent the message to <span class="Code" oldrole="parameter">syslog-ng-server</span>, which is <span class="Code" oldrole="parameter">syslog-ng-relay</span> in this case.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">If you cannot or do not want to resolve the <span class="Code" oldrole="userinput">192.168.1.2</span> IP address on <span class="Code" oldrole="parameter">syslog-ng-relay</span>, but want to store your log messages on <span class="Code" oldrole="parameter">syslog-ng-server</span> using the IP address of the original host (that is, <span class="Code" oldrole="parameter">client-host</span>), you can enable the <span class="Code" oldrole="parameter">spoof-source()</span> option on <span class="Code" oldrole="parameter">syslog-ng-relay</span>. However, <span class="Code" oldrole="parameter">spoof-source()</span> works only under the following conditions:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> binary has been compiled with the <span class="Code" oldrole="parameter">--enable-spoof-source</span> option.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The log messages are sent using the highly unreliable UDP transport protocol. (Extremely unrecommended.)</p>
+</li>
+</ul>
+</li>
+</ul>
+</body></html>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="geoip-parser" oldrole="section">
+<h1 name="geoip-parser" version="5.0">Looking up GeoIP data from IP addresses (DEPRECATED)</h1>
+<MadCap:keyword term="geoip"></MadCap:keyword>
+<MadCap:keyword term="parsers:['geoip']"></MadCap:keyword>
+<p oldrole="para">This parser is deprecated. Use <MadCap:xref href="parser-geoip2.htm#geoip2-parser"></MadCap:xref> instead.</p>
+<p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application can lookup IPv4 addresses from an offline GeoIP database, and make the retrieved data available in name-value pairs. IPv6 addresses are not supported. Depending on the database used, you can access country code, longitude, and latitude information.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">To access longitude and latitude information, download the <a href="http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz">GeoLiteCity</a> database, and unzip it (for example, to the <span class="Code" oldrole="filename">/usr/share/GeoIP/GeoLiteCity.dat</span> file). The default databases available on Linux and other platforms usually contain only the country codes.</p></td></tr></tbody></table>
+<p oldrole="para">You can refer to the separated parts of the message using the key of the value as a macro. For example, if the message contains <span class="Code" oldrole="userinput">KEY1=value1,KEY2=value2</span>, you can refer to the values as <span class="Code" oldrole="userinput">${KEY1}</span> and <span class="Code" oldrole="userinput">${KEY2}</span>.</p>
+<h6 oldrole="formalpara">Declaration:</h6>
+
+<pre class="Code" oldrole="synopsis">parser parser_name {
+    geoip(
+        &lt;macro-containing-the-IP-address-to-lookup&gt;
+        prefix()
+        database("&lt;path-to-database-file&gt;")
+    );
+};</pre>
+
+<h6 oldrole="example">Example: Using the GeoIP parser</h6>
+<p oldrole="para">In the following example, <MadCap:variable name="General.abbrev"></MadCap:variable> retrieves the GeoIP data of the IP address contained in the ${HOST} field of the incoming message, and includes the data (prefixed with the <span class="Code" oldrole="userinput">geoip.</span> string) in the output JSON message.</p>
+<pre class="Code" oldrole="synopsis">@version: 3.7
+@module geoip
+
+options {
+    keep-hostname(yes);
+};
+
+source s_file {
+    file("/tmp/input");
+};
+
+parser p_geoip { geoip( "${HOST}", prefix( "geoip." ) database( "/usr/share/GeoIP/GeoLiteCity.dat" ) ); };
+
+destination d_file {
+    file( "/tmp/output" template("$(format-json --scope core --key geoip*)\n") );
+};
+
+
+log {
+    source(s_file);
+    parser(p_geoip);
+    destination(d_file);
+};</pre>
+<p oldrole="para">For example, for the <span class="Code" oldrole="userinput">&lt;38&gt;Jan 1 14:45:22 192.168.1.1 prg00000[1234]: test message</span> message the output will look like:</p>
+<pre class="Code" oldrole="synopsis">{"geoip":{"longitude":"47.460704","latitude":"19.049968","country_code":"HU"},"PROGRAM":"prg00000","PRIORITY":"info","PID":"1234","MESSAGE":"test message","HOST":"192.168.1.1","FACILITY":"auth","DATE":"Jan  1 14:45:22"}</pre>
+<p oldrole="para">If you are transferring your log messages into Elasticsearch, use the following rewrite rule to combine the longitude and latitude information into a single value (called <span class="Code" oldrole="userinput">geoip.location</span>), and set the mapping in Elasticsearch accordingly. Do not forget to include the rewrite in your log path. For details on transferring your log messages to Elasticsearch, see <MadCap:xref href="destination-elasticsearch.htm#configuring-destinations-elasticsearch"></MadCap:xref>.</p>
+<MadCap:keyword term="geoip:['elasticsearch']"></MadCap:keyword>
+<MadCap:keyword term="elasticsearch:['transferring geoip data']"></MadCap:keyword>
+<pre class="Code" oldrole="synopsis">rewrite r_geoip {
+    set(
+        "${geoip.latitude},${geoip.longitude}",
+        value( "geoip.location" ),
+        condition(not "${geoip.latitude}" == "")
+    );
+};</pre>
+<p oldrole="para">In your Elasticsearch configuration, set the appropriate mappings:</p>
+<pre class="Code" oldrole="synopsis">{
+   "mappings" : {
+      "_default_" : {
+         "properties" : {
+            "geoip" : {
+               "properties" : {
+                  "country_code" : {
+                     "index" : "not_analyzed",
+                     "type" : "string",
+                     "doc_values" : true
+                  },
+                  "latitude" : {
+                     "index" : "not_analyzed",
+                     "type" : "string",
+                     "doc_values" : true
+                  },
+                  "longitude" : {
+                     "type" : "string",
+                     "doc_values" : true,
+                     "index" : "not_analyzed"
+                  },
+                  "location" : {
+                     "type" : "geo_point"
+                  }
+               }
+            }
+         }
+      }
+   }
+}</pre>
+
+<h2 name="geoip-parser-options">Options of <span class="Code" oldrole="userinput">geoip</span> parsers</h2>
+<MadCap:keyword term="geoip"></MadCap:keyword>
+<MadCap:keyword term="parsers:['geoip']"></MadCap:keyword>
+<p oldrole="para">The <span class="Code" oldrole="parameter">geoip</span> parser has the following options.</p>
+
+<MadCap:snippetBlock src="../../shared/chunk/option-parser-prefix.htm"></MadCap:snippetBlock>
+<p oldrole="para">For example, to insert the <span class="Code" oldrole="userinput">geoip.</span> prefix, use the <span class="Code" oldrole="userinput">prefix(.geoip.)</span> option. To refer to a particular data when using a prefix, use the prefix in the name of the macro, for example, <b oldrole="command">${geoip.country_code}</b> .</p>
+
+
+<h6 name="geoip-parser-database" oldrole="simplesect">database()</h6>
+<MadCap:keyword term="database()"></MadCap:keyword>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Synopsis:
+									
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">database()</td>
+</tr>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default:
+									
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1"><span class="Code" oldrole="filename">/usr/share/GeoIP/GeoIP.dat</span>
+</td>
+</tr>
+</tbody>
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The full path to the GeoIP database to use. Note that <MadCap:variable name="General.abbrev"></MadCap:variable> must have the required privileges to read this file. Do not modify or delete this file while <MadCap:variable name="General.abbrev"></MadCap:variable> is running, it can crash <MadCap:variable name="General.abbrev"></MadCap:variable>.</p>
+
+</body></html>
