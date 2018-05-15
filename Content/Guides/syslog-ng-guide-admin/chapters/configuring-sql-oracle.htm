@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="configuring-sql-oracle" oldrole="section">
+<h1 name="configuring-sql-oracle" xmlns="http://docbook.org/ns/docbook">Using the sql() driver with an Oracle database</h1>
+<MadCap:keyword term="Oracle:['sql() configuration']"></MadCap:keyword>
+<p oldrole="para">The Oracle sql destination has some special aspects that are important to note.</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">The hostname of the database server is set in the <span class="Code" oldrole="filename">tnsnames.ora</span> file, not in the <span class="Code" oldrole="parameter">host</span> parameter of the <span class="Code" oldrole="parameter">sql()</span> destination.</p>
+<p oldrole="para">If the <span class="Code" oldrole="filename">tnsnames.ora</span> file is not located in the /etc directory (or in the /var/opt/oracle directory on Solaris), set the following Oracle-related environment variables, so &abbrev; will find the file: <span class="Code" oldrole="parameter">ORACLE_BASE</span>, <span class="Code" oldrole="parameter">ORACLE_HOME</span>, and <span class="Code" oldrole="parameter">ORACLE_SID</span>. For details, see the documentation of the Oracle Instant Client.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">You cannot use the same <span class="Code" oldrole="parameter">database()</span> settings in more than one destination, because the <span class="Code" oldrole="parameter">database()</span> option of the SQL driver is just a reference to the connection string of the <span class="Code" oldrole="filename">tnsnames.ora</span> file. To overcome this problem, you can duplicate the connections in the <span class="Code" oldrole="filename">tnsnames.ora</span> file under a different name, and use a different table in each Oracle destination in &abbrev;.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">As certain database versions limit the maximum length of table names, macros in the table names should be used with care.</p>
+</li>
+<li oldrole="listitem">
+<!-- FIXME delete when solved -->
+<p oldrole="para">In the current version of &abbrev;, the types of database columns must be explicitly set for the Oracle destination. The column used to store the text part of the syslog messages should be able to store messages as long as the longest message permitted by syslog-ng, therefore it is usually recommended to use the <span class="Code" oldrole="userinput">varchar2</span> or <span class="Code" oldrole="userinput">clob</span> column type. (The maximum length of the messages can be set using the <span class="Code" oldrole="parameter">log-msg-size()</span> option.) For details, see the following example.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The Oracle Instant Client used by &abbrev; supports only the following character sets:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">Single-byte character sets: <span class="Code" oldrole="userinput">US7ASCII, WE8DEC, WE8MSWIN1252, and WE8ISO8859P1</span></p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">Unicode character sets: <span class="Code" oldrole="userinput">UTF8, AL16UTF16, and AL32UTF8</span></p>
+</li>
+</ul>
+</li>
+</ul>
+<div class="Example">
+<h6 name="example-destination-sql-oracle" oldrole="example">Example: Using the sql() driver with an Oracle database</h6>
+<MadCap:keyword term="destinations:['sql() configuration']"></MadCap:keyword>
+<MadCap:keyword term="Oracle:['sql() configuration']"></MadCap:keyword>
+<p oldrole="para">The following example sends the log messages into an Oracle database running on the <span class="Code" oldrole="userinput">logserver</span> host, which must be set in the <span class="Code" oldrole="filename">/etc/tnsnames.ora</span> file. The messages are inserted into the <span class="Code" oldrole="userinput">LOGS</span> database, the name of the table includes the exact date when the messages were sent. The syslog-ng application automatically creates the required tables and columns, if the user account used to connect to the database has the required privileges.</p>
+<pre class="Code" oldrole="synopsis">destination d_sql {
+  sql(type(oracle)
+  username("syslog-ng") password("password")
+  database("LOGS")
+  table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")
+  columns("datetime varchar(16)", "host varchar(32)", "program varchar(32)", "pid varchar(8)", "message varchar2")
+  values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
+  indexes("datetime", "host", "program", "pid", "message"));
+};</pre>
+<p oldrole="para">The Oracle Instant Client retrieves the address of the database server from the <span class="Code" oldrole="filename">/etc/tnsnames.ora</span> file. Edit or create this file as needed for your configuration. A sample is provided below.</p>
+<pre class="Code" oldrole="synopsis">LOGS =
+(DESCRIPTION =
+(ADDRESS_LIST =
+(ADDRESS = (PROTOCOL = TCP)
+(HOST = logserver)
+(PORT = 1521))
+)
+(CONNECT_DATA =
+(SERVICE_NAME = EXAMPLE.SERVICE)
+)
+)</pre>
+</div>
+</body></html>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="config-global-variables" oldrole="section">
+<h1 name="config-global-variables" xmlns="http://docbook.org/ns/docbook">Global and environmental variables</h1>
+<MadCap:keyword term="syslog-ng.conf:['global variables']"></MadCap:keyword>
+<MadCap:keyword term="syslog-ng.conf:['environmental variables']"></MadCap:keyword>
+<MadCap:keyword term="environmental variables"></MadCap:keyword>
+<MadCap:keyword term="global variables"></MadCap:keyword>
+<MadCap:keyword term="@define"></MadCap:keyword>
+<p oldrole="para">Starting with &abbrev; version <MadCap:conditionaltext MadCap:conditions="ose">3.2</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">4 F1</MadCap:conditionaltext>, it is possible to define global variables in the configuration file. Global variables are actually <span class="Code" oldrole="userinput">name-value</span> pairs. When syslog-ng processes the configuration file during startup, it automatically replaces <span class="Code" oldrole="userinput">`name`</span> with <span class="Code" oldrole="userinput">value</span>. To define a global variable, use the following syntax:</p>
+<pre class="Code" oldrole="synopsis">@define name "value"</pre>
+<p oldrole="para">The value can be any string, but special characters must be escaped.<!-- FIXME add a link to the part about escaping -->To use the variable, insert the name of the variable enclosed between backticks (<span class="Code" oldrole="userinput">`</span>, similarly to using variables in Linux or UNIX shells) anywhere in the configuration file.</p>
+<p oldrole="para">The value of the global variable can be also specified using the following methods:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">Without any quotes, as long as the value does not contain any spaces or special characters. In other word, it contains only the following characters: <span class="Code" oldrole="userinput">a-zA-Z0-9_.</span>.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">Between apostrophes, in case the value does not contain apostrophes.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">Between double quotes, in which case special characters must be escaped using backslashes (<span class="Code" oldrole="userinput">\</span>).</p>
+</li>
+</ul>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="tip" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">TIP: </span><p oldrole="para">The environmental variables of the host are automatically imported and can be used as global variables.</p></td></tr></tbody></table>
+<div class="Example">
+<h6 name="example-global-variables" oldrole="example">Example: Using global variables</h6>
+<p oldrole="para">For example, if an application is creating multiple log files in a directory, you can store the path in a global variable, and use it in your source definitions.</p>
+<pre class="Code" oldrole="synopsis">@define mypath "/opt/myapp/logs"
+        source s_myapp_1 { file("`mypath`/access.log" follow-freq(1)); };
+        source s_myapp_2 { file("`mypath`/error.log" follow-freq(1)); };
+        source s_myapp_3 { file("`mypath`/debug.log" follow-freq(1)); };</pre>
+<p oldrole="para">The &abbrev; application will interpret this as:</p>
+<pre class="Code" oldrole="synopsis">@define mypath "/opt/myapp/logs"
+        source s_myapp_1 { file("/opt/myapp/logs/access.log" follow-freq(1)); };
+        source s_myapp_2 { file("/opt/myapp/logs/error.log" follow-freq(1)); };
+        source s_myapp_3 { file("/opt/myapp/logs/debug.log" follow-freq(1)); };</pre>
+</div>
+<!-- FIXME add an example that uses escaping -->
+</body></html>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="configuring-destinations-http-nonjava" oldrole="section">
+<h1 name="configuring-destinations-http-nonjava" version="5.0" xmlns="http://docbook.org/ns/docbook"><span class="Code" oldrole="parameter">http</span>: Posting messages over HTTP<MadCap:conditionaltext MadCap:conditions="ose"> without Java</MadCap:conditionaltext>
+</h1>
+<MadCap:keyword term="destination drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;http()&lt;/span&gt;, ' driver']"></MadCap:keyword>
+<MadCap:keyword term='destination drivers:[&lt;span class="Code" oldrole="parameter"&gt;http&lt;/span&gt;]'></MadCap:keyword>
+<p oldrole="para">Version <MadCap:conditionaltext MadCap:conditions="ose">3.8</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7.0.4</MadCap:conditionaltext> of &abbrev; can directly post log messages to web services using the HTTP protocol<MadCap:conditionaltext MadCap:conditions="ose">, without having to use Java</MadCap:conditionaltext>. The current implementation has the following limitations:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">Only the PUT and the POST methods are supported.</p>
+</li>
+</ul>
+<p oldrole="para">HTTPS connection, as well as password- and certificate-based authentication is supported.</p>
+<div class="Example">
+<h6 oldrole="example">Example: Client certificate authentication with HTTPS</h6>
+<pre class="Code" oldrole="synopsis">destination d_https { 
+  http(
+    [...]
+    ca_file("/path-to-cert-dir/ca-crt.pem")
+    ca_dir("/path-to-cert-dir/")
+    cert_file("/path-to-cert-dir/server-crt.pem")
+    key_file("/path-to-certdir/server-key.pem")
+    [...]
+  ); 
+};</pre>
+</div>
+<h6 oldrole="formalpara">Declaration:</h6>
+
+<!--
+    FIXME remove options that have usable defaults
+-->
+<pre class="Code" oldrole="synopsis">destination d_http {
+    http(
+        url("&lt;web-service-IP-or-hostname&gt;")
+        method("&lt;HTTP-method&gt;")
+        user_agent("&lt;USER-AGENT-message-value&gt;")
+        user("&lt;username&gt;")
+        password("&lt;password&gt;")
+    );
+};</pre>
+<div class="Example">
+<h6 name="example-destination-http-nonjava" oldrole="example">Example: Sending log data to a web service</h6>
+<p oldrole="para">The following example defines an <span class="Code" oldrole="parameter">http</span> destination.</p>
+<pre class="Code" oldrole="synopsis">destination d_http {
+  http(
+    url("http://127.0.0.1:8000")
+    method("PUT")
+    user_agent("syslog-ng User Agent")
+    user("user")
+    password("password")
+    headers("HEADER1: header1", "HEADER2: header2")
+    body("${ISODATE} ${MESSAGE}")
+  );
+};
+
+log
+    { source(s_file); destination(d_http); flags(flow-control); };
+</pre>
+</div>
+<p oldrole="para">You can also use the http() destination to <a href="syslog-ng-with-splunk.htm">forward log messages to Splunk using &abbrev;</a>.</p>
+</body></html>

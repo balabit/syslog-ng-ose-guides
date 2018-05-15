@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- FIXME jumplist -->
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="rltp-examples" oldrole="section">
+<h1 name="rltp-examples" xmlns="http://docbook.org/ns/docbook">Examples for using <trademark>RLTP</trademark>
+</h1>
+<div class="Example">
+<h6 oldrole="example">Example: Simple <trademark>RLTP</trademark> connection</h6>
+<p oldrole="para">The sender and the receiver use <trademark>RLTP</trademark> over the <span class="Code" oldrole="parameter">network()</span> protocol. Since the <span class="Code" oldrole="userinput">tls()</span> option is not configured neither on the sender nor on the receiver, the communication will be unencrypted.</p>
+<p oldrole="para"><i oldrole="emphasis">Receiver configuration (&abbrev; server)</i>:</p>
+<pre class="Code" oldrole="synopsis">source s_network_rltp {
+        network(
+            ip("127.0.0.1")
+            port("5555")
+            transport(rltp)
+            ip-protocol(4)
+        );
+};</pre>
+<p oldrole="para"><i oldrole="emphasis">Sender configuration (&abbrev; client)</i>:</p>
+<pre class="Code" oldrole="synopsis">destination d_network_rltp {
+        network(
+            "127.0.0.1"
+            port("5555")
+            transport(rltp)
+            ip-protocol(4)
+        );
+};</pre>
+</div>
+<div class="Example">
+<h6 oldrole="example">Example: <trademark>RLTP</trademark> with TLS encryption</h6>
+<p oldrole="para">The following example configure a sender and a receiver to communicate using <trademark>RLTP</trademark>. Since the <span class="Code" oldrole="parameter">tls-required()</span> option is set to <span class="Code" oldrole="userinput">optional</span> on the receiver and <span class="Code" oldrole="userinput">yes</span> on the sender, and the <span class="Code" oldrole="parameter">tls()</span> option is configured, the communication will be TLS-encrypted. For the sender (&abbrev; client), reliable disk-buffering is enabled to prevent data loss.</p>
+<p oldrole="para"><i oldrole="emphasis">Receiver configuration (&abbrev; server)</i>:</p>
+<pre class="Code" oldrole="synopsis">source s_syslog_rltp {
+        syslog(
+            ip("127.0.0.1")
+            port("4444")
+            transport(rltp(tls-required(optional)))
+            ip-protocol(4)
+            tls(
+                peer-verify(required-trusted)
+                ca-dir("/var/tmp/client/")
+                key-file("/var/tmp/server/server_priv.key")
+                cert-file("/var/tmp/server/server.crt")
+            )
+        );
+};</pre>
+<p oldrole="para"><i oldrole="emphasis">Sender configuration (&abbrev; client)</i>:</p>
+<pre class="Code" oldrole="synopsis">destination d_syslog_rltp {
+        syslog(
+            "127.0.0.1"
+            port("4444")
+            transport(rltp(tls-required(yes)))
+            ip-protocol(4)
+            disk-buffer( mem-buf-size(200000) disk-buf-size(2000000) reliable(yes) )
+            tls(
+                peer-verify(required-trusted)
+                ca-dir("/var/tmp/server/")
+                key-file("/var/tmp/client/client_priv.key")
+                cert-file("/var/tmp/client/client.crt")
+            )
+        );
+};</pre>
+</div>
+</body></html>

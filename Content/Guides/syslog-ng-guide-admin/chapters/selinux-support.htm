@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body condition="pe" name="selinux-support" oldrole="procedure">
+<h1 condition="pe" name="selinux-support" version="5.0" xmlns="http://docbook.org/ns/docbook">Using &abbrev; on &selinux;</h1>
+<MadCap:keyword term="&selinux;"></MadCap:keyword>
+<h6 oldrole="formalpara">Purpose:</h6>
+
+<p oldrole="para">Version &abbrev; 5 F2 and later properly supports &selinux; on Red Hat Enterprise Linux 6.5 and newer platforms. Version 5 F5 and later also supports &selinux; on Red Hat Enterprise Linux 5, as well as on 6.0-6.4. The CentOS and Oracle Linux platforms corresponding to the supported RHEL versions are supported as well. To use &abbrev; on a &selinux;-enabled host, complete the following steps.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">The following steps install &selinux; policy module that enables &abbrev; to properly run with its default configuration and default installation path (<span class="Code" oldrole="filename">/opt/syslog-ng</span>) on a &selinux;-enabled host. If you configure &abbrev; to perform an operation that is outside the permissions of this policy module (for example, to bind to a non-standard port, use a program destination or source, or to write logfiles in a non-standard directory), you have to modify and recompile the policy module. If you need help with that, contact the BalaBit Support Team.</p></td></tr></tbody></table>
+<h6 oldrole="formalpara">Prerequisites:</h6>
+
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">The following packages must be available on the host: <span class="Code" oldrole="filename">policycoreutils</span>,<span class="Code" oldrole="filename">policycoreutils-devel</span>, <span class="Code" oldrole="filename">policycoreutils-python</span>. If they are not already installed, issue the following command: <b oldrole="command">yum install policycoreutils policycoreutils-devel policycoreutils-python</b></p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">On RHEL 6.5, update the following packages at least to the indicated versions. These packages are available in the Red Hat repositories and are installed by default on RHEL 6.6. You can update them with the <b oldrole="command">yum update selinux-policy</b> command.</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para"><span class="Code" oldrole="filename">selinux-policy-3.7.19-231.el6.noarch &gt; 3.7.19-260.el6.noarch</span></p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para"><span class="Code" oldrole="filename">selinux-policy-targeted-3.7.19-231.el6.noarch &gt; 3.7.19-260.el6.noarch</span></p>
+</li>
+</ul>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The &abbrev; application must be installed on the host. For details, see <MadCap:xref href="chapter-install.htm#chapter-install"></MadCap:xref>.</p>
+</li>
+</ul>
+<h6 oldrole="formalpara">Steps:</h6>
+
+<h6 oldrole="formalpara">Expected result:</h6>
+
+<p oldrole="para">The &abbrev; application is installed and properly running under SELinux. If &abbrev; does not start, or displays permission errors, execute the <b oldrole="command">syslog_ng.sh</b>.</p>
+<ol oldrole="procedure"><li oldrole="step">
+<p oldrole="para">Download the &abbrev; &selinux; policy module from <a href="https://my.balabit.com/downloads/syslog-ng/syslog-ng-pe-5F2_and_higher-SELinux">https://my.balabit.com/downloads/syslog-ng/syslog-ng-pe-5F2_and_higher-SELinux</a></p>
+</li><li oldrole="step">
+<p oldrole="para">Uncompress the file and run the <b oldrole="command">./syslog_ng.sh</b> script to compile and load the &selinux; rules for &abbrev;.</p>
+</li><li oldrole="step">
+<p oldrole="para">Restart &abbrev; using the following command.</p>
+<table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');"><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../../Resources/Images/Common/caution.png"/></p></td><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span><p oldrole="para">The &selinux; policy works only if &abbrev; is started by the init daemon.</p></td></tr></tbody></table>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">On RHEL6: <b oldrole="command">service syslog-ng restart</b></p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">On RHEL7: <b oldrole="command">systemctl restart syslog-ng</b></p>
+</li>
+</ul>
+<p oldrole="para">If you do not use the <b oldrole="command">service</b> or the <b oldrole="command">systemctl</b> to start &abbrev; execute the <span class="Code" oldrole="filename">syslog_ng.sh</span> script again after starting &abbrev;. This is required to correct the settings of the files related to &abbrev; (most notably <span class="Code" oldrole="filename">/dev/log</span> and the files under <span class="Code" oldrole="filename">/opt/syslog-ng</span>). The settings can become incorrect if the privileges of the process that started &abbrev; are different from the privileges of the <b oldrole="command">service</b> or the <b oldrole="command">systemctl</b> process.</p>
+</li><li oldrole="step">
+<p oldrole="para">(Optional): The &abbrev; application can create coredumps, but this is disabled by default. You can enable coredumps with the <b oldrole="command">setsebool -P daemons_dump_core 1</b> command.</p>
+<p oldrole="para">Note that his command enables every daemons on your system to create core dumps, not just &abbrev;. There is no way to enable per-application core dumps in &selinux;.</p>
+</li></ol></body></html>

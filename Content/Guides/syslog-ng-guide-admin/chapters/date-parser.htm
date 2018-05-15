@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="date-parser" oldrole="section">
+<h1 name="date-parser" version="5.0" xmlns="http://docbook.org/ns/docbook">Parsing dates and timestamps</h1>
+<MadCap:keyword term="date"></MadCap:keyword>
+<MadCap:keyword term="parsers:['date']"></MadCap:keyword>
+<p oldrole="para">The date parser can extract dates from non-syslog messages. It operates by default on the ${MSG} part of the log message, but can operate on any template or field provided. The parsed date will be available as the sender date (that is, the ${S_DATE}, ${S_ISODATE}, ${S_MONTH}, and so on, and related macros). (To store the parsed date as the received date, use the <span class="Code" oldrole="parameter">timestamp(recvd)</span> option.)</p>
+<p oldrole="para">Note that parsing will fail if the format string does not match the entire template or field. Since by default &abbrev; uses the ${MSG} part of the log message, parsing will fail, unless the log message contains only a date, but that is unlikely, so practically you will have to segment the message (for example, using a <a href="parser-csv.htm">csv-parser()</a>) before using the <span class="Code" oldrole="parameter">date-parser()</span>. You can also use <span class="Code" oldrole="parameter">date-parser()</span> to parse dates received in a JSON or key-value-formatted log message.</p>
+<h6 oldrole="formalpara">Declaration:</h6>
+
+<pre class="Code" oldrole="synopsis">parser parser_name {
+    date-parser(
+        format("&lt;format-string-for-the-date&gt;")
+        template("&lt;field-to-parse&gt;'")
+    );
+};</pre>
+<div class="Example">
+<h6 oldrole="example">Example: Using the date-parser()</h6>
+<p oldrole="para">In the following example, &abbrev; parses dates like <span class="Code" oldrole="userinput">01/Jan/2016:13:05:05 PST</span> from a field called <span class="Code" oldrole="userinput">MY_DATE</span> using the following format string: <span class="Code" oldrole="userinput">format("%d/%b/%Y:%H:%M:%S %Z")</span> (how you create this field from the incoming message is not shown in the example). In the destination template every message will begin with the timestamp in ISODATE format. Since the syslog parser is disabled, &abbrev; will include the entire original message (including the original timestamp) in the ${MESSAGE} macro.</p>
+<pre class="Code" oldrole="synopsis">
+source s_file {
+    file("/tmp/input" flags(no-parse));
+};
+
+destination d_file {
+    file( "/tmp/output" template("${S_ISODATE} ${MESSAGE}\n") );
+};
+
+log {
+    source(s_file);
+    date-parser(format("%d/%b/%Y:%H:%M:%S %Z") template("${MY_DATE}") );
+    destination(d_file);
+};</pre>
+<p oldrole="para">In the template option, you can use template functions to specify which part of the message to parse with the format string. The following example selects the first 24 characters of the ${MESSAGE} macro.</p>
+<pre class="Code" oldrole="synopsis">date-parser(format("%d/%b/%Y:%H:%M:%S %Z") template("$(substr ${MSG} 0 24)") );</pre>
+</div>
+</body></html>

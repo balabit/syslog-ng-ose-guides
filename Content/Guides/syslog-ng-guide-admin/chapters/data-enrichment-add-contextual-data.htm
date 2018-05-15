@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="data-enrichment-add-contextual-data" oldrole="section">
+<h1 name="data-enrichment-add-contextual-data" version="5.0" xmlns="http://docbook.org/ns/docbook">Adding metadata from an external file</h1>
+<MadCap:keyword term='data enrichment:[&lt;span class="Code" oldrole="parameter"&gt;add-contextual-data()&lt;/span&gt;]'></MadCap:keyword>
+<MadCap:keyword term='enriching data:[&lt;span class="Code" oldrole="parameter"&gt;add-contextual-data()&lt;/span&gt;]'></MadCap:keyword>
+<p oldrole="para">In &abbrev; version <MadCap:conditionaltext MadCap:conditions="ose">3.8</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7.0</MadCap:conditionaltext> and later, you can use an external database file to add additional metadata to your log messages. For example, you can create a database (or export it from an existing tool) that contains a list of hostnames or IP addresses, and the department of your organization that the host belongs to, the role of the host (mailserver, webserver, and so on), or similar contextual information.</p>
+<p oldrole="para">The database file is a simple text file in comma-separated value (CSV) format, where each line contains the following information:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">A selector or ID that appears in the log messages, or the name of a filter that matches the messages, for example, the hostname.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The name of the name-value pair that &abbrev; adds to matching log messages.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The value of the name-value pairs.</p>
+</li>
+</ul>
+<p oldrole="para">For example, the following csv-file contains three lines identified with the IP address, and adds the <span class="Code" oldrole="userinput">host-role</span> field to the log message.</p>
+<pre class="Code" oldrole="synopsis">192.168.1.1,host-role,webserver
+192.168.2.1,host-role,firewall
+192.168.3.1,host-role,mailserver</pre>
+<h6 name="add-contextual-data-csv-database-file" oldrole="formalpara">The database file:</h6>
+
+<p oldrole="para">The database file must comply with the <a href="https://tools.ietf.org/html/rfc4180">RFC4180 CSV format</a>, with the following exceptions and limitations:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">The values of the CSV-file cannot contain line-breaks</p>
+</li>
+</ul>
+<p oldrole="para">To add multiple name-value pairs to a message, include a separate line in the database for each name-value pair, for example:</p>
+<pre class="Code" oldrole="synopsis">192.168.1.1,host-role,webserver
+192.168.1.1,contact-person,"John Doe"
+192.168.1.1,contact-email,johndoe@example.com</pre>
+<p oldrole="para">Technically, <span class="Code" oldrole="parameter">add-contextual-data()</span> is a parser in &abbrev; so you have to define it as a parser object.</p>
+<h6 oldrole="formalpara">Declaration:</h6>
+
+<pre class="Code" oldrole="synopsis">parser p_add_context_data {
+    add-contextual-data(
+        selector("$HOST"),
+        database("context-info-db.csv"),
+    );
+};
+</pre>
+<p oldrole="para">You can also add data to messages that do not have a matching selector entry in the database using the <span class="Code" oldrole="parameter">default-selector()</span> option.</p>
+<p oldrole="para">If you modify the database file, you have to reload &abbrev; for the changes to take effect. If reloading &abbrev; or the database file fails for some reason, &abbrev; will keep using the last working database file.</p>
+<div class="Example">
+<h6 oldrole="example">Example: Adding metadata from a CSV file</h6>
+<p oldrole="para">The following example defines uses a CSV database to add the role of the host based on its IP address, and prefixes the added name-value pairs with <span class="Code" oldrole="userinput">.metadata</span>. The destination includes a template that simply appends the added name-value pairs to the end of the log message.</p>
+<pre class="Code" oldrole="synopsis">@include "scl.conf"
+
+source s_network {
+    network(port(5555));
+};
+
+destination d_local {
+    file("/tmp/test-msgs.log"
+    template("$MSG Additional metadata:[${.metadata.host-role}]")};
+
+parser p_add_context_data {
+    add-contextual-data(selector("$SOURCEIP"), database("context-info-db.csv"), default-selector("unknown"), prefix(".metadata."));
+};
+
+log {
+    source(s_network);
+    parser(p_add_context_data);
+    destination(d_local);
+};</pre>
+<pre class="Code" oldrole="synopsis">192.168.1.1,host-role,webserver
+192.168.2.1,host-role,firewall
+192.168.3.1,host-role,mailserver
+unknown,host-role,unknown</pre>
+</div>
+</body></html>

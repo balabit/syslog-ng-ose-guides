@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+
+
+
+ %entities;]&gt;
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body condition="ose" name="configuring-destinations-redis" oldrole="section">
+<h1 condition="ose" name="configuring-destinations-redis" version="5.0" xmlns="http://docbook.org/ns/docbook">Storing name-value pairs in Redis</h1>
+<MadCap:keyword term="destination drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;redis()&lt;/span&gt;, ' driver']"></MadCap:keyword>
+<p oldrole="para">The <span class="Code" oldrole="parameter">redis()</span> driver sends messages as name-value pairs to a <a href="http://redis.io/">Redis</a> key-value store.</p>
+<!--
+    <para>The name-value pairs selected with the <parameter>value-pairs()</parameter> option will be sent as STOMP headers, while the body of the STOMP message is empty by default (but you can add custom content using the <parameter>body()</parameter> option). Publishing the name-value pairs as headers makes it possible to use the Headers exchange-type and subscribe only to interesting log streams. This solution is more flexible than using the <parameter>routing-key()</parameter> option.</para>
+-->
+<p oldrole="para">For the list of available parameters, see <MadCap:xref href="reference-destination-redis.htm#reference-destination-redis"></MadCap:xref>.</p>
+<h6 oldrole="formalpara">Declaration:</h6>
+
+<pre class="Code" oldrole="synopsis">redis(
+    host("&lt;redis-server-address&gt;")
+    port("&lt;redis-server-port&gt;")
+    command("&lt;redis-command&gt;", "&lt;first-command-parameter&gt;", "&lt;second-command-parameter&gt;", "&lt;third-command-parameter&gt;")
+);</pre>
+<div class="Example">
+<h6 name="example-using-redis" oldrole="example">Example: Using the redis() driver</h6>
+<p oldrole="para">The following destination counts the number of log messages received per host.</p>
+<pre class="Code" oldrole="synopsis">destination d_redis {
+    redis(
+        host("localhost")
+        port(6379)
+        command("HINCRBY", "hosts", "$HOST", "1")
+    );
+};</pre>
+<p oldrole="para">The following example creates a statistic from Apache webserver logs about the browsers that the visitors use (per minute)</p>
+<pre class="Code" oldrole="synopsis">@version: &techversion;
+
+source s_apache {
+    file("/var/log/apache2/access.log");
+};
+
+parser p_apache {
+    csv-parser(columns("APACHE.CLIENT_IP", "APACHE.IDENT_NAME", "APACHE.USER_NAME",
+                    "APACHE.TIMESTAMP", "APACHE.REQUEST_URL", "APACHE.REQUEST_STATUS",
+                    "APACHE.CONTENT_LENGTH", "APACHE.REFERER", "APACHE.USER_AGENT",
+                    "APACHE.PROCESS_TIME", "APACHE.SERVER_NAME")
+                flags(escape-double-char,strip-whitespace)
+    delimiters(" ")
+    quote-pairs('""[]')
+    );
+};
+
+destination d_redis {
+    redis( command("HINCRBY" "${MONTH_ABBREV} ${DAY} ${HOUR}:${MIN}"  "${APACHE.USER_AGENT}" "1"));
+};
+
+log {
+    source(s_apache);
+    parser(p_apache);
+    destination(d_redis);
+};</pre>
+</div>
+<h2 name="reference-destination-redis">redis() destination options</h2>
+<MadCap:keyword term="destination drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;redis()&lt;/span&gt;, ' driver']"></MadCap:keyword>
+<p oldrole="para">The <span class="Code" oldrole="parameter">redis()</span> driver sends messages as name-value pairs to a <a href="http://redis.io/">Redis</a> key-value store.</p>
+<p oldrole="para">The <span class="Code" oldrole="parameter">redis()</span> destination has the following options:</p>
+
+<h6 name="redis-option-command" oldrole="simplesect">command()</h6>
+<MadCap:keyword term="command()"></MadCap:keyword>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Type:
+                                
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">comma-separated list of strings ("&lt;redis-command&gt;", "&lt;first-command-parameter&gt;", "&lt;second-command-parameter&gt;", "&lt;third-command-parameter&gt;")</td>
+</tr>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default:
+                                
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">empty string</td>
+</tr>
+</tbody>
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The <a href="http://redis.io/commands">Redis command</a> to execute, for example, LPUSH, INCR, or HINCRBY. Using the HINCRBY command with an increment value of 1 allows you to create various statistics. For example, the <span class="Code" oldrole="userinput">command("HINCRBY" "${HOST}/programs" "${PROGRAM}" "1")</span> command counts the number of log messages on each host for each program.</p>
+<p oldrole="para">Note the following points when using the <span class="Code" oldrole="userinput">redis()</span> destination:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">You can use macros and templates in the parameters of the Redis command.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">Currently you can use only one command in a redis() destination.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">The &abbrev; application ignores the return value of the command. If the Redis server returns an error, &abbrev; closes the connection.</p>
+</li>
+</ul>
+
+
+<MadCap:snippetBlock src="../../shared/chunk/option-destination-diskbuffer.htm"></MadCap:snippetBlock>
+
+
+<h6 name="redis-option-host" oldrole="simplesect">host()</h6>
+<MadCap:keyword term="host()"></MadCap:keyword>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Type:
+                                
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">hostname or IP address</td>
+</tr>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default:
+                                
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">127.0.0.1</td>
+</tr>
+</tbody>
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The hostname or IP address of the Redis server.</p>
+
+
+<h6 name="redis-option-port" oldrole="simplesect">port()</h6>
+<MadCap:keyword term="port()"></MadCap:keyword>
+<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+<tbody>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Type:
+                                
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">number</td>
+</tr>
+<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default:
+                                
+
+                            </td>
+<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">6379</td>
+</tr>
+</tbody>
+<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
+<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The port number of the Redis server.</p>
+
+
+<MadCap:snippetBlock src="../../shared/chunk/option-destination-retries.htm"></MadCap:snippetBlock>
+
+
+<MadCap:snippetBlock src="../../shared/chunk/option-destination-throttle.htm"></MadCap:snippetBlock>
+
+</body></html>

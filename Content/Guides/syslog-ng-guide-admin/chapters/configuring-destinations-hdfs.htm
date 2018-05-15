@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="configuring-destinations-hdfs" oldrole="section">
+<h1 name="configuring-destinations-hdfs" version="5.0" xmlns="http://docbook.org/ns/docbook"><span class="Code" oldrole="parameter">hdfs</span>: Storing messages on the Hadoop Distributed File System (HDFS)</h1>
+<MadCap:keyword term="destination drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;java()&lt;/span&gt;, ' driver']"></MadCap:keyword>
+<MadCap:keyword term='destination drivers:[&lt;span class="Code" oldrole="parameter"&gt;hdfs&lt;/span&gt;]'></MadCap:keyword>
+<p oldrole="para">Starting with version <MadCap:conditionaltext MadCap:conditions="pe">5.3</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="ose">3.7</MadCap:conditionaltext>, &abbrev; can send plain-text log files to the <a href="http://hadoop.apache.org/">Hadoop Distributed File System (HDFS)</a>, allowing you to store your log data on a distributed, scalable file system. This is especially useful if you have huge amount of log messages that would be difficult to store otherwise, or if you want to process your messages using Hadoop tools (for example, Apache Pig).</p>
+<MadCap:snippetBlock src="../../shared/wnt/note-server-mode-only.htm"></MadCap:snippetBlock>
+<p oldrole="para">Note the following limitations when using the &abbrev; <span class="Code" oldrole="parameter">hdfs</span> destination:</p>
+<ul oldrole="itemizedlist">
+<MadCap:snippetBlock src="../../shared/chunk/listitem-java-supported-platforms.htm"></MadCap:snippetBlock>
+<li oldrole="listitem">
+<p oldrole="para">Since &abbrev; uses the official Java HDFS client, the <span class="Code" oldrole="parameter">hdfs</span> destination has significant memory usage (about 400MB).</p>
+</li>
+<li oldrole="listitem">
+<MadCap:snippetBlock src="../../shared/chunk/para-hdfs-flush.htm"></MadCap:snippetBlock>
+</li>
+<MadCap:snippetBlock src="../../shared/chunk/listitem-java-internal-messages.htm"></MadCap:snippetBlock>
+</ul>
+<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">The <span class="Code" oldrole="parameter">hdfs</span> destination has been tested with Hortonworks Data Platform.</p></td></tr></tbody></table>
+<h6 oldrole="formalpara">Declaration:</h6>
+
+<pre class="Code" oldrole="synopsis">@module mod-java
+@include "scl.conf"
+
+hdfs(
+    client-lib-dir("/opt/syslog-ng/lib/syslog-ng/java-modules/:&lt;path-to-preinstalled-hadoop-libraries&gt;")
+    hdfs-uri("hdfs://NameNode:8020")
+    hdfs-file("&lt;path-to-logfile&gt;")
+);</pre>
+<div class="Example">
+<h6 name="example-destination-hdfs" oldrole="example">Example: Storing logfiles on HDFS</h6>
+<p oldrole="para">The following example defines an <span class="Code" oldrole="parameter">hdfs</span> destination using only the required parameters.</p>
+<pre class="Code" oldrole="synopsis">@module mod-java
+@include "scl.conf"
+
+destination d_hdfs {
+    hdfs(
+        client-lib-dir("/opt/syslog-ng/lib/syslog-ng/java-modules/:/opt/hadoop/libs")
+        hdfs-uri("hdfs://10.140.32.80:8020")
+        hdfs-file("/user/log/logfile.txt")
+    );
+};
+</pre>
+</div>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">To install the software required for the <span class="Code" oldrole="parameter">hdfs</span> destination, see <MadCap:xref href="destination-hdfs-prerequisites.htm#destination-hdfs-prerequisites"></MadCap:xref>.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">For details on how the <span class="Code" oldrole="parameter">hdfs</span> destination works, see <MadCap:xref href="destination-hdfs-interaction.htm#destination-hdfs-interaction"></MadCap:xref>.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">For details on using MapR-FS, see <MadCap:xref href="destination-hdfs-maprfs.htm#destination-hdfs-maprfs"></MadCap:xref>.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">For the list of options, see <MadCap:xref href="reference-destination-hdfs.htm#reference-destination-hdfs"></MadCap:xref>.</p>
+</li>
+</ul>
+<p condition="ose" oldrole="para">The <span class="Code" oldrole="parameter">hdfs()</span> driver is actually a reusable configuration snippet configured to receive log messages using the Java language-binding of &abbrev;. For details on using or writing such configuration snippets, see <MadCap:xref href="config-blocks.htm#config-blocks"></MadCap:xref>. You can find the source of the hdfs configuration snippet on <a href="https://github.com/balabit/syslog-ng/blob/master/scl/hdfs/plugin.conf">GitHub</a>. For details on extending &abbrev; in Java, see the <a href="https://syslog-ng.gitbooks.io/getting-started/content/chapters/chapter_5/section_2.html">Getting started with syslog-ng development</a> guide.</p>
+<MadCap:snippetBlock src="destination-hdfs-prerequisites.htm"></MadCap:snippetBlock>
+<MadCap:snippetBlock src="destination-hdfs-interaction.htm"></MadCap:snippetBlock>
+<MadCap:snippetBlock src="destination-hdfs-maprfs.htm"></MadCap:snippetBlock>
+</body></html>

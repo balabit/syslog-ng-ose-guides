@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="kernel-messages" oldrole="section">
+<h1 name="kernel-messages" xmlns="http://docbook.org/ns/docbook">Notes on reading kernel messages</h1>
+<p oldrole="para">Note the following points when reading kernel messages on various platforms.</p>
+<ul oldrole="itemizedlist">
+<MadCap:keyword term="kmsg"></MadCap:keyword>
+<li oldrole="listitem">
+<p oldrole="para">The kernel usually sends log messages to a special file (<span class="Code" oldrole="filename">/dev/kmsg</span> on BSDs, <span class="Code" oldrole="filename">/proc/kmsg</span> on Linux). The <span class="Code" oldrole="parameter">file()</span> driver reads log messages from such files. The syslog-ng application can periodically check the file for new log messages if the <span class="Code" oldrole="parameter">follow-freq()</span> option is set.</p>
+</li>
+<li oldrole="listitem">
+<MadCap:keyword term="klogd"></MadCap:keyword>
+<p oldrole="para">On Linux, the <span class="Code" oldrole="parameter">klogd</span> daemon can be used in addition to syslog-ng to read kernel messages and forward them to syslog-ng. <span class="Code" oldrole="parameter">klogd</span> used to preprocess kernel messages to resolve symbols and so on, but as this is deprecated by <span class="Code" oldrole="parameter">ksymoops</span> there is really no point in running both <span class="Code" oldrole="parameter">klogd</span> and syslog-ng in parallel. Also note that running two processes reading <span class="Code" oldrole="filename">/proc/kmsg</span> at the same time might result in dead-locks.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">When using syslog-ng to read messages from the <span class="Code" oldrole="filename">/proc/kmsg</span> file, syslog-ng automatically disables the <span class="Code" oldrole="parameter">follow-freq()</span> parameter to avoid blocking the file.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">To read the kernel messages on HP-UX platforms, use the following options in the source statement:</p>
+<pre class="Code" oldrole="synopsis">file("/dev/klog" program-override("kernel") flags(kernel) follow-freq(0));</pre>
+</li>
+</ul>
+</body></html>

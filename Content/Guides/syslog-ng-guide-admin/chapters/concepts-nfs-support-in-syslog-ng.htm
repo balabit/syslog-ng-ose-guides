@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="concepts-nfs-support-in-syslog-ng" oldrole="section">
+<h1 name="concepts-nfs-support-in-syslog-ng" version="5.0" xmlns="http://docbook.org/ns/docbook">NFS file system for log files</h1>
+<p oldrole="para">Using the NFS network file system can lead to problems if NFS connection is not stable, therefore &vendor; does neither recommend nor officially support such scenarios. If you can avoid it, do not store log files on NFS. If the NFS connection is stable and reliable, &abbrev; can read and write files on mounted NFS partitions as a normal file source or destination. Read this section carefully before using &abbrev; and NFS-mounted log files.</p>
+
+<h6 name="nfs-risks" oldrole="simplesect">Risks</h6>
+<p oldrole="para">If there is any issue with the NFS connection (for example, connection loss, the NFS server stops), &abbrev; can stop working. These NFS issues can be related to the operating system, and can also vary depending on its patch level and kernel version. The possible effects include the following:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">&abbrev; freezes, does not respond, does not process logs, is unable to stop or reload, and you can stop it only using the <b oldrole="command">kill -9</b> command</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">&abbrev; is not able to start, and hangs during startup</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">Message loss or message duplication</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">Message becomes corrupt (it is not lost, but the message or some parts of it contain garbage)</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">When using the <span class="Code" oldrole="parameter">logstore()</span> destination, the logstore file becomes corrupt</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">On some RHEL-based systems (possibly depending on the kernel version too), <a href="https://access.redhat.com/solutions/22717">NFS returns NULL characters when reading a file that another process is writing</a> at the very same moment.</p>
+</li>
+</ul>
+
+
+<h6 condition="pe" name="nfs-limitations" oldrole="simplesect">Limitations of using &abbrev; with NFS</h6>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">Do not use the <span class="Code" oldrole="parameter">logstore()</span> destination to store files on an NFS-mounted partition</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">To use wildcards in the file source, set the <span class="Code" oldrole="parameter">force-directory_polling()</span> option to <span class="Code" oldrole="userinput">yes</span> to detect newly created files. Note that this option is available only in &abbrev; version 6.0.3 and newer versions of the 6.x branch, and is not yet available in &abbrev; version 7.</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">Since &vendor; does not officially support scenarios where you use &abbrev; together with NFS, &vendor; will handle support requests and bugs related to such scenarios only if you can reproduce the issue independently from NFS.</p>
+</li>
+</ul>
+
+
+<h6 name="nfs-recommendations" oldrole="simplesect">Recommendations for using NFS with &abbrev;</h6>
+<p oldrole="para">If you cannot avoid using NFS with &abbrev; note the following points.</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">USE at least NFS v4 (or newer if available)</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">USE the soft mount option (<span class="Code" oldrole="userinput">-o soft</span>) to mount the partition</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">USE the TCP mount option (<span class="Code" oldrole="userinput">-o tcp</span>) to mount the partition</p>
+</li>
+<MadCap:snippetBlock src="../../shared/chunk/listitem-nfs-do-not-install.htm"></MadCap:snippetBlock>
+<li oldrole="listitem">
+<p oldrole="para">DO NOT use logstore on an NFS-mounted partition, it can easily become corrupted</p>
+</li>
+</ul>
+
+</body></html>
