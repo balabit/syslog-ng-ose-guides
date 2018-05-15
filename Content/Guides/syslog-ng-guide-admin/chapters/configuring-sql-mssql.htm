@@ -1,33 +1,40 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="configuring-sql-mssql" oldrole="section">
-<h1 name="configuring-sql-mssql">Using the sql() driver with a Microsoft SQL database</h1>
-<MadCap:keyword term="Microsoft SQL:['sql() configuration']"></MadCap:keyword>
-<MadCap:keyword term="MSSQL:['sql() configuration']"></MadCap:keyword>
-<p oldrole="para">The <span class="Code" oldrole="parameter">mssql</span> database driver can access Microsoft SQL (MSSQL) destinations. This driver has some special aspects that are important to note.</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para">The date format used by the MSSQL database must be explicitly set in the <span class="Code" oldrole="filename">/etc/locales.conf</span> file of the syslog-ng server. For details, see the following example.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">As certain database versions limit the maximum length of table names, macros in the table names should be used with care.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">In the current version of <MadCap:variable name="General.abbrev"></MadCap:variable>, the types of database columns must be explicitly set for the MSSQL destination.</p>
-<MadCap:snippetBlock src="../../shared/wnt/warning-destination-mssql-columntypes.htm"></MadCap:snippetBlock>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">The column used to store the text part of the syslog messages should be able to store messages as long as the longest message permitted by syslog-ng. The <span class="Code" oldrole="parameter">varchar</span> column type can store maximum 4096 bytes-long messages. The maximum length of the messages can be set using the <span class="Code" oldrole="parameter">log-msg-size()</span> option. For details, see the following example.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">Remote access for SQL users must be explicitly enabled on the Microsoft Windows host running the Microsoft SQL Server. For details, see <MadCap:xref href="configuring-mssql-server.htm#configure-mssql-server"></MadCap:xref>.</p>
-</li>
-</ul>
-
-<h6 name="example-destination-sql-mssql" oldrole="example">Example: Using the sql() driver with an MSSQL database</h6>
-<MadCap:keyword term="destinations:['sql() configuration']"></MadCap:keyword>
-<MadCap:keyword term="MSSQL:['sql() configuration']"></MadCap:keyword>
-<p oldrole="para">The following example sends the log messages into an MSSQL database running on the <span class="Code" oldrole="userinput">logserver</span> host. The messages are inserted into the <span class="Code" oldrole="userinput">syslogng</span> database, the name of the table includes the exact date when the messages were sent. The syslog-ng application automatically creates the required tables and columns, if the user account used to connect to the database has the required privileges.</p>
-<pre class="Code" oldrole="synopsis">destination d_mssql {
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="configuring-sql-mssql" oldrole="section">
+        <h1 name="configuring-sql-mssql">Using the sql() driver with a Microsoft SQL database</h1>
+        <MadCap:keyword term="Microsoft SQL:['sql() configuration']">
+        </MadCap:keyword>
+        <MadCap:keyword term="MSSQL:['sql() configuration']">
+        </MadCap:keyword>
+        <p oldrole="para">The <span class="Code" oldrole="parameter">mssql</span> database driver can access Microsoft SQL (MSSQL) destinations. This driver has some special aspects that are important to note.</p>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para">The date format used by the MSSQL database must be explicitly set in the <span class="Code" oldrole="filename">/etc/locales.conf</span> file of the syslog-ng server. For details, see the following example.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">As certain database versions limit the maximum length of table names, macros in the table names should be used with care.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">In the current version of <MadCap:variable name="General.abbrev"></MadCap:variable>, the types of database columns must be explicitly set for the MSSQL destination.</p>
+                <MadCap:snippetBlock src="../../shared/wnt/warning-destination-mssql-columntypes.htm">
+                </MadCap:snippetBlock>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">The column used to store the text part of the syslog messages should be able to store messages as long as the longest message permitted by syslog-ng. The <span class="Code" oldrole="parameter">varchar</span> column type can store maximum 4096 bytes-long messages. The maximum length of the messages can be set using the <span class="Code" oldrole="parameter">log-msg-size()</span> option. For details, see the following example.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">Remote access for SQL users must be explicitly enabled on the Microsoft Windows host running the Microsoft SQL Server. For details, see <MadCap:xref href="configuring-mssql-server.htm#configure-mssql-server"></MadCap:xref>.</p>
+            </li>
+        </ul>
+        <h6 name="example-destination-sql-mssql" oldrole="example">Example: Using the sql() driver with an MSSQL database</h6>
+        <MadCap:keyword term="destinations:['sql() configuration']">
+        </MadCap:keyword>
+        <MadCap:keyword term="MSSQL:['sql() configuration']">
+        </MadCap:keyword>
+        <p oldrole="para">The following example sends the log messages into an MSSQL database running on the <span class="Code" oldrole="userinput">logserver</span> host. The messages are inserted into the <span class="Code" oldrole="userinput">syslogng</span> database, the name of the table includes the exact date when the messages were sent. The syslog-ng application automatically creates the required tables and columns, if the user account used to connect to the database has the required privileges.</p><pre class="Code" oldrole="synopsis">destination d_mssql {
 sql(type(mssql) host("logserver") port("1433")
   username("syslogng") password("syslogng") database("syslogng")
   table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")columns("datetime varchar(16)", "host varchar(32)",
@@ -35,8 +42,7 @@ sql(type(mssql) host("logserver") port("1433")
   values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
   indexes("datetime", "host", "program", "pid"));
 };</pre>
-<p oldrole="para">The date format used by the MSSQL database must be explicitly set in the <span class="Code" oldrole="filename">/etc/locales.conf</span> file of the syslog-ng server. Edit or create this file as needed for your configuration. A sample is provided below.</p>
-<pre class="Code" oldrole="synopsis">[default]
+        <p oldrole="para">The date format used by the MSSQL database must be explicitly set in the <span class="Code" oldrole="filename">/etc/locales.conf</span> file of the syslog-ng server. Edit or create this file as needed for your configuration. A sample is provided below.</p><pre class="Code" oldrole="synopsis">[default]
 date = "%Y-%m-%d %H:%M:%S"</pre>
-
-</body></html>
+    </body>
+</html>

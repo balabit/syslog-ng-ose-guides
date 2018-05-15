@@ -1,38 +1,84 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- FIXME jumplist -->
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="concepts-diskbuffer" oldrole="section">
-<h1 name="concepts-diskbuffer">Using disk-based and memory buffering</h1>
-<MadCap:keyword term="disk buffer"></MadCap:keyword>
-<MadCap:keyword term="disk-based buffering"></MadCap:keyword>
-<MadCap:keyword term="parameters:['log-disk-fifo-size()']"></MadCap:keyword>
-<!-- FIXME should be merged/streamlined with the flow control section -->
-<p oldrole="para">The <MadCap:variable name="General.product"></MadCap:variable> application can store messages on the local hard disk if the destination (for example, the central log server) or the network connection to the destination becomes unavailable. The <MadCap:variable name="General.abbrev"></MadCap:variable> application automatically sends the stored messages to the destination when the connection is reestablished. The disk buffer is used as a queue: when the connection to the destination is reestablished, <MadCap:variable name="General.abbrev"></MadCap:variable> sends the messages to the destination in the order they were received.</p>
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">Disk-based buffering can be used in conjunction with flow-control. For details on flow-control, see <MadCap:xref href="concepts-flow-control.htm#concepts-flow-control"></MadCap:xref>.</p></td></tr></tbody></table>
-<MadCap:snippetBlock src="../../shared/chunk/p-disk-buffer-drivers.htm"></MadCap:snippetBlock>
-<p oldrole="para">Every such destination uses a separate disk buffer (similarly to the output buffers controlled by <span class="Code" oldrole="parameter">log-fifo-size()</span>). The hard disk space is not pre-allocated, so ensure that there is always enough free space to store the disk buffers even when the disk buffers are full.</p>
-<p oldrole="para">If <MadCap:variable name="General.abbrev"></MadCap:variable> is restarted (using the <b oldrole="command">/etc/init.d/syslog-ng restart</b> command, or another appropriate command on your platform), it automatically saves any unsent messages from the disk buffer and the output queue. After the restart, <MadCap:variable name="General.abbrev"></MadCap:variable> sends the saved messages to the destination. In other words, the disk buffer is persistent. The disk buffer is also resistant to <MadCap:variable name="General.abbrev"></MadCap:variable> crashes.</p>
-<p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application supports two types of disk buffering: reliable and normal. For details, see <MadCap:xref href="configuring-diskbuffer-reliable.htm#configuring-diskbuffer-reliable"></MadCap:xref> and <MadCap:xref href="configuring-diskbuffer-normal.htm#configuring-diskbuffer-normal"></MadCap:xref>, respectively.</p>
-<h6 oldrole="formalpara">Message handling and normal disk-based buffering</h6>
-<p oldrole="para">When you use disk-based buffering, and the <span class="Code" oldrole="parameter">reliable()</span> option is set to <span class="Code" oldrole="userinput">no</span>, <MadCap:variable name="General.abbrev"></MadCap:variable> handles outgoing messages the following way:</p>
-<p class="CaptionFigure">Handling outgoing messages in <MadCap:variable name="General.abbrev"></MadCap:variable></p>
-<img class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/syslog-ng-message-output.png" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" scale="60" src="../../Resources/Images_Notlocalized/syslog-ng-ose-guide-admin/syslog-ng-message-output.png" style="height: auto; width: auto;"/>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<MadCap:keyword term="output queue"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis">Output queue</i>: Messages from the output queue are sent to the destination (for example, your central log server). The <MadCap:variable name="General.abbrev"></MadCap:variable> application puts the outgoing messages directly into the output queue, unless the output queue is full. By default, the output queue can hold 64 messages (you can adjust it using the <span class="Code" oldrole="parameter">quot-size()</span> option).</p>
-</li>
-<li oldrole="listitem">
-<MadCap:keyword term="disk queue{see}['disk buffer']"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis">Disk buffer</i>: If the output queue is full, disk-buffering is enabled, and <span class="Code" oldrole="parameter">reliable()</span> is set to <span class="Code" oldrole="userinput">no</span>, <MadCap:variable name="General.abbrev"></MadCap:variable> puts the outgoing messages into the disk buffer of the destination. (The disk buffer is enabled if the <span class="Code" oldrole="parameter">disk-buffer()</span> option is configured.)</p>
-</li>
-<li oldrole="listitem">
-<MadCap:keyword term="overflow queue{see}['output buffer']"></MadCap:keyword>
-<p oldrole="para"><i oldrole="emphasis">Overflow queue</i>: If the output queue is full and the disk buffer is disabled or full, <MadCap:variable name="General.abbrev"></MadCap:variable> puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter specifies the number of messages stored in the overflow queue. For details on sizing the <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter, see also <MadCap:xref href="concepts-flow-control.htm#concepts-flow-control"></MadCap:xref>.</p>
-</li>
-</ul>
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">Using disk buffer can significantly decrease performance.</p></td></tr></tbody></table>
-<h6 oldrole="formalpara">Message handling and reliable disk-based buffering</h6>
-<p oldrole="para">When you use disk-based buffering, and the <span class="Code" oldrole="parameter">reliable()</span> option is set to <span class="Code" oldrole="userinput">yes</span>, <MadCap:variable name="General.abbrev"></MadCap:variable> handles outgoing messages the following way.</p>
-<!-- FIXME figure/low-chart needed -->
-<p oldrole="para">The <span class="Code" oldrole="parameter">mem-buf-size()</span> option determines when flow-control is triggered. All messages arriving to the log path that includes the destination using the disk-buffer are written into the disk-buffer, until the size of the disk-buffer reaches (<span class="Code" oldrole="parameter">disk-buf-size()</span> minus <span class="Code" oldrole="parameter">mem-buf-size()</span>). Above that size, messages are written into both the disk-buffer and the memory-buffer, indicating that flow-control needs to slow down the message source. These messages are not taken out from the control window (governed by <span class="Code" oldrole="parameter">log-iw-size()</span>), causing the control window to fill up. If the control window is full, the flow-control completely stops reading incoming messages from the source. (As a result, <span class="Code" oldrole="parameter">mem-buf-size()</span> must be at least as large as <span class="Code" oldrole="parameter">log-iw-size()</span>.)</p>
-</body></html>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="concepts-diskbuffer" oldrole="section">
+        <h1 name="concepts-diskbuffer">Using disk-based and memory buffering</h1>
+        <MadCap:keyword term="disk buffer">
+        </MadCap:keyword>
+        <MadCap:keyword term="disk-based buffering">
+        </MadCap:keyword>
+        <MadCap:keyword term="parameters:['log-disk-fifo-size()']">
+        </MadCap:keyword>
+        <!-- FIXME should be merged/streamlined with the flow control section -->
+        <p oldrole="para">The <MadCap:variable name="General.product"></MadCap:variable> application can store messages on the local hard disk if the destination (for example, the central log server) or the network connection to the destination becomes unavailable. The <MadCap:variable name="General.abbrev"></MadCap:variable> application automatically sends the stored messages to the destination when the connection is reestablished. The disk buffer is used as a queue: when the connection to the destination is reestablished, <MadCap:variable name="General.abbrev"></MadCap:variable> sends the messages to the destination in the order they were received.</p>
+        <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+            </col>
+            <tbody>
+                <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                        <p>
+                            <img src="../../Resources/Images/Common/note.png" />
+                        </p>
+                    </td>
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                        <p oldrole="para">Disk-based buffering can be used in conjunction with flow-control. For details on flow-control, see <MadCap:xref href="concepts-flow-control.htm#concepts-flow-control"></MadCap:xref>.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <MadCap:snippetBlock src="../../shared/chunk/p-disk-buffer-drivers.htm">
+        </MadCap:snippetBlock>
+        <p oldrole="para">Every such destination uses a separate disk buffer (similarly to the output buffers controlled by <span class="Code" oldrole="parameter">log-fifo-size()</span>). The hard disk space is not pre-allocated, so ensure that there is always enough free space to store the disk buffers even when the disk buffers are full.</p>
+        <p oldrole="para">If <MadCap:variable name="General.abbrev"></MadCap:variable> is restarted (using the <b oldrole="command">/etc/init.d/syslog-ng restart</b> command, or another appropriate command on your platform), it automatically saves any unsent messages from the disk buffer and the output queue. After the restart, <MadCap:variable name="General.abbrev"></MadCap:variable> sends the saved messages to the destination. In other words, the disk buffer is persistent. The disk buffer is also resistant to <MadCap:variable name="General.abbrev"></MadCap:variable> crashes.</p>
+        <p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application supports two types of disk buffering: reliable and normal. For details, see <MadCap:xref href="configuring-diskbuffer-reliable.htm#configuring-diskbuffer-reliable"></MadCap:xref> and <MadCap:xref href="configuring-diskbuffer-normal.htm#configuring-diskbuffer-normal"></MadCap:xref>, respectively.</p>
+        <h6 oldrole="formalpara">Message handling and normal disk-based buffering</h6>
+        <p oldrole="para">When you use disk-based buffering, and the <span class="Code" oldrole="parameter">reliable()</span> option is set to <span class="Code" oldrole="userinput">no</span>, <MadCap:variable name="General.abbrev"></MadCap:variable> handles outgoing messages the following way:</p>
+        <p class="CaptionFigure">Handling outgoing messages in <MadCap:variable name="General.abbrev"></MadCap:variable></p>
+        <img class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/syslog-ng-message-output.png" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" scale="60" src="../../Resources/Images_Notlocalized/syslog-ng-ose-guide-admin/syslog-ng-message-output.png" style="height: auto; width: auto;" />
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <MadCap:keyword term="output queue">
+                </MadCap:keyword>
+                <p oldrole="para"><i oldrole="emphasis">Output queue</i>: Messages from the output queue are sent to the destination (for example, your central log server). The <MadCap:variable name="General.abbrev"></MadCap:variable> application puts the outgoing messages directly into the output queue, unless the output queue is full. By default, the output queue can hold 64 messages (you can adjust it using the <span class="Code" oldrole="parameter">quot-size()</span> option).</p>
+            </li>
+            <li oldrole="listitem">
+                <MadCap:keyword term="disk queue{see}['disk buffer']">
+                </MadCap:keyword>
+                <p oldrole="para"><i oldrole="emphasis">Disk buffer</i>: If the output queue is full, disk-buffering is enabled, and <span class="Code" oldrole="parameter">reliable()</span> is set to <span class="Code" oldrole="userinput">no</span>, <MadCap:variable name="General.abbrev"></MadCap:variable> puts the outgoing messages into the disk buffer of the destination. (The disk buffer is enabled if the <span class="Code" oldrole="parameter">disk-buffer()</span> option is configured.)</p>
+            </li>
+            <li oldrole="listitem">
+                <MadCap:keyword term="overflow queue{see}['output buffer']">
+                </MadCap:keyword>
+                <p oldrole="para"><i oldrole="emphasis">Overflow queue</i>: If the output queue is full and the disk buffer is disabled or full, <MadCap:variable name="General.abbrev"></MadCap:variable> puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter specifies the number of messages stored in the overflow queue. For details on sizing the <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter, see also <MadCap:xref href="concepts-flow-control.htm#concepts-flow-control"></MadCap:xref>.</p>
+            </li>
+        </ul>
+        <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+            </col>
+            <tbody>
+                <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                        <p>
+                            <img src="../../Resources/Images/Common/note.png" />
+                        </p>
+                    </td>
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                        <p oldrole="para">Using disk buffer can significantly decrease performance.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h6 oldrole="formalpara">Message handling and reliable disk-based buffering</h6>
+        <p oldrole="para">When you use disk-based buffering, and the <span class="Code" oldrole="parameter">reliable()</span> option is set to <span class="Code" oldrole="userinput">yes</span>, <MadCap:variable name="General.abbrev"></MadCap:variable> handles outgoing messages the following way.</p>
+        <!-- FIXME figure/low-chart needed -->
+        <p oldrole="para">The <span class="Code" oldrole="parameter">mem-buf-size()</span> option determines when flow-control is triggered. All messages arriving to the log path that includes the destination using the disk-buffer are written into the disk-buffer, until the size of the disk-buffer reaches (<span class="Code" oldrole="parameter">disk-buf-size()</span> minus <span class="Code" oldrole="parameter">mem-buf-size()</span>). Above that size, messages are written into both the disk-buffer and the memory-buffer, indicating that flow-control needs to slow down the message source. These messages are not taken out from the control window (governed by <span class="Code" oldrole="parameter">log-iw-size()</span>), causing the control window to fill up. If the control window is full, the flow-control completely stops reading incoming messages from the source. (As a result, <span class="Code" oldrole="parameter">mem-buf-size()</span> must be at least as large as <span class="Code" oldrole="parameter">log-iw-size()</span>.)</p>
+    </body>
+</html>

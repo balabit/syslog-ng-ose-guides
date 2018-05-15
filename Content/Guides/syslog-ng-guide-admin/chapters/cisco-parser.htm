@@ -1,36 +1,38 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body condition="ose" name="cisco-parser" oldrole="section">
-<h1 condition="ose" name="cisco-parser" version="5.0">The Cisco Parser</h1>
-<MadCap:keyword term="segmenting messages"></MadCap:keyword>
-<MadCap:keyword term="Cisco Parser"></MadCap:keyword>
-<MadCap:keyword term="cisco"></MadCap:keyword>
-<MadCap:keyword term="parsers:['cisco']"></MadCap:keyword>
-<p oldrole="para">The Cisco Parser can parse the log messages of various Cisco devices. The messages of these devices often do not completely comply with the syslog RFCs, making them difficult to parse. The <span class="Code" oldrole="parameter">cisco-parser()</span> of <MadCap:variable name="General.abbrev"></MadCap:variable> solves this problem, and can separate these log messages to name-value pairs, extracting also the Cisco-specific values, for example, the mnemonic. For details on using value-pairs in <MadCap:variable name="General.abbrev"></MadCap:variable> see <MadCap:xref href="concepts-value-pairs.htm#concepts-value-pairs"></MadCap:xref>. The parser can parse variations of the following message format:</p>
-<pre class="Code" oldrole="synopsis">&lt;pri&gt;(sequence: )?(origin-id: )?(timestamp? timezone?: )?%msg</pre>
-<p oldrole="para">For example:</p>
-<pre class="Code" oldrole="synopsis">&lt;189&gt;29: foo: *Apr 29 13:58:40.411: %SYS-5-CONFIG_I: Configured from console by console
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body condition="ose" name="cisco-parser" oldrole="section">
+        <h1 condition="ose" name="cisco-parser" version="5.0">The Cisco Parser</h1>
+        <MadCap:keyword term="segmenting messages">
+        </MadCap:keyword>
+        <MadCap:keyword term="Cisco Parser">
+        </MadCap:keyword>
+        <MadCap:keyword term="cisco">
+        </MadCap:keyword>
+        <MadCap:keyword term="parsers:['cisco']">
+        </MadCap:keyword>
+        <p oldrole="para">The Cisco Parser can parse the log messages of various Cisco devices. The messages of these devices often do not completely comply with the syslog RFCs, making them difficult to parse. The <span class="Code" oldrole="parameter">cisco-parser()</span> of <MadCap:variable name="General.abbrev"></MadCap:variable> solves this problem, and can separate these log messages to name-value pairs, extracting also the Cisco-specific values, for example, the mnemonic. For details on using value-pairs in <MadCap:variable name="General.abbrev"></MadCap:variable> see <MadCap:xref href="concepts-value-pairs.htm#concepts-value-pairs"></MadCap:xref>. The parser can parse variations of the following message format:</p><pre class="Code" oldrole="synopsis">&lt;pri&gt;(sequence: )?(origin-id: )?(timestamp? timezone?: )?%msg</pre>
+        <p oldrole="para">For example:</p><pre class="Code" oldrole="synopsis">&lt;189&gt;29: foo: *Apr 29 13:58:40.411: %SYS-5-CONFIG_I: Configured from console by console
 &lt;190&gt;30: foo: *Apr 29 13:58:46.411: %SYS-6-LOGGINGHOST_STARTSTOP: Logging to host 192.168.1.239 stopped - CLI initiated
 &lt;190&gt;31: foo: *Apr 29 13:58:46.411: %SYS-6-LOGGINGHOST_STARTSTOP: Logging to host 192.168.1.239 started - CLI initiated
 &lt;189&gt;32: 0.0.0.0: *Apr 29 13:59:12.491: %SYS-5-CONFIG_I: Configured from console by console</pre>
-<p oldrole="para">Note that not every Cisco log message conforms to this format. If you find a message that the <span class="Code" oldrole="parameter">cisco-parser()</span> cannot properly parse, send it to<email>documentation@balabit.com</email>so we can improve the parser.</p>
-<p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application normalizes the parsed log messages into the following format:</p>
-<pre class="Code" oldrole="synopsis">${MESSAGE}=%FAC-SEV-MNEMONIC: message
+        <p oldrole="para">Note that not every Cisco log message conforms to this format. If you find a message that the <span class="Code" oldrole="parameter">cisco-parser()</span> cannot properly parse, send it to<email>documentation@balabit.com</email>so we can improve the parser.</p>
+        <p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application normalizes the parsed log messages into the following format:</p><pre class="Code" oldrole="synopsis">${MESSAGE}=%FAC-SEV-MNEMONIC: message
 ${HOST}=origin-id</pre>
-<p oldrole="para">By default, the Cisco-specific fields are extracted into the following name-value pairs:<span class="Code" oldrole="parameter">${.cisco.facility}</span>, <span class="Code" oldrole="parameter">${.cisco.severity}</span>, <span class="Code" oldrole="parameter">${.cisco.mnemonic}</span>. You can change the prefix using the <span class="Code" oldrole="parameter">prefix</span> option.</p>
-<h6 oldrole="formalpara">Declaration:</h6>
-
-<pre class="Code" oldrole="synopsis">@version: <MadCap:variable name="Version.techversion"></MadCap:variable>
+        <p oldrole="para">By default, the Cisco-specific fields are extracted into the following name-value pairs:<span class="Code" oldrole="parameter">${.cisco.facility}</span>, <span class="Code" oldrole="parameter">${.cisco.severity}</span>, <span class="Code" oldrole="parameter">${.cisco.mnemonic}</span>. You can change the prefix using the <span class="Code" oldrole="parameter">prefix</span> option.</p>
+        <h6 oldrole="formalpara">Declaration:</h6><pre class="Code" oldrole="synopsis">@version: <MadCap:variable name="Version.techversion"></MadCap:variable>
 @include "scl.conf"
 log {
     source { udp(flags(no-parse)); };
     parser { cisco-parser(); };
     destination { ... };
 };</pre>
-<p oldrole="para">Note that you have to disable message parsing in the source using the <span class="Code" oldrole="userinput">flags(no-parse)</span> option for the parser to work.</p>
-<p oldrole="para">The <span class="Code" oldrole="parameter">cisco-parser()</span> is actually a reusable configuration snippet configured to parse Cisco messages. For details on using or writing such configuration snippets, see <MadCap:xref href="config-blocks.htm#config-blocks"></MadCap:xref>. You can find the source of this configuration snippet on <a href="https://github.com/balabit/syslog-ng/blob/master/scl/cisco/plugin.conf">GitHub</a>.</p>
-
-<MadCap:snippetBlock src="../../shared/chunk/option-parser-prefix.htm"></MadCap:snippetBlock>
-<p oldrole="para">By default, <span class="Code" oldrole="parameter">cisco-parser()</span> uses the <span class="Code" oldrole="userinput">cisco.</span> prefix. To modify it, use the following format:</p>
-<pre class="Code" oldrole="synopsis">parser { cisco-parser(prefix("myprefix.")); };</pre>
-
-</body></html>
+        <p oldrole="para">Note that you have to disable message parsing in the source using the <span class="Code" oldrole="userinput">flags(no-parse)</span> option for the parser to work.</p>
+        <p oldrole="para">The <span class="Code" oldrole="parameter">cisco-parser()</span> is actually a reusable configuration snippet configured to parse Cisco messages. For details on using or writing such configuration snippets, see <MadCap:xref href="config-blocks.htm#config-blocks"></MadCap:xref>. You can find the source of this configuration snippet on <a href="https://github.com/balabit/syslog-ng/blob/master/scl/cisco/plugin.conf">GitHub</a>.</p>
+        <MadCap:snippetBlock src="../../shared/chunk/option-parser-prefix.htm">
+        </MadCap:snippetBlock>
+        <p oldrole="para">By default, <span class="Code" oldrole="parameter">cisco-parser()</span> uses the <span class="Code" oldrole="userinput">cisco.</span> prefix. To modify it, use the following format:</p><pre class="Code" oldrole="synopsis">parser { cisco-parser(prefix("myprefix.")); };</pre>
+    </body>
+</html>
