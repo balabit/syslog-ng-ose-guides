@@ -1,34 +1,56 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="filters-boolean" oldrole="section">
-<h1 name="filters-boolean" xmlns="http://docbook.org/ns/docbook">Combining filters with boolean operators</h1>
-<MadCap:keyword term="filters:['boolean operators']"></MadCap:keyword>
-<MadCap:keyword term="filters:['AND, OR, NOT']"></MadCap:keyword>
-<MadCap:keyword term="boolean operators"></MadCap:keyword>
-<MadCap:keyword term="AND"></MadCap:keyword>
-<MadCap:keyword term="OR"></MadCap:keyword>
-<MadCap:keyword term="NOT"></MadCap:keyword>
-<p oldrole="para">When a log statement includes multiple filter statements, syslog-ng sends a message to the destination only if all filters are true for the message. In other words, the filters are connected with the logical <span class="Code" oldrole="userinput">AND</span> operator. In the following example, no message arrives to the destination, because the filters are exclusive (the hostname of a client cannot be <span class="Code" oldrole="userinput">example1</span> and <span class="Code" oldrole="userinput">example2</span> at the same time):</p>
-<pre class="Code" oldrole="synopsis">filter demo_filter1 { host("example1"); };
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="filters-boolean" oldrole="section">
+        <h1 name="filters-boolean" xmlns="http://docbook.org/ns/docbook">Combining filters with boolean operators</h1>
+        <MadCap:keyword term="filters:['boolean operators']">
+        </MadCap:keyword>
+        <MadCap:keyword term="filters:['AND, OR, NOT']">
+        </MadCap:keyword>
+        <MadCap:keyword term="boolean operators">
+        </MadCap:keyword>
+        <MadCap:keyword term="AND">
+        </MadCap:keyword>
+        <MadCap:keyword term="OR">
+        </MadCap:keyword>
+        <MadCap:keyword term="NOT">
+        </MadCap:keyword>
+        <p oldrole="para">When a log statement includes multiple filter statements, syslog-ng sends a message to the destination only if all filters are true for the message. In other words, the filters are connected with the logical <span class="Code" oldrole="userinput">AND</span> operator. In the following example, no message arrives to the destination, because the filters are exclusive (the hostname of a client cannot be <span class="Code" oldrole="userinput">example1</span> and <span class="Code" oldrole="userinput">example2</span> at the same time):</p><pre class="Code" oldrole="synopsis">filter demo_filter1 { host("example1"); };
 filter demo_filter2 { host("example2"); };
 log {
     source(s1); source(s2);
     filter(demo_filter1); filter(demo_filter2);
     destination(d1); destination(d2); };</pre>
-<p oldrole="para">To select the messages that come from either host <span class="Code" oldrole="userinput">example1</span> or <span class="Code" oldrole="userinput">example2</span>, use a single filter expression:</p>
-<pre class="Code" oldrole="synopsis">filter demo_filter { host("example1") or host("example2"); };
+        <p oldrole="para">To select the messages that come from either host <span class="Code" oldrole="userinput">example1</span> or <span class="Code" oldrole="userinput">example2</span>, use a single filter expression:</p><pre class="Code" oldrole="synopsis">filter demo_filter { host("example1") or host("example2"); };
 log {
     source(s1); source(s2);
     filter(demo_filter);
     destination(d1); destination(d2); };</pre>
-<p oldrole="para">Use the <span class="Code" oldrole="userinput">not</span> operator to invert filters, for example, to select the messages that were not sent by host <span class="Code" oldrole="userinput">example1</span>:</p>
-<pre class="Code" oldrole="synopsis">filter demo_filter { not host("example1"); };</pre>
-<p oldrole="para">However, to select the messages that were not sent by host <span class="Code" oldrole="userinput">example1</span> or <span class="Code" oldrole="userinput">example2</span>, you have to use the <span class="Code" oldrole="userinput">and</span> operator (that's how boolean logic works):</p>
-<pre class="Code" oldrole="synopsis">filter demo_filter { not host("example1") and not host("example2"); };</pre>
-<p oldrole="para">Alternatively, you can use parentheses to avoid this confusion:</p>
-<pre class="Code" oldrole="synopsis">filter demo_filter { not (host("example1") or host("example2")); };</pre>
-<p oldrole="para">For a complete description on filter functions, see <MadCap:xref href="reference-filters.htm#reference-filters"></MadCap:xref>.</p>
-<p oldrole="para">The following filter statement selects the messages that contain the word <span class="Code" oldrole="userinput">deny</span> and come from the host <span class="Code" oldrole="userinput">example</span>.</p>
-<pre class="Code" oldrole="synopsis">filter demo_filter { host("example") and match("deny" value("MESSAGE")); };</pre>
-<p oldrole="para">The <span class="Code" oldrole="parameter">value()</span> parameter of the <span class="Code" oldrole="parameter">match</span> function limits the scope of the function to the text part of the message (that is, the part returned by the <span class="Code" oldrole="parameter">${MESSAGE}</span> macro). For details on using the <span class="Code" oldrole="parameter">match()</span> filter function, see <MadCap:xref href="reference-filters-match.htm#reference-filters-match"></MadCap:xref>.</p>
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="tip" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">TIP: </span><p oldrole="para">Filters are often used together with log path flags. For details, see <MadCap:xref href="reference-logflags.htm#reference-logflags"></MadCap:xref>.</p></td></tr></tbody></table>
-</body></html>
+        <p oldrole="para">Use the <span class="Code" oldrole="userinput">not</span> operator to invert filters, for example, to select the messages that were not sent by host <span class="Code" oldrole="userinput">example1</span>:</p><pre class="Code" oldrole="synopsis">filter demo_filter { not host("example1"); };</pre>
+        <p oldrole="para">However, to select the messages that were not sent by host <span class="Code" oldrole="userinput">example1</span> or <span class="Code" oldrole="userinput">example2</span>, you have to use the <span class="Code" oldrole="userinput">and</span> operator (that's how boolean logic works):</p><pre class="Code" oldrole="synopsis">filter demo_filter { not host("example1") and not host("example2"); };</pre>
+        <p oldrole="para">Alternatively, you can use parentheses to avoid this confusion:</p><pre class="Code" oldrole="synopsis">filter demo_filter { not (host("example1") or host("example2")); };</pre>
+        <p oldrole="para">For a complete description on filter functions, see <MadCap:xref href="reference-filters.htm#reference-filters"></MadCap:xref>.</p>
+        <p oldrole="para">The following filter statement selects the messages that contain the word <span class="Code" oldrole="userinput">deny</span> and come from the host <span class="Code" oldrole="userinput">example</span>.</p><pre class="Code" oldrole="synopsis">filter demo_filter { host("example") and match("deny" value("MESSAGE")); };</pre>
+        <p oldrole="para">The <span class="Code" oldrole="parameter">value()</span> parameter of the <span class="Code" oldrole="parameter">match</span> function limits the scope of the function to the text part of the message (that is, the part returned by the <span class="Code" oldrole="parameter">${MESSAGE}</span> macro). For details on using the <span class="Code" oldrole="parameter">match()</span> filter function, see <MadCap:xref href="reference-filters-match.htm#reference-filters-match"></MadCap:xref>.</p>
+        <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="tip" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+            <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+            </col>
+            <tbody>
+                <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                        <p>
+                            <img src="../../../Resources/Images/Common/note.png" />
+                        </p>
+                    </td>
+                    <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">TIP: </span>
+                        <p oldrole="para">Filters are often used together with log path flags. For details, see <MadCap:xref href="reference-logflags.htm#reference-logflags"></MadCap:xref>.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>
