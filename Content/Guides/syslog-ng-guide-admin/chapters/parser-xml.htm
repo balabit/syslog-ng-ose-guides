@@ -1,22 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-
-
-
-
-
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="xml-parser" oldrole="section">
-<h1 name="xml-parser">The XML parser</h1>
-<MadCap:keyword term="segmenting messages"></MadCap:keyword>
-<MadCap:keyword term="XML parsers"></MadCap:keyword>
-<MadCap:keyword term="splitting messages"></MadCap:keyword>
-<MadCap:keyword term="parsers:['xml-parser']"></MadCap:keyword>
-<p oldrole="para">Extensible Markup Language (XML) is a text-based open standard designed for both human-readable and machine-readable data interchange. Like JSON, it is used primarily to transmit data between a server and web application. It is described in <a href="https://www.w3.org/TR/REC-xml/">W3C Recommendation: Extensible Markup Language (XML)</a>.</p>
-<p oldrole="para">The XML parser processes input in XML format, and adds the parsed data to the message object.</p>
-<p oldrole="para">To create an XML parser, define an <span class="Code" oldrole="parameter">xml_parser</span> that has the <span class="Code" oldrole="parameter">xml()</span> option. By default, the parser will process the <span class="Code" oldrole="userinput">${MESSAGE}</span> part of the log message. To process other parts of a log message using the XML parser, use the <span class="Code" oldrole="parameter">template()</span> option. You can also define the parser inline in the log path.</p>
-<h6 oldrole="formalpara">Declaration:</h6>
-
-<pre class="Code" oldrole="synopsis">parser xml_name {
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+    </head>
+    <body name="xml-parser" oldrole="section">
+        <h1 name="xml-parser">The XML parser</h1>
+        <MadCap:keyword term="segmenting messages">
+        </MadCap:keyword>
+        <MadCap:keyword term="XML parsers">
+        </MadCap:keyword>
+        <MadCap:keyword term="splitting messages">
+        </MadCap:keyword>
+        <MadCap:keyword term="parsers:['xml-parser']">
+        </MadCap:keyword>
+        <p oldrole="para">Extensible Markup Language (XML) is a text-based open standard designed for both human-readable and machine-readable data interchange. Like JSON, it is used primarily to transmit data between a server and web application. It is described in <a href="https://www.w3.org/TR/REC-xml/">W3C Recommendation: Extensible Markup Language (XML)</a>.</p>
+        <p oldrole="para">The XML parser processes input in XML format, and adds the parsed data to the message object.</p>
+        <p oldrole="para">To create an XML parser, define an <span class="Code" oldrole="parameter">xml_parser</span> that has the <span class="Code" oldrole="parameter">xml()</span> option. By default, the parser will process the <span class="Code" oldrole="userinput">${MESSAGE}</span> part of the log message. To process other parts of a log message using the XML parser, use the <span class="Code" oldrole="parameter">template()</span> option. You can also define the parser inline in the log path.</p>
+        <h6 oldrole="formalpara">Declaration:</h6><pre class="Code" oldrole="synopsis">parser xml_name {
     xml(template()
         prefix()
         drop-invalid()
@@ -24,10 +23,9 @@
         strip-whitespaces()
     );
 };</pre>
-<div class="Example">
-<h6 oldrole="example">Example: Using an XML parser</h6>
-<p oldrole="para">In the following example, the source is an XML-encoded log message. The destination is a file that uses the <span class="Code" oldrole="parameter">format-json</span> template. The log line connects the source, the destination and the parser.</p>
-<pre class="Code" oldrole="synopsis">source s_local {
+        <div class="Example">
+            <h6 oldrole="example">Example: Using an XML parser</h6>
+            <p oldrole="para">In the following example, the source is an XML-encoded log message. The destination is a file that uses the <span class="Code" oldrole="parameter">format-json</span> template. The log line connects the source, the destination and the parser.</p><pre class="Code" oldrole="synopsis">source s_local {
         file("/tmp/aaa");
 };
 
@@ -44,223 +42,203 @@ log {
     parser(xml_parser);
     destination(d_local);
 };</pre>
-<p oldrole="para">You can also define the parser inline in the log path.</p>
-<pre class="Code" oldrole="synopsis">log {
+            <p oldrole="para">You can also define the parser inline in the log path.</p><pre class="Code" oldrole="synopsis">log {
     source(s_file);
     parser { xml(prefix(".SDATA")); };
     destination(d_file);
 };</pre>
-</div>
-<p oldrole="para">The XML parser inserts an "<span class="Code" oldrole="userinput">.xml</span>" prefix by default before the extracted name-value pairs. Since <span class="Code" oldrole="parameter">format-json</span> replaces a dot with an underscore at the beginning of keys, the "<span class="Code" oldrole="userinput">.xml</span>" prefix becomes "<span class="Code" oldrole="userinput">_xml</span>". Attributes get an <span class="Code" oldrole="userinput">_</span> prefix. For example, from the XML input:</p>
-<pre class="Code" oldrole="synopsis">&lt;tags attr='attrval'&gt;part1&lt;tag1&gt;Tag1 Leaf&lt;/tag1&gt;part2&lt;tag2&gt;Tag2 Leaf&lt;/tag2&gt;part3&lt;/tags&gt;</pre>
-<p oldrole="para">The following output is generated:</p>
-<pre class="Code" oldrole="synopsis">{<i oldrole="emphasis" role="bold">"_xml"</i>:{"tags":{"tag2":"Tag2 Leaf","tag1":"Tag1 Leaf","<i oldrole="emphasis" role="bold">_attr</i>":"attrval","tags":"part1part2part3"}}}</pre>
-<p oldrole="para">When the text is separated by tags on different levels or tags on the same level, the parser simply concatenates the different parts of text. For example, from this input XML:</p>
-<pre class="Code" oldrole="synopsis">&lt;tag&gt;
+        </div>
+        <p oldrole="para">The XML parser inserts an "<span class="Code" oldrole="userinput">.xml</span>" prefix by default before the extracted name-value pairs. Since <span class="Code" oldrole="parameter">format-json</span> replaces a dot with an underscore at the beginning of keys, the "<span class="Code" oldrole="userinput">.xml</span>" prefix becomes "<span class="Code" oldrole="userinput">_xml</span>". Attributes get an <span class="Code" oldrole="userinput">_</span> prefix. For example, from the XML input:</p><pre class="Code" oldrole="synopsis">&lt;tags attr='attrval'&gt;part1&lt;tag1&gt;Tag1 Leaf&lt;/tag1&gt;part2&lt;tag2&gt;Tag2 Leaf&lt;/tag2&gt;part3&lt;/tags&gt;</pre>
+        <p oldrole="para">The following output is generated:</p><pre class="Code" oldrole="synopsis">{<i oldrole="emphasis" role="bold">"_xml"</i>:{"tags":{"tag2":"Tag2 Leaf","tag1":"Tag1 Leaf","<i oldrole="emphasis" role="bold">_attr</i>":"attrval","tags":"part1part2part3"}}}</pre>
+        <p oldrole="para">When the text is separated by tags on different levels or tags on the same level, the parser simply concatenates the different parts of text. For example, from this input XML:</p><pre class="Code" oldrole="synopsis">&lt;tag&gt;
  &lt;tag1&gt;text1&lt;/tag1&gt;
  &lt;tag1&gt;text2&lt;/tag1&gt;
 &lt;/tag&gt;</pre>
-<p oldrole="para">The following output is generated:</p>
-<pre class="Code" oldrole="synopsis">.xml.tag.tag1 = text1text2</pre>
-<p oldrole="para">Whitespaces are kept as they are in the XML input. No collapsing happens on significant whitespaces. For example, from this input XML:</p>
-<pre class="Code" oldrole="synopsis">&lt;133&gt;Feb 25 14:09:07 webserver syslogd: &lt;b&gt;|Test\n\n   Test2|&lt;/b&gt;\n</pre>
-<p oldrole="para">The following output is generated:</p>
-<pre class="Code" oldrole="synopsis">[2017-09-04T13:20:27.417266] Setting value; msg='0x7f2fd8002df0', name='.xml.b', value='|Test\x0a\x0a   Test2|'</pre>
-<p oldrole="para">However, note that users can choose to strip whitespaces using the <a href="xml-parser-options.htm"><span class="Code" oldrole="parameter">strip-whitespaces()</span></a> option.</p>
-<bridgehead>Configuration hints</bridgehead>
-<p oldrole="para">Define a source that correctly detects the end of the message, otherwise the XML parser will consider the input invalid, resulting in a parser error.</p>
-<p oldrole="para">To ensure that the end of the XML document is accurately detected, use any of the following options:</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para">Ensure that the XML is a single-line message.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">In the case of multiline XML documents:</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para">If the opening and closing tags are fixed and known, you can use <span class="Code" oldrole="parameter">multi-line-mode(prefix-suffix)</span>. Using regular expressions, specify a prefix and suffix matching the opening and closing tags. For details on using <span class="Code" oldrole="parameter">multi-line-mode(prefix-suffix)</span>, see the <span class="Code" oldrole="parameter">multi-line-prefix()</span> and <span class="Code" oldrole="parameter">multi-line-suffix()</span> options.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">In the case of TCP, you can encapsulate and send the document in syslog-protocol format, and use a <span class="Code" oldrole="parameter">syslog()</span> source. Make sure that the message conforms to <a href="https://tools.ietf.org/html/rfc6587#section-3.4.1">the octet counting method described in RFC6587</a>.</p>
-<p oldrole="para">For example:</p>
-<pre class="Code" oldrole="synopsis">59 &lt;133&gt;Feb 25 14:09:07 webserver syslogd: &lt;book&gt;\nText\n&lt;/book&gt;</pre>
-<p oldrole="para">Considering the new lines as one character, <span class="Code" oldrole="parameter">59</span> is appended to the original message.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">You can use a datagram-based source. In the case of datagram-based sources, the protocol signals the end of the message automatically. Ensure that the complete XML document is written in one message.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">Unless the opening and closing tags are fixed and known, stream-based sources are currently not supported.</p>
-</li>
-</ul>
-</li>
-</ul>
-<p oldrole="para">In case you experience issues, start syslog-ng with debug logs enabled. There will be a debug log about the incoming log entry, which shows the complete message to be parsed. The entry should contain the entire XML document.</p>
-<bridgehead>Limitations</bridgehead>
-<p oldrole="para">The XML parser comes with certain limitations.</p>
-<h6 oldrole="formalpara">Vector-like structures:</h6>
-
-<p oldrole="para">It is not possible to address each element of a vector-like structure individually. For example, take this input:</p>
-<pre class="Code" oldrole="synopsis">&lt;vector&gt;
+        <p oldrole="para">The following output is generated:</p><pre class="Code" oldrole="synopsis">.xml.tag.tag1 = text1text2</pre>
+        <p oldrole="para">Whitespaces are kept as they are in the XML input. No collapsing happens on significant whitespaces. For example, from this input XML:</p><pre class="Code" oldrole="synopsis">&lt;133&gt;Feb 25 14:09:07 webserver syslogd: &lt;b&gt;|Test\n\n   Test2|&lt;/b&gt;\n</pre>
+        <p oldrole="para">The following output is generated:</p><pre class="Code" oldrole="synopsis">[2017-09-04T13:20:27.417266] Setting value; msg='0x7f2fd8002df0', name='.xml.b', value='|Test\x0a\x0a   Test2|'</pre>
+        <p oldrole="para">However, note that users can choose to strip whitespaces using the <a href="xml-parser-options.htm"><span class="Code" oldrole="parameter">strip-whitespaces()</span></a> option.</p>
+        <bridgehead>Configuration hints</bridgehead>
+        <p oldrole="para">Define a source that correctly detects the end of the message, otherwise the XML parser will consider the input invalid, resulting in a parser error.</p>
+        <p oldrole="para">To ensure that the end of the XML document is accurately detected, use any of the following options:</p>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para">Ensure that the XML is a single-line message.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">In the case of multiline XML documents:</p>
+                <ul oldrole="itemizedlist">
+                    <li oldrole="listitem">
+                        <p oldrole="para">If the opening and closing tags are fixed and known, you can use <span class="Code" oldrole="parameter">multi-line-mode(prefix-suffix)</span>. Using regular expressions, specify a prefix and suffix matching the opening and closing tags. For details on using <span class="Code" oldrole="parameter">multi-line-mode(prefix-suffix)</span>, see the <span class="Code" oldrole="parameter">multi-line-prefix()</span> and <span class="Code" oldrole="parameter">multi-line-suffix()</span> options.</p>
+                    </li>
+                    <li oldrole="listitem">
+                        <p oldrole="para">In the case of TCP, you can encapsulate and send the document in syslog-protocol format, and use a <span class="Code" oldrole="parameter">syslog()</span> source. Make sure that the message conforms to <a href="https://tools.ietf.org/html/rfc6587#section-3.4.1">the octet counting method described in RFC6587</a>.</p>
+                        <p oldrole="para">For example:</p><pre class="Code" oldrole="synopsis">59 &lt;133&gt;Feb 25 14:09:07 webserver syslogd: &lt;book&gt;\nText\n&lt;/book&gt;</pre>
+                        <p oldrole="para">Considering the new lines as one character, <span class="Code" oldrole="parameter">59</span> is appended to the original message.</p>
+                    </li>
+                    <li oldrole="listitem">
+                        <p oldrole="para">You can use a datagram-based source. In the case of datagram-based sources, the protocol signals the end of the message automatically. Ensure that the complete XML document is written in one message.</p>
+                    </li>
+                    <li oldrole="listitem">
+                        <p oldrole="para">Unless the opening and closing tags are fixed and known, stream-based sources are currently not supported.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p oldrole="para">In case you experience issues, start syslog-ng with debug logs enabled. There will be a debug log about the incoming log entry, which shows the complete message to be parsed. The entry should contain the entire XML document.</p>
+        <bridgehead>Limitations</bridgehead>
+        <p oldrole="para">The XML parser comes with certain limitations.</p>
+        <h6 oldrole="formalpara">Vector-like structures:</h6>
+        <p oldrole="para">It is not possible to address each element of a vector-like structure individually. For example, take this input:</p><pre class="Code" oldrole="synopsis">&lt;vector&gt;
     &lt;entry&gt;value1&lt;/entry&gt;
     &lt;entry&gt;value2&lt;/entry&gt;
     ...
     &lt;entry&gt;valueN&lt;/entry&gt;
 &lt;/vector&gt;</pre>
-<p oldrole="para">After parsing, the entries cannot be addressed individually. Instead, the text of the entries will be concatenated:</p>
-<pre class="Code" oldrole="synopsis">vector.entry = "value1value2...valueN"</pre>
-<p oldrole="para">Note that <span class="Code" oldrole="parameter">xmllint</span> has the same behavior:</p>
-<pre class="Code" oldrole="synopsis">$ xmllint --xpath "/vector/entry/text()" test.xml
+        <p oldrole="para">After parsing, the entries cannot be addressed individually. Instead, the text of the entries will be concatenated:</p><pre class="Code" oldrole="synopsis">vector.entry = "value1value2...valueN"</pre>
+        <p oldrole="para">Note that <span class="Code" oldrole="parameter">xmllint</span> has the same behavior:</p><pre class="Code" oldrole="synopsis">$ xmllint --xpath "/vector/entry/text()" test.xml
 value1value2valueN%</pre>
-<h6 oldrole="formalpara">CDATA:</h6>
-
-<p oldrole="para">The XML parser does not support CDATA. CDATA inside the XML input is ignored. This is true for the processing instructions as well.</p>
-<h6 oldrole="formalpara">Inherited limitations:</h6>
-
-<p oldrole="para">The XML parser is based on the glib XML subset parser, called <a href="https://developer.gnome.org/glib/stable/glib-Simple-XML-Subset-Parser.html">"GMarkup" parser</a>, which is not a full-scale XML parser. It is intended to parse a simple markup format that is a subset of XML. Some limitations are inherited:</p>
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para">Do not use the XML parser if you expect to interoperate with applications generating full-scale XML. Instead, use it for application data files, configuration files, log files, and so on, where you know your application will be the only one writing the file.</p>
-</li>
-<li oldrole="listitem">
-<p oldrole="para">The XML parser is not guaranteed to display an error message in the case of invalid XML. It may accept invalid XML. However, it does not accept XML input that is not well-formed (a condition that is weaker than requiring XML to be valid).</p>
-</li>
-</ul>
-<h6 oldrole="formalpara">No support for long keys:</h6>
-
-<p oldrole="para">If the key is longer than 255 characters, syslog-ng drops the entry and an error log is emitted. There is no chunking or any other way of recovering data, not even partial data. The entry will be replaced by an empty string.</p>
-<h2 name="xml-parser-options">Options of XML parsers</h2>
-<p oldrole="para">The XML parser has the following options.</p>
-
-<h6 name="xml-parser-drop-invalid" oldrole="simplesect">drop-invalid</h6>
-<MadCap:keyword term="drop-invalid"></MadCap:keyword>
-<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
-<tbody>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Synopsis: 
+        <h6 oldrole="formalpara">CDATA:</h6>
+        <p oldrole="para">The XML parser does not support CDATA. CDATA inside the XML input is ignored. This is true for the processing instructions as well.</p>
+        <h6 oldrole="formalpara">Inherited limitations:</h6>
+        <p oldrole="para">The XML parser is based on the glib XML subset parser, called <a href="https://developer.gnome.org/glib/stable/glib-Simple-XML-Subset-Parser.html">"GMarkup" parser</a>, which is not a full-scale XML parser. It is intended to parse a simple markup format that is a subset of XML. Some limitations are inherited:</p>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para">Do not use the XML parser if you expect to interoperate with applications generating full-scale XML. Instead, use it for application data files, configuration files, log files, and so on, where you know your application will be the only one writing the file.</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">The XML parser is not guaranteed to display an error message in the case of invalid XML. It may accept invalid XML. However, it does not accept XML input that is not well-formed (a condition that is weaker than requiring XML to be valid).</p>
+            </li>
+        </ul>
+        <h6 oldrole="formalpara">No support for long keys:</h6>
+        <p oldrole="para">If the key is longer than 255 characters, syslog-ng drops the entry and an error log is emitted. There is no chunking or any other way of recovering data, not even partial data. The entry will be replaced by an empty string.</p>
+        <h2 name="xml-parser-options">Options of XML parsers</h2>
+        <p oldrole="para">The XML parser has the following options.</p>
+        <h6 name="xml-parser-drop-invalid" oldrole="simplesect">drop-invalid</h6>
+        <MadCap:keyword term="drop-invalid">
+        </MadCap:keyword>
+        <table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+            <tbody>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Synopsis: 
 
                             </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">drop-invalid()</td>
-</tr>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Format: 
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">drop-invalid()</td>
+                </tr>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Format: 
 
                             </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">yes|no</td>
-</tr>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default: 
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">yes|no</td>
+                </tr>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default: 
 
                             </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">no</td>
-</tr>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Mandatory: 
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">no</td>
+                </tr>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Mandatory: 
 
                             </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">no</td>
-</tr>
-</tbody>
-<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
-<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> If set, messages with an invalid XML will be dropped entirely.</p>
-
-
-<h6 name="xml-parser-exclude-tags" oldrole="simplesect">exclude-tags</h6>
-<MadCap:keyword term="exclude-tags"></MadCap:keyword>
-<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
-<tbody>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Synopsis: 
-
-                            </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">exclude-tags()</td>
-</tr>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Format: 
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">no</td>
+                </tr>
+            </tbody>
+            <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+        </table>
+        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> If set, messages with an invalid XML will be dropped entirely.</p>
+        <h6 name="xml-parser-exclude-tags" oldrole="simplesect">exclude-tags</h6>
+        <MadCap:keyword term="exclude-tags">
+        </MadCap:keyword>
+        <table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+            <tbody>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Synopsis: 
 
                             </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">list of globs</td>
-</tr>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default: 
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">exclude-tags()</td>
+                </tr>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Format: 
 
                             </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<p oldrole="para">None</p>
-<p oldrole="para">If not set, no filtering is done.</p>
-</td>
-</tr>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Mandatory: 
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">list of globs</td>
+                </tr>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default: 
 
                             </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">no</td>
-</tr>
-</tbody>
-<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
-<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The XML parser matches tags against the listed globs. If there is a match, the given subtree of the XML will be omitted.</p>
-<div class="Example">
-<h6 oldrole="example">Example: Using <span class="Code" oldrole="parameter">exclude_tags</span>
-</h6>
-<pre class="Code" oldrole="synopsis">parser xml_parser {
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <p oldrole="para">None</p>
+                        <p oldrole="para">If not set, no filtering is done.</p>
+                    </td>
+                </tr>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Mandatory: 
+
+                            </td>
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">no</td>
+                </tr>
+            </tbody>
+            <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+        </table>
+        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The XML parser matches tags against the listed globs. If there is a match, the given subtree of the XML will be omitted.</p>
+        <div class="Example">
+            <h6 oldrole="example">Example: Using <span class="Code" oldrole="parameter">exclude_tags</span></h6><pre class="Code" oldrole="synopsis">parser xml_parser {
        xml(template("$MSG") exclude_tags("tag1", "tag2", "inner*"));
 };</pre>
-<p oldrole="para">From this XML input:</p>
-<pre class="Code" oldrole="synopsis">&lt;tag1&gt;Text1&lt;/tag1&gt;&lt;tag2&gt;Text2&lt;/tag2&gt;&lt;tag3&gt;Text3&lt;innertag&gt;TextInner&lt;/innertag&gt;&lt;/tag3&gt;</pre>
-<p oldrole="para">The following output is generated:</p>
-<pre class="Code" oldrole="synopsis">{"_xml":{"tag3":"Text3"}}</pre>
-</div>
-
-
-<MadCap:snippetBlock src="../../shared/chunk/option-parser-prefix.htm"></MadCap:snippetBlock>
-<MadCap:snippetBlock src="../../shared/chunk/para-macro-prefix-parser.htm"></MadCap:snippetBlock>
-<p oldrole="para">The <span class="Code" oldrole="parameter">prefix()</span> option is optional and its default value is <span class="Code" oldrole="userinput">".xml"</span>.</p>
-
-
-<h6 name="xml-parser-strip-whitespaces" oldrole="simplesect">strip-whitespaces</h6>
-<MadCap:keyword term="strip-whitespaces"></MadCap:keyword>
-<table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
-<tbody>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Synopsis: 
+            <p oldrole="para">From this XML input:</p><pre class="Code" oldrole="synopsis">&lt;tag1&gt;Text1&lt;/tag1&gt;&lt;tag2&gt;Text2&lt;/tag2&gt;&lt;tag3&gt;Text3&lt;innertag&gt;TextInner&lt;/innertag&gt;&lt;/tag3&gt;</pre>
+            <p oldrole="para">The following output is generated:</p><pre class="Code" oldrole="synopsis">{"_xml":{"tag3":"Text3"}}</pre>
+        </div>
+        <MadCap:snippetBlock src="../../shared/chunk/option-parser-prefix.htm">
+        </MadCap:snippetBlock>
+        <MadCap:snippetBlock src="../../shared/chunk/para-macro-prefix-parser.htm">
+        </MadCap:snippetBlock>
+        <p oldrole="para">The <span class="Code" oldrole="parameter">prefix()</span> option is optional and its default value is <span class="Code" oldrole="userinput">".xml"</span>.</p>
+        <h6 name="xml-parser-strip-whitespaces" oldrole="simplesect">strip-whitespaces</h6>
+        <MadCap:keyword term="strip-whitespaces">
+        </MadCap:keyword>
+        <table cellspacing="0" class="RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+            <tbody>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Synopsis: 
 
                             </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">strip-whitespaces()</td>
-</tr>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Format: 
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">strip-whitespaces()</td>
+                </tr>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Format: 
 
                             </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">yes|no</td>
-</tr>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default: 
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">yes|no</td>
+                </tr>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Default: 
 
                             </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">no </td>
-</tr>
-<tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Mandatory: 
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">no </td>
+                </tr>
+                <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">Mandatory: 
 
                             </td>
-<td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">no</td>
-</tr>
-</tbody>
-<col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;"></col></table>
-<p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Strip the whitespaces from the XML text nodes before adding them to the message.</p>
-<div class="Example">
-<h6 oldrole="example">Example: Using <span class="Code" oldrole="parameter">strip-whitespaces</span>
-</h6>
-<pre class="Code" oldrole="synopsis">parser xml_parser {
+                    <td class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">no</td>
+                </tr>
+            </tbody>
+            <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+        </table>
+        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Strip the whitespaces from the XML text nodes before adding them to the message.</p>
+        <div class="Example">
+            <h6 oldrole="example">Example: Using <span class="Code" oldrole="parameter">strip-whitespaces</span></h6><pre class="Code" oldrole="synopsis">parser xml_parser {
        xml(template("$MSG") strip_whitespaces(yes));
 };</pre>
-<p oldrole="para">From this XML input:</p>
-<pre class="Code" oldrole="synopsis">&lt;tag1&gt; Tag &lt;/tag1&gt;</pre>
-<p oldrole="para">The following output is generated:</p>
-<pre class="Code" oldrole="synopsis">{"_xml":{"tag1":"Tag"}}</pre>
-</div>
-
-
-<MadCap:snippetBlock src="../../shared/chunk/option-parser-template.htm"></MadCap:snippetBlock>
-
-</body></html>
+            <p oldrole="para">From this XML input:</p><pre class="Code" oldrole="synopsis">&lt;tag1&gt; Tag &lt;/tag1&gt;</pre>
+            <p oldrole="para">The following output is generated:</p><pre class="Code" oldrole="synopsis">{"_xml":{"tag1":"Tag"}}</pre>
+        </div>
+        <MadCap:snippetBlock src="../../shared/chunk/option-parser-template.htm">
+        </MadCap:snippetBlock>
+    </body>
+</html>
