@@ -16,14 +16,18 @@
     };
 };</pre>
         <h6 name="example-channels" oldrole="example">Example: Using channels</h6>
-        <p oldrole="para">For example, to process a log file in a specific way, you can define the required processing rules (parsers and rewrite expressions) and combine them in a single object:</p><pre class="Code" oldrole="synopsis">source s_apache {
+        <p oldrole="para">For example, to process a log file in a specific way, you can define the required processing rules (parsers and rewrite expressions) and combine them in a single object:</p>
+			<pre class="Code" oldrole="synopsis">source s_apache {
     channel {
-        source { file("/var/log/apache/error.log"); };
+        source {
+			file("/var/log/apache/error.log");
+        };
         parser(p_apache_parser);
     };
 };
-
-log { source(s_apache); ... };</pre>
+log {
+    source(s_apache); ...
+};</pre>
         <p oldrole="para">The <span class="Code" oldrole="parameter">s_apache</span> source uses a file source (the error log of an Apache webserver) and references a specific parser to process the messages of the error log. The log statement references only the <span class="Code" oldrole="parameter">s_apache</span> source, and any other object in the log statement can already use the results of the <span class="Code" oldrole="parameter">p_apache_parser</span>parser.</p>
         <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
             <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
@@ -38,7 +42,8 @@ log { source(s_apache); ... };</pre>
                         </p>
                     </td>
                     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
-                        <p oldrole="para">You must start the object definition with a <span class="Code" oldrole="parameter">channel</span> even if you will use a <span class="Code" oldrole="parameter">junction</span>, for example:</p><pre class="Code" oldrole="synopsis">parser demo-parser() {
+                        <p oldrole="para">You must start the object definition with a <span class="Code" oldrole="parameter">channel</span> even if you will use a <span class="Code" oldrole="parameter">junction</span>, for example:</p>
+							<pre class="Code" oldrole="synopsis">parser demo-parser() {
     channel {
         junction {
             channel { ... };
@@ -46,17 +51,18 @@ log { source(s_apache); ... };</pre>
         };
     };
 };</pre>
-                        <p oldrole="para">If you want to embed configuration objects into sources or destinations, always use channels, otherwise the source or destination will not behave as expected. For example, the following configuration is good:</p><pre class="Code" oldrole="synopsis">source s_filtered_hosts {
-  channel{
-    source {
-      pipe("/dev/pipe");
-      syslog(ip(192.168.0.1) transport("tcp"));
-      syslog(ip(127.0.0.1) transport("tcp"));
+                        <p oldrole="para">If you want to embed configuration objects into sources or destinations, always use channels, otherwise the source or destination will not behave as expected. For example, the following configuration is good:</p>
+							<pre class="Code" oldrole="synopsis">source s_filtered_hosts {
+    channel{
+        source {
+            pipe("/dev/pipe");
+            syslog(ip(192.168.0.1) transport("tcp"));
+            syslog(ip(127.0.0.1) transport("tcp"));
+        };
+        filter {
+            netmask(10.0.0.0/16);
+        };
     };
-    filter {
-      netmask(10.0.0.0/16);
-    };
-  };
 };;</pre>
                     </td>
                 </tr>
