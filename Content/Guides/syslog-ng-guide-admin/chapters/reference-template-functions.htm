@@ -91,7 +91,7 @@
   --pair MSGHDR=\"$PROGRAM[$PID]: \")</pre>
         <p oldrole="para">The following example selects every value-pair that has a name beginning with <span class="Code" oldrole="userinput">.cef.</span>, but removes the <span class="Code" oldrole="userinput">.cef.</span> prefix from the key names.</p><pre class="Code" oldrole="synopsis">template("$(format-cef-extension --subkeys .cef.)\n")</pre>
         <p oldrole="para">The following example shows how to use this template function to store log messages in CEF format:</p><pre class="Code" oldrole="synopsis">destination d_cef_extension {
-  file("/var/log/messages.cef" template("${ISODATE} ${HOST} $(format-cef-extension --scope selected_macros --scope nv_pairs)\n"));
+    file("/var/log/messages.cef" template("${ISODATE} ${HOST} $(format-cef-extension --scope selected_macros --scope nv_pairs)\n"));
 };</pre>
         <h6 name="template-function-format-cim" oldrole="simplesect">format-cim</h6>
         <MadCap:keyword term="format-cim">
@@ -99,7 +99,10 @@
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(format-cim)</pre>
         </p>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Formats the message into <a href="http://docs.splunk.com/Documentation/CIM/latest/User/Overview">Splunk Common Information Model (CIM) format</a>. Applications that can receive messages in CIM format include Kibana, logstash, and Splunk. Applications that can be configured to log into CIM format include nflog and the Suricata IDS engine.</p><pre class="Code" oldrole="synopsis">destination d_cim {
-    network("192.168.1.1" template("$(format-cim)\n"));
+    network(
+        "192.168.1.1"
+        template("$(format-cim)\n")
+    );
 };</pre>
         <p oldrole="para">You can find the exact source of this template function in the <a href="https://github.com/balabit/syslog-ng/blob/master/scl/cim/template.conf"><MadCap:variable name="General.abbrev"></MadCap:variable> GitHub repository</a>.</p>
         <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
@@ -128,13 +131,14 @@
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Available in <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="ose">3.13</MadCap:conditionaltext> and later.</p>
         <p oldrole="para">You can use the Graylog Extended Log Format (GELF) template together with the <span class="Code" oldrole="parameter">graylog2()</span> destination to send syslog messages to <a href="http://docs.graylog.org">Graylog</a>. GELF is the native data format of Graylog.</p>
         <h6 oldrole="example">Example: Using the format-gelf template function</h6>
-        <p oldrole="para">The following configuration example shows how you can use the <span class="Code" oldrole="parameter">format-gelf</span> template:</p><pre class="Code" oldrole="synopsis">destination graylog2 { 
-  network(
-    "127.0.0.1"
-    port(12201)
-    transport(tcp)
-    template("$(format-gelf)")
-  );
+        <p oldrole="para">The following configuration example shows how you can use the <span class="Code" oldrole="parameter">format-gelf</span> template:</p>
+			<pre class="Code" oldrole="synopsis">destination graylog2 { 
+    network(
+        "127.0.0.1"
+        port(12201)
+        transport(tcp)
+        template("$(format-gelf)")
+    );
 };</pre>
         <h6 name="template-function-format-json" oldrole="simplesect">format-json</h6>
         <MadCap:keyword term="format-json">
@@ -165,8 +169,12 @@
         <p oldrole="para">The following example selects every available information about the log message, except for the date-related macros (<span class="Code" oldrole="userinput">R_*</span> and <span class="Code" oldrole="userinput">S_*</span>), selects the <span class="Code" oldrole="userinput">.SDATA.meta.sequenceId</span> macro, and defines a new value-pair called <span class="Code" oldrole="userinput">MSGHDR</span> that contains the program name and PID of the application that sent the log message (since you will use the template-function in a template, you must escape the double-quotes).</p><pre class="Code" oldrole="synopsis">$(format-json --scope syslog,all_macros,selected_macros \
   --exclude R_* --exclude S_* --key .SDATA.meta.sequenceId \
   --pair MSGHDR=\"$PROGRAM[$PID]: \")</pre>
-        <p oldrole="para">The following example shows how to use this template function to store log messages in JSON format:</p><pre class="Code" oldrole="synopsis">destination d_json {
-    file("/var/log/messages.json" template("$(format-json --scope selected_macros --scope nv_pairs)\n"));
+        <p oldrole="para">The following example shows how to use this template function to store log messages in JSON format:</p>
+			<pre class="Code" oldrole="synopsis">destination d_json {
+    file(
+        "/var/log/messages.json"
+        template("$(format-json --scope selected_macros --scope nv_pairs)\n")
+    );
 };</pre>
         <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
             <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
@@ -199,8 +207,12 @@
         <p oldrole="para">The following example selects every available information about the log message, except for the date-related macros (<span class="Code" oldrole="userinput">R_*</span> and <span class="Code" oldrole="userinput">S_*</span>), selects the <span class="Code" oldrole="userinput">.SDATA.meta.sequenceId</span> macro, and defines a new value-pair called <span class="Code" oldrole="userinput">MSGHDR</span> that contains the program name and PID of the application that sent the log message (since you will use the template-function in a template, you must escape the double-quotes).</p><pre class="Code" oldrole="synopsis">$(format-welf --scope syslog,all_macros,selected_macros \
   --exclude R_* --exclude S_* --key .SDATA.meta.sequenceId \
   --pair MSGHDR=\"$PROGRAM[$PID]: \")</pre>
-        <p oldrole="para">The following example shows how to use this template function to store log messages in WELF format:</p><pre class="Code" oldrole="synopsis">destination d_welf {
-    file("/var/log/messages.welf" template("$(format-welf --scope selected_macros --scope nv_pairs)\n"));
+        <p oldrole="para">The following example shows how to use this template function to store log messages in WELF format:</p>
+			<pre class="Code" oldrole="synopsis">destination d_welf {
+    file(
+        "/var/log/messages.welf"
+        template("$(format-welf --scope selected_macros --scope nv_pairs)\n")
+    );
 };</pre>
         <h6 condition="ose" name="template-function-geoip" oldrole="simplesect">geoip (DEPRECATED)</h6>
         <MadCap:keyword term="geoip">
@@ -405,9 +417,12 @@ $(getent services 80)</pre>
         </p>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> This template function makes it possible to write multi-line log messages into a file. The first line is written like a regular message, subsequent lines are indented with a tab, in compliance with RFC822.</p>
         <h6 oldrole="example">Example: Using the indent-multi-line template function</h6>
-        <p oldrole="para">The following example writes multi-line messages into a text file.</p><pre class="Code" oldrole="synopsis">destination d_file {
-        file ("/var/log/messages"
-                template("${ISODATE} ${HOST} $(indent-multi-line ${MESSAGE})\n") );
+        <p oldrole="para">The following example writes multi-line messages into a text file.</p>
+			<pre class="Code" oldrole="synopsis">destination d_file {
+    file (
+        "/var/log/messages"
+        template("${ISODATE} ${HOST} $(indent-multi-line ${MESSAGE})\n")
+    );
 };</pre>
         <h6 name="template-function-ipv4-to-int" oldrole="simplesect">ipv4-to-int</h6>
         <MadCap:keyword term="ipv4-to-int">
@@ -507,7 +522,8 @@ $(getent services 80)</pre>
         </MadCap:keyword>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(length "&lt;macro&gt;")</pre>
         </p>
-        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the length of the macro in characters, for example, the length of the message. For example, the following filter selects messages that are shorter than 16 characters:</p><pre class="Code" oldrole="synopsis">f_short {
+        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the length of the macro in characters, for example, the length of the message. For example, the following filter selects messages that are shorter than 16 characters:</p>
+			<pre class="Code" oldrole="synopsis">f_short {
     match ('-', value ("$(if ($(length "${MESSAGE}") &lt;= 16) "-" "+")"));
 };</pre>
         <h6 name="template-function-lowercase" oldrole="simplesect">lowercase</h6>
@@ -515,7 +531,8 @@ $(getent services 80)</pre>
         </MadCap:keyword>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(lowercase "&lt;macro&gt;")</pre>
         </p>
-        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the lowercase version of the specified string or macro. For example, the following example uses the lowercase version of the hostname in a directory name:</p><pre class="Code" oldrole="synopsis">destination d_file {
+        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the lowercase version of the specified string or macro. For example, the following example uses the lowercase version of the hostname in a directory name:</p>
+			<pre class="Code" oldrole="synopsis">destination d_file {
     file ("/var/log/${MONTH}/${DAY}/$(lowercase "${HOST}")/messages");
 };</pre>
         <p oldrole="para">Available in <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="ose">3.5</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7.0</MadCap:conditionaltext> and later.</p>
@@ -618,7 +635,10 @@ def resolve_host(log_message, hostname):
 };
 
 destination d_local {
-    file("/tmp/logs.txt" template("${ISODATE} $(python resolve_host(${SOURCE_IP})) ${MESSAGE}\n"));
+    file(
+        "/tmp/logs.txt"
+        template("${ISODATE} $(python resolve_host(${SOURCE_IP})) ${MESSAGE}\n")
+    );
 };</pre>
         <h6 name="template-function-replace-delimiter" oldrole="simplesect">replace-delimiter</h6>
         <MadCap:keyword term="replace-delimiter">
@@ -707,8 +727,9 @@ destination d_local {
         </MadCap:keyword>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(uppercase "&lt;macro&gt;")</pre>
         </p>
-        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the uppercase version of the specified string or macro. For example, the following example uses the uppercase version of the hostname in a directory name:</p><pre class="Code" oldrole="synopsis">destination d_file {
-file ("/var/log/${MONTH}/${DAY}/$(uppercase "${HOST}")/messages");
+        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the uppercase version of the specified string or macro. For example, the following example uses the uppercase version of the hostname in a directory name:</p>
+			<pre class="Code" oldrole="synopsis">destination d_file {
+    file ("/var/log/${MONTH}/${DAY}/$(uppercase "${HOST}")/messages");
 };</pre>
         <p oldrole="para">Available in <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="ose">3.5</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7.0</MadCap:conditionaltext> and later.</p>
         <h6 name="template-function-uuid" oldrole="simplesect">uuid</h6>
@@ -719,18 +740,23 @@ file ("/var/log/${MONTH}/${DAY}/$(uppercase "${HOST}")/messages");
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Generates a Universally Unique IDentifier (UUID) that complies with <a href="https://www.ietf.org/rfc/rfc4122.txt">RFC4122</a>. That way, an UUID can be added to the message soon after it is received, so messages stored in multiple destinations can be identified. For example, when storing messages in a database and also in files, the UUID can be used to find a particular message both in the database and the files.</p>
         <p oldrole="para">To generate a UUID, you can use a rewrite rule to create a new value-pair for the message.</p>
         <h6 oldrole="example">Example: Using Universally Unique Identifiers</h6>
-        <p oldrole="para">The following example adds a value-pair called <span class="Code" oldrole="userinput">MESSAGE_UUID</span> to the message using a rewrite rule and a template.</p><pre class="Code" oldrole="synopsis">rewrite r_add_uuid { set("$(uuid)" value("MESSAGE_UUID")); };
-
-destination d_file {
-    file ("/var/log/messages"
-          template("$MESSAGE_UUID $ISODATE $HOST $MSG\n")
-          template-escape(no)
-         );
+        <p oldrole="para">The following example adds a value-pair called <span class="Code" oldrole="userinput">MESSAGE_UUID</span> to the message using a rewrite rule and a template.</p>
+			<pre class="Code" oldrole="synopsis">rewrite r_add_uuid {
+    set("$(uuid)" value("MESSAGE_UUID"));
 };
 
-log { source(s_network);
-      rewrite(r_add_uuid);
-      destination(d_file);
+destination d_file {
+    file (
+        "/var/log/messages"
+        template("$MESSAGE_UUID $ISODATE $HOST $MSG\n")
+        template-escape(no)
+    );
+};
+
+log {
+    source(s_network);
+    rewrite(r_add_uuid);
+    destination(d_file);
 };</pre>
         <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
             <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
