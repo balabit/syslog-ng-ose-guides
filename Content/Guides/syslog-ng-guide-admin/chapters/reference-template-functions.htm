@@ -19,8 +19,10 @@
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(context-lookup [option] condition value-to-select)</pre>
         </p>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The <span class="Code" oldrole="parameter">context-lookup</span> template function can search a message context when correlating messages (for example, when you use a <a href="patterndb-correlation.htm">pattern database</a> or the <a href="grouping-by-parser.htm">grouping-by parser</a>). The <span class="Code" oldrole="parameter">context-lookup</span> template function requires a condition (a filter or a string), and returns a specific macro or template of the matching messages (for example, the ${MESSAGE}) as a list. It works similarly to the <a href="reference-template-functions.htm"><span class="Code" oldrole="parameter">$(grep)</span></a> template function, but it escapes its output properly, so that the returned value is a list that can be processed with other template functions that work on lists, for example, <span class="Code" oldrole="parameter">$(list-slice)</span>.</p>
-        <h6 oldrole="example">Example: Using the <span class="Code" oldrole="parameter">context-lookup</span> template function</h6>
-        <p oldrole="para">The following example selects the message of the context that has a <span class="Code" oldrole="userinput">username</span> name-value pair with the <span class="Code" oldrole="userinput">root</span> value, and returns the value of the <span class="Code" oldrole="userinput">tags</span> name-value pair.</p><pre class="Code" oldrole="synopsis">$(context-lookup ("${username}" == "root") ${tags})</pre>
+        <div class="Example">
+            <h6 oldrole="example">Example: Using the <span class="Code" oldrole="parameter">context-lookup</span> template function</h6>
+            <p oldrole="para">The following example selects the message of the context that has a <span class="Code" oldrole="userinput">username</span> name-value pair with the <span class="Code" oldrole="userinput">root</span> value, and returns the value of the <span class="Code" oldrole="userinput">tags</span> name-value pair.</p><pre class="Code" oldrole="synopsis">$(context-lookup ("${username}" == "root") ${tags})</pre>
+        </div>
         <p oldrole="para">To limit the number of matches that the template function returns, use the <span class="Code" oldrole="userinput">--max-count</span> option, for example, <span class="Code" oldrole="userinput">$(context-lookup --max-count 5 ("${username}" == "root") ${tags})</span>. If you do not want to limit the number of matches, use <span class="Code" oldrole="userinput">--max-count 0</span>.</p>
         <p oldrole="para">You can to specify multiple name-value pairs as parameters, separated with commas. If multiple messages match the condition of <span class="Code" oldrole="parameter">context-lookup</span>, these will be returned also separated by commas. This can be used for example to collect the e-mail recipients from postfix messages.</p>
         <p oldrole="para">Available in <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="ose">3.10</MadCap:conditionaltext> and later.</p>
@@ -85,14 +87,16 @@
                 <p oldrole="para">The log messages must be encoded in UTF-8. Use the <span class="Code" oldrole="parameter">encoding()</span> option or the <span class="Code" oldrole="parameter">validate-utf8</span> flag in the message source.</p>
             </li>
         </ul>
-        <h6 oldrole="example">Example: Using the <span class="Code" oldrole="parameter">format-cef-extension</span> template function</h6>
-        <p oldrole="para">The following example selects every available information about the log message, except for the date-related macros (<span class="Code" oldrole="userinput">R_*</span> and <span class="Code" oldrole="userinput">S_*</span>), selects the <span class="Code" oldrole="userinput">.SDATA.meta.sequenceId</span> macro, and defines a new value-pair called <span class="Code" oldrole="userinput">MSGHDR</span> that contains the program name and PID of the application that sent the log message (since you will use the template-function in a template, you must escape the double-quotes).</p><pre class="Code" oldrole="synopsis">$(format-cef-extension --scope syslog,all_macros,selected_macros \
+        <div class="Example">
+            <h6 oldrole="example">Example: Using the <span class="Code" oldrole="parameter">format-cef-extension</span> template function</h6>
+            <p oldrole="para">The following example selects every available information about the log message, except for the date-related macros (<span class="Code" oldrole="userinput">R_*</span> and <span class="Code" oldrole="userinput">S_*</span>), selects the <span class="Code" oldrole="userinput">.SDATA.meta.sequenceId</span> macro, and defines a new value-pair called <span class="Code" oldrole="userinput">MSGHDR</span> that contains the program name and PID of the application that sent the log message (since you will use the template-function in a template, you must escape the double-quotes).</p><pre class="Code" oldrole="synopsis">$(format-cef-extension --scope syslog,all_macros,selected_macros \
   --exclude R_* --exclude S_* --key .SDATA.meta.sequenceId \
   --pair MSGHDR=\"$PROGRAM[$PID]: \")</pre>
-        <p oldrole="para">The following example selects every value-pair that has a name beginning with <span class="Code" oldrole="userinput">.cef.</span>, but removes the <span class="Code" oldrole="userinput">.cef.</span> prefix from the key names.</p><pre class="Code" oldrole="synopsis">template("$(format-cef-extension --subkeys .cef.)\n")</pre>
-        <p oldrole="para">The following example shows how to use this template function to store log messages in CEF format:</p><pre class="Code" oldrole="synopsis">destination d_cef_extension {
+            <p oldrole="para">The following example selects every value-pair that has a name beginning with <span class="Code" oldrole="userinput">.cef.</span>, but removes the <span class="Code" oldrole="userinput">.cef.</span> prefix from the key names.</p><pre class="Code" oldrole="synopsis">template("$(format-cef-extension --subkeys .cef.)\n")</pre>
+            <p oldrole="para">The following example shows how to use this template function to store log messages in CEF format:</p><pre class="Code" oldrole="synopsis">destination d_cef_extension {
     file("/var/log/messages.cef" template("${ISODATE} ${HOST} $(format-cef-extension --scope selected_macros --scope nv_pairs)\n"));
 };</pre>
+        </div>
         <h6 name="template-function-format-cim" oldrole="simplesect">format-cim</h6>
         <MadCap:keyword term="format-cim">
         </MadCap:keyword>
@@ -130,9 +134,9 @@
         </p>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Available in <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="ose">3.13</MadCap:conditionaltext> and later.</p>
         <p oldrole="para">You can use the Graylog Extended Log Format (GELF) template together with the <span class="Code" oldrole="parameter">graylog2()</span> destination to send syslog messages to <a href="http://docs.graylog.org">Graylog</a>. GELF is the native data format of Graylog.</p>
-        <h6 oldrole="example">Example: Using the format-gelf template function</h6>
-        <p oldrole="para">The following configuration example shows how you can use the <span class="Code" oldrole="parameter">format-gelf</span> template:</p>
-			<pre class="Code" oldrole="synopsis">destination graylog2 { 
+        <div class="Example">
+            <h6 oldrole="example">Example: Using the format-gelf template function</h6>
+            <p oldrole="para">The following configuration example shows how you can use the <span class="Code" oldrole="parameter">format-gelf</span> template:</p><pre class="Code" oldrole="synopsis">destination graylog2 { 
     network(
         "127.0.0.1"
         port(12201)
@@ -140,6 +144,7 @@
         template("$(format-gelf)")
     );
 };</pre>
+        </div>
         <h6 name="template-function-format-json" oldrole="simplesect">format-json</h6>
         <MadCap:keyword term="format-json">
         </MadCap:keyword>
@@ -165,17 +170,18 @@
         <p oldrole="para">For details, see <MadCap:xref href="concepts-value-pairs.htm#concepts-value-pairs"></MadCap:xref>. Note that the syntax of <span class="Code" oldrole="parameter">format-json</span> is different from the syntax of <span class="Code" oldrole="parameter">value-pairs()</span>: <span class="Code" oldrole="parameter">format-json</span> uses a syntax similar to command lines.</p>
         <MadCap:snippetBlock src="../../shared/wnt/note-typehinting.htm">
         </MadCap:snippetBlock>
-        <h6 oldrole="example">Example: Using the format-json template function</h6>
-        <p oldrole="para">The following example selects every available information about the log message, except for the date-related macros (<span class="Code" oldrole="userinput">R_*</span> and <span class="Code" oldrole="userinput">S_*</span>), selects the <span class="Code" oldrole="userinput">.SDATA.meta.sequenceId</span> macro, and defines a new value-pair called <span class="Code" oldrole="userinput">MSGHDR</span> that contains the program name and PID of the application that sent the log message (since you will use the template-function in a template, you must escape the double-quotes).</p><pre class="Code" oldrole="synopsis">$(format-json --scope syslog,all_macros,selected_macros \
+        <div class="Example">
+            <h6 oldrole="example">Example: Using the format-json template function</h6>
+            <p oldrole="para">The following example selects every available information about the log message, except for the date-related macros (<span class="Code" oldrole="userinput">R_*</span> and <span class="Code" oldrole="userinput">S_*</span>), selects the <span class="Code" oldrole="userinput">.SDATA.meta.sequenceId</span> macro, and defines a new value-pair called <span class="Code" oldrole="userinput">MSGHDR</span> that contains the program name and PID of the application that sent the log message (since you will use the template-function in a template, you must escape the double-quotes).</p><pre class="Code" oldrole="synopsis">$(format-json --scope syslog,all_macros,selected_macros \
   --exclude R_* --exclude S_* --key .SDATA.meta.sequenceId \
   --pair MSGHDR=\"$PROGRAM[$PID]: \")</pre>
-        <p oldrole="para">The following example shows how to use this template function to store log messages in JSON format:</p>
-			<pre class="Code" oldrole="synopsis">destination d_json {
+            <p oldrole="para">The following example shows how to use this template function to store log messages in JSON format:</p><pre class="Code" oldrole="synopsis">destination d_json {
     file(
         "/var/log/messages.json"
         template("$(format-json --scope selected_macros --scope nv_pairs)\n")
     );
 };</pre>
+        </div>
         <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
             <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
             </col>
@@ -203,17 +209,18 @@
         </MadCap:keyword>
         <p oldrole="para">This template function converts value-pairs into the WebTrends Enhanced Log file Format (WELF). The WELF format is a comma-separated list of <span class="Code" oldrole="userinput">name=value</span> elements. Note that the order of the elements is random. If the value contains whitespace, it is enclosed in double-quotes, for example, <span class="Code" oldrole="userinput">name="value"</span>. For details on the WELF format, see <a href="https://www3.trustwave.com/support/kb/article.aspx?id=10899">https://www3.trustwave.com/support/kb/article.aspx?id=10899</a>.</p>
         <p oldrole="para">To select which value-pairs to convert, use the command-line syntax of the <span class="Code" oldrole="parameter">value-pairs()</span> option. For details on selecting value-pairs, see <MadCap:xref href="concepts-value-pairs.htm#options-value-pairs"></MadCap:xref>.</p>
-        <h6 oldrole="example">Example: Using the <span class="Code" oldrole="parameter">format-welf()</span> template function</h6>
-        <p oldrole="para">The following example selects every available information about the log message, except for the date-related macros (<span class="Code" oldrole="userinput">R_*</span> and <span class="Code" oldrole="userinput">S_*</span>), selects the <span class="Code" oldrole="userinput">.SDATA.meta.sequenceId</span> macro, and defines a new value-pair called <span class="Code" oldrole="userinput">MSGHDR</span> that contains the program name and PID of the application that sent the log message (since you will use the template-function in a template, you must escape the double-quotes).</p><pre class="Code" oldrole="synopsis">$(format-welf --scope syslog,all_macros,selected_macros \
+        <div class="Example">
+            <h6 oldrole="example">Example: Using the <span class="Code" oldrole="parameter">format-welf()</span> template function</h6>
+            <p oldrole="para">The following example selects every available information about the log message, except for the date-related macros (<span class="Code" oldrole="userinput">R_*</span> and <span class="Code" oldrole="userinput">S_*</span>), selects the <span class="Code" oldrole="userinput">.SDATA.meta.sequenceId</span> macro, and defines a new value-pair called <span class="Code" oldrole="userinput">MSGHDR</span> that contains the program name and PID of the application that sent the log message (since you will use the template-function in a template, you must escape the double-quotes).</p><pre class="Code" oldrole="synopsis">$(format-welf --scope syslog,all_macros,selected_macros \
   --exclude R_* --exclude S_* --key .SDATA.meta.sequenceId \
   --pair MSGHDR=\"$PROGRAM[$PID]: \")</pre>
-        <p oldrole="para">The following example shows how to use this template function to store log messages in WELF format:</p>
-			<pre class="Code" oldrole="synopsis">destination d_welf {
+            <p oldrole="para">The following example shows how to use this template function to store log messages in WELF format:</p><pre class="Code" oldrole="synopsis">destination d_welf {
     file(
         "/var/log/messages.welf"
         template("$(format-welf --scope selected_macros --scope nv_pairs)\n")
     );
 };</pre>
+        </div>
         <h6 condition="ose" name="template-function-geoip" oldrole="simplesect">geoip (DEPRECATED)</h6>
         <MadCap:keyword term="geoip">
         </MadCap:keyword>
@@ -336,10 +343,12 @@ $(getent services 80)</pre>
         </p>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Available in <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="ose">3.6</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7.0</MadCap:conditionaltext> and later<MadCap:conditionaltext MadCap:conditions="ose"> (Originally appeared in the <MadCap:variable name="General.abbrev"></MadCap:variable> incubator for syslog-ng 3.5)</MadCap:conditionaltext>. This template function converts value-pairs from the incoming message to the Graphite plain text protocol format. It is ideal to use with the messages generated by the <a href="https://github.com/balabit/syslog-ng-incubator/tree/master/modules/monitor-source/">monitor-source plugin</a> (currently available in the syslog-ng incubator project).</p>
         <p oldrole="para">For details on selecting value-pairs in <MadCap:variable name="General.abbrev"></MadCap:variable> and for possibilities to specify which information to convert to Graphite plain text protocol format, see <MadCap:xref href="concepts-value-pairs.htm#concepts-value-pairs"></MadCap:xref>. Note that the syntax of <span class="Code" oldrole="parameter">graphite-output</span> is different from the syntax of <span class="Code" oldrole="parameter">value-pairs()</span>: <span class="Code" oldrole="parameter">graphite-output</span> uses a the command-line syntax used in the <a href="reference-template-functions.htm">format-json template function</a>.</p>
-        <h6 oldrole="example">Example: Using the graphite-output template function</h6>
-        <p oldrole="para">The following configuration example shows, how to send value-pairs with names starting with "<span class="Code" oldrole="userinput">vmstat.</span>" to Graphite running on <span class="Code" oldrole="userinput">localhost</span>, port <span class="Code" oldrole="userinput">2003</span>:</p><pre class="Code" oldrole="synopsis">destination d_graphite {
+        <div class="Example">
+            <h6 oldrole="example">Example: Using the graphite-output template function</h6>
+            <p oldrole="para">The following configuration example shows, how to send value-pairs with names starting with "<span class="Code" oldrole="userinput">vmstat.</span>" to Graphite running on <span class="Code" oldrole="userinput">localhost</span>, port <span class="Code" oldrole="userinput">2003</span>:</p><pre class="Code" oldrole="synopsis">destination d_graphite {
     network( host("localhost") port(2003) template("$(graphite-output --key vmstat.*)"));
 };</pre>
+        </div>
         <h6 name="template-function-grep" oldrole="simplesect">grep</h6>
         <MadCap:keyword term="grep">
         </MadCap:keyword>
@@ -347,8 +356,10 @@ $(getent services 80)</pre>
             <!-- FIXME make this more specific -->
         </p>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The <span class="Code" oldrole="parameter">grep</span> template function can search a message context when correlating messages (for example, when you use a <a href="patterndb-correlation.htm">pattern database</a> or the <a href="grouping-by-parser.htm">grouping-by parser</a>). The <span class="Code" oldrole="parameter">context-lookup</span> template function requires a condition (a filter or a string), and returns a specific macro or template of the matching message (for example, the ${MESSAGE} field of the message).</p>
-        <MadCap:snippetBlock src="../../shared/chunk/example-grep-template-function.htm">
-        </MadCap:snippetBlock>
+        <div class="Example">
+            <MadCap:snippetBlock src="../../shared/chunk/example-grep-template-function.htm">
+            </MadCap:snippetBlock>
+        </div>
         <p oldrole="para">You can to specify multiple name-value pairs as parameters, separated with commas. If multiple messages match the condition of <span class="Code" oldrole="parameter">grep</span>, these will be returned also separated by commas. This can be used for example to collect the e-mail recipients from postfix messages.</p>
         <h6 name="template-function-hash" oldrole="simplesect">hash</h6>
         <MadCap:keyword term="tfhash">
@@ -388,42 +399,49 @@ $(getent services 80)</pre>
                 </tr>
             </tbody>
         </table>
-        <h6 name="template-function-hash-example" oldrole="example">Example: Using the $(hash) template function</h6>
-        <p oldrole="para">The following example calculates the SHA1 hash of the hostname of the message:</p><pre class="Code" oldrole="synopsis">$(sha1 $HOST)</pre>
-        <p oldrole="para">The following example calculates the SHA256 hash of the hostname, using the <span class="Code" oldrole="userinput">salted</span> string to salt the result:</p><pre class="Code" oldrole="synopsis">$(sha1 $HOST salted)</pre>
-        <p oldrole="para">To use shorter hashes, set the <span class="Code" oldrole="parameter">--length</span>:</p><pre class="Code" oldrole="synopsis">$(sha1 --length 6 $HOST)</pre>
-        <p oldrole="para">To replace the hostname with its hash, use a rewrite rule:</p><pre class="Code" oldrole="synopsis">rewrite r_rewrite_hostname{set("$(sha1 $HOST)", value("HOST"));};</pre>
-        <MadCap:snippetBlock src="../../shared/chunk/example-rewrite-hash.htm">
-        </MadCap:snippetBlock>
+        <div class="Example">
+            <h6 name="template-function-hash-example" oldrole="example">Example: Using the $(hash) template function</h6>
+            <p oldrole="para">The following example calculates the SHA1 hash of the hostname of the message:</p><pre class="Code" oldrole="synopsis">$(sha1 $HOST)</pre>
+            <p oldrole="para">The following example calculates the SHA256 hash of the hostname, using the <span class="Code" oldrole="userinput">salted</span> string to salt the result:</p><pre class="Code" oldrole="synopsis">$(sha1 $HOST salted)</pre>
+            <p oldrole="para">To use shorter hashes, set the <span class="Code" oldrole="parameter">--length</span>:</p><pre class="Code" oldrole="synopsis">$(sha1 --length 6 $HOST)</pre>
+            <p oldrole="para">To replace the hostname with its hash, use a rewrite rule:</p><pre class="Code" oldrole="synopsis">rewrite r_rewrite_hostname{set("$(sha1 $HOST)", value("HOST"));};</pre>
+        </div>
+        <div class="Example">
+            <MadCap:snippetBlock src="../../shared/chunk/example-rewrite-hash.htm">
+            </MadCap:snippetBlock>
+        </div>
         <h6 name="template-function-if" oldrole="simplesect">if</h6>
         <MadCap:keyword term="if">
         </MadCap:keyword>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(if (&lt;condition&gt;) &lt;true template&gt; &lt;false template&gt;)</pre>
         </p>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the value of the <span class="Code" oldrole="userinput">&lt;true template&gt;</span> parameter if the <span class="Code" oldrole="userinput">&lt;condition&gt;</span> is true. If the <span class="Code" oldrole="userinput">&lt;condition&gt;</span> is false, the value of <span class="Code" oldrole="userinput">&lt;false template&gt;</span> is returned.</p>
-        <h6 oldrole="example">Example: Using pattern databases and the if template function</h6>
-        <p oldrole="para">The following example returns <span class="Code" oldrole="userinput">violation</span> if the <span class="Code" oldrole="userinput">username</span> name-value pair of a message is <span class="Code" oldrole="userinput">root</span>, and <span class="Code" oldrole="userinput">system</span> otherwise.</p><pre class="Code" oldrole="synopsis">$(if ("${username}" == "root") "violation" "system")</pre>
-        <p oldrole="para">This can be used to set the class of a message in pattern database rules based on the condition.</p><pre class="Code" oldrole="synopsis">&lt;value name="username"&gt;$(if ("${username}" == "root") "violation" "system")&lt;/value&gt;</pre>
-        <MadCap:keyword term="template functions:['embedding']">
-        </MadCap:keyword>
-        <p oldrole="para">Since template functions can be embedded into each other, it is possible to use another template function as the template of the first one. For example, the following expression returns <span class="Code" oldrole="userinput">root</span> if the username is <span class="Code" oldrole="userinput">root</span>, <span class="Code" oldrole="userinput">admin</span> if the username is <span class="Code" oldrole="userinput">joe</span>, and <span class="Code" oldrole="userinput">normal user</span> otherwise.</p><pre class="Code" oldrole="synopsis">&lt;value name="username"&gt;
+        <div class="Example">
+            <h6 oldrole="example">Example: Using pattern databases and the if template function</h6>
+            <p oldrole="para">The following example returns <span class="Code" oldrole="userinput">violation</span> if the <span class="Code" oldrole="userinput">username</span> name-value pair of a message is <span class="Code" oldrole="userinput">root</span>, and <span class="Code" oldrole="userinput">system</span> otherwise.</p><pre class="Code" oldrole="synopsis">$(if ("${username}" == "root") "violation" "system")</pre>
+            <p oldrole="para">This can be used to set the class of a message in pattern database rules based on the condition.</p><pre class="Code" oldrole="synopsis">&lt;value name="username"&gt;$(if ("${username}" == "root") "violation" "system")&lt;/value&gt;</pre>
+            <MadCap:keyword term="template functions:['embedding']">
+            </MadCap:keyword>
+            <p oldrole="para">Since template functions can be embedded into each other, it is possible to use another template function as the template of the first one. For example, the following expression returns <span class="Code" oldrole="userinput">root</span> if the username is <span class="Code" oldrole="userinput">root</span>, <span class="Code" oldrole="userinput">admin</span> if the username is <span class="Code" oldrole="userinput">joe</span>, and <span class="Code" oldrole="userinput">normal user</span> otherwise.</p><pre class="Code" oldrole="synopsis">&lt;value name="username"&gt;
     $(if ("${username}" == "root")
         "root"
         $(if ("${username}" == "joe") "admin" "normal user"))&lt;/value&gt;</pre>
+        </div>
         <h6 name="template-function-indent-multi-line" oldrole="simplesect">indent-multi-line</h6>
         <MadCap:keyword term="indent-multi-line">
         </MadCap:keyword>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(indent-multi-line parameter)</pre>
         </p>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> This template function makes it possible to write multi-line log messages into a file. The first line is written like a regular message, subsequent lines are indented with a tab, in compliance with RFC822.</p>
-        <h6 oldrole="example">Example: Using the indent-multi-line template function</h6>
-        <p oldrole="para">The following example writes multi-line messages into a text file.</p>
-			<pre class="Code" oldrole="synopsis">destination d_file {
+        <div class="Example">
+            <h6 oldrole="example">Example: Using the indent-multi-line template function</h6>
+            <p oldrole="para">The following example writes multi-line messages into a text file.</p><pre class="Code" oldrole="synopsis">destination d_file {
     file (
         "/var/log/messages"
         template("${ISODATE} ${HOST} $(indent-multi-line ${MESSAGE})\n")
     );
 };</pre>
+        </div>
         <h6 name="template-function-ipv4-to-int" oldrole="simplesect">ipv4-to-int</h6>
         <MadCap:keyword term="ipv4-to-int">
         </MadCap:keyword>
@@ -522,8 +540,7 @@ $(getent services 80)</pre>
         </MadCap:keyword>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(length "&lt;macro&gt;")</pre>
         </p>
-        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the length of the macro in characters, for example, the length of the message. For example, the following filter selects messages that are shorter than 16 characters:</p>
-			<pre class="Code" oldrole="synopsis">f_short {
+        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the length of the macro in characters, for example, the length of the message. For example, the following filter selects messages that are shorter than 16 characters:</p><pre class="Code" oldrole="synopsis">f_short {
     match ('-', value ("$(if ($(length "${MESSAGE}") &lt;= 16) "-" "+")"));
 };</pre>
         <h6 name="template-function-lowercase" oldrole="simplesect">lowercase</h6>
@@ -531,8 +548,7 @@ $(getent services 80)</pre>
         </MadCap:keyword>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(lowercase "&lt;macro&gt;")</pre>
         </p>
-        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the lowercase version of the specified string or macro. For example, the following example uses the lowercase version of the hostname in a directory name:</p>
-			<pre class="Code" oldrole="synopsis">destination d_file {
+        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the lowercase version of the specified string or macro. For example, the following example uses the lowercase version of the hostname in a directory name:</p><pre class="Code" oldrole="synopsis">destination d_file {
     file ("/var/log/${MONTH}/${DAY}/$(lowercase "${HOST}")/messages");
 };</pre>
         <p oldrole="para">Available in <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="ose">3.5</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7.0</MadCap:conditionaltext> and later.</p>
@@ -571,10 +587,12 @@ $(getent services 80)</pre>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis"> $(padding &lt;macro&gt; &lt;width&gt; &lt;prepended-character-or-string&gt;)</pre>
         </p>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> This template function returns the value of its first parameter (a string or macro), prepended with a string. This string is <span class="Code" oldrole="userinput">&lt;width&gt;</span> long, and repeats the character or string set in the third parameter. If you use a single character, it is added <span class="Code" oldrole="userinput">&lt;width&gt;</span> times. If you use a string, it is repeated until its length reaches <span class="Code" oldrole="userinput">&lt;width&gt;</span>. The default padding character is ' ' (space). For example:</p>
-        <h6 oldrole="example">Example: Using the padding template function</h6>
-        <p oldrole="para">If the value of the <span class="Code" oldrole="userinput">${MESSAGE}</span> macro is <span class="Code" oldrole="userinput">mymessage</span>, then the output of the <span class="Code" oldrole="parameter">padding()</span> template function is the following:</p><pre class="Code" oldrole="synopsis">$(padding ${MESSAGE} 10 X)</pre>
-        <p oldrole="para">Output: <span class="Code" oldrole="userinput">XXXXXXXXXXmymessage</span></p><pre class="Code" oldrole="synopsis">$(padding ${MESSAGE} 10 foo)</pre>
-        <p oldrole="para">Output: <span class="Code" oldrole="userinput">foofoofoofmymessage</span></p>
+        <div class="Example">
+            <h6 oldrole="example">Example: Using the padding template function</h6>
+            <p oldrole="para">If the value of the <span class="Code" oldrole="userinput">${MESSAGE}</span> macro is <span class="Code" oldrole="userinput">mymessage</span>, then the output of the <span class="Code" oldrole="parameter">padding()</span> template function is the following:</p><pre class="Code" oldrole="synopsis">$(padding ${MESSAGE} 10 X)</pre>
+            <p oldrole="para">Output: <span class="Code" oldrole="userinput">XXXXXXXXXXmymessage</span></p><pre class="Code" oldrole="synopsis">$(padding ${MESSAGE} 10 foo)</pre>
+            <p oldrole="para">Output: <span class="Code" oldrole="userinput">foofoofoofmymessage</span></p>
+        </div>
         <h6 name="template-function-python" oldrole="simplesect">python</h6>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis"> $(python &lt;name-of-the-python-method-to-use&gt; &lt;arguments-of-the-method&gt;)</pre>
         </p>
@@ -611,8 +629,9 @@ def &lt;name_of_the_python_function&gt;(&lt;log_message&gt;, &lt;optional_other_
 template &lt;template-name&gt; {
     template($(python &lt;name_of_the_python_function&gt;));
 };</pre>
-        <h6 name="example-python-template-functions" oldrole="example">Example: Writing template functions in Python</h6>
-        <p oldrole="para">The following example creates a Python template function called <span class="Code" oldrole="userinput">return_message</span> that returns the MESSAGE part of the log message.</p><pre class="Code" oldrole="synopsis">@version: <MadCap:variable name="Version.techversion"></MadCap:variable>
+        <div class="Example">
+            <h6 name="example-python-template-functions" oldrole="example">Example: Writing template functions in Python</h6>
+            <p oldrole="para">The following example creates a Python template function called <span class="Code" oldrole="userinput">return_message</span> that returns the MESSAGE part of the log message.</p><pre class="Code" oldrole="synopsis">@version: <MadCap:variable name="Version.techversion"></MadCap:variable>
 
 python {
 def return_message(log_message):
@@ -622,7 +641,7 @@ def return_message(log_message):
 destination d_local {
     file("/tmp/logs.txt" template("[$(python return_message)]\n"));
 };</pre>
-        <p oldrole="para">The following example creates a Python template function called <span class="Code" oldrole="userinput">resolve_host</span> that receives an IP address as an argument, and attempts to resolve it into a hostname.</p><pre class="Code" oldrole="synopsis">@version: <MadCap:variable name="Version.techversion"></MadCap:variable>
+            <p oldrole="para">The following example creates a Python template function called <span class="Code" oldrole="userinput">resolve_host</span> that receives an IP address as an argument, and attempts to resolve it into a hostname.</p><pre class="Code" oldrole="synopsis">@version: <MadCap:variable name="Version.techversion"></MadCap:variable>
 
 python {
 import socket
@@ -640,6 +659,7 @@ destination d_local {
         template("${ISODATE} $(python resolve_host(${SOURCE_IP})) ${MESSAGE}\n")
     );
 };</pre>
+        </div>
         <h6 name="template-function-replace-delimiter" oldrole="simplesect">replace-delimiter</h6>
         <MadCap:keyword term="replace-delimiter">
         </MadCap:keyword>
@@ -676,9 +696,11 @@ destination d_local {
                 </li>
             </li>
         </ul>
-        <h6 oldrole="example">Example: Using the sanitize template function</h6>
-        <p oldrole="para">The following example uses the sanitize function on two macros, and the results are used as directory names in a file destination.</p><pre class="Code" oldrole="synopsis">file("/var/log/$(sanitize $HOST $PROGRAM)/messages");</pre>
-        <p oldrole="para">This is equivalent to <span class="Code" oldrole="filename">file("/var/log/$HOST/$PROGRAM/messages");</span>, but any slashes in the values of the $HOST and $PROGRAM macros are replaced with underscores.</p>
+        <div class="Example">
+            <h6 oldrole="example">Example: Using the sanitize template function</h6>
+            <p oldrole="para">The following example uses the sanitize function on two macros, and the results are used as directory names in a file destination.</p><pre class="Code" oldrole="synopsis">file("/var/log/$(sanitize $HOST $PROGRAM)/messages");</pre>
+            <p oldrole="para">This is equivalent to <span class="Code" oldrole="filename">file("/var/log/$HOST/$PROGRAM/messages");</span>, but any slashes in the values of the $HOST and $PROGRAM macros are replaced with underscores.</p>
+        </div>
         <h6 condition="ose" name="template-function-stardate" oldrole="simplesect">stardate</h6>
         <MadCap:keyword term="stardate">
         </MadCap:keyword>
@@ -714,21 +736,22 @@ destination d_local {
                 </li>
             </li>
         </ul>
-        <h6 oldrole="example">Example: Using the substr template function</h6>
-        <p oldrole="para">Skip the first 15 characters of the message, and select the rest:</p><pre class="Code" oldrole="synopsis">$(substr "${MESSAGE}" "15");</pre>
-        <p oldrole="para">Select characters 16-30 of the message (15 characters with offset 15):</p><pre class="Code" oldrole="synopsis">$(substr "${MESSAGE}" "15" "15");</pre>
-        <p oldrole="para">Select the last 15 characters of the message:</p><pre class="Code" oldrole="synopsis">$(substr "${MESSAGE}" "-15");</pre>
-        <p oldrole="para">A template that converts the message to RFC3164 (BSD-syslog) format and truncates the messages to 1023 characters:</p><pre class="Code" oldrole="synopsis">template t_truncate_messages {
+        <div class="Example">
+            <h6 oldrole="example">Example: Using the substr template function</h6>
+            <p oldrole="para">Skip the first 15 characters of the message, and select the rest:</p><pre class="Code" oldrole="synopsis">$(substr "${MESSAGE}" "15");</pre>
+            <p oldrole="para">Select characters 16-30 of the message (15 characters with offset 15):</p><pre class="Code" oldrole="synopsis">$(substr "${MESSAGE}" "15" "15");</pre>
+            <p oldrole="para">Select the last 15 characters of the message:</p><pre class="Code" oldrole="synopsis">$(substr "${MESSAGE}" "-15");</pre>
+            <p oldrole="para">A template that converts the message to RFC3164 (BSD-syslog) format and truncates the messages to 1023 characters:</p><pre class="Code" oldrole="synopsis">template t_truncate_messages {
     template("$(substr \"&lt;$PRI&gt;$DATE $HOST $MSGHDR$MESSAGE\" \"0\" \"1023\")\n");
     template-escape(no);
 };</pre>
+        </div>
         <h6 name="template-function-uppercase" oldrole="simplesect">uppercase</h6>
         <MadCap:keyword term="uppercase">
         </MadCap:keyword>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(uppercase "&lt;macro&gt;")</pre>
         </p>
-        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the uppercase version of the specified string or macro. For example, the following example uses the uppercase version of the hostname in a directory name:</p>
-			<pre class="Code" oldrole="synopsis">destination d_file {
+        <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Returns the uppercase version of the specified string or macro. For example, the following example uses the uppercase version of the hostname in a directory name:</p><pre class="Code" oldrole="synopsis">destination d_file {
     file ("/var/log/${MONTH}/${DAY}/$(uppercase "${HOST}")/messages");
 };</pre>
         <p oldrole="para">Available in <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="ose">3.5</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="pe">7.0</MadCap:conditionaltext> and later.</p>
@@ -739,9 +762,9 @@ destination d_local {
         </p>
         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> Generates a Universally Unique IDentifier (UUID) that complies with <a href="https://www.ietf.org/rfc/rfc4122.txt">RFC4122</a>. That way, an UUID can be added to the message soon after it is received, so messages stored in multiple destinations can be identified. For example, when storing messages in a database and also in files, the UUID can be used to find a particular message both in the database and the files.</p>
         <p oldrole="para">To generate a UUID, you can use a rewrite rule to create a new value-pair for the message.</p>
-        <h6 oldrole="example">Example: Using Universally Unique Identifiers</h6>
-        <p oldrole="para">The following example adds a value-pair called <span class="Code" oldrole="userinput">MESSAGE_UUID</span> to the message using a rewrite rule and a template.</p>
-			<pre class="Code" oldrole="synopsis">rewrite r_add_uuid {
+        <div class="Example">
+            <h6 oldrole="example">Example: Using Universally Unique Identifiers</h6>
+            <p oldrole="para">The following example adds a value-pair called <span class="Code" oldrole="userinput">MESSAGE_UUID</span> to the message using a rewrite rule and a template.</p><pre class="Code" oldrole="synopsis">rewrite r_add_uuid {
     set("$(uuid)" value("MESSAGE_UUID"));
 };
 
@@ -758,6 +781,7 @@ log {
     rewrite(r_add_uuid);
     destination(d_file);
 };</pre>
+        </div>
         <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
             <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
             </col>
