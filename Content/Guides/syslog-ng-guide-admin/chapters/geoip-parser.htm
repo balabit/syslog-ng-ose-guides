@@ -37,8 +37,9 @@
         database("&lt;path-to-database-file&gt;")
     );
 };</pre>
-        <h6 oldrole="example">Example: Using the GeoIP parser</h6>
-        <p oldrole="para">In the following example, <MadCap:variable name="General.abbrev"></MadCap:variable> retrieves the GeoIP data of the IP address contained in the ${HOST} field of the incoming message, and includes the data (prefixed with the <span class="Code" oldrole="userinput">geoip.</span> string) in the output JSON message.</p><pre class="Code" oldrole="synopsis">@version: 3.7
+        <div class="Example">
+            <h6 oldrole="example">Example: Using the GeoIP parser</h6>
+            <p oldrole="para">In the following example, <MadCap:variable name="General.abbrev"></MadCap:variable> retrieves the GeoIP data of the IP address contained in the ${HOST} field of the incoming message, and includes the data (prefixed with the <span class="Code" oldrole="userinput">geoip.</span> string) in the output JSON message.</p><pre class="Code" oldrole="synopsis">@version: 3.7
 @module geoip
 
 options {
@@ -61,19 +62,19 @@ log {
     parser(p_geoip);
     destination(d_file);
 };</pre>
-        <p oldrole="para">For example, for the <span class="Code" oldrole="userinput">&lt;38&gt;Jan 1 14:45:22 192.168.1.1 prg00000[1234]: test message</span> message the output will look like:</p><pre class="Code" oldrole="synopsis">{"geoip":{"longitude":"47.460704","latitude":"19.049968","country_code":"HU"},"PROGRAM":"prg00000","PRIORITY":"info","PID":"1234","MESSAGE":"test message","HOST":"192.168.1.1","FACILITY":"auth","DATE":"Jan  1 14:45:22"}</pre>
-        <p oldrole="para">If you are transferring your log messages into Elasticsearch, use the following rewrite rule to combine the longitude and latitude information into a single value (called <span class="Code" oldrole="userinput">geoip.location</span>), and set the mapping in Elasticsearch accordingly. Do not forget to include the rewrite in your log path. For details on transferring your log messages to Elasticsearch, see <MadCap:xref href="destination-elasticsearch.htm#configuring-destinations-elasticsearch"></MadCap:xref>.</p>
-        <MadCap:keyword term="geoip:['elasticsearch']">
-        </MadCap:keyword>
-        <MadCap:keyword term="elasticsearch:['transferring geoip data']">
-        </MadCap:keyword><pre class="Code" oldrole="synopsis">rewrite r_geoip {
+            <p oldrole="para">For example, for the <span class="Code" oldrole="userinput">&lt;38&gt;Jan 1 14:45:22 192.168.1.1 prg00000[1234]: test message</span> message the output will look like:</p><pre class="Code" oldrole="synopsis">{"geoip":{"longitude":"47.460704","latitude":"19.049968","country_code":"HU"},"PROGRAM":"prg00000","PRIORITY":"info","PID":"1234","MESSAGE":"test message","HOST":"192.168.1.1","FACILITY":"auth","DATE":"Jan  1 14:45:22"}</pre>
+            <p oldrole="para">If you are transferring your log messages into Elasticsearch, use the following rewrite rule to combine the longitude and latitude information into a single value (called <span class="Code" oldrole="userinput">geoip.location</span>), and set the mapping in Elasticsearch accordingly. Do not forget to include the rewrite in your log path. For details on transferring your log messages to Elasticsearch, see <MadCap:xref href="destination-elasticsearch.htm#configuring-destinations-elasticsearch"></MadCap:xref>.</p>
+            <MadCap:keyword term="geoip:['elasticsearch']">
+            </MadCap:keyword>
+            <MadCap:keyword term="elasticsearch:['transferring geoip data']">
+            </MadCap:keyword><pre class="Code" oldrole="synopsis">rewrite r_geoip {
     set(
         "${geoip.latitude},${geoip.longitude}",
         value( "geoip.location" ),
         condition(not "${geoip.latitude}" == "")
     );
 };</pre>
-        <p oldrole="para">In your Elasticsearch configuration, set the appropriate mappings:</p><pre class="Code" oldrole="synopsis">{
+            <p oldrole="para">In your Elasticsearch configuration, set the appropriate mappings:</p><pre class="Code" oldrole="synopsis">{
    "mappings" : {
       "_default_" : {
          "properties" : {
@@ -103,5 +104,6 @@ log {
       }
    }
 }</pre>
+        </div>
     </body>
 </html>
