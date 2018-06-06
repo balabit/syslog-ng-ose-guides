@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="using-embedded-log-statements" oldrole="section">
+<h1 name="using-embedded-log-statements">Using embedded log statements</h1>
+<p oldrole="para">Embedded log statements (for details, see <MadCap:xref href="concepts-embedded-logpaths.htm#concepts-embedded-logpaths"></MadCap:xref>) re-use the results of processing messages (for example the results of filtering or rewriting) to create complex log paths. Embedded log statements use the same syntax as regular log statements, but they cannot contain additional sources. To define embedded log statements, use the following syntax:</p>
+<pre class="Code" name="log-path-synopsis-embedded" oldrole="synopsis">log {
+    source(s1); source(s2); ...
+
+    optional_element(filter1|parser1|rewrite1);
+    optional_element(filter2|parser2|rewrite2);
+    ...
+    destination(d1); destination(d2); ...
+
+    #embedded log statement
+    log {
+        optional_element(filter1|parser1|rewrite1);
+        optional_element(filter2|parser2|rewrite2);
+        ...
+        destination(d1); destination(d2); ...
+
+        #another embedded log statement
+        log {
+            optional_element(filter1|parser1|rewrite1);
+            optional_element(filter2|parser2|rewrite2);
+            ...
+            destination(d1); destination(d2); ...
+        };
+    };
+    #set flags after the embedded log statements
+    flags(flag1[, flag2...]);
+};</pre>
+<div class="Example">
+<h6 name="example-logpath-embedded" oldrole="example">Example: Using embedded log paths</h6>
+<p oldrole="para">The following log path sends every message to the configured destinations: both the <span class="Code" oldrole="userinput">d_file1</span> and the <span class="Code" oldrole="userinput">d_file2</span> destinations receive every message of the source.</p>
+<pre class="Code" oldrole="synopsis">log { source(s_localhost); destination(d_file1); destination(d_file2); };</pre>
+<p oldrole="para">The next example is equivalent with the one above, but uses an embedded log statement.</p>
+<pre class="Code" oldrole="synopsis">log { source(s_localhost); destination(d_file1);
+    log { destination(d_file2); };
+};</pre>
+<p oldrole="para">The following example uses two filters:</p>
+<ul oldrole="itemizedlist">
+<li oldrole="listitem">
+<p oldrole="para">messages coming from the host <span class="Code" oldrole="userinput">192.168.1.1</span> are sent to the <span class="Code" oldrole="userinput">d_file1</span> destination, and</p>
+</li>
+<li oldrole="listitem">
+<p oldrole="para">messages coming from the host <span class="Code" oldrole="userinput">192.168.1.1</span> and containing the string <span class="Code" oldrole="userinput">example</span> are sent to the <span class="Code" oldrole="userinput">d_file2</span> destination.</p>
+</li>
+</ul>
+<pre class="Code" oldrole="synopsis">log { source(s_localhost); filter { host(192.168.1.1); }; destination(d_file1);
+    log { message("example"); destination(d_file2); };
+};</pre>
+<p oldrole="para">The following example collects logs from multiple source groups and uses the <span class="Code" oldrole="parameter">source()</span> filter in the embedded log statement to select messages of the <span class="Code" oldrole="userinput">s_network</span> source group.</p>
+<pre class="Code" oldrole="synopsis">log { source(s_localhost);  filter { source(s_network); }; destination(d_file1);
+    log {  filter { source(s_network); }; destination(d_file2); };
+};</pre>
+</div>
+</body></html>
