@@ -59,67 +59,21 @@
         <p>
             <img class="Image" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" scale="60" src="../../Resources/Images_Notlocalized/syslog-ng-pe-guide-admin/syslog-ng-message-output.png" style="height: auto; width: auto;" />
         </p>
-		<ul oldrole="itemizedlist"><MadCap:keyword term="output queue">
-			</MadCap:keyword>
+        <ul oldrole="itemizedlist">
+            <MadCap:keyword term="output queue">
+            </MadCap:keyword>
             <li oldrole="listitem">
-                <p oldrole="para">
-                    <i oldrole="emphasis">Output queue</i>: Messages from the output queue are sent to the target syslog-ng server. The syslog-ng application puts the outgoing messages directly into the output queue, unless the output queue is full. The output queue can hold 64 messages, this is a fixed value and cannot be modified.</p>
-			</li> <MadCap:keyword term="disk queue:['disk buffer']">
-			</MadCap:keyword>
-            <li oldrole="listitem">
-               
-                <p oldrole="para"><i oldrole="emphasis">Disk buffer</i>: If the output queue is full and disk-buffering is enabled, syslog-ng Premium Edition puts the outgoing messages into the disk buffer of the destination.</p>
-			</li><MadCap:keyword term="overflow queue:['output buffer']">
-			</MadCap:keyword>
-            <li oldrole="listitem">
-                
-                <p oldrole="para"><i oldrole="emphasis">Overflow queue</i>: If the output queue is full<MadCap:conditionaltext MadCap:conditions="pe"> and the disk buffer is disabled or full</MadCap:conditionaltext>, syslog-ng puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter specifies the number of messages stored in the overflow queue. For details on sizing the <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter, see <MadCap:xref href="concepts-flow-control.htm#concepts-flow-control"></MadCap:xref>.</p>
-            </li>
-        </ul>
+                <p oldrole="para"><i oldrole="emphasis">Output queue</i>: Messages from the output queue are sent to the target syslog-ng server. The syslog-ng application puts the outgoing messages directly into the output queue, unless the output queue is full. The output queue can hold 64 messages, this is a fixed value and cannot be modified.</p>
+            </li> <MadCap:keyword term="disk queue:['disk buffer']"></MadCap:keyword><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">Disk buffer</i>: If the output queue is full and disk-buffering is enabled, syslog-ng Premium Edition puts the outgoing messages into the disk buffer of the destination.</p></li><MadCap:keyword term="overflow queue:['output buffer']"></MadCap:keyword><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">Overflow queue</i>: If the output queue is full<MadCap:conditionaltext MadCap:conditions="pe"> and the disk buffer is disabled or full</MadCap:conditionaltext>, syslog-ng puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter specifies the number of messages stored in the overflow queue. For details on sizing the <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter, see <MadCap:xref href="concepts-flow-control.htm#concepts-flow-control"></MadCap:xref>.</p></li></ul>
         <p oldrole="para">There are two types of flow-control: Hard flow-control and soft flow-control.</p>
-		<ul oldrole="itemizedlist"> <MadCap:keyword term="flow-control:['soft']">
-			</MadCap:keyword>
-            <li oldrole="listitem">
-               
-                <p oldrole="para"><i oldrole="emphasis">Soft flow-control:</i> In case of soft flow-control there is no message lost if the destination can accept messages, but it is possible to lose messages if it cannot accept messages (for example non-writeable file destination, or the disk becomes full), and all buffers are full. Soft flow-control cannot be configured, it is automatically available for file <MadCap:conditionaltext MadCap:conditions="pe"> and logstore </MadCap:conditionaltext>destinations.</p>
-                <div class="Example">
-                    <h6 oldrole="example">Example: Soft flow-control</h6><pre class="Code" oldrole="synopsis">source s_file { file("/tmp/input_file.log"); };
+        <ul oldrole="itemizedlist"> <MadCap:keyword term="flow-control:['soft']"></MadCap:keyword><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">Soft flow-control:</i> In case of soft flow-control there is no message lost if the destination can accept messages, but it is possible to lose messages if it cannot accept messages (for example non-writeable file destination, or the disk becomes full), and all buffers are full. Soft flow-control cannot be configured, it is automatically available for file <MadCap:conditionaltext MadCap:conditions="pe"> and logstore </MadCap:conditionaltext>destinations.</p><div class="Example"><h6 oldrole="example">Example: Soft flow-control</h6><pre class="Code" oldrole="synopsis">source s_file { file("/tmp/input_file.log"); };
 destination d_file { file("/tmp/output_file.log"); };
 destination d_tcp { network("127.0.0.1" port(2222) log-fifo-size(1000)); };
 log { source(s_file); destination(d_file); destination(d_tcp); };
-</pre>
-                </div>
-                <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
-                    <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
-                    </col>
-                    <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2">
-                    </col>
-                    <tbody>
-                        <tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1">
-                            <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1">
-                                <p>
-                                    <img src="../../../Resources/Images/Common/caution.png" />
-                                </p>
-                            </td>
-                            <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span>
-                                <p oldrole="para">Hazard of data loss! For destinations other than file<MadCap:conditionaltext MadCap:conditions="pe"> and logstore</MadCap:conditionaltext>, soft flow-control is not available. Thus, it is possible to lose log messages on those destinations. To avoid data loss on those destinations, use hard flow-control.</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-			</li> <MadCap:keyword term="flow-control:['hard']">
-			</MadCap:keyword>
-            <li oldrole="listitem">
-               
-                <p oldrole="para"><i oldrole="emphasis">Hard flow-control:</i> In case of hard flow-control there is no message lost. To use hard flow-control, enable the <span class="Code" oldrole="parameter">flow-control</span> flag in the log path. Hard flow-control is available for all destinations.</p>
-                <div class="Example">
-                    <h6 oldrole="example">Example: Hard flow-control</h6><pre class="Code" oldrole="synopsis">source s_file { file("/tmp/input_file.log"); };
+</pre></div><table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');"><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../../Resources/Images/Common/caution.png" /></p></td><td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span><p oldrole="para">Hazard of data loss! For destinations other than file<MadCap:conditionaltext MadCap:conditions="pe"> and logstore</MadCap:conditionaltext>, soft flow-control is not available. Thus, it is possible to lose log messages on those destinations. To avoid data loss on those destinations, use hard flow-control.</p></td></tr></tbody></table></li> <MadCap:keyword term="flow-control:['hard']"></MadCap:keyword><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">Hard flow-control:</i> In case of hard flow-control there is no message lost. To use hard flow-control, enable the <span class="Code" oldrole="parameter">flow-control</span> flag in the log path. Hard flow-control is available for all destinations.</p><div class="Example"><h6 oldrole="example">Example: Hard flow-control</h6><pre class="Code" oldrole="synopsis">source s_file { file("/tmp/input_file.log"); };
 destination d_file { file("/tmp/output_file.log"); };
 destination d_tcp { network("127.0.0.1" port(2222) log-fifo-size(1000)); };
 log { source(s_file); destination(d_file); destination(d_tcp); flags(flow-control); };
-</pre>
-                </div>
-            </li>
-        </ul>
+</pre></div></li></ul>
     </body>
 </html>

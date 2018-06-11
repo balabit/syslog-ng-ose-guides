@@ -1,76 +1,142 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><body name="wec-configure-event-source-computers" oldrole="procedure">
-<h1 name="wec-configure-event-source-computers">Configure event source computers</h1>
-<h6 oldrole="formalpara">Prerequisites:</h6>
-
-<ul oldrole="itemizedlist">
-<li oldrole="listitem">
-<p oldrole="para">Microsoft Windows 7 or newer</p>
-</li>
-</ul>
-<h6 oldrole="formalpara">Purpose:</h6>
-
-<p oldrole="para">When collecting event logs from Windows hosts, the Windows clients sending logs act as the event source computers. The <MadCap:variable name="General.wecabbrev"></MadCap:variable> tool collects and forwards messages from the standard Windows eventlog containers.</p>
-<p oldrole="para">There is no restriction on the number of Windows hosts that can connect to the <MadCap:variable name="General.wec"></MadCap:variable>.</p>
-<p oldrole="para">To configure your event sources, complete the following steps.</p>
-<h6 oldrole="formalpara">Steps:</h6>
-
-<ol oldrole="procedure"><li oldrole="step">
-<p oldrole="para">Open the <b class="UI" oldrole="guimenu">Microsoft Management Console</b> (<span class="Code" oldrole="filename">mmc.exe</span>), select <b class="UI" oldrole="guimenu">File &gt; Add/Remove Snap-ins</b>, and add the <b class="UI" oldrole="guimenu">Certificates</b> snap-in.</p>
-</li><li oldrole="step">
-<p oldrole="para">Select <b class="UI" oldrole="guimenu">Computer Account</b>.</p>
-</li><li oldrole="step">
-<p oldrole="para">Right-click the <b class="UI" oldrole="guimenu">Personal</b> node, and select <b class="UI" oldrole="guimenu">All Tasks &gt; Import</b>.</p>
-</li><li oldrole="step">
-<p oldrole="para">Find and select the client certificate (<span class="Code" oldrole="filename">client*.p12</span>) and import this file.</p>
-</li><li oldrole="step">
-<p oldrole="para">The PKCS #12 archive contains the CA certificate as well. Move the CA certificate to the <b class="UI" oldrole="guimenu">Trusted Root Certification Authorities</b> node after the import.</p>
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">Make sure that you only move the CA certificate and not the client certificate.</p></td></tr></tbody></table>
-</li><li oldrole="step">
-<p oldrole="para">Give NetworkService access to the private key file of the client authentication certificate:</p>
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">Make sure that you modify the access rights of only the private key file of the client certificate and not the CA certificate.</p></td></tr></tbody></table>
-<ol oldrole="substeps">
-<li oldrole="step">
-<p oldrole="para">In certmgr, right-click the client certificate, select <b class="UI" oldrole="guimenu">All Tasks &gt; Manage Private Keys...</b>.</p>
-</li>
-<li oldrole="step">
-<p oldrole="para">Add read permission to "NETWORK SERVICE".</p>
-<p class="CaptionFigure">Adding read permission to "NETWORK SERVICE"</p>
-<p><img class="Image" contentwidth="screenshotsize_small" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" src="../Resources/Images_Notlocalized/syslog-ng-pe-wec-guide/cert-add-permission-to-network-service.png" style="height: auto; width: auto;"/></p>
-</li>
-</ol>
-</li><li oldrole="step">
-<p oldrole="para">To forward security logs:</p>
-<ol oldrole="substeps">
-<li oldrole="step">
-<p oldrole="para">In CompMgmt.msc, under <b class="UI" oldrole="guimenu">Local Users and Groups</b>, click <b class="UI" oldrole="guimenu">Groups &gt; Event Log Readers</b> to open <b class="UI" oldrole="guimenu">Event Log Readers Properties</b>.</p>
-</li>
-<li oldrole="step">
-<p oldrole="para">Add the "NETWORK SERVICE" account to the <b class="UI" oldrole="guimenu">Event Log Readers</b> group.</p>
-<p class="CaptionFigure">Adding the "Network Service" account to the Event Log Readers group.</p>
-<p><img class="Image" contentwidth="screenshotsize_small" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" src="../Resources/Images_Notlocalized/syslog-ng-pe-wec-guide/add-network-service-to-eventlog-readers-group.png" style="height: auto; width: auto;"/></p>
-</li>
-<li oldrole="step">
-<p oldrole="para">Reboot the client computer.</p>
-</li>
-</ol>
-</li><li oldrole="step">
-<p oldrole="para">Run the following commands from an elevated privilege command prompt:</p>
-<pre class="Code" oldrole="synopsis">winrm qc -q
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <body name="wec-configure-event-source-computers" oldrole="procedure">
+        <h1 name="wec-configure-event-source-computers">Configure event source computers</h1>
+        <h6 oldrole="formalpara">Prerequisites:</h6>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para">Microsoft Windows 7 or newer</p>
+            </li>
+        </ul>
+        <h6 oldrole="formalpara">Purpose:</h6>
+        <p oldrole="para">When collecting event logs from Windows hosts, the Windows clients sending logs act as the event source computers. The <MadCap:variable name="General.wecabbrev"></MadCap:variable> tool collects and forwards messages from the standard Windows eventlog containers.</p>
+        <p oldrole="para">There is no restriction on the number of Windows hosts that can connect to the <MadCap:variable name="General.wec"></MadCap:variable>.</p>
+        <p oldrole="para">To configure your event sources, complete the following steps.</p>
+        <h6 oldrole="formalpara">Steps:</h6>
+        <ol oldrole="procedure">
+            <li oldrole="step">
+                <p oldrole="para">Open the <b class="UI" oldrole="guimenu">Microsoft Management Console</b> (<span class="Code" oldrole="filename">mmc.exe</span>), select <b class="UI" oldrole="guimenu">File &gt; Add/Remove Snap-ins</b>, and add the <b class="UI" oldrole="guimenu">Certificates</b> snap-in.</p>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Select <b class="UI" oldrole="guimenu">Computer Account</b>.</p>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Right-click the <b class="UI" oldrole="guimenu">Personal</b> node, and select <b class="UI" oldrole="guimenu">All Tasks &gt; Import</b>.</p>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Find and select the client certificate (<span class="Code" oldrole="filename">client*.p12</span>) and import this file.</p>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">The PKCS #12 archive contains the CA certificate as well. Move the CA certificate to the <b class="UI" oldrole="guimenu">Trusted Root Certification Authorities</b> node after the import.</p>
+                <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                    </col>
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+                    </col>
+                    <tbody>
+                        <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                                <p>
+                                    <img src="../../Resources/Images/Common/note.png" />
+                                </p>
+                            </td>
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                                <p oldrole="para">Make sure that you only move the CA certificate and not the client certificate.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Give NetworkService access to the private key file of the client authentication certificate:</p>
+                <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                    </col>
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+                    </col>
+                    <tbody>
+                        <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                                <p>
+                                    <img src="../../Resources/Images/Common/note.png" />
+                                </p>
+                            </td>
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                                <p oldrole="para">Make sure that you modify the access rights of only the private key file of the client certificate and not the CA certificate.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <ol oldrole="substeps">
+                    <li oldrole="step">
+                        <p oldrole="para">In certmgr, right-click the client certificate, select <b class="UI" oldrole="guimenu">All Tasks &gt; Manage Private Keys...</b>.</p>
+                    </li>
+                    <li oldrole="step">
+                        <p oldrole="para">Add read permission to "NETWORK SERVICE".</p>
+                        <p class="CaptionFigure">Adding read permission to "NETWORK SERVICE"</p>
+                        <p>
+                            <img class="Image" contentwidth="screenshotsize_small" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" src="../Resources/Images_Notlocalized/syslog-ng-pe-wec-guide/cert-add-permission-to-network-service.png" style="height: auto; width: auto;" />
+                        </p>
+                    </li>
+                </ol>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">To forward security logs:</p>
+                <ol oldrole="substeps">
+                    <li oldrole="step">
+                        <p oldrole="para">In CompMgmt.msc, under <b class="UI" oldrole="guimenu">Local Users and Groups</b>, click <b class="UI" oldrole="guimenu">Groups &gt; Event Log Readers</b> to open <b class="UI" oldrole="guimenu">Event Log Readers Properties</b>.</p>
+                    </li>
+                    <li oldrole="step">
+                        <p oldrole="para">Add the "NETWORK SERVICE" account to the <b class="UI" oldrole="guimenu">Event Log Readers</b> group.</p>
+                        <p class="CaptionFigure">Adding the "Network Service" account to the Event Log Readers group.</p>
+                        <p>
+                            <img class="Image" contentwidth="screenshotsize_small" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" src="../Resources/Images_Notlocalized/syslog-ng-pe-wec-guide/add-network-service-to-eventlog-readers-group.png" style="height: auto; width: auto;" />
+                        </p>
+                    </li>
+                    <li oldrole="step">
+                        <p oldrole="para">Reboot the client computer.</p>
+                    </li>
+                </ol>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Run the following commands from an elevated privilege command prompt:</p><pre class="Code" oldrole="synopsis">winrm qc -q
 winrm set winrm/config/client/auth @{Certificate="true"}
 </pre>
-</li><li oldrole="step">
-<p oldrole="para">Open gpedit.msc.</p>
-</li><li oldrole="step">
-<p oldrole="para">Under the <b class="UI" oldrole="guimenu">Computer Configuration</b> node, expand the <b class="UI" oldrole="guimenu">Administrative Templates</b> node, then expand the <b class="UI" oldrole="guimenu">Windows Components</b> node, and then select the <b class="UI" oldrole="guimenu">Event Forwarding</b> node.</p>
-</li><li oldrole="step">
-<p oldrole="para" xreflabel="use the CA thumbprint you saved earlier">Select the <b class="UI" oldrole="guimenu">SubscriptionManagers</b> setting and enable it. Click the <b class="UI" oldrole="guimenu">Show</b> button to add a subscription (<MadCap:xref href="wec-generate-certs.htm#step-thumbprint-CA"></MadCap:xref>):</p>
-<pre class="Code" oldrole="synopsis">Server=https://&lt;FQDN of the collector&gt;:5986/wsman/SubscriptionManager/WEC,Refresh=&lt;Refresh interval in seconds&gt;,IssuerCA=&lt;Thumbprint of the root CA&gt;</pre>
-<p oldrole="para">For example:</p>
-<pre class="Code" oldrole="synopsis">
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Open gpedit.msc.</p>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para">Under the <b class="UI" oldrole="guimenu">Computer Configuration</b> node, expand the <b class="UI" oldrole="guimenu">Administrative Templates</b> node, then expand the <b class="UI" oldrole="guimenu">Windows Components</b> node, and then select the <b class="UI" oldrole="guimenu">Event Forwarding</b> node.</p>
+            </li>
+            <li oldrole="step">
+                <p oldrole="para" xreflabel="use the CA thumbprint you saved earlier">Select the <b class="UI" oldrole="guimenu">SubscriptionManagers</b> setting and enable it. Click the <b class="UI" oldrole="guimenu">Show</b> button to add a subscription (<MadCap:xref href="wec-generate-certs.htm#step-thumbprint-CA"></MadCap:xref>):</p><pre class="Code" oldrole="synopsis">Server=https://&lt;FQDN of the collector&gt;:5986/wsman/SubscriptionManager/WEC,Refresh=&lt;Refresh interval in seconds&gt;,IssuerCA=&lt;Thumbprint of the root CA&gt;</pre>
+                <p oldrole="para">For example:</p><pre class="Code" oldrole="synopsis">
 Server=HTTPS://wec.balabit:5986/wsman/SubscriptionManager/WEC,Refresh=60,IssuerCA=A814E609311FD3A89FFD0297974524E4F2D2BA9D
 </pre>
-<p class="CaptionFigure">Adding the subscription in SubscriptionManagers</p>
-<p><img class="Image" contentwidth="screenshotsize_small" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" src="../Resources/Images_Notlocalized/syslog-ng-pe-wec-guide/set-subscription-event-forwarding.png" style="height: auto; width: auto;"/></p>
-<table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');"><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;"></col><col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2"></col><tbody><tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1"><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1"><p><img src="../../Resources/Images/Common/note.png"/></p></td><td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span><p oldrole="para">If you wish to set up multiple subscriptions because you want to forward Windows events to multiple event collectors (such as <MadCap:variable name="General.wecabbrev"></MadCap:variable>), then you can do that here.</p></td></tr></tbody></table>
-</li></ol></body></html>
+                <p class="CaptionFigure">Adding the subscription in SubscriptionManagers</p>
+                <p>
+                    <img class="Image" contentwidth="screenshotsize_small" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" src="../Resources/Images_Notlocalized/syslog-ng-pe-wec-guide/set-subscription-event-forwarding.png" style="height: auto; width: auto;" />
+                </p>
+                <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                    </col>
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+                    </col>
+                    <tbody>
+                        <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                                <p>
+                                    <img src="../../Resources/Images/Common/note.png" />
+                                </p>
+                            </td>
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                                <p oldrole="para">If you wish to set up multiple subscriptions because you want to forward Windows events to multiple event collectors (such as <MadCap:variable name="General.wecabbrev"></MadCap:variable>), then you can do that here.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </li>
+        </ol>
+    </body>
+</html>
