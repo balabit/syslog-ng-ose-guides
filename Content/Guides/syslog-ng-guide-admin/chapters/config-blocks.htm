@@ -60,47 +60,49 @@ log { source(s_myappsource); destination(...); };</pre>
                     </td>
                     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">TIP: </span>
                         <p oldrole="para">Since the block is inserted into the <MadCap:variable name="General.abbrev"></MadCap:variable> configuration when <MadCap:variable name="General.abbrev"></MadCap:variable> is started, the block can be generated dynamically using an external script if needed. This is useful when you are running <MadCap:variable name="General.abbrev"></MadCap:variable> on different hosts and you want to keep the main configuration identical.</p>
-                        <p oldrole="para">If you want to reuse more than a single configuration object, for example, a logpath and the definitions of its sources and destinations, use the include feature to reuse the entire snippet. For details, see <MadCap:xref href="including-config-files.htm#including-config-files"></MadCap:xref>.</p>
+                        <p oldrole="para">If you want to reuse more than a single configuration object, for example, a logpath and the definitions of its sources and destinations, use the include feature to reuse the entire snippet. For details, see <MadCap:xref href="including-config-files.htm#including-config-files"><span style="color: #04aada;" class="mcFormatColor">Including configuration files</span></MadCap:xref>.</p>
                     </td>
                 </tr>
             </tbody>
         </table>
-        <div><h2>Passing arguments to configuration blocks</h2>
-        <MadCap:keyword term="block arguments">
-        </MadCap:keyword>
-        <MadCap:keyword term="configuration snippets:['block arguments']">
-        </MadCap:keyword>
-        <p oldrole="para">Configuration blocks can receive arguments as well. The parameters the block can receive must be specified when the block is defined, using the following syntax:</p><pre class="Code" oldrole="synopsis">block type block_name(argument1(&lt;default-value-of-the-argument&gt;) argument2(&lt;default-value-of-the-argument&gt;) argument3())</pre>
-        <p oldrole="para">If an argument does not have a default value, use empty parentheses after the name of the argument. To refer the value of the argument in the block, use the name of the argument between backticks (for example, <span class="Code" oldrole="userinput">`argument1`</span>).</p>
-        <div class="Example">
-            <h6 oldrole="example">Example: Passing arguments to blocks</h6>
-            <p oldrole="para">The following sample defines a file source block, which can receive the name of the file as a parameter. If no parameter is set, it reads messages from the <span class="Code" oldrole="filename">/var/log/messages</span> file.</p><pre class="Code" oldrole="synopsis">block source s_logfile (filename("messages")) {
+        <div>
+            <h2>Passing arguments to configuration blocks</h2>
+            <MadCap:keyword term="block arguments">
+            </MadCap:keyword>
+            <MadCap:keyword term="configuration snippets:['block arguments']">
+            </MadCap:keyword>
+            <p oldrole="para">Configuration blocks can receive arguments as well. The parameters the block can receive must be specified when the block is defined, using the following syntax:</p><pre class="Code" oldrole="synopsis">block type block_name(argument1(&lt;default-value-of-the-argument&gt;) argument2(&lt;default-value-of-the-argument&gt;) argument3())</pre>
+            <p oldrole="para">If an argument does not have a default value, use empty parentheses after the name of the argument. To refer the value of the argument in the block, use the name of the argument between backticks (for example, <span class="Code" oldrole="userinput">`argument1`</span>).</p>
+            <div class="Example">
+                <h6 oldrole="example">Example: Passing arguments to blocks</h6>
+                <p oldrole="para">The following sample defines a file source block, which can receive the name of the file as a parameter. If no parameter is set, it reads messages from the <span class="Code" oldrole="filename">/var/log/messages</span> file.</p><pre class="Code" oldrole="synopsis">block source s_logfile (filename("messages")) {
   file("/var/log/`filename`" );
 };
 
 source s_example {
   s_logfile(filename("logfile.log"));
 };</pre>
-        </div>
-        <MadCap:keyword term="block arguments:['dynamical']">
-        </MadCap:keyword>
-        <MadCap:keyword term="dynamical block arguments">
-        </MadCap:keyword>
-        <MadCap:keyword term="configuration snippets:['dynamical block arguments']">
-        </MadCap:keyword>
-        <p oldrole="para">If you reference the block with more arguments then specified in its definition, you can use these additional arguments as a single argument-list within the block. That way, you can use a variable number of optional arguments in your block. This can be useful when passing arguments to a template, or optional arguments to an underlying driver. To reference this argument-list, insert <span class="Code" oldrole="userinput">`__VARARGS__`</span> to the place in the block where you want to insert the argument-list. Note that you can use this only once in a block. The following definition extends the logfile block from the previous example, and passes the optional arguments (<span class="Code" oldrole="userinput">follow-freq(1) flags(no-parse)</span>) to the <span class="Code" oldrole="userinput">file()</span> source.</p><pre class="Code" oldrole="synopsis">block source s_logfile (filename("messages")) {
+            </div>
+            <MadCap:keyword term="block arguments:['dynamical']">
+            </MadCap:keyword>
+            <MadCap:keyword term="dynamical block arguments">
+            </MadCap:keyword>
+            <MadCap:keyword term="configuration snippets:['dynamical block arguments']">
+            </MadCap:keyword>
+            <p oldrole="para">If you reference the block with more arguments then specified in its definition, you can use these additional arguments as a single argument-list within the block. That way, you can use a variable number of optional arguments in your block. This can be useful when passing arguments to a template, or optional arguments to an underlying driver. To reference this argument-list, insert <span class="Code" oldrole="userinput">`__VARARGS__`</span> to the place in the block where you want to insert the argument-list. Note that you can use this only once in a block. The following definition extends the logfile block from the previous example, and passes the optional arguments (<span class="Code" oldrole="userinput">follow-freq(1) flags(no-parse)</span>) to the <span class="Code" oldrole="userinput">file()</span> source.</p><pre class="Code" oldrole="synopsis">block source s_logfile (filename("messages")) {
   file("/var/log/`filename`" `__VARARGS__`);
 };
 
 source s_example {
   s_logfile(filename("logfile.log") follow-freq(1) flags(no-parse));
 };</pre>
-        <div class="Example" MadCap:conditions="General.ose">
-            <h6 oldrole="example">Example: Using arguments in blocks</h6>
-            <p oldrole="para">The following example is the code of the <a href="configuring-source-pacct.htm"><span class="Code" oldrole="parameter">pacct()</span> source driver</a>, which is actually a block that can optionally receive two arguments.</p><pre class="Code" oldrole="synopsis">block source pacct(file("/var/log/account/pacct") follow-freq(1)) {
+            <div class="Example" MadCap:conditions="General.ose">
+                <h6 oldrole="example">Example: Using arguments in blocks</h6>
+                <p oldrole="para">The following example is the code of the <a href="configuring-source-pacct.htm"><span class="Code" oldrole="parameter">pacct()</span> source driver</a>, which is actually a block that can optionally receive two arguments.</p><pre class="Code" oldrole="synopsis">block source pacct(file("/var/log/account/pacct") follow-freq(1)) {
 @module pacctformat
         file("`file`" follow-freq(`follow-freq`) format("pacct") tags(".pacct") `__VARARGS__`);
 };</pre>
-        </div></div>
+            </div>
+        </div>
     </body>
 </html>
