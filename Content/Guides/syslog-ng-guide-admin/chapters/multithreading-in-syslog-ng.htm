@@ -3,7 +3,7 @@
     <head>
     </head>
     <body name="multithreading-in-syslog-ng" oldrole="section">
-        <h1 name="multithreading-in-syslog-ng">Multithreading concepts of <MadCap:variable name="General.abbrev"></MadCap:variable></h1>
+        <h1 name="multithreading-in-syslog-ng"><a name="multithreading-in-syslog-ng"></a>Multithreading concepts of <MadCap:variable name="General.abbrev"></MadCap:variable></h1>
         <p oldrole="para">This section is a brief overview on how <MadCap:variable name="General.abbrev"></MadCap:variable> works in multithreaded mode. It is mainly for illustration purposes: the concept has been somewhat simplified and may not completely match reality.</p>
         <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
             <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
@@ -35,7 +35,7 @@
                 <p oldrole="para">Some other, special threads for internal functionalities. For example, certain destinations run in a separate thread, independently of the multithreading (<span class="Code" oldrole="parameter">threaded()</span>) and <span class="Code" oldrole="parameter">--worker-threads</span> settings of <MadCap:variable name="General.abbrev"></MadCap:variable>.</p>
             </li>
         </ul>
-        <p oldrole="para">The maximum number of worker threads <MadCap:variable name="General.abbrev"></MadCap:variable> uses is the number of CPUs or cores in the host running <MadCap:variable name="General.abbrev"></MadCap:variable> (up to 64). You can limit this value using the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option that sets the maximum total number of threads <MadCap:variable name="General.abbrev"></MadCap:variable> can use, including the main <MadCap:variable name="General.abbrev"></MadCap:variable> thread. However, the <span class="Code" oldrole="parameter">--worker-threads</span> option does not affect the supervisor of <MadCap:variable name="General.abbrev"></MadCap:variable>. The supervisor is a separate process (see <MadCap:xref href="#syslog-ng.8"></MadCap:xref>), but certain operating systems might display it as a thread. In addition, certain destinations always run in a separate thread, independently of the multithreading (<span class="Code" oldrole="parameter">threaded()</span>) and <span class="Code" oldrole="parameter">--worker-threads</span> settings of <MadCap:variable name="General.abbrev"></MadCap:variable>.</p>
+        <p oldrole="para">The maximum number of worker threads <MadCap:variable name="General.abbrev"></MadCap:variable> uses is the number of CPUs or cores in the host running <MadCap:variable name="General.abbrev"></MadCap:variable> (up to 64). You can limit this value using the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option that sets the maximum total number of threads <MadCap:variable name="General.abbrev"></MadCap:variable> can use, including the main <MadCap:variable name="General.abbrev"></MadCap:variable> thread. However, the <span class="Code" oldrole="parameter">--worker-threads</span> option does not affect the supervisor of <MadCap:variable name="General.abbrev"></MadCap:variable>. The supervisor is a separate process (see <MadCap:xref href="../../../manpages/syslog-ng.8.html"><span style="color: #04aada;" class="mcFormatColor">The syslog-ng manual page</span></MadCap:xref>), but certain operating systems might display it as a thread. In addition, certain destinations always run in a separate thread, independently of the multithreading (<span class="Code" oldrole="parameter">threaded()</span>) and <span class="Code" oldrole="parameter">--worker-threads</span> settings of <MadCap:variable name="General.abbrev"></MadCap:variable>.</p>
         <p oldrole="para">When an event requiring a new thread occurs (for example, <MadCap:variable name="General.abbrev"></MadCap:variable> receives new messages, or a destination becomes available), <MadCap:variable name="General.abbrev"></MadCap:variable> tries to start a new thread. If there are no free threads, the task waits until a thread finishes its task and becomes available. There are two types of worker threads:</p>
         <ul oldrole="itemizedlist">
             <li oldrole="listitem">
@@ -45,34 +45,38 @@
                 <p oldrole="para">Writer threads take the messages from the queue of the destination and send them to the destination, that is, write the messages into a file, or send them to the syslog server over the network. The writer thread starts to process messages from the queue only if the destination is writable, and there are enough messages in the queue, as set in the <span class="Code" oldrole="parameter">flush-lines()</span> and the <span class="Code" oldrole="parameter">flush-timeout()</span> options. Writer threads stop processing messages when the destination becomes unavailable, or there are no more messages in the queue.</p>
             </li>
         </ul>
-        <h6 oldrole="formalpara">Sources and destinations affected by multithreading</h6>
-        <p oldrole="para">The following list describes which sources and destinations can use multiple threads. Changing the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option changes the number of threads available to these sources and destinations.</p>
-        <ul oldrole="itemizedlist">
-            <li oldrole="listitem">
-                <p oldrole="para">The <span class="Code" oldrole="parameter">tcp</span> and <span class="Code" oldrole="userinput">syslog(tcp)</span> sources can process independent connections in separate threads. The number of independent connections is limited by the <span class="Code" oldrole="parameter">max-connections()</span> option of the source. Separate sources are processed by separate thread, for example, if you have two separate <span class="Code" oldrole="parameter">tcp</span> sources defined that receive messages on different IP addresses or port, <MadCap:variable name="General.abbrev"></MadCap:variable> will use separate threads for these sources even if they both have only a single active connection.</p>
-            </li>
-            <li oldrole="listitem">
-                <p oldrole="para">The <span class="Code" oldrole="parameter">udp</span>, <span class="Code" oldrole="parameter">file</span>, and <span class="Code" oldrole="parameter">pipe</span> sources use a single thread for every source statement.</p>
-            </li>
-            <li oldrole="listitem">
-                <p oldrole="para">The <span class="Code" oldrole="parameter">tcp</span>, <span class="Code" oldrole="parameter">syslog</span>, and <span class="Code" oldrole="parameter">pipe</span> destinations use a single thread for every destination.</p>
-            </li>
-            <li oldrole="listitem">
-                <p oldrole="para">The <span class="Code" oldrole="parameter">file</span> destination uses a single thread for writing the destination file, but may use a separate thread for each destination file if the filename includes macros.</p>
-            </li>
-        </ul>
-        <h6 oldrole="formalpara">Sources and destinations not affected by multithreading</h6>
-        <p oldrole="para">The following list describes sources and destinations that use a separate thread even if you disable multithreading in <MadCap:variable name="General.abbrev"></MadCap:variable>, in addition to the limit set in the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option.</p>
-        <ul oldrole="itemizedlist">
-            <li condition="pe" oldrole="listitem">
-                <p oldrole="para">The <span class="Code" oldrole="parameter">logstore</span> destination uses separate threads for writing the messages from the journal to the logstore files, and also for timestamping. These threads are independent from the setting of the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option.</p>
-            </li>
-            <li oldrole="listitem">
-                <p oldrole="para">Every <span class="Code" oldrole="parameter">sql</span> destination uses its own thread. These threads are independent from the setting of the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option.</p>
-            </li>
-            <li oldrole="listitem">
-                <p oldrole="para">The <span class="Code" oldrole="parameter">java</span> destinations use one thread, even if there are multiple Java-based destinations configured. This thread is independent from the setting of the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option.</p>
-            </li>
-        </ul>
+        <div>
+            <h6 oldrole="formalpara">Sources and destinations affected by multithreading</h6>
+            <p oldrole="para">The following list describes which sources and destinations can use multiple threads. Changing the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option changes the number of threads available to these sources and destinations.</p>
+            <ul oldrole="itemizedlist">
+                <li oldrole="listitem">
+                    <p oldrole="para">The <span class="Code" oldrole="parameter">tcp</span> and <span class="Code" oldrole="userinput">syslog(tcp)</span> sources can process independent connections in separate threads. The number of independent connections is limited by the <span class="Code" oldrole="parameter">max-connections()</span> option of the source. Separate sources are processed by separate thread, for example, if you have two separate <span class="Code" oldrole="parameter">tcp</span> sources defined that receive messages on different IP addresses or port, <MadCap:variable name="General.abbrev"></MadCap:variable> will use separate threads for these sources even if they both have only a single active connection.</p>
+                </li>
+                <li oldrole="listitem">
+                    <p oldrole="para">The <span class="Code" oldrole="parameter">udp</span>, <span class="Code" oldrole="parameter">file</span>, and <span class="Code" oldrole="parameter">pipe</span> sources use a single thread for every source statement.</p>
+                </li>
+                <li oldrole="listitem">
+                    <p oldrole="para">The <span class="Code" oldrole="parameter">tcp</span>, <span class="Code" oldrole="parameter">syslog</span>, and <span class="Code" oldrole="parameter">pipe</span> destinations use a single thread for every destination.</p>
+                </li>
+                <li oldrole="listitem">
+                    <p oldrole="para">The <span class="Code" oldrole="parameter">file</span> destination uses a single thread for writing the destination file, but may use a separate thread for each destination file if the filename includes macros.</p>
+                </li>
+            </ul>
+        </div>
+        <div>
+            <h6 oldrole="formalpara">Sources and destinations not affected by multithreading</h6>
+            <p oldrole="para">The following list describes sources and destinations that use a separate thread even if you disable multithreading in <MadCap:variable name="General.abbrev"></MadCap:variable>, in addition to the limit set in the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option.</p>
+            <ul oldrole="itemizedlist">
+                <li condition="pe" oldrole="listitem">
+                    <p oldrole="para">The <span class="Code" oldrole="parameter">logstore</span> destination uses separate threads for writing the messages from the journal to the logstore files, and also for timestamping. These threads are independent from the setting of the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option.</p>
+                </li>
+                <li oldrole="listitem">
+                    <p oldrole="para">Every <span class="Code" oldrole="parameter">sql</span> destination uses its own thread. These threads are independent from the setting of the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option.</p>
+                </li>
+                <li oldrole="listitem">
+                    <p oldrole="para">The <span class="Code" oldrole="parameter">java</span> destinations use one thread, even if there are multiple Java-based destinations configured. This thread is independent from the setting of the <span class="Code" oldrole="parameter">--worker-threads</span> command-line option.</p>
+                </li>
+            </ul>
+        </div>
     </body>
 </html>
