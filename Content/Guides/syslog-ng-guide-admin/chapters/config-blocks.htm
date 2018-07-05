@@ -26,12 +26,21 @@
         <div class="Example">
             <h6 name="example-configuration-block" oldrole="example"><a name="example-configuration-block"></a>Example: Reusing configuration blocks</h6>
             <p oldrole="para">Suppose you are running an application on your hosts that logs into the <span class="Code" oldrole="filename">/opt/var/myapplication.log</span> file. Create a file (for example, <span class="Code" oldrole="filename">myblocks.conf</span>) that stores a source describing this file and how it should be read:</p><pre class="Code" oldrole="synopsis">block source myappsource() {
-        file("/opt/var/myapplication.log" follow-freq(1) default-facility(syslog)); };</pre>
+    file("/opt/var/myapplication.log"
+        follow-freq(1)
+        default-facility(syslog)
+    );
+};</pre>
             <p oldrole="para">Include this file in your main syslog-ng configuration file, reference the block, and use it in a logpath:</p><pre class="Code" oldrole="synopsis">@version: <MadCap:variable name="Version.configversion"></MadCap:variable>
 @include "&lt;correct/path&gt;/myblocks.conf"
-source s_myappsource { myappsource(); };
+source s_myappsource {
+    myappsource();
+};
 ...
-log { source(s_myappsource); destination(...); };</pre>
+log {
+    source(s_myappsource);
+    destination(...);
+};</pre>
         </div>
         <p oldrole="para">To define a block that defines more than one object, use <span class="Code" oldrole="parameter">root</span> as the type of the block, and reference the block from the main part of the <MadCap:variable name="General.abbrev"></MadCap:variable> configuration file.</p>
         <div class="Example">
@@ -41,9 +50,18 @@ log { source(s_myappsource); destination(...); };</pre>
             <MadCap:keyword term="root">
             </MadCap:keyword>
             <p oldrole="para">The following example defines a source, a destination, and a log path to connect them.</p><pre class="Code" oldrole="synopsis">block root mylogs() {
-        source s_file { file("/var/log/mylogs.log" follow-freq(1)); };
-        destination d_local { file("/var/log/messages"); };
-        log { source(s_file); destination(d_local); };
+    source s_file {
+        file("/var/log/mylogs.log"
+            follow-freq(1)
+        );
+    };
+    destination d_local {
+        file("/var/log/messages");
+    };
+    log {
+        source(s_file);
+				destination(d_local);
+    };
 };</pre>
         </div>
         <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="tip" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
@@ -76,11 +94,11 @@ log { source(s_myappsource); destination(...); };</pre>
             <div class="Example">
                 <h6 oldrole="example">Example: Passing arguments to blocks</h6>
                 <p oldrole="para">The following sample defines a file source block, which can receive the name of the file as a parameter. If no parameter is set, it reads messages from the <span class="Code" oldrole="filename">/var/log/messages</span> file.</p><pre class="Code" oldrole="synopsis">block source s_logfile (filename("messages")) {
-  file("/var/log/`filename`" );
+    file("/var/log/`filename`");
 };
 
 source s_example {
-  s_logfile(filename("logfile.log"));
+    s_logfile(filename("logfile.log"));
 };</pre>
             </div>
             <MadCap:keyword term="block arguments:['dynamical']">
@@ -90,17 +108,29 @@ source s_example {
             <MadCap:keyword term="configuration snippets:['dynamical block arguments']">
             </MadCap:keyword>
             <p oldrole="para">If you reference the block with more arguments then specified in its definition, you can use these additional arguments as a single argument-list within the block. That way, you can use a variable number of optional arguments in your block. This can be useful when passing arguments to a template, or optional arguments to an underlying driver. To reference this argument-list, insert <span class="Code" oldrole="userinput">`__VARARGS__`</span> to the place in the block where you want to insert the argument-list. Note that you can use this only once in a block. The following definition extends the logfile block from the previous example, and passes the optional arguments (<span class="Code" oldrole="userinput">follow-freq(1) flags(no-parse)</span>) to the <span class="Code" oldrole="userinput">file()</span> source.</p><pre class="Code" oldrole="synopsis">block source s_logfile (filename("messages")) {
-  file("/var/log/`filename`" `__VARARGS__`);
+    file("/var/log/`filename`" `__VARARGS__`);
 };
 
 source s_example {
-  s_logfile(filename("logfile.log") follow-freq(1) flags(no-parse));
+    s_logfile(
+        filename("logfile.log")
+        follow-freq(1)
+        flags(no-parse)
+    );
 };</pre>
             <div class="Example" MadCap:conditions="General.ose">
                 <h6 oldrole="example">Example: Using arguments in blocks</h6>
-                <p oldrole="para">The following example is the code of the <a href="configuring-source-pacct.htm"><span class="Code" oldrole="parameter">pacct()</span> source driver</a>, which is actually a block that can optionally receive two arguments.</p><pre class="Code" oldrole="synopsis">block source pacct(file("/var/log/account/pacct") follow-freq(1)) {
+                <p oldrole="para">The following example is the code of the <a href="configuring-source-pacct.htm"><span class="Code" oldrole="parameter">pacct()</span> source driver</a>, which is actually a block that can optionally receive two arguments.</p><pre class="Code" oldrole="synopsis">block source pacct(
+    file("/var/log/account/pacct")
+        follow-freq(1)
+    )
+{
 @module pacctformat
-        file("`file`" follow-freq(`follow-freq`) format("pacct") tags(".pacct") `__VARARGS__`);
+    file("`file`"
+        follow-freq(`follow-freq`)
+        format("pacct")
+        tags(".pacct")
+    `__VARARGS__`);
 };</pre>
             </div>
         </div>

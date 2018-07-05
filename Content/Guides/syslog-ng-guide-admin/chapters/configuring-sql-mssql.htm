@@ -35,12 +35,18 @@
             <MadCap:keyword term="MSSQL:['sql() configuration']">
             </MadCap:keyword>
             <p oldrole="para">The following example sends the log messages into an MSSQL database running on the <span class="Code" oldrole="userinput">logserver</span> host. The messages are inserted into the <span class="Code" oldrole="userinput">syslogng</span> database, the name of the table includes the exact date when the messages were sent. The syslog-ng application automatically creates the required tables and columns, if the user account used to connect to the database has the required privileges.</p><pre class="Code" oldrole="synopsis">destination d_mssql {
-sql(type(mssql) host("logserver") port("1433")
-  username("syslogng") password("syslogng") database("syslogng")
-  table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")columns("datetime varchar(16)", "host varchar(32)",
-  "program varchar(32)", "pid varchar(8)", "message varchar(4096)")
-  values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
-  indexes("datetime", "host", "program", "pid"));
+    sql(
+        type(mssql)
+        host("logserver")
+        port("1433")
+        username("syslogng")
+        password("syslogng")
+        database("syslogng")
+        table("msgs_${R_YEAR}${R_MONTH}${R_DAY}")
+        columns("datetime varchar(16)", "host varchar(32)", "program varchar(32)", "pid varchar(8)", "message varchar(4096)")
+        values("${R_DATE}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}")
+        indexes("datetime", "host", "program", "pid")
+    );
 };</pre>
             <p oldrole="para">The date format used by the MSSQL database must be explicitly set in the <span class="Code" oldrole="filename">/etc/locales.conf</span> file of the syslog-ng server. Edit or create this file as needed for your configuration. A sample is provided below.</p><pre class="Code" oldrole="synopsis">[default]
 date = "%Y-%m-%d %H:%M:%S"</pre>
