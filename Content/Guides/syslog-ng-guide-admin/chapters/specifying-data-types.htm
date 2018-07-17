@@ -41,11 +41,12 @@
             <MadCap:keyword term="mongodb{see}['type-casting']">
             </MadCap:keyword>
             <p oldrole="para">The following example stores the MESSAGE, PID, DATE, and PROGRAM fields of a log message in a MongoDB database. The DATE and PID parts are stored as numbers instead of strings.</p><pre class="Code" oldrole="synopsis">mongodb(
-    value-pairs(pair("date", datetime("$UNIXTIME"))
-            pair("pid", int64("$PID"))
-            pair("program", "$PROGRAM"))
-            pair("message", "$MESSAGE"))
-             )
+    value-pairs(
+        pair("date", datetime("$UNIXTIME"))
+        pair("pid", int64("$PID"))
+        pair("program", "$PROGRAM"))
+        pair("message", "$MESSAGE"))
+    )
 );</pre>
             <p oldrole="para">The following example formats the same fields into JSON.</p><pre class="Code" oldrole="synopsis">$(format-json date=datetime("$UNIXTIME") pid=int64("$PID") program="$PROGRAM" message="$MESSAGE")</pre>
         </div>
@@ -182,8 +183,8 @@
                     <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1" colspan="2">
                         <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> This option removes the specified macros from the selection. Use it to remove unneeded macros selected using the <span class="Code" oldrole="parameter">scope()</span> parameter.</p>
                         <p oldrole="para">For example, the following example removes the SDATA macros from the selection.</p><pre>value-pairs(
-   scope(rfc5424 selected_macros)
-   exclude(".SDATA*")
+    scope(rfc5424 selected_macros)
+    exclude(".SDATA*")
 )</pre>
                         <p oldrole="para">The name of the macro to remove can include wildcards <span class="Code" oldrole="userinput">(*, ?)</span>. Regular expressions are not supported.</p>
                     </td>
@@ -218,10 +219,12 @@
                 <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
                     <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1" colspan="2">
                         <p class="TableHyphen"><i oldrole="emphasis" role="bold">Description:</i> This option selects the specified macros. The selected macros will be included as <span class="Code" oldrole="userinput">MACRONAME = MACROVALUE</span>, that is using <span class="Code" oldrole="userinput">key("HOST")</span> will result in <span class="Code" oldrole="userinput">HOST = $HOST</span>. You can use wildcards <span class="Code" oldrole="userinput">(*, ?)</span> to select multiple macros. For example:</p><pre class="Code" oldrole="synopsis">value-pairs(
-        scope(rfc3164)
-        key("HOST"))</pre><pre class="Code" oldrole="synopsis">value-pairs(
-        scope(rfc3164)
-        key("HOST", "PROGRAM"))</pre>
+    scope(rfc3164)
+    key("HOST")
+)</pre><pre class="Code" oldrole="synopsis">value-pairs(
+    scope(rfc3164)
+    key("HOST", "PROGRAM")
+)</pre>
                         <p class="TableHyphen">&#160;</p>
                     </td>
                 </tr>
@@ -329,11 +332,11 @@
                         <div class="Example">
                             <h6 name="example-value-pairs-rekey" oldrole="example"><a name="example-value-pairs-rekey"></a>Example: <caption MadCap:autonum="Table 1: ">Using the rekey() option</caption></h6>
                             <p oldrole="para">The following sample selects every value-pair that begins with <span class="Code" oldrole="userinput">.cee.</span>, deletes this prefix by cutting 4 characters from the names, and adds a new prefix (<span class="Code" oldrole="userinput">events.</span>).</p><pre class="Code" oldrole="synopsis" xml:space="preserve">value-pairs(
-  key(".cee.*"
-    rekey(
-      shift(4)
-      add-prefix("events.")
-	)
+    key(".cee.*"
+        rekey(
+            shift(4)
+            add-prefix("events.")
+        )
     )
 )</pre>
                             <p oldrole="para">The <span class="Code" oldrole="parameter">rekey()</span> option can be used with the <span class="Code" oldrole="parameter">format-json</span> template-function as well, using the following syntax:</p><pre class="Code" oldrole="synopsis">$(format-json --rekey .cee.* --add-prefix events.)</pre>
@@ -372,7 +375,8 @@
                     <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">empty string</td>
                 </tr>
                 <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1"> <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1" colspan="2"><p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> This option selects predefined groups of macros. The following groups are available:</p><ul oldrole="itemizedlist"><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">nv-pairs</i>: Every soft macro (name-value pair) associated with the message, except the ones that start with a dot (.) character. Macros starting with a dot character are generated within <MadCap:variable name="General.abbrev"></MadCap:variable> and are not originally part of the message, therefore are not included in this group.</p></li><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">dot-nv-pairs</i>: Every soft macro (name-value pair) associated with the message which starts with a dot (.) character. For example, <span class="Code" oldrole="userinput">.classifier.rule_id</span> and <span class="Code" oldrole="userinput">.sdata.*</span>. Macros starting with a dot character are generated within <MadCap:variable name="General.abbrev"></MadCap:variable> and are not originally part of the message.</p></li><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">all-nv-pairs</i>: Include every soft macro (name-value pair). Equivalent to using both <span class="Code" oldrole="parameter">nv-pairs</span> and <span class="Code" oldrole="parameter">dot-nv-pairs</span>.</p></li><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">rfc3164</i>: The macros that correspond to the RFC3164 (legacy or BSD-syslog) message format: <span class="Code" oldrole="parameter">$FACILITY</span>, <span class="Code" oldrole="parameter">$PRIORITY</span>, <span class="Code" oldrole="parameter">$HOST</span>, <span class="Code" oldrole="parameter">$PROGRAM</span>, <span class="Code" oldrole="parameter">$PID</span>, <span class="Code" oldrole="parameter">$MESSAGE</span>, and <span class="Code" oldrole="parameter">$DATE</span>.</p></li><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">rfc5424</i>: The macros that correspond to the RFC5424 (IETF-syslog) message format: <span class="Code" oldrole="parameter">$FACILITY</span>, <span class="Code" oldrole="parameter">$PRIORITY</span>, <span class="Code" oldrole="parameter">$HOST</span>, <span class="Code" oldrole="parameter">$PROGRAM</span>, <span class="Code" oldrole="parameter">$PID</span>, <span class="Code" oldrole="parameter">$MESSAGE</span>, <span class="Code" oldrole="parameter">$MSGID</span>, <span class="Code" oldrole="parameter">$R_DATE</span>, and the metadata from the structured-data (SDATA) part of RFC5424-formatted messages, that is, every macro that starts with <span class="Code" oldrole="userinput">.SDATA.</span>.</p><p oldrole="para">The <span class="Code" oldrole="parameter">rfc5424</span> group also has the following alias: <span class="Code" oldrole="parameter">syslog-proto</span>. Note that the value of <span class="Code" oldrole="parameter">$R_DATE</span> will be listed under the <span class="Code" oldrole="parameter">DATE</span> key.</p><p oldrole="para">The <span class="Code" oldrole="parameter">rfc5424</span> group does not contain any metadata about the message, only information that was present in the original message. To include the most commonly used metadata (for example, the <span class="Code" oldrole="parameter">$SOURCEIP</span> macro), use the <span class="Code" oldrole="parameter">selected-macros</span> group instead.</p></li><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">all-macros</i>: Include every hard macro. This group is mainly useful for debugging, as it contains redundant information (for example, the date-related macros include the date-related information several times in various formats).</p></li><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">selected-macros</i>: Include the macros of the <span class="Code" oldrole="parameter">rfc3164</span> groups, and the most commonly used metadata about the log message: the <span class="Code" oldrole="parameter">$TAGS</span>, <span class="Code" oldrole="parameter">$SOURCEIP</span>, and <span class="Code" oldrole="parameter">$SEQNUM</span> macros.</p></li><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">sdata</i>: The metadata from the structured-data (SDATA) part of RFC5424-formatted messages, that is, every macro that starts with <span class="Code" oldrole="userinput">.SDATA.</span></p></li><li oldrole="listitem"><p oldrole="para"><i oldrole="emphasis">everything</i>: Include every hard and soft macros. This group is mainly useful for debugging, as it contains redundant information (for example, the date-related macros include the date-related information several times in various formats).</p></li></ul><p oldrole="para">For example:</p><pre class="Code" oldrole="synopsis">value-pairs(
-        scope(rfc3164 selected-macros))</pre></td></tr>
+    scope(rfc3164 selected-macros)
+)</pre></td></tr>
             </tbody>
             <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
             </col>
