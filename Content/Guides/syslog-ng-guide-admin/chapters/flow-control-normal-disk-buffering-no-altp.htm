@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <link href="../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
+        <meta name="description" content="" />
+    </head>
+    <body name="flow-control-normal-disk-buffering-no-altp">
+        <h1 name="flow-control-normal-disk-buffering-no-altp">Flow control, normal disk buffering, no <MadCap:variable name="syslogngPEVariables.RLTPUppercase" /></h1>
+        <h6>How it works:</h6>
+        <ol>
+            <li><MadCap:variable name="General.abbrev" /> puts messages into the disk buffer (set via <span class="Code">disk-buf-size()</span>) when the destination becomes unavailable or when it is not able to process logs as fast as they arrive through the sources.</li>
+            <li>When the disk buffer is full, <MadCap:variable name="General.abbrev" /> puts messages into the memory buffer (set via <span class="Code">mem-buf-length()</span>). When the memory buffer gets full too, then <MadCap:variable name="General.abbrev" /> stops the source (flow-control mechanism).</li>
+        </ol>
+        <p class="CaptionFigure" MadCap:autonum="Figure 1: ">Flow control, normal disk buffering, no <MadCap:variable name="syslogngPEVariables.RLTPUppercase" /></p>
+        <p>
+            <img src="../../Resources/Images_Notlocalized/syslog-ng-pe-guide-admin/flow-control-normal-disk-buffering-no-altp.png" />
+        </p>
+        <h6>How to set key parameters:</h6>
+        <p>Set <span class="Code">flags(flow-control)</span> in the log path.</p>
+        <p>The memory buffer must be large enough to store the incoming messages of every source:</p>
+        <p><span class="Code">mem-buf-length()</span> &gt; sum of <span class="Code">log-iw-size()</span> of sources connected to this destination</p>
+        <p>Configure disk buffering. For details, see <MadCap:xref href="#config-normal-disk-buffering" class="HeadingOnPage"><span style="color: #04aada;" class="mcFormatColor">Example: Example configuration of normal disk-based buffering</span></MadCap:xref>.</p>
+        <div class="Example">
+            <h6 oldrole="example"><a name="config-normal-disk-buffering"></a>Example: Example configuration of normal disk-based buffering</h6><pre class="Code" oldrole="synopsis">disk-buffer(
+	mem-buf-length(20000) # storing 20000 messages in memory, sum log-iw-size of sources should be less than 20000 to use flow-control
+	disk-buf-size(2147483648) # storing 2 GB of messages on disk
+	reliable(no)
+)</pre>
+        </div>
+        <h6>Benefits:</h6>
+        <p>This configuration minimizes the loss of log messages in the following situations:</p>
+        <ul>
+            <li><i>Unreachable destination server(s)</i>: Only as many incoming log messages are read as can be "delivered". When flow control is used in combination with disk buffering, messages that have been written to the disk buffer and/or the memory buffer are considered delivered. When the memory buffer becomes full, <MadCap:variable name="General.abbrev" /> stops reading messages from the configured sources. This means that no log messages get lost.</li>
+            <li><i>Message loss outside of <MadCap:variable name="General.abbrev" /></i>: The greatest advantage of this configuration over when no disk buffering is used at all is that when the <span class="Code">log-iw-size()</span> control window is full, the flow-control mechanism stops reading logs from the sources much later. This is because when it is not possible to send logs directly to the destinations, they are first written to the disk and then the memory buffer. It is only after both the disk buffer and the memory buffer have been filled to their full capacity that the sources are stopped. This enables you to minimize the loss of log messages during peak hours or when the network is temporarily down.</li>
+            <li>
+                <p><i>Message loss when <MadCap:variable name="General.abbrev" /> is stopped or restarted</i>: When syslog-ng is stopped or restarted, the contents of the memory buffer and the disk buffer are flushed to disk, meaning that no log loss occurs.</p>
+                <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                    </col>
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+                    </col>
+                    <tbody>
+                        <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                                <p>
+                                    <img src="../../../Resources/Images/Common/note.png" />
+                                </p>
+                            </td>
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                                <p oldrole="para">In rare cases, the buffers stored on the disk can become corrupted, in which case <MadCap:variable name="General.abbrev" /> may not able to process all the logs stored in the disk buffer.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </li>
+        </ul>
+        <h6>Drawbacks:</h6>
+        <p>One drawback of using disk buffering is that the processing of log messages by <MadCap:variable name="General.abbrev" /> is slower.</p>
+        <p>This configuration does not provide protection against the loss of log messages in the following situations:</p>
+        <ul>
+            <li><i>TCP error</i>: In the case of a TCP connection, when messages are sent from the destination drivers to the destination servers, messages are written to the TCP socket. The TCP socket sends an acknowledgement to the destination drivers once it has successfully processed messages. A message is considered "delivered" when no error occurs during the process of writing the data to the socket, and the acknowledgement is received. Note, however, that if something goes wrong after messages have been successfully written to the TCP socket, log messages can still get lost. Also note that TCP errors can occur on both the source and the destination side, and both can cause the loss of log messages.
+</li>
+            <li>
+                <p><i>When <MadCap:variable name="General.abbrev"></MadCap:variable> is not able to operate normally</i> (for example, when <MadCap:variable name="General.abbrev" /> crashes due to some unforeseen event): Log messages that were in the output buffer when the issue occurred get lost because those messages are stored in the memory.</p>
+            </li>
+        </ul>
+    </body>
+</html>

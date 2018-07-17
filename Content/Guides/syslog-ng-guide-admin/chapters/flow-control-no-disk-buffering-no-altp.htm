@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <link href="../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
+        <meta name="description" content="" />
+    </head>
+    <body name="flow-control-no-disk-buffering-no-altp">
+        <h1 name="flow-control-no-disk-buffering-no-altp">Flow control, no disk buffering, no <MadCap:variable name="syslogngPEVariables.RLTPUppercase" /></h1>
+        <h6>How it works:</h6>
+        <p> <span class="Code">log-iw-size()</span> sets a control window that tracks how many messages <MadCap:variable name="General.abbrev" /> can accept. Every source has its own control window. If the window gets full, <MadCap:variable name="General.abbrev" /> stops reading messages from the sources until some messages are successfully sent to the destination(s).</p>
+        <p>Flow control, no disk buffering, no <MadCap:variable name="syslogngPEVariables.RLTPUppercase" /></p>
+        <p>
+            <img src="../../Resources/Images_Notlocalized/syslog-ng-pe-guide-admin/flow-control-no-disk-buffering-no-altp.png" />
+        </p>
+        <h6>How to set key parameters:</h6>
+        <p>Set <span class="Code">flags(flow-control)</span> in the log path.</p>
+        <p>The output buffer must be large enough to store the incoming messages of every connected source:</p>
+        <p><span class="Code">log-fifo-size()</span> &gt; sum of <span class="Code">log-iw-size()</span> of sources connected to this destination</p>
+        <h6>Benefits:</h6>
+        <p>This configuration minimizes the loss of log messages in the following situations:</p>
+        <ul>
+            <li>
+                <p><i>Unreachable destination server(s)</i>: Only as many incoming log messages are read as can be "delivered". When flow control is used, those messages are considered delivered that have been written to the output buffer. When the output buffer is full, <MadCap:variable name="General.abbrev" /> stops reading messages from the connected sources. This means that no log messages get lost.</p>
+                <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                    </col>
+                    <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
+                    </col>
+                    <tbody>
+                        <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
+                                <p>
+                                    <img src="../../../Resources/Images/Common/note.png" />
+                                </p>
+                            </td>
+                            <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
+                                <p oldrole="para">In case the application is sending its log messages through a blocking I/O socket, then it is the application that stops sending new log messages and waits until the previous batch has been delivered. If the application is not sending logs through a blocking I/O socket, then it will keep sending messages (regardless of whether or not the previous batch has been delivered), and this can result in the loss of log messages. For example, it is not possible to apply flow control in the case of a UDP source.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </li>
+        </ul>
+        <h6>Drawbacks:</h6>
+        <p>While this configuration gives you the fastest processing time, it has some limitations. It does not provide protection against the loss of log messages in the following situations:</p>
+        <ul>
+            <li><i>TCP error</i>: In the case of a TCP connection, when messages are sent from the destination drivers to the destination servers, messages are written to the TCP socket. The TCP socket sends an acknowledgement to the destination drivers once it has successfully processed messages. A message is considered "delivered" when no error occurs during the process of writing the data to the socket, and the acknowledgement is received. Note, however, that if something goes wrong after messages have been successfully written to the TCP socket, log messages can still get lost. Also note that TCP errors can occur on both the source and the destination side, and both can cause the loss of log messages.
+</li>
+            <li><i>Message loss outside of <MadCap:variable name="General.abbrev" /></i>: Because <MadCap:variable name="General.abbrev" /> stores only a small number of log messages in the memory, it is possible to lose messages outside of syslog-ng. For example, if the output buffer is full because the server is not reachable, <MadCap:variable name="General.abbrev" /> will not read the source, meaning that the external application that generates the logs can drop the logs. If you want to minimize the risk, use disk buffering. For details, see <MadCap:xref href="flow-control-normal-disk-buffering-no-altp.htm" class="HeadingOnPage"><span style="color: #04aada;" class="mcFormatColor">Flow control, normal disk buffering, no [%=syslogngPEVariables.RLTPUppercase%]</span></MadCap:xref>and Section 13.4, Flow control, reliable disk buffering, no ALTP.</li>
+            <li><i>Message loss when <MadCap:variable name="General.abbrev" /> is stopped or restarted</i>: When syslog-ng is stopped or restarted, the contents of the output buffers are lost. If you want to minimize the risk, use disk buffering. For details, see <MadCap:xref href="flow-control-normal-disk-buffering-no-altp.htm" class="HeadingOnPage"><span style="color: #04aada;" class="mcFormatColor">Flow control, normal disk buffering, no [%=syslogngPEVariables.RLTPUppercase%]</span></MadCap:xref> and Section 13.4, Flow control, reliable disk buffering, no ALTP.</li>
+            <li>
+                <p><i>When <MadCap:variable name="General.abbrev"></MadCap:variable> is not able to operate normally</i> (for example, when <MadCap:variable name="General.abbrev" /> crashes due to some unforeseen event): Log messages that were in the output buffer when the issue occurred get lost because those messages are stored in the memory.</p>
+            </li>
+        </ul>
+    </body>
+</html>
