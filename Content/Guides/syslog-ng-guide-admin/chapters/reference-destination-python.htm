@@ -7,19 +7,35 @@
         <h1 name="reference-destination-python">python() destination options</h1>
         <MadCap:keyword term="destination drivers:[python(), ' driver']">
         </MadCap:keyword>
-        <p oldrole="para">The Python destination allows you to write your own destination in Python.</p>
-        <!-- FIXME destination options,
-        * ha external fileban van a kod, akkor a filenevet meg kell adni a class() parameterben
-        * This configuration snippet uses value-pairs() to select which name-value pairs are passed on to the Python code, kulonben az msg objektumon keresztul erheti el az egeszet
-destination d_python_to_file {
-    python(
-        class("pythonexample.TextDestination")
-        value-pairs(key(MESSAGE))
-    );
-};
-        * option atadas: You can also include other arbitrary options in the configuration file. These will be sent to Python in the form of a dictionary.
-        -->
-        <p oldrole="para">The <span class="Code" oldrole="parameter">python()</span> destination has the following options:</p>
+        <p oldrole="para">The Python destination allows you to write your own destination in Python. The <span class="Code" oldrole="parameter">python()</span> destination has the following options. The <span class="Code" oldrole="parameter">class()</span> option is mandatory. For details on writing destinations in Python, see <MadCap:xref href="python-destination.htm"></MadCap:xref>.</p>
+        <div>
+            <h6>class()</h6>
+            <MadCap:keyword term="class()">
+            </MadCap:keyword>
+            <table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1">N/A</td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                </col>
+            </table>
+            <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> The name of the Python class that implements the destination, for example:</p>
+            <pre class="Code">python(
+    class("MyPythonDestination")
+);</pre>
+            <p>If you want to store the Python code in an external Python file, the <span class="Code" oldrole="parameter">class()</span> option must include the name of the file as well, for example:</p>
+            <pre class="Code">python(
+    class("MyPythonfilename.MyPythonDestination")
+);</pre>
+            <p>For details, see <MadCap:xref href="python-code-external-file.htm"></MadCap:xref></p>
+        </div>
         <MadCap:snippetBlock src="../../shared/chunk/option-destination-diskbuffer.htm">
         </MadCap:snippetBlock>
         <MadCap:snippetBlock src="../../shared/chunk/option-destination-frac-digits.htm">
@@ -28,10 +44,47 @@ destination d_python_to_file {
         </MadCap:snippetBlock>
         <MadCap:snippetBlock src="../../shared/chunk/option-destination-on-error.htm">
         </MadCap:snippetBlock>
+        <div>
+            <h6>options()</h6>
+            <MadCap:keyword term="options()">
+            </MadCap:keyword>
+            <table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" frame="topbot" rowsep="0" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1">N/A</td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                </col>
+            </table>
+            <p oldrole="para"><i oldrole="emphasis" role="bold">Description:</i> This option allows you to pass custom values from the configuration file to the Python code. The Python code will receive these values during initialization as the <span class="Code">options</span> dictionary. For example, you can use this to set the IP address of the target server from the configuration file, so it is not hard-coded in the Python object.</p>
+            <pre class="Code">python(
+    class("MyPythonDestination")
+    options(
+        host 127.0.0.1
+        port 1883
+        otheroption value)
+);</pre>
+            <p>For example, you can refer to the value of the host field in the Python code as <span class="Code" oldrole="userinput">options["host"]</span>. Note that the Python code receives the values as strings, so you might have to cast them to the type required, for example: <span class="Code" oldrole="userinput">int(options["port"])</span></p>
+        </div>
         <MadCap:snippetBlock src="../../shared/chunk/option-destination-throttle.htm">
         </MadCap:snippetBlock>
-        <MadCap:snippetBlock src="../../shared/chunk/destination-option-value-pairs-content.htm">
-        </MadCap:snippetBlock>
-        <!-- FIXME Specifies which name-value pairs will be generated from the message and passed in a dictionary to the Python script.-->
+        <div>
+            <MadCap:snippetBlock src="../../shared/chunk/destination-option-value-pairs-content.htm">
+            </MadCap:snippetBlock>
+            <p>You can use this option to limit which name-value pairs are passed to the Python code for each message. In the following example, only the text of the log message is passed to Python.</p>
+            <pre class="Code">destination d_python_to_file {
+    python(
+        class("pythonexample.TextDestination")
+        value-pairs(key(MESSAGE))
+    );
+};
+</pre>
+        </div>
     </body>
 </html>
