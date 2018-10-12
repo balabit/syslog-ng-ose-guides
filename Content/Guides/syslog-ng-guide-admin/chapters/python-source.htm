@@ -14,7 +14,7 @@
         </MadCap:keyword>
         <MadCap:snippetBlock src="../../shared/chunk/python-source-intro.htm">
         </MadCap:snippetBlock>
-        <p>This section describes server-style sources. For details on fetcher-style sources, see <MadCap:xref href="python-source-fetcher.htm"></MadCap:xref>.</p>
+        <p>This section describes server-style sources. For details on fetcher-style sources, see <MadCap:xref href="python-fetcher-source.htm"></MadCap:xref>.</p>
         <MadCap:snippetBlock src="../../shared/chunk/python-blocks.htm">
         </MadCap:snippetBlock>
         <div>
@@ -56,12 +56,8 @@ class MySource(LogSource):
             <p>Server-style Python sources must be inherited from the <span class="Code" oldrole="parameter">syslogng.LogSource</span> class, and must implement at least the <span class="Code" oldrole="parameter">run</span> and <span class="Code" oldrole="parameter">request_exit</span> methods. Multiple inheritance is allowed, but only for pure Python super classes.</p>
             <p>You can implement your own event loop, or integrate the event loop of an external framework or library, for example, <a href="https://kafka-python.readthedocs.io/en/master/apidoc/KafkaConsumer.html">KafkaConsumer</a>, <a href="http://flask.pocoo.org/">Flask</a>, <a href="https://twistedmatrix.com/trac/">Twisted engine</a>, and so on.</p>
             <p>To post messages, call <span class="Code" oldrole="parameter">LogSource::post_message()</span> method in the <span class="Code" oldrole="parameter">run</span> method.</p>
-            <div>
-                <h6 oldrole="formalpara"><span class="Code" oldrole="parameter">init(self, options)</span> method (optional)</h6>
-                <p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application initializes Python objects only when it is started or reloaded. That means it keeps the state of internal variables while <MadCap:variable name="General.abbrev"></MadCap:variable> is running. The <span class="Code" oldrole="parameter">init</span> method is executed as part of the initialization. You can perform any initialization steps that are necessary for your source to work.</p>
-                <p oldrole="para">When this method returns with False, <MadCap:variable name="General.abbrev"></MadCap:variable> does not start. It can be used to check options and return False when they prevent the successful start of the source.</p>
-                <p oldrole="para"><span class="Code" oldrole="userinput">options</span>: This optional argument contains the contents of the <span class="Code" oldrole="parameter">options()</span> parameter of the <MadCap:variable name="General.abbrev"></MadCap:variable> configuration object as a Python dict.</p>
-            </div>
+            <MadCap:snippetBlock src="../../shared/chunk/python-method-init.htm">
+            </MadCap:snippetBlock>
             <div>
                 <h6 oldrole="formalpara"><span class="Code" oldrole="parameter">run(self)</span> method (mandatory)</h6>
                 <p oldrole="para">Use the <span class="Code" oldrole="parameter">run</span> method to implement an event loop, or start a server framework or library. Create <span class="Code" oldrole="parameter">LogMessage</span> instances in this method, and pass them to the log paths by calling <span class="Code" oldrole="parameter">LogSource::post_message()</span>.</p>
@@ -72,12 +68,8 @@ class MySource(LogSource):
                 <h6 oldrole="formalpara"><span class="Code" oldrole="parameter">request_exit(self)</span> method (mandatory)</h6>
                 <p>The <MadCap:variable name="General.abbrev"></MadCap:variable> application calls this method when <MadCap:variable name="General.abbrev"></MadCap:variable> is shut down or restarted. The <span class="Code" oldrole="parameter">request_exit</span> method must shut down the event loop or framework, so the <span class="Code" oldrole="parameter">run</span> method can return gracefully. If you use blocking operations within the <span class="Code" oldrole="parameter">run()</span> method, use <span class="Code" oldrole="parameter">request_exit()</span> to interrupt those operations and set an exit flag, otherwise <MadCap:variable name="General.abbrev"></MadCap:variable> is not able to stop. Note that <MadCap:variable name="General.abbrev"></MadCap:variable> calls the <span class="Code" oldrole="parameter">request_exit</span> method from a thread different from the source thread.</p>
             </div>
-            <div>
-                <h6 oldrole="formalpara">The <span class="Code" oldrole="parameter">deinit(self)</span> method (optional)</h6>
-                <p oldrole="para">This method is executed when <MadCap:variable name="General.abbrev" /> is stopped or reloaded. This method does not return a value.</p>
-                <MadCap:snippetBlock src="../../shared/wnt/warning-python-parser-deinit.htm">
-                </MadCap:snippetBlock>
-            </div>
+            <MadCap:snippetBlock src="../../shared/chunk/python-method-deinit.htm">
+            </MadCap:snippetBlock>
         </div>
         <p>For the list of available optional parameters, see <MadCap:xref href="reference-source-python.htm"></MadCap:xref>.</p>
     </body>
