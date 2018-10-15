@@ -17,7 +17,7 @@
         </ul>
         <p oldrole="para">HTTPS connection, as well as password- and certificate-based authentication is supported.</p>
         <div class="Example">
-            <h6 oldrole="example">Example: Client certificate authentication with HTTPS</h6><pre class="Code" oldrole="synopsis">destination d_https { 
+            <h6 oldrole="example">Example: Client certificate authentication with HTTPS</h6><pre class="Code" oldrole="synopsis">destination d_https {
   http(
     [...]
     ca-file("/&lt;path-to-certificate-directory&gt;/ca-crt.pem")
@@ -25,7 +25,7 @@
     cert-file("/&lt;path-to-certificate-directory&gt;/server-crt.pem")
     key-file("/&lt;path-to-certificate-directory&gt;/server-key.pem")
     [...]
-  ); 
+  );
 };</pre>
         </div>
         <div><h6 oldrole="formalpara">Declaration:</h6>
@@ -59,5 +59,48 @@ log
 </pre>
         </div>
         <p oldrole="para">You can also use the http() destination to <a href="syslog-ng-with-splunk.htm">forward log messages to Splunk using <MadCap:variable name="General.abbrev"></MadCap:variable></a>.</p>
+        <div>
+            <h2 name="http-batch-mode" oldrole="section"><a name="http-batch-mode"></a>Batch mode</h2>
+            <p>Starting with version <MadCap:conditionaltext MadCap:conditions="General.ose">3.18</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0.12</MadCap:conditionaltext>, you can send multiple log messages in a single HTTP request if the destination HTTP server supports that.</p>
+            <div>
+                <h3 name="http-batch-size" oldrole="section"><a name="http-batch-size"></a>Batch size</h3>
+                <p>The <span class="Code" oldrole="parameter">flush-lines()</span>, <span class="Code" oldrole="parameter">flush-lines()</span>, and <span class="Code" oldrole="parameter">flush-timeout()</span> options of the <span class="Code" oldrole="parameter">http</span> destination determine how many log messages <MadCap:variable name="General.abbrev"></MadCap:variable> sends in a batch. The <span class="Code" oldrole="parameter">flush-lines()</span> option determines the maximum number of messages <MadCap:variable name="General.abbrev"></MadCap:variable> puts in a batch in. This can be limited based on size and time:</p>
+                <ul>
+                    <li>
+                        <p><MadCap:variable name="General.abbrev"></MadCap:variable> sends a batch every <span class="Code" oldrole="parameter">flush-timeout()</span> seconds, even if the number of messages in the batch is less than <span class="Code" oldrole="parameter">flush-lines()</span>. That way the destination receives every message in a timely manner even if suddenly there are no more messages.</p>
+                    </li>
+                    <li>
+                        <p><MadCap:variable name="General.abbrev"></MadCap:variable> sends the batch if the total size of the messages in the batch reaches <span class="Code" oldrole="parameter">flush-bytes()</span> bytes.</p>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <h3 name="http-batch-format" oldrole="section"><a name="http-batch-format"></a>Formatting the batch</h3>
+                <p>By default, <MadCap:variable name="General.abbrev"></MadCap:variable> separates the log messages of the batch with a newline character. You can specify a different delimiter by using the <span class="Code" oldrole="parameter">delimiter()</span> option.</p>
+                <p>If the destination requires a special beginning or ending to recognize batches, use the <span class="Code" oldrole="parameter">body-prefix()</span> and <span class="Code" oldrole="parameter">body-suffix()</span> options to add a beginning and ending to the batch. For example, you can use these options to create JSON-encoded arrays as POST payloads, which is required by a number of REST APIs. The body of a batch HTTP request looks like this:</p>
+                <pre class="Code" oldrole="synopsis">value of body-prefix() option
+log-line-1 (as formatted in the body() option)
+log-line-2 (as formatted in the body() option)
+....
+log-line-n (the number of log lines is flush-lines(), or less if flush-timeout() has elapsed or the batch would be longer than flush-bytes())
+value of body-suffix() option</pre>
+        <div class="Example">
+            <h6 name="example-http-batch-mode" oldrole="example"><a name="example-http-batch-mode"></a>Example: HTTP batch mode</h6>
+            <p>The following destination sends <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">log messages to an Elasticsearch server using the bulk API</a>. A batch consists of 100 messages, or a maximum of 512 kilobytes, and is sent every 10 seconds (10000 milliseconds).</p>
+            <pre class="Code" oldrole="synopsis">destination d_http {
+    http(url("http://your-elasticsearch-server/_bulk")
+        method("POST")
+        flush-lines(100)
+        flush-bytes(512Kb)
+        flush-timeout(10000)
+        headers("Content-Type: application/x-ndjson")
+        body-suffix("\n")
+        body('{ "index":{} }
+             $(format-json --scope rfc5424 --key ISODATE)')
+    );
+};</pre>
+        </div>
+            </div>
+        </div>
     </body>
 </html>
