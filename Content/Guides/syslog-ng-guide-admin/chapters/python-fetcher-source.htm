@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <link href="../../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
+        <meta name="description" content="" />
+    </head>
+    <body name="python-source" oldrole="section">
+        <h1 name="python-fetcher-source">python-fetcher: writing fetcher-style Python sources</h1>
+        <MadCap:keyword term="python source">
+        </MadCap:keyword>
+        <MadCap:keyword term="custom python source">
+        </MadCap:keyword>
+        <MadCap:keyword term="source:['python-fetcher']">
+        </MadCap:keyword>
+        <MadCap:snippetBlock src="../../shared/chunk/python-source-intro.htm">
+        </MadCap:snippetBlock>
+        <p>This section describes fetcher-style sources. For details on server-style sources, see <MadCap:xref href="python-source.htm"></MadCap:xref>.</p>
+        <MadCap:snippetBlock src="../../shared/chunk/python-blocks.htm">
+        </MadCap:snippetBlock>
+        <div>
+            <h6 oldrole="formalpara">Declaration:</h6>
+            <MadCap:snippetBlock src="../../shared/chunk/python-source-declaration.htm">
+            </MadCap:snippetBlock>
+            <pre class="Code" oldrole="synopsis">source &lt;name_of_the_python_source&gt;{
+    python-fetcher(
+        class("&lt;name_of_the_python_class_executed_by_the_source&gt;")
+    );
+};
+
+python {
+from syslogng import LogFetcher
+from syslogng import LogMessage
+
+class MyFetcher(LogFetcher):
+    def init(self, options): # optional
+        print("init")
+        print(options)
+        return True
+
+    def deinit(self): # optional
+        print("deinit")
+
+    def open(self): # optional
+        print("open")
+        return True
+
+    def close(self): # optional
+        print("close")
+
+    def fetch(self): # mandatory
+        print("fetch")
+        # return LogFetcher.FETCH_ERROR,
+        # return LogFetcher.FETCH_NOT_CONNECTED,
+        return LogFetcher.FETCH_SUCCESS, msg
+};</pre>
+        </div>
+        <div>
+            <h2 name="python-source-methods" oldrole="simplesect"><a name="python-source-methods"></a>Methods of the python-fetcher() source</h2>
+            <p>Fetcher-style Python sources must be inherited from the <span class="Code" oldrole="parameter">syslogng.LogFetcher</span> class, and must implement at least the <span class="Code" oldrole="parameter">fetch</span> method. Multiple inheritance is allowed, but only for pure Python super classes.</p>
+            <p>For fetcher-style Python sources, <MadCap:variable name="General.abbrev" /> handles the event loop and the scheduling automatically. You can use simple blocking server/client libraries to receive or fetch logs.</p>
+            <MadCap:snippetBlock src="../../shared/chunk/python-method-init.htm">
+            </MadCap:snippetBlock>
+            <div>
+                <h6 oldrole="formalpara"><span class="Code" oldrole="parameter">fetch(self)</span> method (mandatory)</h6>
+                <p oldrole="para">Use the <span class="Code" oldrole="parameter">fetch</span> method to implement an event loop, or start a server framework or library. Create <span class="Code" oldrole="parameter">LogMessage</span> instances in this method, and pass them to the log paths by calling <span class="Code" oldrole="parameter">LogSource::post_message()</span>.</p>
+                <p>Currently, <span class="Code" oldrole="parameter">run</span> stops permanently if an unhandled exception happens.</p>
+                <p>For details on parsing and posting messages, see <MadCap:xref href="python-source-logmessage.htm"></MadCap:xref>.</p>
+                <!-- FIXME fetcherrel hogyan kell uzenetet posztolni? -->
+                <!-- FIXME open/close mit csinal? ugyanazt, mint a destinationnnel? mikor hivodnak meg, ha a fetch() failel? -->
+            </div>
+            <div>
+                <h6 oldrole="formalpara"><span class="Code" oldrole="parameter">request_exit(self)</span> method (optional)</h6>
+                <p>If you use blocking operations within the <span class="Code" oldrole="parameter">fetch()</span> method, use <span class="Code" oldrole="parameter">request_exit()</span> to interrupt those operations and set an exit flag, otherwise <MadCap:variable name="General.abbrev"></MadCap:variable> is not able to stop. Note that <MadCap:variable name="General.abbrev"></MadCap:variable> calls the <span class="Code" oldrole="parameter">request_exit</span> method from a thread different from the source thread.</p>
+            </div>
+            <MadCap:snippetBlock src="../../shared/chunk/python-method-deinit.htm">
+            </MadCap:snippetBlock>
+        </div>
+        <p>For the list of available optional parameters, see <MadCap:xref href="reference-source-python.htm"></MadCap:xref>.</p>
+    </body>
+</html>

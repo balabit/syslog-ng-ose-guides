@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="python-source-logmessage" oldrole="section">
+        <h1 name="python-source-logmessage">Python LogMessage API</h1>
+
+        <pre class="Code" oldrole="synopsis">msg = LogMessage() # empty message with good defaults (recvd timestamp, rcptid, hostid, ...)
+msg = LogMessage("string or bytes-like object") # sets the $MESSAGE field
+
+msg_ietf = LogMessage.parse('&lt;165&gt;1 2003-10-11T22:14:15.003Z mymachine.example.com evntslog - ID47 [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] An application event log entry', self.parse_options)
+msg_bsd = LogMessage.parse('&lt;34&gt;Oct 11 22:14:15 mymachine su: \'su root\' failed for lonvick on /dev/pts/8', self.parse_options)
+
+msg["HOST"] = "hostname" # keep-hostname(), use-dns(), use-fqdn(), chain-hostnames() will be taken into account by the source
+msg["MESSAGE"] = "message"
+
+msg.set_pri(165)
+
+timestamp = datetime.fromisoformat("2018-09-11T14:49:02.100+02:00")
+msg.set_timestamp(timestamp) # datetime object, includes timezone information</pre>
+
+        <p>Reusing/storing LogMessage objects after they have been posted (calling post_message() or returning the message from fetch()) is not recommended.</p>
+
+        <p>set_timestamp() works differently in Python 2 and Python 3.</p>
+        <ul>
+            <li>
+                <p>In Python 2, timezone information can not be attached to the datetime instance without using an external library. Naive datetime objects are supported, they are represented in UTC inside syslog-ng.</p>
+            </li>
+            <li>
+                <p>In Python 3, naive and timezone-aware datetime objects are both supported.</p>
+            </li>
+        </ul>
+
+        <p>These sources create structured LogMessage instances, so it is not necessarily a good idea to force log-msg-size() on the MESSAGE field or on the entire message. Currently, we can't return multiple messages, so splitting a message is not really possible, I would just ignore log-msg-size().</p>
+    </body>
+</html>
