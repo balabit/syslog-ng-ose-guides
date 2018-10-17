@@ -5,33 +5,51 @@
     </head>
     <body name="python-source-logmessage" oldrole="section">
         <h1 name="python-source-logmessage">Python LogMessage API</h1>
+        <p>The LogMessage API allows you to create LogMessage objects in Python sources, parse syslog messages, and set the various fields of the log message.</p>
+        <div>
+            <h6 oldrole="formalpara"><span class="Code" oldrole="parameter">LogMessage()</span> method: Create log message objects</h6>
+            <p>You can use the <span class="Code" oldrole="parameter">LogMessage()</span> method to create a structured log message instance. For example:</p>
+            <pre class="Code" oldrole="synopsis">from syslogng import LogMessage
 
-        <pre class="Code" oldrole="synopsis">msg = LogMessage() # empty message with good defaults (recvd timestamp, rcptid, hostid, ...)
-msg = LogMessage("string or bytes-like object") # sets the $MESSAGE field
-
-msg_ietf = LogMessage.parse('&lt;165&gt;1 2003-10-11T22:14:15.003Z mymachine.example.com evntslog - ID47 [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] An application event log entry', self.parse_options)
-msg_bsd = LogMessage.parse('&lt;34&gt;Oct 11 22:14:15 mymachine su: \'su root\' failed for lonvick on /dev/pts/8', self.parse_options)
-
-msg["HOST"] = "hostname" # keep-hostname(), use-dns(), use-fqdn(), chain-hostnames() will be taken into account by the source
-msg["MESSAGE"] = "message"
-
-msg.set_pri(165)
-
-timestamp = datetime.fromisoformat("2018-09-11T14:49:02.100+02:00")
+msg = LogMessage() # Initialize an empty message with default values (recvd timestamp, rcptid, hostid, ...)
+msg = LogMessage("string or bytes-like object") # Initialize a message and set its ${MESSAGE} field to the specified argument</pre>
+            <p>You can also explicitly set the different values of the log message. For example:</p>
+            <pre class="Code" oldrole="synopsis">msg["MESSAGE"] = "message"
+msg["HOST"] = "hostname"</pre>
+            <p>You can set certain special field (timestamp, priority) by using specific methods.</p>
+            <p>Note the following points when creating a log message:</p>
+            <ul>
+                <li>
+                    <p>When setting the hostname, <MadCap:variable name="General.abbrev"></MadCap:variable> takes the following hostname-related options of the configuration into account: <span class="Code" oldrole="parameter">chain-hostnames()</span>, <span class="Code" oldrole="parameter">keep-hostname()</span>, <span class="Code" oldrole="parameter">use-dns()</span>, and <span class="Code" oldrole="parameter">use-fqdn()</span>.</p>
+                </li>
+                <li>
+                    <p>Python sources ignore the <span class="Code" oldrole="parameter">log-msg-size()</span> option.</p>
+                </li>
+                <li>
+                    <p>It is not possible to return multiple messages, or to split a message into two separate messages.</p>
+                </li>
+                <li>
+                    <p>Do not reuse or store LogMessage objects after posting (calling <span class="Code" oldrole="parameter">post_message()</span>) or returning the message from <span class="Code" oldrole="parameter">fetch()</span>.</p>
+                </li>
+            </ul>
+        </div>
+        <div>
+            <h6 oldrole="formalpara"><span class="Code" oldrole="parameter">parse()</span> method: Parse syslog messages</h6>
+            <p>The <span class="Code" oldrole="parameter">parse()</span> method allows you to parse incoming messages as syslog messages. By default, the <span class="Code" oldrole="parameter">parse()</span> method attempts to parse the message as an IETF-syslog (RFC5424) log message. If that fails, it parses the log message as a BSD-syslog (RFC3164) log message. Note that <MadCap:variable name="General.abbrev"></MadCap:variable> takes the parsing-related options of the configuration into account: <span class="Code" oldrole="parameter">flags()</span>, <span class="Code" oldrole="parameter">keep-hostname()</span>, <span class="Code" oldrole="parameter">recv-time-zone()</span>. For example, if <span class="Code" oldrole="parameter">keep-hostname()</span> is set to <span class="Code" oldrole="userinput">no</span>, <MadCap:variable name="General.abbrev"></MadCap:variable> ignores the hostname set in the message.</p>
+            <pre class="Code" oldrole="synopsis">msg_ietf = LogMessage.parse('&lt;165&gt;1 2003-10-11T22:14:15.003Z mymachine.example.com evntslog - ID47 [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] An application event log entry', self.parse_options)
+msg_bsd = LogMessage.parse('&lt;34&gt;Oct 11 22:14:15 mymachine su: \'su root\' failed for lonvick on /dev/pts/8', self.parse_options)</pre>
+        <div>
+            <h6 oldrole="formalpara"><span class="Code" oldrole="parameter">set_pri()</span> method</h6>
+            <p>You can set the priority of the message with the <span class="Code" oldrole="parameter">set_pri()</span> method.</p>
+            <pre class="Code" oldrole="synopsis">msg.set_pri(165)</pre>
+        </div>
+        <div>
+            <h6 oldrole="formalpara"><span class="Code" oldrole="parameter">set_timestamp()</span> method</h6>
+            <p>You can use the <span class="Code" oldrole="parameter">set_timestamp()</span> method to set the date and time of the log message.</p>
+            <pre class="Code" oldrole="synopsis">timestamp = datetime.fromisoformat("2018-09-11T14:49:02.100+02:00")
 msg.set_timestamp(timestamp) # datetime object, includes timezone information</pre>
-
-        <p>Reusing/storing LogMessage objects after they have been posted (calling post_message() or returning the message from fetch()) is not recommended.</p>
-
-        <p>set_timestamp() works differently in Python 2 and Python 3.</p>
-        <ul>
-            <li>
-                <p>In Python 2, timezone information can not be attached to the datetime instance without using an external library. Naive datetime objects are supported, they are represented in UTC inside syslog-ng.</p>
-            </li>
-            <li>
-                <p>In Python 3, naive and timezone-aware datetime objects are both supported.</p>
-            </li>
-        </ul>
-
-        <p>These sources create structured LogMessage instances, so it is not necessarily a good idea to force log-msg-size() on the MESSAGE field or on the entire message. Currently, we can't return multiple messages, so splitting a message is not really possible, I would just ignore log-msg-size().</p>
+            <p>In Python 2, timezone information cannot be attached to the datetime instance without using an external library. The <MadCap:variable name="General.abbrev"></MadCap:variable> represents naive datetime objects in UTC.</p>
+            <p MadCap:conditions="General.pe">In Python 3, naive and timezone-aware datetime objects are both supported.</p>
+        </div>
     </body>
 </html>
