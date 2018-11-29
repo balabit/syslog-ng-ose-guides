@@ -65,13 +65,13 @@ log
             <p>Starting with version <MadCap:conditionaltext MadCap:conditions="General.ose">3.18</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0.12</MadCap:conditionaltext>, you can send multiple log messages in a single HTTP request if the destination HTTP server supports that.</p>
             <div>
                 <h3 name="http-batch-size" oldrole="section"><a name="http-batch-size"></a>Batch size</h3>
-                <p>The <span class="Code" oldrole="parameter">flush-lines()</span>, <span class="Code" oldrole="parameter">flush-lines()</span>, and <span class="Code" oldrole="parameter">flush-timeout()</span> options of the <span class="Code" oldrole="parameter">http</span> destination determine how many log messages <MadCap:variable name="General.abbrev"></MadCap:variable> sends in a batch. The <span class="Code" oldrole="parameter">flush-lines()</span> option determines the maximum number of messages <MadCap:variable name="General.abbrev"></MadCap:variable> puts in a batch in. This can be limited based on size and time:</p>
+                <p>The <span class="Code" oldrole="parameter">batch-lines()</span>, <span class="Code" oldrole="parameter">batch-lines()</span>, and <span class="Code" oldrole="parameter">batch-timeout()</span> options of the <span class="Code" oldrole="parameter">http</span> destination determine how many log messages <MadCap:variable name="General.abbrev"></MadCap:variable> sends in a batch. The <span class="Code" oldrole="parameter">batch-lines()</span> option determines the maximum number of messages <MadCap:variable name="General.abbrev"></MadCap:variable> puts in a batch in. This can be limited based on size and time:</p>
                 <ul>
                     <li>
-                        <p><MadCap:variable name="General.abbrev"></MadCap:variable> sends a batch every <span class="Code" oldrole="parameter">flush-timeout()</span> seconds, even if the number of messages in the batch is less than <span class="Code" oldrole="parameter">flush-lines()</span>. That way the destination receives every message in a timely manner even if suddenly there are no more messages.</p>
+                        <p><MadCap:variable name="General.abbrev"></MadCap:variable> sends a batch every <span class="Code" oldrole="parameter">batch-timeout()</span> seconds, even if the number of messages in the batch is less than <span class="Code" oldrole="parameter">batch-lines()</span>. That way the destination receives every message in a timely manner even if suddenly there are no more messages.</p>
                     </li>
                     <li>
-                        <p><MadCap:variable name="General.abbrev"></MadCap:variable> sends the batch if the total size of the messages in the batch reaches <span class="Code" oldrole="parameter">flush-bytes()</span> bytes.</p>
+                        <p><MadCap:variable name="General.abbrev"></MadCap:variable> sends the batch if the total size of the messages in the batch reaches <span class="Code" oldrole="parameter">batch-bytes()</span> bytes.</p>
                     </li>
                 </ul>
                 <p>To increase the performance of the <span class="Code" oldrole="parameter">http()</span> destination, increase the number of worker threads for the destination using the <span class="Code" oldrole="parameter">workers()</span> option.</p>
@@ -84,7 +84,7 @@ log
 log-line-1 (as formatted in the body() option)
 log-line-2 (as formatted in the body() option)
 ....
-log-line-n (the number of log lines is flush-lines(), or less if flush-timeout() has elapsed or the batch would be longer than flush-bytes())
+log-line-n (the number of log lines is batch-lines(), or less if batch-timeout() has elapsed or the batch would be longer than batch-bytes())
 value of body-suffix() option</pre>
         <div class="Example">
             <h6 name="example-http-batch-mode" oldrole="example"><a name="example-http-batch-mode"></a>Example: HTTP batch mode</h6>
@@ -92,9 +92,9 @@ value of body-suffix() option</pre>
             <pre class="Code" oldrole="synopsis">destination d_http {
     http(url("http://your-elasticsearch-server/_bulk")
         method("POST")
-        flush-lines(100)
-        flush-bytes(512Kb)
-        flush-timeout(10000)
+        batch-lines(100)
+        batch-bytes(512Kb)
+        batch-timeout(10000)
         headers("Content-Type: application/x-ndjson")
         body-suffix("\n")
         body('{ "index":{} }
