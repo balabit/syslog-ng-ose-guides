@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+    </head>
+    <body name="configuring-destinations-splunk-hec" oldrole="section" MadCap:conditionaltext MadCap:conditions="General.pe">
+        <h1 name="configuring-destinations-splunk-hec"><a name="configuring-destinations-splunk-hec"></a><span class="Code" oldrole="parameter">splunk-hec</span>: Sending messages to Splunk HTTP Event Collector</h1>
+        <MadCap:keyword term="destination drivers:['splunk-hec() driver']">
+        </MadCap:keyword>
+        <MadCap:keyword term="destination drivers:['splunk-hec']">
+        </MadCap:keyword>
+        <p oldrole="para">Version <MadCap:conditionaltext MadCap:conditions="General.pe">7.0.12</MadCap:conditionaltext> of <MadCap:variable name="General.abbrev"></MadCap:variable> can directly post log messages to a Splunk deployment using the HTTP Event Collector (HEC) over the HTTP and Secure HTTP (HTTPS) protocols.</p>
+        <p oldrole="para">HTTPS connection, as well as password- and certificate-based authentication is supported.</p>
+        <div><h6 oldrole="formalpara">Declaration:</h6>
+        <pre class="Code" oldrole="synopsis">d_splunk_hec {
+    splunk_hec(
+        #mandatory
+        index("&lt;splunk-index-to-store-messages&gt;")
+        token("&lt;event-collector-tokens&gt;")
+        url("http://your-splunk-server:8088/services/collector/raw")
+    );
+};</pre></div>
+        <div>
+            <h6 oldrole="formalpara">Prerequisites:</h6>
+            <ul>
+                <li>
+                    <p>On your Splunk deployment, you must enable HTTP Event Collector (HEC).</p>
+                </li>
+                <li>
+                    <p>On your Splunk deployment, you must create a token for <MadCap:variable name="General.abbrev"></MadCap:variable>. You must use this token in the <span class="Code" oldrole="parameter">token()</span> option of your <span class="Code" oldrole="parameter">splunk-hec()</span> destination.</p>
+                </li>
+            </ul>
+            <p>For details, see <a href="https://docs.splunk.com/Documentation/Splunk/latest/Data/UsetheHTTPEventCollector">Set up and use HTTP Event Collector in Splunk Web</a>.</p>
+        </div>
+        <div class="Example">
+            <h6 name="example-destination-splunk-hec" oldrole="example"><a name="example-destination-splunk-hec"></a>Example: Sending log data to Splunk</h6>
+            <p oldrole="para">The following example defines a <span class="Code" oldrole="parameter">splunk-hec()</span> destination.</p><pre class="Code" oldrole="synopsis">d_splunk_hec {
+    splunk_hec(
+        #mandatory
+        index("&lt;splunk-index-to-store-messages&gt;")
+        token("&lt;event-collector-tokens&gt;")
+        url("http://your-splunk-server:8088/services/collector/raw")
+        batch_lines(25)
+        workers(4)
+        source("syslog-ng")
+        sourcetype("${.app.name:-syslog}")
+        delimiter("\n")
+        time("$UNIXTIME.$MSEC")
+        host("$HOST")
+        event("$ISODATE $HOST $MSGHDR$MSG")
+        timeout(10));
+    );
+};
+
+log {
+    source(s_file);
+    destination(d_splunk_hec);
+    flags(flow-control);
+};
+</pre>
+        </div>
+    </body>
+</html>
