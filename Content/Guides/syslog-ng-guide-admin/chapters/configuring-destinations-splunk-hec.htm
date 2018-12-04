@@ -9,14 +9,14 @@
         <MadCap:keyword term="destination drivers:['splunk-hec']">
         </MadCap:keyword>
         <p oldrole="para">Version <MadCap:conditionaltext MadCap:conditions="General.pe">7.0.12</MadCap:conditionaltext> of <MadCap:variable name="General.abbrev"></MadCap:variable> can directly post log messages to a Splunk deployment using the HTTP Event Collector (HEC) over the HTTP and Secure HTTP (HTTPS) protocols.</p>
-        <p oldrole="para">HTTPS connection, as well as password- and certificate-based authentication is supported.</p>
+        <p oldrole="para">HTTPS connection, as well as password- and certificate-based authentication is supported. The content of the events is sent in JSON format.</p>
         <div><h6 oldrole="formalpara">Declaration:</h6>
         <pre class="Code" oldrole="synopsis">d_splunk_hec {
     splunk_hec(
         #mandatory
         index("&lt;splunk-index-to-store-messages&gt;")
         token("&lt;event-collector-tokens&gt;")
-        url("http://your-splunk-server:8088/services/collector/raw")
+        url("http://your-splunk-server:8088/services/collector/event")
     );
 };</pre></div>
         <div>
@@ -35,18 +35,20 @@
             <h6 name="example-destination-splunk-hec" oldrole="example"><a name="example-destination-splunk-hec"></a>Example: Sending log data to Splunk</h6>
             <p oldrole="para">The following example defines a <span class="Code" oldrole="parameter">splunk-hec()</span> destination.</p><pre class="Code" oldrole="synopsis">d_splunk_hec {
     splunk_hec(
-        #mandatory
+        # mandatory
         index("&lt;splunk-index-to-store-messages&gt;")
         token("&lt;event-collector-tokens&gt;")
-        url("http://your-splunk-server:8088/services/collector/raw")
+        url("http://your-splunk-server:8088/services/collector/event")
+
+        # optional
         batch_lines(25)
         workers(4)
         source("syslog-ng")
         sourcetype("${.app.name:-syslog}")
         delimiter("\n")
-        time("$UNIXTIME.$MSEC")
+        time("$S_UNIXTIME.$S_MSEC")
         host("$HOST")
-        event("$ISODATE $HOST $MSGHDR$MSG")
+        event("$S_ISODATE $HOST $MSGHDR$MSG\n")
         timeout(10));
     );
 };

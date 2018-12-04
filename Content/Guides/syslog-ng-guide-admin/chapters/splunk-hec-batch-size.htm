@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="splunk-hec-batch-mode" oldrole="section">
+        <MadCap:keyword term="batch mode">
+        </MadCap:keyword>
+        <div>
+            <h1 name="splunk-hec-batch-mode" oldrole="section"><a name="splunk-hec-batch-mode"></a>Batch mode</h1>
+            <p>The <span class="Code" oldrole="parameter">splunk-hec()</span> destination automatically sends multiple log messages in a single HTTP request, increasing the rate of messages that your Splunk deployment can consume. For details on adjusting and fine-tuning the batch mode of the <span class="Code" oldrole="parameter">splunk-hec()</span> destination, see the following section.</p>
+
+            <MadCap:snippetBlock src="../../shared/chunk/concept-batch-size.htm">
+            </MadCap:snippetBlock>
+
+                <div class="Example">
+                    <h6 name="example-splunk-hec-batch-mode" oldrole="example"><a name="example-splunk-hec-batch-mode"></a>Example: HTTP batch mode</h6>
+                    <p>In the following example, a batch consists of 100 messages, or a maximum of 512 kilobytes, and is sent every 20 seconds (20000 milliseconds).</p>
+                    <pre class="Code" oldrole="synopsis">destination d_splunk-hec {
+    splunk-hec(url("http://your-splunk-server:8088/services/collector/event")
+        index("&lt;splunk-index-to-store-messages&gt;")
+        token("&lt;event-collector-tokens&gt;")
+        url("http://your-splunk-server:8088/services/collector/event")
+        batch-lines(100)
+        batch-bytes(512Kb)
+        batch-timeout(10000)
+    );
+};</pre>
+                </div>
+            </div>
+            <div>
+                <h6 name="splunk-hec-load-balancing" oldrole="section"><a name="splunk-hec-load-balancing"></a>Load balancing between multiple Splunk indexers</h6>
+                <MadCap:snippetBlock src="../../shared/chunk/destination-load-balancing-url.htm">
+                </MadCap:snippetBlock>
+                <div class="Example">
+                    <h6 name="example-splunk-hec-load-balancing" oldrole="example"><a name="example-splunk-hec-load-balancing"></a>Example: HTTP load balancing</h6>
+                    <p>The following destination sends log messages to 3 different Splunk indexer nodes. A batch consists of 100 messages, or a maximum of 512 kilobytes, and is sent every 20 seconds (20000 milliseconds).</p>
+                    <pre class="Code" oldrole="synopsis">destination d_splunk-hec {
+    splunk-hec(url("http://your-splunk-server1:8088/services/collector/event" "http://your-splunk-server2:8088/services/collector/event" "http://your-splunk-server3:8088/services/collector/event")
+        batch-lines(100)
+        batch-bytes(512Kb)
+        batch-timeout(20000)
+        persist-name("d_splunk-hec-load-balance")
+    );
+};</pre>
+                </div>
+        </div>
+    </body>
+</html>
