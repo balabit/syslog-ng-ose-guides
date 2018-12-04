@@ -3,29 +3,20 @@
     <head>
         <meta name="description" content="" />
     </head>
-    <body name="ttp-batch-mode" oldrole="section">
+    <body name="http-batch-mode" oldrole="section">
         <MadCap:keyword term="batch mode">
         </MadCap:keyword>
         <div>
             <h1 name="http-batch-mode" oldrole="section"><a name="http-batch-mode"></a>Batch mode</h1>
             <p>Starting with version <MadCap:conditionaltext MadCap:conditions="General.ose">3.18</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0.12</MadCap:conditionaltext>, you can send multiple log messages in a single HTTP request if the destination HTTP server supports that.</p>
-            <div>
-                <h6 name="http-batch-size" oldrole="section"><a name="http-batch-size"></a>Batch size</h6>
-                <p>The <span class="Code" oldrole="parameter">batch-lines()</span>, <span class="Code" oldrole="parameter">batch-lines()</span>, and <span class="Code" oldrole="parameter">batch-timeout()</span> options of the <span class="Code" oldrole="parameter">http</span> destination determine how many log messages <MadCap:variable name="General.abbrev"></MadCap:variable> sends in a batch. The <span class="Code" oldrole="parameter">batch-lines()</span> option determines the maximum number of messages <MadCap:variable name="General.abbrev"></MadCap:variable> puts in a batch in. This can be limited based on size and time:</p>
-                <ul>
-                    <li>
-                        <p><MadCap:variable name="General.abbrev"></MadCap:variable> sends a batch every <span class="Code" oldrole="parameter">batch-timeout()</span> seconds, even if the number of messages in the batch is less than <span class="Code" oldrole="parameter">batch-lines()</span>. That way the destination receives every message in a timely manner even if suddenly there are no more messages.</p>
-                    </li>
-                    <li>
-                        <p><MadCap:variable name="General.abbrev"></MadCap:variable> sends the batch if the total size of the messages in the batch reaches <span class="Code" oldrole="parameter">batch-bytes()</span> bytes.</p>
-                    </li>
-                </ul>
-                <p>To increase the performance of the <span class="Code" oldrole="parameter">http()</span> destination, increase the number of worker threads for the destination using the <span class="Code" oldrole="parameter">workers()</span> option, or adjust the <span class="Code" oldrole="parameter">batch-bytes()</span>, <span class="Code" oldrole="parameter">batch-lines()</span>, <span class="Code" oldrole="parameter">batch-timeout()</span> options.</p>
-            </div>
+
+            <MadCap:snippetBlock src="../../shared/chunk/concept-batch-size.htm">
+            </MadCap:snippetBlock>
+
             <div>
                 <h6 name="http-batch-format" oldrole="section"><a name="http-batch-format"></a>Formatting the batch</h6>
                 <p>By default, <MadCap:variable name="General.abbrev"></MadCap:variable> separates the log messages of the batch with a newline character. You can specify a different delimiter by using the <span class="Code" oldrole="parameter">delimiter()</span> option.</p>
-                <p>If the destination requires a special beginning or ending to recognize batches, use the <span class="Code" oldrole="parameter">body-prefix()</span> and <span class="Code" oldrole="parameter">body-suffix()</span> options to add a beginning and ending to the batch. For example, you can use these options to create JSON-encoded arrays as POST payloads, which is required by a number of REST APIs. The body of a batch HTTP request looks like this:</p>
+                <p>If the target application or server requires a special beginning or ending to recognize batches, use the <span class="Code" oldrole="parameter">body-prefix()</span> and <span class="Code" oldrole="parameter">body-suffix()</span> options to add a beginning and ending to the batch. For example, you can use these options to create JSON-encoded arrays as POST payloads, which is required by a number of REST APIs. The body of a batch HTTP request looks like this:</p>
                 <pre class="Code" oldrole="synopsis">value of body-prefix() option
 log-line-1 (as formatted in the body() option)
 log-line-2 (as formatted in the body() option)
@@ -66,6 +57,7 @@ value of body-suffix() option</pre>
         body-suffix("\n")
         body('{ "index":{} }
              $(format-json --scope rfc5424 --key ISODATE)')
+        persist-name("d_http-load-balance")
     );
 };</pre>
                 </div>
