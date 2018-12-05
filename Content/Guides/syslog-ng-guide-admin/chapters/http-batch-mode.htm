@@ -46,13 +46,14 @@ value of body-suffix() option</pre>
                 </MadCap:snippetBlock>
                 <div class="Example">
                     <h6 name="example-http-load-balancing" oldrole="example"><a name="example-http-load-balancing"></a>Example: HTTP load balancing</h6>
-                    <p>The following destination sends <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">log messages to an Elasticsearch server using the bulk API</a>, to 3 different ingest nodes. A batch consists of 100 messages, or a maximum of 512 kilobytes, and is sent every 10 seconds (10000 milliseconds).</p>
+                    <p>The following destination sends <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">log messages to an Elasticsearch server using the bulk API</a>, to 3 different ingest nodes. Each node is assigned a separate worker thread. A batch consists of 100 messages, or a maximum of 512 kilobytes, and is sent every 10 seconds (10000 milliseconds).</p>
                     <pre class="Code" oldrole="synopsis">destination d_http {
     http(url("http://your-elasticsearch-server/_bulk" "http://your-second-ingest-node/_bulk" "http://your-third-ingest-node/_bulk")
         method("POST")
         batch-lines(100)
         batch-bytes(512Kb)
         batch-timeout(10000)
+        workers(3)
         headers("Content-Type: application/x-ndjson")
         body-suffix("\n")
         body('{ "index":{} }
@@ -60,6 +61,7 @@ value of body-suffix() option</pre>
         persist-name("d_http-load-balance")
     );
 };</pre>
+                    <MadCap:snippetBlock src="../chunk/http-load-balance-workers.htm"/>
                 </div>
             </div>
         </div>
