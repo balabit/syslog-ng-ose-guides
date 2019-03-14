@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="configuring-destinations-collectd" oldrole="section">
+        <h1 name="configuring-destinations-collectd"><span class="Code" oldrole="parameter">collectd</span>: Using collectd</h1>
+        <MadCap:keyword term="destination drivers:['collectd()']">
+        </MadCap:keyword>
+        <p oldrole="para">The <span class="Code" oldrole="parameter">collectd()</span> destination uses the <a href="https://collectd.org/documentation/manpages/collectd-unixsock.5.shtml">unixsock plugin of the collectd application</a> to send log messages to the <a href="https://collectd.org">collectd system statistics collection daemon</a>. You must install and configure collectd separately before using this destination.</p>
+        <p>Available in <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="General.ose">3.20</MadCap:conditionaltext> and later.</p>
+        <div>
+            <h6 oldrole="formalpara">Declaration:</h6><pre class="Code" oldrole="synopsis">collectd();</pre>
+            <pre class="Code" oldrole="synopsis">destination d_collectd {
+  collectd(
+    socket("&lt;path-to-collectd-socket&gt;"),
+    host("${HOST}"),
+    plugin("${PROGRAM}"),
+    type("&lt;type-of-the-collected-metric&gt;"),
+    values("&lt;metric-sent-to-collectd&gt;"),
+  );
+};</pre>
+         </div>
+        <div class="Example">
+            <h6 name="example-destination-collectd" oldrole="example"><a name="example-destination-collectd"></a>Example: Using the collectd() driver</h6>
+            <p oldrole="para">The following example uses TLS encryption. Before using it, download the CA certificate of collectd and copy it to your hosts (for example, into the <span class="Code" oldrole="filename">/etc/ssl/certs/</span> directory.</p><pre class="Code" oldrole="synopsis">destination d_collectd {
+  collectd(
+    socket("/var/run/collectd-unixsock"),
+    host("${HOST}"),
+    plugin("${PROGRAM}"),
+    type("gauge"),
+    type_instance("seqnum"),
+    values("${SEQNUM}"),
+  );
+};</pre>
+        </div>
+        <p oldrole="para">To use the <span class="Code" oldrole="parameter">collectd()</span> driver, the <span class="Code" oldrole="filename">scl.conf</span> file must be included in your <MadCap:variable name="General.abbrev"></MadCap:variable> configuration:</p><pre class="Code" oldrole="synopsis">@include "scl.conf"</pre>
+        <p oldrole="para" MadCap:conditions="General.ose">The <span class="Code" oldrole="parameter">collectd()</span> driver is actually a reusable configuration snippet configured to send log messages using the <span class="Code" oldrole="parameter">unix-stream()</span> driver. For details on using or writing such configuration snippets, see <MadCap:xref href="config-blocks.htm#config-blocks"><span style="color: #04aada;" class="mcFormatColor">Reusing configuration blocks</span></MadCap:xref>. You can find the source of this configuration snippet on <a href="https://github.com/balabit/syslog-ng/blob/master/scl/collectd/plugin.conf">GitHub</a>.</p>
+    </body>
+</html>
