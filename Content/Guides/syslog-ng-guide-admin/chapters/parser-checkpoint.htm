@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <link href="../../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
+        <meta name="description" content="" />
+    </head>
+    <body name="checkpoint-LogExporter-parser" oldrole="section">
+        <h1 name="websense-parser">Checkpoint LogExporter parser</h1>
+        <MadCap:keyword term="segmenting messages">
+        </MadCap:keyword>
+        <MadCap:keyword term="Websense parser">
+        </MadCap:keyword>
+        <MadCap:keyword term="Checkpoint LogExporter">
+        </MadCap:keyword>
+        <MadCap:keyword term="parsers:['Checkpoint LogExporter']">
+        </MadCap:keyword>
+        <p oldrole="para">The Checkpoint LogExporter parser can parse the log messages of Checkpoint LogExporter Content Gateway (Raytheon|Checkpoint LogExporter, now Forcepoint). These messages do not completely comply with the syslog RFCs, making them difficult to parse. The <span class="Code" oldrole="parameter">websense-parser()</span> of <MadCap:variable name="General.abbrev"></MadCap:variable> solves this problem, and can separate these log messages to name-value pairs. For details on using value-pairs in <MadCap:variable name="General.abbrev"></MadCap:variable> see <MadCap:xref href="concepts-value-pairs.htm"><span style="color: #04aada;" class="mcFormatColor">Structuring macros, metadata, and other value-pairs</span></MadCap:xref>. The parser can parse messages in the following format:</p><pre class="Code" oldrole="synopsis">&lt;PRI&gt;&lt;DATE&gt; &lt;TIMEZONE&gt; &lt;IP-ADDRESS&gt; &lt;NAME=VALUE PAIRS&gt;</pre>
+        <p oldrole="para">For example:</p><pre class="Code" oldrole="synopsis">&lt;159&gt;Dec 19 10:48:57 EST 192.168.1.1 vendor=Websense product=Security product_version=7.7.0 action=permitted severity=1 category=153 user=- src_host=192.168.2.1 src_port=62189 dst_host=example.com dst_ip=192.168.3.1 dst_port=443 bytes_out=197 bytes_in=76 http_response=200 http_method=CONNECT http_content_type=- http_user_agent=Mozilla/5.0_(Windows;_U;_Windows_NT_6.1;_enUS;_rv:1.9.2.23)_Gecko/20110920_Firefox/3.6.23 http_proxy_status_code=200 reason=- disposition=1034 policy=- role=8 duration=0 url=https://example.com</pre>
+        <p oldrole="para">If you find a message that the <span class="Code" oldrole="parameter">websense-parser()</span> cannot properly parse, <MadCap:variable name="General.contact-support"></MadCap:variable> so we can improve the parser.</p>
+        <p oldrole="para">The <MadCap:variable name="General.abbrev"></MadCap:variable> application sets the <span class="Code" oldrole="parameter">${PROGRAM}</span> field to <span class="Code" oldrole="userinput">Checkpoint LogExporter</span>.</p>
+        <p oldrole="para">By default, the websense-specific fields are extracted into name-value pairs prefixed with <span class="Code" oldrole="parameter">.websense</span>. For example, the <span class="Code" oldrole="parameter">product_version</span> in the previous message becomes <span class="Code" oldrole="parameter">${.websense.product_version}</span>. You can change the prefix using the <span class="Code" oldrole="parameter">prefix</span> option of the parser.</p>
+        <div>
+            <h6 oldrole="formalpara">Declaration:</h6><pre class="Code" oldrole="synopsis">@version: <MadCap:variable name="Version.techversion"></MadCap:variable>
+				@include "scl.conf"
+				log {
+				source { network(flags(no-parse)); };
+				parser { websense-parser(); };
+				destination { ... };
+			};</pre>
+        </div>
+        <p oldrole="para">Note that you have to disable message parsing in the source using the <span class="Code" oldrole="userinput">flags(no-parse)</span> option for the parser to work.</p>
+        <p oldrole="para" MadCap:conditions="General.ose">The <span class="Code" oldrole="parameter">websense-parser()</span> is actually a reusable configuration snippet configured to parse websense messages. For details on using or writing such configuration snippets, see <MadCap:xref href="config-blocks.htm"><span style="color: #04aada;" class="mcFormatColor">Reusing configuration blocks</span></MadCap:xref>. You can find the source of this configuration snippet on <a href="https://github.com/balabit/syslog-ng/blob/master/scl/websense/plugin.conf">GitHub</a>.</p>
+        <div>
+            <MadCap:snippetBlock src="../../shared/chunk/option-parser-prefix.htm">
+            </MadCap:snippetBlock>
+            <p oldrole="para">By default, <span class="Code" oldrole="parameter">websense-parser()</span> uses the <span class="Code" oldrole="userinput">websense.</span> prefix. To modify it, use the following format:</p><pre class="Code" oldrole="synopsis">parser {
+				websense-parser(prefix("myprefix."));
+			};</pre>
+        </div>
+    </body>
+</html>
