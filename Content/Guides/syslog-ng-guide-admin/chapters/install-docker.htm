@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+    </head>
+    <body name="install-deb" oldrole="procedure" MadCap:conditions="General.pe">
+        <h1 name="install-deb">Installing syslog-ng in Docker</h1>
+        <MadCap:keyword term="installing syslog-ng:['from DEB package']">
+        </MadCap:keyword>
+        <h6 oldrole="formalpara" MadCap:conditions="CommonConditions_DoNotEdit.DoNotPublish">Purpose:</h6>
+        <p oldrole="para">The following describes how to install <MadCap:variable name="General.abbrev"></MadCap:variable> in a Docker container. The following operating systems are supported:</p>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p oldrole="para">CentOS 7</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">RedHat EL 7.5</p>
+            </li>
+            <li oldrole="listitem">
+                <p oldrole="para">Ubuntu 18.04 LTS (Bionic Beaver)</p>
+            </li>
+        </ul>
+        <div>
+            <h6 oldrole="formalpara" MadCap:conditions="CommonConditions_DoNotEdit.DoNotPublish">Steps:</h6>
+            <p class="Procedure">To install <MadCap:variable name="General.abbrev"></MadCap:variable> in a Docker container</p>
+            <ol oldrole="procedure">
+                <li condition="pe" oldrole="step">
+                    <p oldrole="para">Start Docker. Use the command appropriate for you platform:</p>
+                    <ul>
+                        <li>
+                            <p><span class="Code">docker run -d -p &lt;network-ports-forwarded-to-docker> -v &lt;directories-to-be-mounted> --name syslog-ng-in-docker centos:7</span></p>
+                        </li>
+                        <li>
+                            <p><span class="Code">docker run -d -p &lt;network-ports-forwarded-to-docker> -v &lt;directories-to-be-mounted> --name syslog-ng-in-docker registry.access.redhat.com/rhel-7.5-s390x</span></p>
+                        </li>
+                        <li>
+                            <p><span class="Code">docker run -d -p &lt;network-ports-forwarded-to-docker> -v &lt;directories-to-be-mounted> --name syslog-ng-in-docker ubuntu:18.04</span></p>
+                        </li>
+                    </ul>
+                    <p>For example, to forward port 514 and mount the etc and var directories on RedHat, use the following command: <span class="Code">docker run -d -p 514:514 -v /root/docker/etc/:/opt/syslog-ng/etc -v /root/docker/var:/opt/syslog-ng/var --name syslog-ng-in-docker registry.access.redhat.com/rhel-7.5-s390x</span></p>
+                    <p>Note the following points:</p>
+                    <ul>
+                        <li>
+                            <p>Forward all ports to Docker that you want to receive messages from in your <MadCap:variable name="General.abbrev"></MadCap:variable> configuration.</p>
+                        </li>
+                        <li>
+                            <p>The previous example mounts the etc and var directories from outside the docker container. That way you can edit the <MadCap:variable name="General.abbrev"></MadCap:variable> configuration file outside the container, and the <MadCap:variable name="General.abbrev"></MadCap:variable> persist file will not be deleted if you delete and recreate the docker container.</p>
+                        </li>
+                        <li>
+                            <p>Do not mount the same var directory for multiple docker containers.</p>
+                        </li>
+                        <li>
+                            <p>Make sure that the <MadCap:variable name="General.abbrev"></MadCap:variable> running in the docker container has permissions to read the configuration file, and read and write permissions for the var directory.</p>
+                        </li>
+                        <li>
+                            <p>If you want to read the logs of the host from <span class="Code">/dev/log</span>, mount it into the Docker container. Note that only a single <MadCap:variable name="General.abbrev"></MadCap:variable> instance can read <span class="Code">/dev/log</span> at the same time. Do not mount the same <span class="Code">/dev/log</span> for multiple <MadCap:variable name="General.abbrev"></MadCap:variable> instances.</p>
+                        </li>
+                    </ul>
+                </li>
+                <li oldrole="step">
+                    <p oldrole="para">Download the <MadCap:variable name="General.abbrev"></MadCap:variable> .run installation package from <MadCap:variable name="General.downloads"></MadCap:variable>.</p>
+                </li>
+                <li oldrole="step">
+                    <p oldrole="para">Install <MadCap:variable name="General.abbrev"></MadCap:variable> in the Docker container. (Since there is no service management (systemd) in the docker container, the registration and start of the <MadCap:variable name="General.abbrev"></MadCap:variable> service is disabled.)</p>
+                    <p oldrole="para"><span class="Code" oldrole="command">docker exec -it syslog-ng-in-docker /bin/bash</span></p>
+                    <p oldrole="para"><span class="Code" oldrole="command">syslog-ng-premium-edition-<MadCap:variable name="Version.techversion"></MadCap:variable>-linux-glibc2.11-amd64.run -- --accept-eula  --silent --no-register</span>
+                    </p>
+                </li>
+                <li oldrole="step">
+                    <p oldrole="para">(Optional Step) If you want to use any features of <MadCap:variable name="General.abbrev"></MadCap:variable> that require external packages (for example, Java or Python-based destinations), install the required packages manually in the Docker container (for example, Java or Python).</p>
+                </li>
+                <li oldrole="step">
+                    <p oldrole="para">Start <MadCap:variable name="General.abbrev"></MadCap:variable>.</p>
+                    <p oldrole="para"><span class="Code" oldrole="command">docker exec -i syslog-ng-in-docker /opt/syslog-ng/sbin/syslog-ng &lt;-optional-command-line-parameters-of-syslog-ng></span></p>
+                    <p>For the list of available command-line parameters, see the syslog-ng.8 manual page.</p>
+                </li>
+            </ol>
+        </div>
+        <div>
+            <h6>Start, reload, stop <MadCap:variable name="General.abbrev"></MadCap:variable> in a Docker container</h6>
+            <p>To start <MadCap:variable name="General.abbrev"></MadCap:variable>, issue the following command in the Docker container.</p>
+            <p oldrole="para"><span class="Code" oldrole="command">docker exec -i syslog-ng-in-docker /opt/syslog-ng/sbin/syslog-ng &lt;-optional-command-line-parameters-of-syslog-ng></span></p>
+            <p>To reload <MadCap:variable name="General.abbrev"></MadCap:variable>, issue the following command in the Docker container.</p>
+            <p oldrole="para"><span class="Code" oldrole="command">docker exec -i syslog-ng-in-docker /opt/syslog-ng/sbin/syslog-ng-ctl reload</span></p>
+            <p>To stop <MadCap:variable name="General.abbrev"></MadCap:variable>, issue the following command in the Docker container.</p>
+            <p oldrole="para"><span class="Code" oldrole="command">docker exec -i syslog-ng-in-docker /opt/syslog-ng/sbin/syslog-ng-ctl stop</span></p>
+        </div>
+        <div>
+            <h6>Upgrading <MadCap:variable name="General.abbrev"></MadCap:variable> running in a Docker container</h6>
+            <p class="procedure">To upgrade a <MadCap:variable name="General.abbrev"></MadCap:variable> instance that is running in a Docker container</p>
+            <ol>
+                <li oldrole="step">
+                    <p oldrole="para">Download the new <MadCap:variable name="General.abbrev"></MadCap:variable> .run installation package from <MadCap:variable name="General.downloads"></MadCap:variable>.</p>
+                </li>
+                <li oldrole="step">
+                    <p oldrole="para">Upgrade <MadCap:variable name="General.abbrev"></MadCap:variable> in the Docker container.</p>
+                    <p oldrole="para"><span class="Code" oldrole="command">docker exec -it syslog-ng-in-docker /bin/bash</span></p>
+                    <p oldrole="para"><span class="Code" oldrole="command">syslog-ng-premium-edition-<MadCap:variable name="Version.techversion"></MadCap:variable>-linux-glibc2.11-amd64.run -- --accept-eula  --silent --no-register --upgrade</span></p>
+                </li>
+                <li oldrole="step">
+                    <p oldrole="para">Start <MadCap:variable name="General.abbrev"></MadCap:variable>.</p>
+                    <p oldrole="para"><span class="Code" oldrole="command">docker exec -i syslog-ng-in-docker /opt/syslog-ng/sbin/syslog-ng &lt;-optional-command-line-parameters-of-syslog-ng></span></p>
+                    <p>For the list of available command-line parameters, see the syslog-ng.8 manual page.</p>
+                </li>
+            </ol>
+        </div>
+    </body>
+</html>

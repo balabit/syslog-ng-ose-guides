@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+    </head>
+    <body name="configuring-destinations-elasticsearch-http" oldrole="section" MadCap:conditions="General.pe">
+        <h1 name="configuring-destinations-elasticsearch-http"><a name="configuring-destinations-elasticsearch-http"></a><span class="Code" oldrole="parameter">elasticsearch-http</span>: Sending messages to Elasticsearch HTTP Event Collector</h1>
+        <MadCap:keyword term="destination drivers:['elasticsearch-http() driver']">
+        </MadCap:keyword>
+        <MadCap:keyword term="destination drivers:['elasticsearch-http']">
+        </MadCap:keyword>
+        <p oldrole="para">Version <MadCap:conditionaltext MadCap:conditions="General.pe">7.0.14</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.ose">3.21</MadCap:conditionaltext> of <MadCap:variable name="General.abbrev"></MadCap:variable> can directly post log messages to an Elasticsearch deployment using the Elasticsearch Bulk API over the HTTP and Secure HTTP (HTTPS) protocols.</p>
+        <p oldrole="para">HTTPS connection, as well as password- and certificate-based authentication is supported. The content of the events is sent in JSON format.</p>
+        <div>
+            <h6 oldrole="formalpara">Declaration:</h6>
+            <pre class="Code" oldrole="synopsis">d_elasticsearch_http {
+    elasticsearch-http(
+        index("&lt;elasticsearch-index-to-store-messages&gt;")
+        url("https://your-elasticsearch-server1:9200/_bulk" "https://your-elasticsearch-server2:9200/_bulk")
+        type("&lt;type-of-the-index&gt;")
+    );
+};</pre>
+        </div>
+        <div class="Example">
+            <h6 name="example-destination-elasticsearch-http" oldrole="example"><a name="example-destination-elasticsearch-http"></a>Example: Sending log data to Elasticsearch</h6>
+            <p oldrole="para">The following example defines a <span class="Code" oldrole="parameter">elasticsearch-http()</span> destination, with only the required options.</p>
+            <pre class="Code" oldrole="synopsis">destination d_elasticsearch_http {
+    elasticsearch-http(
+        index("&lt;name-of-the-index>")
+        type("&lt;type-of-the-index>")
+        url("http://my-elastic-server:9200/_bulk")
+    );
+};
+
+
+log {
+    source(s_file);
+    destination(d_elasticsearch_http);
+    flags(flow-control);
+};
+</pre>
+            <p oldrole="para">The following example uses mutually-authenticated HTTPS connection, templated index, and also sets the <span class="Code">type()</span> and some other options.</p>
+            <pre class="Code">destination d_elasticsearch_https {
+    elasticsearch-http(
+        url("https://node01.example.com:9200/_bulk")
+        index("test-${YEAR}${MONTH}${DAY}")
+        time-zone("UTC")
+        type("test")
+        workers(4)
+        batch-lines(16)
+        timeout(10)
+        tls(
+            ca-file("ca.pem")
+            cert-file("syslog_ng.crt.pem")
+            key-file("syslog_ng.key.pem")
+            peer-verify(yes)
+        )
+    );
+};</pre>
+        </div>
+        <p MadCap:conditions="General.ose">This driver is actually a reusable configuration snippet configured to send log messages using the <span class="Code" oldrole="parameter">tcp()</span> driver using a template. For details on using or writing such configuration snippets, see <MadCap:xref href="config-blocks.htm"><span style="color: #04aada;" class="mcFormatColor">Reusing configuration blocks</span></MadCap:xref>. You can find the source of this configuration snippet on <a href="https://github.com/balabit/syslog-ng/tree/master/scl/elasticsearch">GitHub</a>.</p>
+    </body>
+</html>

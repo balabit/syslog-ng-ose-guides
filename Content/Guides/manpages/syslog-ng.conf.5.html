@@ -1,101 +1,781 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>The syslog-ng.conf manual page</title><meta name="generator" content="DocBook XSL Stylesheets V1.78.1"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="reference"><div class="titlepage"><div><div><h1 class="title"><a name="idm46231572561792"></a>The syslog-ng.conf manual page</h1></div></div><hr></div><div class="toc"><p><b>Table of Contents</b></p><dl class="toc"><dt><span class="refentrytitle"><a href="#syslog-ng.conf.5">syslog-ng.conf</a></span><span class="refpurpose"> &#8212; syslog-ng configuration file</span></dt></dl></div><div class="refentry"><a name="syslog-ng.conf.5"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>syslog-ng.conf &#8212; syslog-ng configuration file</p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">syslog-ng.conf</code> </p></div></div><div class="refsection"><a name="idm46231546685440"></a><h2>Description</h2><p>This manual page is only an abstract, for the complete documentation of syslog-ng, see <a class="link" href="https://syslog-ng.com/documentation/" target="_top"><span class="command"><strong>The <span class="phrase">syslog-ng Premium Edition</span> Administrator Guide</strong></span></a> or the <span class="phrase"><a class="link" href="https://syslog-ng.com/documentation" target="_top">syslog-ng Documentation page</a></span>.</p><p>The <span class="phrase">syslog-ng PE</span> application is a flexible and highly scalable system logging application. Typically, syslog-ng is used to manage log messages and implement centralized logging, where the aim is to collect the log messages of several devices on a single, central log server. The different devices - called syslog-ng clients - all run syslog-ng, and collect the log messages from the various applications, files, and other <span class="emphasis"><em>sources</em></span>. The clients send all important log messages to the remote syslog-ng server, where the server sorts and stores them.</p></div><div class="refsection"><a name="idm46231546678032"></a><h2>Basic concepts of <span class="phrase">syslog-ng PE</span></h2><p>The syslog-ng application reads incoming messages and forwards them to the selected <span class="emphasis"><em>destinations</em></span>. The syslog-ng application can receive messages from files, remote hosts, and other <span class="emphasis"><em>sources</em></span>.</p><a class="indexterm" name="idm46231546675408"></a><p>Log messages enter syslog-ng in one of the defined sources, and are sent to one or more <span class="emphasis"><em>destinations</em></span>.</p><a class="indexterm" name="idm46231546673712"></a><a class="indexterm" name="idm46231546672944"></a><p>Sources and destinations are independent objects, <span class="emphasis"><em>log paths</em></span> define what syslog-ng does with a message, connecting the sources to the destinations. A log path consists of one or more sources and one or more destinations: messages arriving from a source are sent to every destination listed in the log path. A log path defined in syslog-ng is called a <span class="emphasis"><em>log statement</em></span>.</p><a class="indexterm" name="idm46231546670272"></a><p>Optionally, log paths can include <span class="emphasis"><em>filters</em></span>. Filters are rules that select only certain messages, for example, selecting only messages sent by a specific application. If a log path includes filters, syslog-ng sends only the messages satisfying the filter rules to the destinations set in the log path.</p><a class="indexterm" name="idm46231546668416"></a><a class="indexterm" name="idm46231546667648"></a><p>Other optional elements that can appear in log statements are <span class="emphasis"><em>parsers</em></span> and <span class="emphasis"><em>rewriting rules</em></span>. Parsers segment messages into different fields to help processing the messages, while rewrite rules modify the messages by adding, replacing, or removing parts of the messages.</p></div><div class="refsection"><a name="idm46231546665280"></a><h2>Configuring syslog-ng</h2><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>The main body of the configuration file consists of object definitions: sources, destinations, logpaths define which log message are received and where they are sent. All identifiers, option names and attributes, and any other strings used in the syslog-ng configuration file are case sensitive. Object definitions (also called statements) have the following syntax:</p><pre class="synopsis">type-of-the-object identifier-of-the-object {&lt;parameters&gt;};</pre><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem"><p><span class="emphasis"><em>Type of the object</em></span>: One of <em class="parameter"><code>source</code></em>, <em class="parameter"><code>destination</code></em>, <em class="parameter"><code>log</code></em>, <em class="parameter"><code>filter</code></em>, <em class="parameter"><code>parser</code></em>, <em class="parameter"><code>rewrite</code></em> rule, or <em class="parameter"><code>template</code></em>.</p></li><li class="listitem"><p><span class="emphasis"><em>Identifier of the object</em></span>: A unique name identifying the object. When using a reserved word as an identifier, enclose the identifier in quotation marks.</p><p>All identifiers, attributes, and any other strings used in the syslog-ng configuration file are case sensitive.</p><div class="tip" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Tip</h3><p>Use identifiers that refer to the type of the object they identify. For example, prefix source objects with <strong class="userinput"><code>s_</code></strong>, destinations with <strong class="userinput"><code>d_</code></strong>, and so on.</p></div><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>Repeating a definition of an object (that is, defining the same object with the same id more than once) is not allowed, unless you use the <em class="parameter"><code>@define allow-config-dups 1</code></em> definition in the configuration file.</p></div></li><li class="listitem"><p><span class="emphasis"><em>Parameters</em></span>: The parameters of the object, enclosed in braces <strong class="userinput"><code>{parameters}</code></strong>.</p></li><li class="listitem"><p><span class="emphasis"><em>Semicolon</em></span>: Object definitions end with a semicolon (<strong class="userinput"><code>;</code></strong>).</p></li></ul></div><p>For example, the following line defines a source and calls it <strong class="userinput"><code>s_internal</code></strong>.</p><pre class="synopsis">source s_internal { internal(); };</pre><p>The object can be later referenced in other statements using its ID, for example, the previous source is used as a parameter of the following log statement:</p><pre class="synopsis">log { source(s_internal); destination(d_file); };</pre></li><li class="listitem"><p>The parameters and options within a statement are similar to function calls of the C programming language: the name of the option followed by a list of its parameters enclosed within brackets and terminated with a semicolon.</p><pre class="synopsis">option(parameter1, parameter2); option2(parameter1, parameter2);</pre><p>For example, the <em class="parameter"><code>file()</code></em> driver in the following source statement has three options: the filename (<code class="filename">/var/log/apache/access.log</code>), <em class="parameter"><code>follow-freq()</code></em>, and <em class="parameter"><code>flags()</code></em>. The <em class="parameter"><code>follow-freq()</code></em> option also has a parameter, while the <em class="parameter"><code>flags()</code></em> option has two parameters.</p><pre class="synopsis">source s_tail { file("/var/log/apache/access.log"
-    follow-freq(1) flags(no-parse, validate-utf8)); };</pre><p>Objects may have required and optional parameters. Required parameters are positional, meaning that they must be specified in a defined order. Optional parameters can be specified in any order using the <code class="literal">option(value)</code> format. If a parameter (optional or required) is not specified, its default value is used. The parameters and their default values are listed in the reference section of the particular object.</p><div class="example"><a name="idm46231546621888"></a><p class="title"><b>Example 1. Using required and optional parameters</b></p><div class="example-contents"><p>The <em class="parameter"><code>unix-stream()</code></em> source driver has a single required argument: the name of the socket to listen on. Optional parameters follow the socket name in any order, so the following source definitions have the same effect:</p><pre class="synopsis">source s_demo_stream1 {
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for HTML5 for Linux version 5.2.0"/>
+  <meta http-equiv="Content-Type" content=
+  "text/html; charset=utf-8"/>
+  <title>The syslog-ng.conf manual page</title>
+  <meta name="generator" content="DocBook XSL Stylesheets V1.78.1"/>
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084"
+alink="#0000FF">
+  <div class="reference">
+    <div class="titlepage">
+      <div>
+        <div>
+          <h1 class="title"><a name="idm46231572561792" id=
+          "idm46231572561792"></a>The syslog-ng.conf manual
+          page</h1>
+        </div>
+      </div>
+      <hr/>
+    </div>
+    <div class="toc">
+      <p><b>Table of Contents</b></p>
+      <dl class="toc">
+        <dt><span class="refentrytitle"><a href=
+        "#syslog-ng.conf.5">syslog-ng.conf</a></span> <span class=
+        "refpurpose">â€” syslog-ng configuration file</span></dt>
+      </dl>
+    </div>
+    <div class="refentry">
+      <a name="syslog-ng.conf.5" id="syslog-ng.conf.5"></a>
+      <div class="titlepage"></div>
+      <div class="refnamediv">
+        <h6>Name</h6>
+        <p>syslog-ng.conf â€” syslog-ng configuration file</p>
+      </div>
+      <div class="refsynopsisdiv">
+        <h6>Synopsis</h6>
+        <div class="cmdsynopsis">
+          <p><code class="command">syslog-ng.conf</code></p>
+        </div>
+      </div>
+      <div class="refsection">
+        <a name="idm46231546685440" id="idm46231546685440"></a>
+        <h6>Description</h6>
+        <p>This manual page is only an abstract, for the complete
+        documentation of syslog-ng, see <a class="link" href=
+        "https://www.syslog-ng.com/" target=
+        "_top"><span class="command"><strong>The <span class=
+        "phrase">syslog-ng Premium Edition</span> Administrator
+        Guide</strong></span></a> or the <span class=
+        "phrase"><a class="link" href=
+        "https://www.syslog-ng.com" target=
+        "_top">syslog-ng Documentation page</a></span>.</p>
+        <p>The <span class="phrase">syslog-ng PE</span> application
+        is a flexible and highly scalable system logging
+        application. Typically, syslog-ng is used to manage log
+        messages and implement centralized logging, where the aim
+        is to collect the log messages of several devices on a
+        single, central log server. The different devices - called
+        syslog-ng clients - all run syslog-ng, and collect the log
+        messages from the various applications, files, and other
+        <span class="emphasis"><em>sources</em></span>. The clients
+        send all important log messages to the remote syslog-ng
+        server, where the server sorts and stores them.</p>
+      </div>
+      <div class="refsection">
+        <a name="idm46231546678032" id="idm46231546678032"></a>
+        <h6>Basic concepts of <span class="phrase">syslog-ng
+        PE</span></h6>
+        <p>The syslog-ng application reads incoming messages and
+        forwards them to the selected <span class=
+        "emphasis"><em>destinations</em></span>. The syslog-ng
+        application can receive messages from files, remote hosts,
+        and other <span class=
+        "emphasis"><em>sources</em></span>.</p><a class="indexterm"
+        name="idm46231546675408" id="idm46231546675408"></a>
+        <p>Log messages enter syslog-ng in one of the defined
+        sources, and are sent to one or more <span class=
+        "emphasis"><em>destinations</em></span>.</p><a class=
+        "indexterm" name="idm46231546673712" id=
+        "idm46231546673712"></a><a class="indexterm" name=
+        "idm46231546672944" id="idm46231546672944"></a>
+        <p>Sources and destinations are independent objects,
+        <span class="emphasis"><em>log paths</em></span> define
+        what syslog-ng does with a message, connecting the sources
+        to the destinations. A log path consists of one or more
+        sources and one or more destinations: messages arriving
+        from a source are sent to every destination listed in the
+        log path. A log path defined in syslog-ng is called a
+        <span class="emphasis"><em>log
+        statement</em></span>.</p><a class="indexterm" name=
+        "idm46231546670272" id="idm46231546670272"></a>
+        <p>Optionally, log paths can include <span class=
+        "emphasis"><em>filters</em></span>. Filters are rules that
+        select only certain messages, for example, selecting only
+        messages sent by a specific application. If a log path
+        includes filters, syslog-ng sends only the messages
+        satisfying the filter rules to the destinations set in the
+        log path.</p><a class="indexterm" name="idm46231546668416"
+        id="idm46231546668416"></a><a class="indexterm" name=
+        "idm46231546667648" id="idm46231546667648"></a>
+        <p>Other optional elements that can appear in log
+        statements are <span class=
+        "emphasis"><em>parsers</em></span> and <span class=
+        "emphasis"><em>rewriting rules</em></span>. Parsers segment
+        messages into different fields to help processing the
+        messages, while rewrite rules modify the messages by
+        adding, replacing, or removing parts of the messages.</p>
+      </div>
+      <div class="refsection">
+        <a name="idm46231546665280" id="idm46231546665280"></a>
+        <h6>Configuring syslog-ng</h6>
+        <div class="itemizedlist">
+          <ul class="itemizedlist" style="list-style-type: disc;">
+            <li class="listitem">
+              <p>The main body of the configuration file consists
+              of object definitions: sources, destinations,
+              logpaths define which log message are received and
+              where they are sent. All identifiers, option names
+              and attributes, and any other strings used in the
+              syslog-ng configuration file are case sensitive.
+              Object definitions (also called statements) have the
+              following syntax:</p>
+              <pre class="synopsis">
+              type-of-the-object identifier-of-the-object {&lt;parameters&gt;};</pre>
+              <div class="itemizedlist">
+                <ul class="itemizedlist" style=
+                "list-style-type: circle;">
+                  <li class="listitem">
+                    <p><span class="emphasis"><em>Type of the
+                    object</em></span>: One of <em class=
+                    "parameter"><code>source</code></em>,
+                    <em class="parameter"><code>destination</code></em>,
+                    <em class="parameter"><code>log</code></em>,
+                    <em class="parameter"><code>filter</code></em>,
+                    <em class="parameter"><code>parser</code></em>,
+                    <em class="parameter"><code>rewrite</code></em>
+                    rule, or <em class=
+                    "parameter"><code>template</code></em>.</p>
+                  </li>
+                  <li class="listitem">
+                    <p><span class="emphasis"><em>Identifier of the
+                    object</em></span>: A unique name identifying
+                    the object. When using a reserved word as an
+                    identifier, enclose the identifier in quotation
+                    marks.</p>
+                    <p>All identifiers, attributes, and any other
+                    strings used in the syslog-ng configuration
+                    file are case sensitive.</p>
+                    <div class="tip" style=
+                    "margin-left: 0.5in; margin-right: 0.5in;">
+                      <b>Tip</b>
+                      <p>Use identifiers that refer to the type of
+                      the object they identify. For example, prefix
+                      source objects with <strong class=
+                      "userinput"><code>s_</code></strong>,
+                      destinations with <strong class=
+                      "userinput"><code>d_</code></strong>, and so
+                      on.</p>
+                    </div>
+                    <div class="note" style=
+                    "margin-left: 0.5in; margin-right: 0.5in;">
+                      <b>Note</b>
+                      <p>Repeating a definition of an object (that
+                      is, defining the same object with the same id
+                      more than once) is not allowed, unless you
+                      use the <em class="parameter"><code>@define
+                      allow-config-dups 1</code></em> definition in
+                      the configuration file.</p>
+                    </div>
+                  </li>
+                  <li class="listitem">
+                    <p><span class=
+                    "emphasis"><em>Parameters</em></span>: The
+                    parameters of the object, enclosed in braces
+                    <strong class=
+                    "userinput"><code>{parameters}</code></strong>.</p>
+                  </li>
+                  <li class="listitem">
+                    <p><span class=
+                    "emphasis"><em>Semicolon</em></span>: Object
+                    definitions end with a semicolon
+                    (<strong class="userinput"><code>;</code></strong>).</p>
+                  </li>
+                </ul>
+              </div>
+              <p>For example, the following line defines a source
+              and calls it <strong class=
+              "userinput"><code>s_internal</code></strong>.</p>
+              <pre class="synopsis">
+              source s_internal { internal(); };</pre>
+              <p>The object can be later referenced in other
+              statements using its ID, for example, the previous
+              source is used as a parameter of the following log
+              statement:</p>
+              <pre class="synopsis">
+              log { source(s_internal); destination(d_file); };</pre>
+            </li>
+            <li class="listitem">
+              <p>The parameters and options within a statement are
+              similar to function calls of the C programming
+              language: the name of the option followed by a list
+              of its parameters enclosed within brackets and
+              terminated with a semicolon.</p>
+              <pre class="synopsis">
+              option(parameter1, parameter2); option2(parameter1, parameter2);</pre>
+              <p>For example, the <em class=
+              "parameter"><code>file()</code></em> driver in the
+              following source statement has three options: the
+              filename (<code class=
+              "filename">/var/log/apache/access.log</code>),
+              <em class=
+              "parameter"><code>follow-freq()</code></em>, and
+              <em class="parameter"><code>flags()</code></em>. The
+              <em class="parameter"><code>follow-freq()</code></em>
+              option also has a parameter, while the <em class=
+              "parameter"><code>flags()</code></em> option has two
+              parameters.</p>
+              <pre class="synopsis">
+              source s_tail { file("/var/log/apache/access.log"
+    follow-freq(1) flags(no-parse, validate-utf8)); };</pre>
+              <p>Objects may have required and optional parameters.
+              Required parameters are positional, meaning that they
+              must be specified in a defined order. Optional
+              parameters can be specified in any order using the
+              <code class="literal">option(value)</code> format. If
+              a parameter (optional or required) is not specified,
+              its default value is used. The parameters and their
+              default values are listed in the reference section of
+              the particular object.</p>
+              <div class="example">
+                <a name="idm46231546621888" id=
+                "idm46231546621888"></a>
+                <p class="title"><b>Example 1. Using required and
+                optional parameters</b></p>
+                <div class="example-contents">
+                  <p>The <em class=
+                  "parameter"><code>unix-stream()</code></em>
+                  source driver has a single required argument: the
+                  name of the socket to listen on. Optional
+                  parameters follow the socket name in any order,
+                  so the following source definitions have the same
+                  effect:</p>
+                  <pre class="synopsis">source s_demo_stream1 {
         unix-stream("&lt;path-to-socket&gt;" max-connections(10) group(log)); };
 source s_demo_stream2 {
-        unix-stream("&lt;path-to-socket&gt;" group(log) max-connections(10)); };</pre></div></div><br class="example-break"></li><li class="listitem"><p>Some options are global options, or can be set globally, for example, whether <span class="phrase">syslog-ng PE</span> should use DNS resolution to resolve IP addresses. Global options are detailed in <a class="xref" href="#">???</a>.</p><pre class="synopsis">options { use-dns(no); };</pre></li><li class="listitem"><p>Objects can be used before definition.</p></li><li class="listitem"><p>Objects can be defined inline as well. This is useful if you use the object only once (for example, a filter). For details, see <a class="xref" href="#">???</a>.</p></li><li class="listitem"><p>To add comments to the configuration file, start a line with <strong class="userinput"><code>#</code></strong> and write your comments. These lines are ignored by syslog-ng.</p><pre class="synopsis"># Comment: This is a stream source
+        unix-stream("&lt;path-to-socket&gt;" group(log) max-connections(10)); };</pre>
+                </div>
+              </div><br class="example-break"/>
+            </li>
+            <li class="listitem">
+              <p>Some options are global options, or can be set
+              globally, for example, whether <span class=
+              "phrase">syslog-ng PE</span> should use DNS
+              resolution to resolve IP addresses. Global options
+              are detailed in <a class="xref" href="#">???</a>.</p>
+              <pre class="synopsis">options { use-dns(no); };</pre>
+            </li>
+            <li class="listitem">
+              <p>Objects can be used before definition.</p>
+            </li>
+            <li class="listitem">
+              <p>Objects can be defined inline as well. This is
+              useful if you use the object only once (for example,
+              a filter). For details, see <a class="xref" href=
+              "#">???</a>.</p>
+            </li>
+            <li class="listitem">
+              <p>To add comments to the configuration file, start a
+              line with <strong class=
+              "userinput"><code>#</code></strong> and write your
+              comments. These lines are ignored by syslog-ng.</p>
+              <pre class="synopsis">
+              # Comment: This is a stream source
 source s_demo_stream {
-        unix-stream("&lt;path-to-socket&gt;" max-connections(10) group(log)); };</pre></li></ul></div><p>The syntax of log statements is as follows:</p><pre class="synopsis">log {
+        unix-stream("&lt;path-to-socket&gt;" max-connections(10) group(log)); };</pre>
+            </li>
+          </ul>
+        </div>
+        <p>The syntax of log statements is as follows:</p>
+        <pre class="synopsis">log {
     source(s1); source(s2); ...
     optional_element(filter1|parser1|rewrite1);
     optional_element(filter2|parser2|rewrite2);
     ...
     destination(d1); destination(d2); ...
     flags(flag1[, flag2...]);
-};</pre><p>The following log statement sends all messages arriving to the localhost to a remote server.</p><pre class="synopsis">source s_localhost { network(ip(127.0.0.1) port(1999)); };
+};</pre>
+        <p>The following log statement sends all messages arriving
+        to the localhost to a remote server.</p>
+        <pre class="synopsis">
+        source s_localhost { network(ip(127.0.0.1) port(1999)); };
 destination d_tcp { network("10.1.2.3" port(1999) localport(999)); };
-log { source(s_localhost); destination(d_tcp); };</pre><p>The syslog-ng application has a number of global options governing DNS usage, the timestamp format used, and other general points. Each option may have parameters, similarly to driver specifications. To set global options, add an option statement to the syslog-ng configuration file using the following syntax:</p><pre class="synopsis">options { option1(params); option2(params); ... };</pre><div class="example"><a name="idm46231546607264"></a><p class="title"><b>Example 2. Using global options</b></p><div class="example-contents"><p>To disable domain name resolving, add the following line to the syslog-ng configuration file:</p><pre class="synopsis">options { use-dns(no); };</pre></div></div><br class="example-break"><p>The sources, destinations, and filters available in syslog-ng are listed below. For details, see the <span class="phrase"><a class="link" href="https://syslog-ng.com/documentation" target="_top">syslog-ng Documentation page</a></span>.</p><div class="table"><a name="idm46231546602944"></a><p class="title"><b>Table 1. Source drivers available in syslog-ng</b></p><div class="table-contents"><a class="indexterm" name="idm46231546602016"></a><table summary="Source drivers available in syslog-ng" border="1"><colgroup><col><col></colgroup><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td>
-                  <a class="link" href="#">file()</a>
-                </td><td>Opens the specified file and reads messages.</td></tr><tr><td>
-                  <a class="link" href="#">internal()</a>
-                </td><td>Messages generated internally in syslog-ng.</td></tr><tr><td>
-                  <a class="link" href="#">network()</a>
-                </td><td>Receives messages from remote hosts using the <a class="link" href="#">BSD-syslog protocol</a> over IPv4 and IPv6. Supports the TCP, UDP, and TLS network protocols.</td></tr><tr><td>
-                  <a class="link" href="#">pipe()</a>
-                </td><td>Opens the specified named pipe and reads messages.</td></tr><tr><td>
-                  <a class="link" href="#">program()</a>
-                </td><td>Opens the specified application and reads messages from its standard output.</td></tr><tr><td>
-                  <a class="link" href="#">sun-stream(), sun-streams()</a>
-                </td><td>Opens the specified <em class="parameter"><code>STREAMS</code></em> device on Solaris systems and reads incoming messages.</td></tr><tr><td>
-                  <a class="link" href="#">syslog()</a>
-                </td><td>Listens for incoming messages using the new <a class="link" href="#">IETF-standard syslog protocol</a>.</td></tr><tr><td>
-                  <a class="link" href="#">system()</a>
-                </td><td>Automatically detects which platform <span class="phrase">syslog-ng PE</span> is running on, and collects the native log messages of that platform.</td></tr><tr><td>
-                  <a class="link" href="#">systemd-journal()</a>
-                </td><td>Collects messages directly from the journal of platforms that use systemd.</td></tr><tr><td>
-                  <a class="link" href="#">systemd-syslog()</a>
-                </td><td>Collects messages from the journal using a socket on platforms that use systemd.</td></tr><tr><td>
-                  <a class="link" href="#">unix-dgram()</a>
-                </td><td>Opens the specified unix socket in <em class="parameter"><code>SOCK_DGRAM</code></em> mode and listens for incoming messages.</td></tr><tr><td>
-                  <a class="link" href="#">unix-stream()</a>
-                </td><td>Opens the specified unix socket in <em class="parameter"><code>SOCK_STREAM</code></em> mode and listens for incoming messages.</td></tr><tr><td>
-                  <a class="link" href="#">windowsevent()</a>
-                </td><td>Reads messages from the Windows Event Collector tool.</td></tr></tbody></table></div></div><br class="table-break"><div class="table"><a name="idm46231546570000"></a><p class="title"><b>Table 2. Destination drivers available in syslog-ng</b></p><div class="table-contents"><a class="indexterm" name="idm46231546569056"></a><table summary="Destination drivers available in syslog-ng" border="1"><colgroup><col><col></colgroup><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a class="link" href="#">elasticsearch</a> and <a class="link" href="#">elasticsearch2</a>
-                </td><td>Sends messages to an Elasticsearch server. The <em class="parameter"><code>elasticsearch2</code></em> driver supports Elasticsearch version 2 and newer.</td></tr><tr><td>
-                  <a class="link" href="#">file()</a>
-                </td><td>Writes messages to the specified file.</td></tr><tr><td>
-                  <a class="link" href="#">hdfs()</a>
-                </td><td>Sends messages into a file on a <a class="link" href="http://hadoop.apache.org/" target="_top">Hadoop Distributed File System (HDFS) or MapR-FS</a> node.</td></tr><tr><td>http()</td><td>Sends messages over the <a class="link" href="#">HTTP protocol</a>.</td></tr><tr><td>
-                  <a class="link" href="#">kafka()</a>
-                </td><td>Publishes log messages to the <a class="link" href="http://kafka.apache.org" target="_top">Apache Kafka</a> message bus, where subscribers can access them.</td></tr><tr><td>
-                  <a class="link" href="#">logstore()</a>
-                </td><td>Writes messages securely into encrypted, compressed, and timestamped binary files.</td></tr><tr><td>
-                  <a class="link" href="#">mongodb()</a>
-                </td><td>Sends messages to a <a class="link" href="https://www.mongodb.com" target="_top">MongoDB</a> database.</td></tr><tr><td>
-                  <a class="link" href="#">network()</a>
-                </td><td>Sends messages to a remote host using the <a class="link" href="#">BSD-syslog protocol</a> over IPv4 and IPv6. Supports the TCP, UDP, and TLS network protocols.</td></tr><tr><td>
-                  <a class="link" href="#">pipe()</a>
-                </td><td>Writes messages to the specified named pipe.</td></tr><tr><td>
-                  <a class="link" href="#">program()</a>
-                </td><td>Forks and launches the specified program, and sends messages to its standard input.</td></tr><tr><td>
-                  <a class="link" href="#">smtp()</a>
-                </td><td>Sends e-mail messages to the specified recipients.</td></tr><tr><td>
-                  <a class="link" href="#">Splunk</a>
-                </td><td>Forward your log messages to Splunk.</td></tr><tr><td>
-                  <a class="link" href="#">sql()</a>
-                </td><td>Sends messages into an SQL database. In addition to the standard syslog-ng packages, the <em class="parameter"><code>sql()</code></em> destination requires database-specific packages to be installed. Refer to the section appropriate for your platform in <a class="xref" href="#">???</a>.</td></tr><tr><td>
-                  <a class="link" href="#">syslog()</a>
-                </td><td>Sends messages to the specified remote host using the <a class="link" href="#">IETF-syslog protocol</a>. The IETF standard supports message transport using the UDP, TCP, and TLS networking protocols.</td></tr><tr><td>
-                  <a class="link" href="#">unix-dgram()</a>
-                </td><td>Sends messages to the specified unix socket in <em class="parameter"><code>SOCK_DGRAM</code></em> style (BSD).</td></tr><tr><td>
-                  <a class="link" href="#">unix-stream()</a>
-                </td><td>Sends messages to the specified unix socket in <em class="parameter"><code>SOCK_STREAM</code></em> style (Linux).</td></tr><tr><td>
-                  <a class="link" href="#">usertty()</a>
-                </td><td>Sends messages to the terminal of the specified user, if the user is logged in.</td></tr></tbody></table></div></div><br class="table-break"><div class="table"><a name="idm46231546526208"></a><p class="title"><b>Table 3. Filter functions available in <span class="phrase">syslog-ng PE</span></b></p><div class="table-contents"><a class="indexterm" name="idm46231546524544"></a><table summary="Filter functions available in syslog-ng PE" border="1"><colgroup><col><col></colgroup><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td>
-                  <a class="link" href="#">facility()</a>
-                </td><td>Filter messages based on the sending facility.</td></tr><tr><td>
-                  <a class="link" href="#">filter()</a>
-                </td><td>Call another filter function.</td></tr><tr><td>
-                  <a class="link" href="#">host()</a>
-                </td><td>Filter messages based on the sending host.</td></tr><tr><td>
-                  <a class="link" href="#">inlist()</a>
-                </td><td>File-based whitelisting and blacklisting.</td></tr><tr><td>
-                  <a class="link" href="#">level() or priority()</a>
-                </td><td>Filter messages based on their priority.</td></tr><tr><td>
-                  <a class="link" href="#">match()</a>
-                </td><td>Use a regular expression to filter messages based on a specified header or content field.</td></tr><tr><td>
-                  <a class="link" href="#">message()</a>
-                </td><td>Use a regular expression to filter messages based on their content.</td></tr><tr><td>
-                  <a class="link" href="#">netmask()</a>
-                </td><td>Filter messages based on the IP address of the sending host.</td></tr><tr><td>
-                  <a class="link" href="#">program()</a>
-                </td><td>Filter messages based on the sending application.</td></tr><tr><td>
-                  <a class="link" href="#">source()</a>
-                </td><td>Select messages of the specified <span class="phrase">syslog-ng PE</span> source statement.</td></tr><tr><td>
-                  <a class="link" href="#">tags()</a>
-                </td><td>Select messages having the specified tag.</td></tr></tbody></table></div></div><br class="table-break"></div><div class="refsection"><a name="idm46231546499440"></a><h2>Files</h2><p>
-        <code class="filename">/opt/syslog-ng/</code>
-      </p><p>
-        <code class="filename">/opt/syslog-ng/etc/syslog-ng.conf</code>
-      </p></div><div class="refsection"><a name="idm46231546497088"></a><h2>See also</h2><p>
-        <a class="link" href="#"><span class="command"><strong>syslog-ng</strong></span>(8)</a>
-      </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>For the detailed documentation of <span class="phrase">syslog-ng PE</span> see <a class="link" href="https://syslog-ng.com/documents/html/syslog-ng-ose-latest-guides/en/syslog-ng-ose-guide-admin/html/index.html" target="_top"><span class="command"><strong>The <span class="phrase">syslog-ng PE</span> 7 Administrator Guide</strong></span></a></p><p>If you experience any problems or need help with syslog-ng, visit the <a class="link" href="https://lists.balabit.hu/mailman/listinfo/syslog-ng" target="_top"><span class="command"><strong>syslog-ng mailing list</strong></span></a>.</p><p>For news and notifications about of syslog-ng, visit the <a class="link" href="https://syslog-ng.com/blog/" target="_top"><span class="command"><strong>syslog-ng blogs</strong></span></a>.</p></div></div><div class="refsection"><a name="idm46231546488496"></a><h2>Author</h2><p>This manual page was written by the Balabit Documentation Team &lt;documentation@balabit.com&gt;.</p></div><div class="refsection"><a name="idm46231546486960"></a><h2>Copyright</h2><p><span class="trademark">Copyright</span>© 2000-2018<span class="phrase">Balabit</span>. Published under the Creative Commons Attribution-Noncommercial-No Derivative Works (by-nc-nd) 3.0 license. For details, see <a class="link" href="https://creativecommons.org/" target="_top">https://creativecommons.org//</a>. The latest version is always available at <a class="link" href="https://syslog-ng.com/documentation" target="_top">https://www.balabit.com/support/documentation</a>.</p></div></div></div></body></html>
+log { source(s_localhost); destination(d_tcp); };</pre>
+        <p>The syslog-ng application has a number of global options
+        governing DNS usage, the timestamp format used, and other
+        general points. Each option may have parameters, similarly
+        to driver specifications. To set global options, add an
+        option statement to the syslog-ng configuration file using
+        the following syntax:</p>
+        <pre class="synopsis">
+        options { option1(params); option2(params); ... };</pre>
+        <div class="example">
+          <a name="idm46231546607264" id="idm46231546607264"></a>
+          <p class="title"><b>Example 2. Using global
+          options</b></p>
+          <div class="example-contents">
+            <p>To disable domain name resolving, add the following
+            line to the syslog-ng configuration file:</p>
+            <pre class="synopsis">options { use-dns(no); };</pre>
+          </div>
+        </div><br class="example-break"/>
+        <p>The sources, destinations, and filters available in
+        syslog-ng are listed below. For details, see the
+        <span class="phrase"><a class="link" href=
+        "https://www.syslog-ng.com" target=
+        "_top">syslog-ng Documentation page</a></span>.</p>
+        <div class="table">
+          <a name="idm46231546602944" id="idm46231546602944"></a>
+          <p class="title"><b>Table 1. Source drivers available in
+          syslog-ng</b></p>
+          <div class="table-contents">
+            <a class="indexterm" name="idm46231546602016" id=
+            "idm46231546602016"></a>
+            <table summary="Source drivers available in syslog-ng"
+            border="1">
+              <colgroup>
+                <col/><col/>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <a class="link" href="#">file()</a>
+                  </td>
+                  <td>Opens the specified file and reads
+                  messages.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">internal()</a>
+                  </td>
+                  <td>Messages generated internally in
+                  syslog-ng.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">network()</a>
+                  </td>
+                  <td>
+                    Receives messages from remote hosts using the
+                    <a class="link" href="#">BSD-syslog
+                    protocol</a> over IPv4 and IPv6. Supports the
+                    TCP, UDP, and TLS network protocols.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">pipe()</a>
+                  </td>
+                  <td>Opens the specified named pipe and reads
+                  messages.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">program()</a>
+                  </td>
+                  <td>Opens the specified application and reads
+                  messages from its standard output.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">sun-stream(),
+                    sun-streams()</a>
+                  </td>
+                  <td>Opens the specified <em class=
+                  "parameter"><code>STREAMS</code></em> device on
+                  Solaris systems and reads incoming messages.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">syslog()</a>
+                  </td>
+                  <td>
+                    Listens for incoming messages using the new
+                    <a class="link" href="#">IETF-standard syslog
+                    protocol</a>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">system()</a>
+                  </td>
+                  <td>Automatically detects which platform
+                  <span class="phrase">syslog-ng PE</span> is
+                  running on, and collects the native log messages
+                  of that platform.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">systemd-journal()</a>
+                  </td>
+                  <td>Collects messages directly from the journal
+                  of platforms that use systemd.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">systemd-syslog()</a>
+                  </td>
+                  <td>Collects messages from the journal using a
+                  socket on platforms that use systemd.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">unix-dgram()</a>
+                  </td>
+                  <td>Opens the specified unix socket in <em class=
+                  "parameter"><code>SOCK_DGRAM</code></em> mode and
+                  listens for incoming messages.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">unix-stream()</a>
+                  </td>
+                  <td>Opens the specified unix socket in <em class=
+                  "parameter"><code>SOCK_STREAM</code></em> mode
+                  and listens for incoming messages.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">windowsevent()</a>
+                  </td>
+                  <td>Reads messages from the Windows Event
+                  Collector tool.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div><br class="table-break"/>
+        <div class="table">
+          <a name="idm46231546570000" id="idm46231546570000"></a>
+          <p class="title"><b>Table 2. Destination drivers
+          available in syslog-ng</b></p>
+          <div class="table-contents">
+            <a class="indexterm" name="idm46231546569056" id=
+            "idm46231546569056"></a>
+            <table summary=
+            "Destination drivers available in syslog-ng" border=
+            "1">
+              <colgroup>
+                <col/><col/>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <a class="link" href="#">elasticsearch2</a>
+                  </td>
+                  <td>Sends messages to an Elasticsearch server.
+                  The <em class=
+                  "parameter"><code>elasticsearch2</code></em>
+                  driver supports Elasticsearch version 2 and
+                  newer.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">file()</a>
+                  </td>
+                  <td>Writes messages to the specified file.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">hdfs()</a>
+                  </td>
+                  <td>
+                    Sends messages into a file on a <a class="link"
+                    href="http://hadoop.apache.org/" target=
+                    "_top">Hadoop Distributed File System (HDFS) or
+                    MapR-FS</a> node.
+                  </td>
+                </tr>
+                <tr>
+                  <td>http()</td>
+                  <td>
+                    Sends messages over the <a class="link" href=
+                    "#">HTTP protocol</a>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">kafka()</a>
+                  </td>
+                  <td>
+                    Publishes log messages to the <a class="link"
+                    href="http://kafka.apache.org" target=
+                    "_top">Apache Kafka</a> message bus, where
+                    subscribers can access them.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">logstore()</a>
+                  </td>
+                  <td>Writes messages securely into encrypted,
+                  compressed, and timestamped binary files.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">mongodb()</a>
+                  </td>
+                  <td>
+                    Sends messages to a <a class="link" href=
+                    "https://www.mongodb.com" target=
+                    "_top">MongoDB</a> database.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">network()</a>
+                  </td>
+                  <td>
+                    Sends messages to a remote host using the
+                    <a class="link" href="#">BSD-syslog
+                    protocol</a> over IPv4 and IPv6. Supports the
+                    TCP, UDP, and TLS network protocols.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">pipe()</a>
+                  </td>
+                  <td>Writes messages to the specified named
+                  pipe.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">program()</a>
+                  </td>
+                  <td>Forks and launches the specified program, and
+                  sends messages to its standard input.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">smtp()</a>
+                  </td>
+                  <td>Sends e-mail messages to the specified
+                  recipients.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">Splunk</a>
+                  </td>
+                  <td>Forward your log messages to Splunk.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">sql()</a>
+                  </td>
+                  <td>
+                    Sends messages into an SQL database. In
+                    addition to the standard syslog-ng packages,
+                    the <em class=
+                    "parameter"><code>sql()</code></em> destination
+                    requires database-specific packages to be
+                    installed. Refer to the section appropriate for
+                    your platform in <a class="xref" href=
+                    "#">???</a>.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">syslog()</a>
+                  </td>
+                  <td>
+                    Sends messages to the specified remote host
+                    using the <a class="link" href="#">IETF-syslog
+                    protocol</a>. The IETF standard supports
+                    message transport using the UDP, TCP, and TLS
+                    networking protocols.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">unix-dgram()</a>
+                  </td>
+                  <td>Sends messages to the specified unix socket
+                  in <em class=
+                  "parameter"><code>SOCK_DGRAM</code></em> style
+                  (BSD).</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">unix-stream()</a>
+                  </td>
+                  <td>Sends messages to the specified unix socket
+                  in <em class=
+                  "parameter"><code>SOCK_STREAM</code></em> style
+                  (Linux).</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">usertty()</a>
+                  </td>
+                  <td>Sends messages to the terminal of the
+                  specified user, if the user is logged in.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div><br class="table-break"/>
+        <div class="table">
+          <a name="idm46231546526208" id="idm46231546526208"></a>
+          <p class="title"><b>Table 3. Filter functions available
+          in <span class="phrase">syslog-ng PE</span></b></p>
+          <div class="table-contents">
+            <a class="indexterm" name="idm46231546524544" id=
+            "idm46231546524544"></a>
+            <table summary=
+            "Filter functions available in syslog-ng PE" border=
+            "1">
+              <colgroup>
+                <col/><col/>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <a class="link" href="#">facility()</a>
+                  </td>
+                  <td>Filter messages based on the sending
+                  facility.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">filter()</a>
+                  </td>
+                  <td>Call another filter function.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">host()</a>
+                  </td>
+                  <td>Filter messages based on the sending
+                  host.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">inlist()</a>
+                  </td>
+                  <td>File-based whitelisting and
+                  blacklisting.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">level() or
+                    priority()</a>
+                  </td>
+                  <td>Filter messages based on their priority.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">match()</a>
+                  </td>
+                  <td>Use a regular expression to filter messages
+                  based on a specified header or content
+                  field.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">message()</a>
+                  </td>
+                  <td>Use a regular expression to filter messages
+                  based on their content.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">netmask()</a>
+                  </td>
+                  <td>Filter messages based on the IP address of
+                  the sending host.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">program()</a>
+                  </td>
+                  <td>Filter messages based on the sending
+                  application.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">source()</a>
+                  </td>
+                  <td>Select messages of the specified <span class=
+                  "phrase">syslog-ng PE</span> source
+                  statement.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <a class="link" href="#">tags()</a>
+                  </td>
+                  <td>Select messages having the specified
+                  tag.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div><br class="table-break"/>
+      </div>
+      <div class="refsection">
+        <a name="idm46231546499440" id="idm46231546499440"></a>
+        <h6>Files</h6>
+        <p><code class="filename">/opt/syslog-ng/</code></p>
+        <p><code class=
+        "filename">/opt/syslog-ng/etc/syslog-ng.conf</code></p>
+      </div>
+      <div class="refsection">
+        <a name="idm46231546497088" id="idm46231546497088"></a>
+        <h6>See also</h6>
+        <p><a class="link" href="#"><span class=
+        "command"><strong>syslog-ng</strong></span>(8)</a></p>
+        <div class="note" style=
+        "margin-left: 0.5in; margin-right: 0.5in;">
+          <b>Note</b>
+          <p>For the detailed documentation of <span class=
+          "phrase">syslog-ng PE</span> see <a class="link" href=
+          "https://syslog-ng.com/documents/html/syslog-ng-ose-latest-guides/en/syslog-ng-ose-guide-admin/html/index.html"
+          target="_top"><span class="command"><strong>The
+          <span class="phrase">syslog-ng PE</span> 7 Administrator
+          Guide</strong></span></a></p>
+          <p>If you experience any problems or need help with
+          syslog-ng, visit the <a class="link" href=
+          "https://lists.balabit.hu/mailman/listinfo/syslog-ng"
+          target="_top"><span class="command"><strong>syslog-ng
+          mailing list</strong></span></a>.</p>
+          <p>For news and notifications about of syslog-ng, visit
+          the <a class="link" href="https://syslog-ng.com/blog/"
+          target="_top"><span class="command"><strong>syslog-ng
+          blogs</strong></span></a>.</p>
+        </div>
+      </div>
+      <div class="refsection">
+        <a name="idm46231546488496" id="idm46231546488496"></a>
+        <h6>Author</h6>
+        <p>This manual page was written by the One Identity
+        Documentation Team.</p>
+      </div>
+      <div class="refsection">
+        <a name="idm46231546486960" id="idm46231546486960"></a>
+        <h6>Copyright</h6>
+        <p><span class="trademark">Copyright</span>
+        2000-2019<span class="phrase">One Identity</span>. Published
+        under the Creative Commons Attribution-Noncommercial-No
+        Derivative Works (by-nc-nd) 3.0 license. For details, see
+        <a class="link" href="https://creativecommons.org/" target=
+        "_top">https://creativecommons.org//</a>. The latest
+        version is always available at <a class="link" href=
+        "https://www.syslog-ng.com" target=
+        "_top">https://www.syslog-ng.com</a>.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
