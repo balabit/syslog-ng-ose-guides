@@ -6,7 +6,8 @@
         <h1>Limitations of the XML parsers</h1>
         <p oldrole="para">The XML parser comes with certain limitations.</p>
         <div>
-            <h6 oldrole="formalpara">Vector-like structures:</h6>
+            <h6 oldrole="formalpara">Vector-like structures and the  list-handling functionality:</h6>
+            <p oldrole="formalpara">The XML parser uses  the list-handling functionality to handle lists in the XML. The list-handling functionality has limitations when handling name-value pairs or SDATA as described below. Note that you can <MadCap:xref href="#disable" class="HeadingOnPage"><span style="color: #04aada;" class="mcFormatColor">disable</span></MadCap:xref> the  list-handling functionality if needed. </p>
             <p oldrole="para">Vector-like structures are separated by a comma as separate entries. Using the following structure as an example:</p><pre class="Code" oldrole="synopsis" xml:space="preserve">&lt;vector&gt;
     &lt;entry&gt;value1&lt;/entry&gt;
     &lt;entry&gt;"value 2"&lt;/entry&gt;
@@ -14,13 +15,37 @@
     ...
     &lt;entry&gt;valueN&lt;/entry&gt;
 &lt;/vector&gt;</pre>
-            <p oldrole="para">After parsing, the entries are separated by a comma. If an entry is already within a double-quote, for example, "value 2" in the previous example, additional quoting is applied to the entry:</p><pre class="Code" oldrole="synopsis">vector.entry = "value1,"value 2",value3...valueN"</pre>
-            <p oldrole="para">To disable this functionality, use the <span class="Code">create_lists(yes/no)</span> option. The default value is set to <span class="Code">yes</span>.</p>
-            <p oldrole="para">The following example disables this functionality:</p><pre class="Code" oldrole="synopsis">parser p_xml {
+            <p oldrole="para">After parsing, the entries are separated by a comma. If an entry is already within a double-quote, for example, "value 2" in the previous example, quoting is applied to the entry:</p><pre class="Code" oldrole="synopsis">vector.entry = "value1,"value 2",value3...valueN"</pre>
+            <h6>Using the list-handling functionality with name-value pairs:</h6>
+            <p>As every value in name-value pairs can be quoted, <MadCap:variable name="CommonVariables.CompanyNameShort" /> recommends that you access name-values as lists as follows:</p>
+            <ul>
+                <li>Use list related template-functions  on the list created by the XML parser.</li>
+                <li>
+                    <p>Use <a href="specifying-data-types.htm">type-hinting</a> using the format-json template function as shown in the example below:</p><pre>template("$(format-json --scope dot-nv-pairs LIST=list(${.xml.Event.EventData.Data}))\n")</pre>
+                </li>
+            </ul>
+            <h6>Using the list-handling functionality with SDATA:</h6>
+            <p>According to RFC5424, SDATA parameter values  must be quoted with double-quote ('"') characters.
+If the value contains double-quotes, they must be escaped with a backslash (\) character.</p>
+            <p>Due to the  list-handling functionality of the XML parser, parsed XML text contents are also quoted using double-quote ('"') characters.
+As parsed XML text content are part of the message, they are quoted when used as SDATA parameter values.</p>
+            <p oldrole="para">Using the following structure as an example:</p><pre class="Code" oldrole="synopsis" xml:space="preserve">&lt;Event&gt;
+&lt;Data&gt;42&lt;/Data&gt;
+&lt;Data&gt;Testing testing&lt;/Data&gt;
+&lt;/Event&gt;</pre>
+            <p>The expected name-value pair is as follows:</p><pre class="Code" oldrole="synopsis">Event.Data = 42,"Testing testing"</pre>
+            <p oldrole="para">In SDATA,&#160;this is quoted as shown below:</p><pre class="Code" oldrole="synopsis">[Event Data="42,\"Testing testing\""]</pre>
+            <h6 oldrole="para"><a name="disable"></a>Disabling the list-handling functionality:</h6>
+            <p oldrole="para">To disable the list-handling functionality, use the <span class="Code">create_lists(yes/no)</span> option as shown below. The default value is set to <span class="Code">yes</span>.</p><pre class="Code" oldrole="synopsis" xml:space="preserve">parser p_xml {
     xml(create_lists(no));
 };</pre>
-            <p oldrole="para">Note that <span class="Code" oldrole="parameter">xmllint</span> has the same behavior:</p><pre class="Code" oldrole="synopsis" xml:space="preserve">$ xmllint --xpath "/vector/entry/text()" test.xml
-value1,value2valueN%</pre>
+            <p>Note that if you disable the list-handling functionality, the XML parser cannot address each element of a vector-like structure individually. Using the following structure as an example:</p><pre class="Code" oldrole="synopsis">&lt;vector&gt;
+    &lt;entry&gt;value1&lt;/entry&gt;
+    &lt;entry&gt;value2&lt;/entry&gt;
+    ...
+    &lt;entry&gt;valueN&lt;/entry&gt;
+&lt;/vector&gt;</pre>
+            <p oldrole="para">After parsing, the entries are not addressed individually. Instead, the text of the entries are concatenated:</p><pre class="Code" oldrole="synopsis">vector.entry = "value1value2...valueN"</pre>
         </div>
         <div>
             <h6 oldrole="formalpara">CDATA:</h6>
