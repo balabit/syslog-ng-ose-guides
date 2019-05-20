@@ -79,6 +79,20 @@
         template-escape(no)
     );
 };</pre>
+            <p>Note that if you chain pattern databases, that is, use multiple databases in the same log path, the class assigned to the message (the value of <span class="Code" oldrole="parameter">${.classifier.class}</span>) will be the one assigned by the last pattern database. As a result, a message might be classified as unknown even if a previous parser successfully classified it. For example, consider the following configuration:</p><pre class="Code">log {
+    ...
+    parser(db_parser1);
+    parser(db_parser2);
+    ...
+};</pre>
+            <p>Even if <span class="Code" oldrole="userinput">db_parser1</span> matches the message, <span class="Code" oldrole="userinput">db_parser2</span> might set <span class="Code" oldrole="parameter">${.classifier.class}</span> to unknown. To avoid this problem, you can use an 'if' statement to apply the second parser only if the first parser could not classify the message:</p><pre class="Code">log {
+    ...
+    parser{ db-parser(file("db_parser1.xml")); };
+    if (match("^unknown$" value(".classifier.class"))) {
+        parser { db-parser(file("db_parser2.xml")); };
+    };
+    ...
+};</pre>
         </div>
         <p>For details on how to create your own pattern databases see <MadCap:xref href="reference-patterndb-schemes.htm#reference-patterndb-schemes"><span style="color: #04aada;" class="mcFormatColor">The syslog-ng pattern database format</span></MadCap:xref>.</p>
         <div MadCap:conditions="General.ose">
