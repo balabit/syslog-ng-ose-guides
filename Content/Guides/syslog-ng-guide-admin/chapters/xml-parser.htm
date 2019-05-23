@@ -4,7 +4,7 @@
         <meta name="description" content="" />
     </head>
     <body name="xml-parser" oldrole="section">
-        <h1 name="xml-parser"><a name="xml-parser"></a>The XML parser</h1>
+        <h1 name="xml-parser"><a name="xml-parser"></a>XML parser</h1>
         <MadCap:keyword term="segmenting messages">
         </MadCap:keyword>
         <MadCap:keyword term="XML parsers">
@@ -16,14 +16,16 @@
         <p oldrole="para">Extensible Markup Language (XML) is a text-based open standard designed for both human-readable and machine-readable data interchange. Like JSON, it is used primarily to transmit data between a server and web application. It is described in <a href="https://www.w3.org/TR/REC-xml/">W3C Recommendation: Extensible Markup Language (XML)</a>.</p>
         <p oldrole="para">The XML parser processes input in XML format, and adds the parsed data to the message object.</p>
         <p oldrole="para">To create an XML parser, define an <span class="Code" oldrole="parameter">xml_parser</span> that has the <span class="Code" oldrole="parameter">xml()</span> option. By default, the parser will process the <span class="Code" oldrole="userinput">${MESSAGE}</span> part of the log message. To process other parts of a log message using the XML parser, use the <span class="Code" oldrole="parameter">template()</span> option. You can also define the parser inline in the log path.</p>
-        <div><h6 oldrole="formalpara">Declaration:</h6><pre class="Code" oldrole="synopsis">parser xml_name {
+        <div>
+            <h6 oldrole="formalpara">Declaration:</h6><pre class="Code" oldrole="synopsis">parser xml_name {
     xml(template()
         prefix()
         drop-invalid()
         exclude-tags()
         strip-whitespaces()
     );
-};</pre></div>
+};</pre>
+        </div>
         <div class="Example">
             <h6 oldrole="example">Example: Using an XML parser</h6>
             <p oldrole="para">In the following example, the source is an XML-encoded log message. The destination is a file that uses the <span class="Code" oldrole="parameter">format-json</span> template. The log line connects the source, the destination and the parser.</p><pre class="Code" oldrole="synopsis">source s_local {
@@ -59,7 +61,8 @@ log {
         <p oldrole="para">Whitespaces are kept as they are in the XML input. No collapsing happens on significant whitespaces. For example, from this input XML:</p><pre class="Code" oldrole="synopsis">&lt;133&gt;Feb 25 14:09:07 webserver syslogd: &lt;b&gt;|Test\n\n   Test2|&lt;/b&gt;\n</pre>
         <p oldrole="para">The following output is generated:</p><pre class="Code" oldrole="synopsis">[2017-09-04T13:20:27.417266] Setting value; msg='0x7f2fd8002df0', name='.xml.b', value='|Test\x0a\x0a   Test2|'</pre>
         <p oldrole="para">However, note that users can choose to strip whitespaces using the <a href="xml-parser-options.htm"><span class="Code" oldrole="parameter">strip-whitespaces()</span></a> option.</p>
-        <bridgehead>Configuration hints</bridgehead>
+        <h6>Configuration hints
+        </h6>
         <p oldrole="para">Define a source that correctly detects the end of the message, otherwise the XML parser will consider the input invalid, resulting in a parser error.</p>
         <p oldrole="para">To ensure that the end of the XML document is accurately detected, use any of the following options:</p>
         <ul oldrole="itemizedlist">
@@ -87,31 +90,5 @@ log {
             </li>
         </ul>
         <p oldrole="para">In case you experience issues, start syslog-ng with debug logs enabled. There will be a debug log about the incoming log entry, which shows the complete message to be parsed. The entry should contain the entire XML document.</p>
-        <bridgehead>Limitations</bridgehead>
-        <p oldrole="para">The XML parser comes with certain limitations.</p>
-        <div><h6 oldrole="formalpara">Vector-like structures:</h6>
-        <p oldrole="para">It is not possible to address each element of a vector-like structure individually. For example, take this input:</p><pre class="Code" oldrole="synopsis">&lt;vector&gt;
-    &lt;entry&gt;value1&lt;/entry&gt;
-    &lt;entry&gt;value2&lt;/entry&gt;
-    ...
-    &lt;entry&gt;valueN&lt;/entry&gt;
-&lt;/vector&gt;</pre>
-        <p oldrole="para">After parsing, the entries cannot be addressed individually. Instead, the text of the entries will be concatenated:</p><pre class="Code" oldrole="synopsis">vector.entry = "value1value2...valueN"</pre>
-        <p oldrole="para">Note that <span class="Code" oldrole="parameter">xmllint</span> has the same behavior:</p><pre class="Code" oldrole="synopsis">$ xmllint --xpath "/vector/entry/text()" test.xml
-value1value2valueN%</pre></div>
-        <div><h6 oldrole="formalpara">CDATA:</h6>
-        <p oldrole="para">The XML parser does not support CDATA. CDATA inside the XML input is ignored. This is true for the processing instructions as well.</p></div>
-        <div><h6 oldrole="formalpara">Inherited limitations:</h6>
-        <p oldrole="para">The XML parser is based on the glib XML subset parser, called <a href="https://developer.gnome.org/glib/stable/glib-Simple-XML-Subset-Parser.html">"GMarkup" parser</a>, which is not a full-scale XML parser. It is intended to parse a simple markup format that is a subset of XML. Some limitations are inherited:</p>
-        <ul oldrole="itemizedlist">
-            <li oldrole="listitem">
-                <p oldrole="para">Do not use the XML parser if you expect to interoperate with applications generating full-scale XML. Instead, use it for application data files, configuration files, log files, and so on, where you know your application will be the only one writing the file.</p>
-            </li>
-            <li oldrole="listitem">
-                <p oldrole="para">The XML parser is not guaranteed to display an error message in the case of invalid XML. It may accept invalid XML. However, it does not accept XML input that is not well-formed (a condition that is weaker than requiring XML to be valid).</p>
-            </li>
-        </ul></div>
-        <div><h6 oldrole="formalpara">No support for long keys:</h6>
-        <p oldrole="para">If the key is longer than 255 characters, syslog-ng drops the entry and an error log is emitted. There is no chunking or any other way of recovering data, not even partial data. The entry will be replaced by an empty string.</p></div>
     </body>
 </html>
