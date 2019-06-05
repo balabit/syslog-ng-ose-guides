@@ -8,7 +8,7 @@
         <p>You can use a relay for many different use cases as described in the examples below.</p>
         <h6>UDP-only source devices</h6>
         <p>Most network devices send log messages over UDP. However, UDP does not guarantee that all packets are delivered, which makes UDP unreliable. </p>
-        <p>To ensure at least a best effort level of reliability, <MadCap:variable name="CommonVariables.CompanyNameShort" /> recommends that you deploy a relay on the network, close to the source devices. With the  most reliable hops between the source and the relay, you can minimize the risk of losing UDP packets. Once the packet arrives at the relay, <a href="https://syslog-ng.com/blog/upgrading-from-syslog-ng-open-source-to-premium-edition/"><MadCap:variable name="General.oseabbrev" MadCap:conditions="General.ose" /><MadCap:variable name="General.peabbrev" MadCap:conditions="General.pe" /></a> ensures that the messages are delivered to the central server in a reliable manner, based on TCP/TLS, and for <MadCap:variable name="General.peabbrev" /> only, Advanced Log Transfer Protocol (ALTP).</p>
+        <p>To ensure at least a best effort level of reliability, <MadCap:variable name="CommonVariables.CompanyNameShort" /> recommends that you deploy a relay on the network, close to the source devices. With the  most reliable hops between the source and the relay, you can minimize the risk of losing UDP packets. Once the packet arrives at the relay, <a href="https://syslog-ng.com/blog/upgrading-from-syslog-ng-open-source-to-premium-edition/"><MadCap:variable name="General.oseabbrev" MadCap:conditions="General.ose" /><MadCap:variable name="General.peabbrev" MadCap:conditions="General.pe" /></a> ensures that the messages are delivered to the central server in a reliable manner, based on TCP/TLS<MadCap:conditionalText MadCap:conditions="General.pe"> and Advanced Log Transfer Protocol (ALTP)</MadCap:conditionalText>.</p>
         <h6>Too many source devices</h6>
         <p>Depending on the hardware and configuration, an average syslog-ng instance can usually handle the following number of concurrent connections:</p>
         <ul>
@@ -20,7 +20,7 @@
                 <li>
                     <p>maximum ca. 1,000 TLS connections</p>
                 </li>
-                <li>
+                <li MadCap:conditions="General.pe">
                     <p>maximum ca. 1,000 ALTP connections</p>
                 </li>
             </ul>
@@ -28,7 +28,7 @@
                 <p>If the message rate is higher than 200,000 messages per second, contact <MadCap:variable name="CommonVariables.CompanyNameShort" />.</p>
             </li>
         </ul>
-        <p>If you have more source devices, you must deploy a relay machine at least per 5,000 sources and batch up all the logs into a single TCP connection that connects the relay to the server. If TLS or ALTP is used, deploy relays  per 1,000 source devices.</p>
+        <p>If you have more source devices, you must deploy a relay machine at least per 5,000 sources and batch up all the logs into a single TCP connection that connects the relay to the server. If TLS<MadCap:conditionalText MadCap:conditions="General.pe"> or ALTP</MadCap:conditionalText> is used, deploy relays  per 1,000 source devices.</p>
         <h6>Collecting logs from remote sites (especially over public WAN)</h6>
         <p>If you need to collect log messages from geographically remote sites or over public WAN, <MadCap:variable name="CommonVariables.CompanyNameShort" /> recommends that you  install  at least a relay node per each remote site. The relay can be the last outgoing hop for all the messages of the remote site, which has several benefits:</p>
         <ul>
@@ -44,11 +44,11 @@
         </ul>
         <h6>Separation, distribution, and balancing of message processing tasks</h6>
         <p>Most Linux applications have their own human readable, but difficult to handle, log messages. Without parsing and normalization it is difficult to alert and report on these log messages. Many syslog-ng users use the message parsing tools of syslog-ng to normalize their different log messages. Just like normalization, filtering can also be resource-heavy, depending on what the filtering is based on. In this case, it might be inefficient to perform all the message processing tasks on the server as it can result in decreased overall performance. </p>
-        <p>It is a typical setup to deploy relays in front of the central server operating as a receiver front-end. Most resource-heavy tasks, for example, parsing, filtering, and so on, are performed on this receiver layer. As all resource-heavy tasks are performed on the relay, the central server behind it only needs to get the messages from the relay and write them into the final text-based or tamper-proof format<MadCap:conditionalText MadCap:conditions="General.pe"> (logstore)</MadCap:conditionalText>. Since you can run several relays, you can balance the resource-heavy tasks between more relays, and a single server behind the relays can still be fast enough to write all the messages on the disk.</p>
+        <p>It is a typical setup to deploy relays in front of the central server operating as a receiver front-end. Most resource-heavy tasks, for example, parsing, filtering, and so on, are performed on this receiver layer. As all resource-heavy tasks are performed on the relay, the central server behind it only needs to get the messages from the relay and write them into the final text-based <MadCap:conditionalText MadCap:conditions="General.pe">or tamper-proof (logstore)</MadCap:conditionalText> format. Since you can run several relays, you can balance the resource-heavy tasks between more relays, and a single server behind the relays can still be fast enough to write all the messages on the disk.</p>
         <p>Acting as a relay also depends on the functionality. A relay does not have to be a dedicated relay machine at all. For log collection, it can be one of the clients with a relay configuration. Note that in a robust log collection infrastructure, the relays have their own purpose, and <MadCap:variable name="CommonVariables.CompanyNameShort" /> recommends running dedicated relay machines.</p>
         <p>You can run several parallel relays to ensure horizontal redundancy. For example, if each of the relays has the same configuration, when one relay goes down another relay can take over the processing. Distribution of the logs can be done by the built-in client-side failover functionality and also by a general load balancer. The load balancer is also used to serve N+1 redundant relay deployments. In this case, switching from one relay to another relay is done when there is  an outage but also for real load balancing purposes.</p>
         <h6>What syslog-ng relays are not good for</h6>
         <p>The purpose of the relay is to buffer the logs for short term, for example, a few minutes or a few hours long outages (depending on the log volume). It is not designed to buffer logs generated by the sources during a very long server or connection outage, for example, up to a few days long.</p>
-        <p>If you expect extended outages, <MadCap:variable name="CommonVariables.CompanyNameShort" /> recommends  that you deploy servers instead of relays. There are many deployments where long term storage and archiving are performed on the central syslog-ng server, but relays also do short-term log storage. </p>
+        <p>If you expect extended outages, <MadCap:variable name="CommonVariables.CompanyNameShort" /> recommends  that you deploy servers instead of relays. There are many deployments where long term storage and archiving are performed on the central syslog-ng server, but relays also do short-term log storage. <MadCap:conditionalText MadCap:conditions="General.pe">From the <MadCap:variable name="General.peabbrev" MadCap:conditions="General.pe" /> point of view, these are servers, and thus need separate server licenses.</MadCap:conditionalText></p>
     </body>
 </html>
