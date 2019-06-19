@@ -16,22 +16,22 @@
         </MadCap:keyword>
         <MadCap:keyword term="parameters:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;log-fifo-size()&lt;/span&gt;]">
         </MadCap:keyword>
-        <p oldrole="para">This section describes the internal message-processing model of syslog-ng, as well as the flow-control feature that can prevent message losses. To use flow-control, the <span class="Code" oldrole="parameter">flow-control</span> flag must be enabled for the particular log path.</p>
-        <p oldrole="para">The syslog-ng application monitors (polls) the sources defined in its configuration file, periodically checking each source for messages. When a log message is found in one of the sources, syslog-ng polls every source and reads the available messages. These messages are processed and put into the output buffer of syslog-ng (also called fifo). From the output buffer, the operating system sends the messages to the appropriate destinations.</p>
-        <p oldrole="para">In large-traffic environments many messages can arrive during a single poll loop, therefore syslog-ng reads only a fixed number of messages from each source. The <span class="Code" oldrole="parameter">log-fetch-limit()</span> option specifies the number of messages read during a poll loop from a single source.</p>
+        <p>This section describes the internal message-processing model of syslog-ng, as well as the flow-control feature that can prevent message losses. To use flow-control, the <span class="Code" oldrole="parameter">flow-control</span> flag must be enabled for the particular log path.</p>
+        <p>The syslog-ng application monitors (polls) the sources defined in its configuration file, periodically checking each source for messages. When a log message is found in one of the sources, syslog-ng polls every source and reads the available messages. These messages are processed and put into the output buffer of syslog-ng (also called fifo). From the output buffer, the operating system sends the messages to the appropriate destinations.</p>
+        <p>In large-traffic environments many messages can arrive during a single poll loop, therefore syslog-ng reads only a fixed number of messages from each source. The <span class="Code" oldrole="parameter">log-fetch-limit()</span> option specifies the number of messages read during a poll loop from a single source.</p>
         <p class="CaptionFigure" MadCap:autonum="Figure 1: ">Managing log messages in syslog-ng</p>
         <img class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/syslog-ng-io-01.png" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" scale="80" src="../../Resources/Images_Notlocalized/syslog-ng-ose-guide-admin/syslog-ng-io-01.png" style="height: auto; width: auto;" />
         <MadCap:keyword term="output buffer">
         </MadCap:keyword>
-        <p oldrole="para">Every destination has its own output buffer. The output buffer is needed because the destination might not be able to accept all messages immediately. The <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter sets the size of the output buffer. The output buffer must be larger than the <span class="Code" oldrole="parameter">log-fetch-limit()</span> of the sources, to ensure that every message read during the poll loop fits into the output buffer. If the log path sends messages to a destination from multiple sources, the output buffer must be large enough to store the incoming messages of every source.</p>
-        <p oldrole="para">TCP and unix-stream sources can receive the logs from several incoming connections (for example many different clients or applications). For such sources, syslog-ng reads messages from every connection, thus the <span class="Code" oldrole="parameter">log-fetch-limit()</span> parameter applies individually to every connection of the source.</p>
+        <p>Every destination has its own output buffer. The output buffer is needed because the destination might not be able to accept all messages immediately. The <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter sets the size of the output buffer. The output buffer must be larger than the <span class="Code" oldrole="parameter">log-fetch-limit()</span> of the sources, to ensure that every message read during the poll loop fits into the output buffer. If the log path sends messages to a destination from multiple sources, the output buffer must be large enough to store the incoming messages of every source.</p>
+        <p>TCP and unix-stream sources can receive the logs from several incoming connections (for example many different clients or applications). For such sources, syslog-ng reads messages from every connection, thus the <span class="Code" oldrole="parameter">log-fetch-limit()</span> parameter applies individually to every connection of the source.</p>
         <MadCap:keyword term="parameters:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;log-iw-size()&lt;/span&gt;]">
         </MadCap:keyword>
         <MadCap:keyword term="parameters:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;max-connections()&lt;/span&gt;]">
         </MadCap:keyword>
         <p class="CaptionFigure" MadCap:autonum="Figure 2: ">Managing log messages of TCP sources in syslog-ng</p>
         <img class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/syslog-ng-io-02.png" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" scale="80" src="../../Resources/Images_Notlocalized/syslog-ng-ose-guide-admin/syslog-ng-io-02.png" style="height: auto; width: auto;" />
-        <p oldrole="para">The flow-control of syslog-ng introduces a control window to the source that tracks how many messages can syslog-ng accept from the source. Every message that syslog-ng reads from the source lowers the window size by one, every message that syslog-ng successfully sends from the output buffer increases the window size by one. If the window is full (that is, its size decreases to zero), syslog-ng stops reading messages from the source. The initial size of the control window is by default <span class="Code" oldrole="userinput">100</span>: the <span class="Code" oldrole="parameter">log-fifo-size()</span> must be larger than this value in order for flow-control to have any effect. If a source accepts messages from multiple connections, all messages use the same control window.</p>
+        <p>The flow-control of syslog-ng introduces a control window to the source that tracks how many messages can syslog-ng accept from the source. Every message that syslog-ng reads from the source lowers the window size by one, every message that syslog-ng successfully sends from the output buffer increases the window size by one. If the window is full (that is, its size decreases to zero), syslog-ng stops reading messages from the source. The initial size of the control window is by default <span class="Code" oldrole="userinput">100</span>: the <span class="Code" oldrole="parameter">log-fifo-size()</span> must be larger than this value in order for flow-control to have any effect. If a source accepts messages from multiple connections, all messages use the same control window.</p>
         <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
             <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
             </col>
@@ -45,36 +45,36 @@
                         </p>
                     </td>
                     <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
-                        <p oldrole="para">If the source can handle multiple connections (for example, <span class="Code" oldrole="parameter">network()</span>), the size of the control window is divided by the value of the <span class="Code" oldrole="parameter">max-connections()</span> parameter and this smaller control window is applied to each connection of the source.</p>
+                        <p>If the source can handle multiple connections (for example, <span class="Code" oldrole="parameter">network()</span>), the size of the control window is divided by the value of the <span class="Code" oldrole="parameter">max-connections()</span> parameter and this smaller control window is applied to each connection of the source.</p>
                     </td>
                 </tr>
             </tbody>
         </table>
-        <p oldrole="para">When flow-control is used, every source has its own control window. As a worst-case situation, the output buffer of the destination must be set to accommodate all messages of every control window, that is, the <span class="Code" oldrole="parameter">log-fifo-size()</span> of the destination must be greater than <span class="Code" oldrole="userinput">number_of_sources</span>*<span class="Code" oldrole="parameter">log-iw-size()</span>. This applies to every source that sends logs to the particular destination. Thus if two sources having several connections and heavy traffic send logs to the same destination, the control window of both sources must fit into the output buffer of the destination. Otherwise, syslog-ng does not activate the flow-control, and messages may be lost.</p>
-        <p oldrole="para">The syslog-ng application handles outgoing messages the following way:</p>
+        <p>When flow-control is used, every source has its own control window. As a worst-case situation, the output buffer of the destination must be set to accommodate all messages of every control window, that is, the <span class="Code" oldrole="parameter">log-fifo-size()</span> of the destination must be greater than <span class="Code" oldrole="userinput">number_of_sources</span>*<span class="Code" oldrole="parameter">log-iw-size()</span>. This applies to every source that sends logs to the particular destination. Thus if two sources having several connections and heavy traffic send logs to the same destination, the control window of both sources must fit into the output buffer of the destination. Otherwise, syslog-ng does not activate the flow-control, and messages may be lost.</p>
+        <p>The syslog-ng application handles outgoing messages the following way:</p>
         <p class="CaptionFigure" MadCap:autonum="Figure 3: ">Handling outgoing messages in <MadCap:variable name="General.abbrev"></MadCap:variable></p>
         <img class="Image" fileref="&lt;entity&gt;imgroot&lt;/entity&gt;/syslog-ng-message-output.png" format="PNG" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" scale="60" src="../../Resources/Images_Notlocalized/syslog-ng-ose-guide-admin/syslog-ng-message-output.png" style="height: auto; width: auto;" />
         <ul oldrole="itemizedlist">
             <li oldrole="listitem">
-                <p oldrole="para"><i oldrole="emphasis">Output queue</i>: Messages from the output queue are sent to the target syslog-ng server. The syslog-ng application puts the outgoing messages directly into the output queue, unless the output queue is full. The output queue can hold 64 messages, this is a fixed value and cannot be modified.</p>
+                <p><i oldrole="emphasis">Output queue</i>: Messages from the output queue are sent to the target syslog-ng server. The syslog-ng application puts the outgoing messages directly into the output queue, unless the output queue is full. The output queue can hold 64 messages, this is a fixed value and cannot be modified.</p>
                 <MadCap:keyword term="output queue">
                 </MadCap:keyword>
             </li>
             <li oldrole="listitem">
-                <p oldrole="para"><i oldrole="emphasis">Disk buffer</i>: If the output queue is full and disk-buffering is enabled, syslog-ng puts the outgoing messages into the disk buffer of the destination.</p>
+                <p><i oldrole="emphasis">Disk buffer</i>: If the output queue is full and disk-buffering is enabled, syslog-ng puts the outgoing messages into the disk buffer of the destination.</p>
                 <MadCap:keyword term="disk queue:['disk buffer']">
                 </MadCap:keyword>
             </li>
             <li oldrole="listitem">
-                <p oldrole="para"><i oldrole="emphasis">Overflow queue</i>: If the output queue is full and the disk buffer is disabled or full, syslog-ng puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter specifies the number of messages stored in the overflow queue. For details on sizing the <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter, see <MadCap:xref href="#"><span style="color: #04aada;" class="mcFormatColor">Managing incoming and outgoing messages with flow-control</span></MadCap:xref>.</p>
+                <p><i oldrole="emphasis">Overflow queue</i>: If the output queue is full and the disk buffer is disabled or full, syslog-ng puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter specifies the number of messages stored in the overflow queue. For details on sizing the <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter, see <MadCap:xref href="#"><span style="color: #04aada;" class="mcFormatColor">Managing incoming and outgoing messages with flow-control</span></MadCap:xref>.</p>
                 <MadCap:keyword term="overflow queue:['output buffer']">
                 </MadCap:keyword>
             </li>
         </ul>
-        <p oldrole="para">There are two types of flow-control: Hard flow-control and soft flow-control.</p>
+        <p>There are two types of flow-control: Hard flow-control and soft flow-control.</p>
         <ul oldrole="itemizedlist">
             <li oldrole="listitem">
-                <p oldrole="para"><i oldrole="emphasis">Soft flow-control:</i> In case of soft flow-control there is no message lost if the destination can accept messages, but it is possible to lose messages if it cannot accept messages (for example non-writeable file destination, or the disk becomes full), and all buffers are full. Soft flow-control cannot be configured, it is automatically available for file <MadCap:conditionaltext MadCap:conditions="General.pe"> and logstore </MadCap:conditionaltext>destinations.</p>
+                <p><i oldrole="emphasis">Soft flow-control:</i> In case of soft flow-control there is no message lost if the destination can accept messages, but it is possible to lose messages if it cannot accept messages (for example non-writeable file destination, or the disk becomes full), and all buffers are full. Soft flow-control cannot be configured, it is automatically available for file <MadCap:conditionaltext MadCap:conditions="General.pe"> and logstore </MadCap:conditionaltext>destinations.</p>
                 <MadCap:keyword term="flow-control:['soft']">
                 </MadCap:keyword>
                 <div class="Example">
@@ -109,14 +109,14 @@ log {
                                 </p>
                             </td>
                             <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span>
-                                <p oldrole="para">Hazard of data loss! For destinations other than file<MadCap:conditionaltext MadCap:conditions="General.pe"> and logstore</MadCap:conditionaltext>, soft flow-control is not available. Thus, it is possible to lose log messages on those destinations. To avoid data loss on those destinations, use hard flow-control.</p>
+                                <p>Hazard of data loss! For destinations other than file<MadCap:conditionaltext MadCap:conditions="General.pe"> and logstore</MadCap:conditionaltext>, soft flow-control is not available. Thus, it is possible to lose log messages on those destinations. To avoid data loss on those destinations, use hard flow-control.</p>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </li>
             <li oldrole="listitem">
-                <p oldrole="para"><i oldrole="emphasis">Hard flow-control:</i> In case of hard flow-control there is no message lost. To use hard flow-control, enable the <span class="Code" oldrole="parameter">flow-control</span> flag in the log path. Hard flow-control is available for all destinations.</p>
+                <p><i oldrole="emphasis">Hard flow-control:</i> In case of hard flow-control there is no message lost. To use hard flow-control, enable the <span class="Code" oldrole="parameter">flow-control</span> flag in the log path. Hard flow-control is available for all destinations.</p>
                 <MadCap:keyword term="flow-control:['hard']">
                 </MadCap:keyword>
                 <div class="Example">
