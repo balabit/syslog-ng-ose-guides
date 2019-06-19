@@ -27,6 +27,14 @@
             <p><i oldrole="emphasis" role="bold">Description:</i> Returns the filename from an argument (for example, a macro: <span class="Code" oldrole="userinput">$(basename ${FILE_NAME})</span>) that contains a filename with a path. For example, <span class="Code" oldrole="userinput">$(basename "/var/log/messages.log")</span> returns <span class="Code" oldrole="userinput">messages.log</span>. To <a href="reference-template-functions.htm">extract the path, use the <span class="Code" oldrole="parameter">dirname</span> template function</a>.</p>
             <p>Available in <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="General.ose">3.10</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0.3</MadCap:conditionaltext> and later.</p>
         </div>
+        <div>
+            <h6 name="template-function-ceil" oldrole="simplesect"><a name="template-function-ceil"></a>ceil</h6>
+            <MadCap:keyword term="ceil">
+            </MadCap:keyword>
+            <p><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(ceil argument)</pre>
+            </p>
+            <p><i oldrole="emphasis" role="bold">Description:</i> Rounds a floating-point number upwards to the nearest integer. For example, <span class="Code" oldrole="userinput">$(ceil 1.5)</span> is 2, <span class="Code" oldrole="userinput">$(ceil -1.5)</span> is -1. See also the <span class="Code" oldrole="parameter">floor</span> and <span class="Code" oldrole="parameter">round</span> template functions.</p>
+        </div>
         <div MadCap:conditions="General.ose">
             <h6 condition="ose" name="template-function-context-lookup" oldrole="simplesect"><a name="template-function-context-lookup"></a>context-lookup</h6>
             <MadCap:keyword term="context-lookup">
@@ -141,6 +149,14 @@
             </div>
         </div>
         <div>
+            <h6 name="template-function-floor" oldrole="simplesect"><a name="template-function-floor"></a>floor</h6>
+            <MadCap:keyword term="floor">
+            </MadCap:keyword>
+            <p><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(floor argument)</pre>
+            </p>
+            <p><i oldrole="emphasis" role="bold">Description:</i> Rounds a floating-point number downwards to the nearest integer. For example, <span class="Code" oldrole="userinput">$(floor 1.5)</span> is 1, <span class="Code" oldrole="userinput">$(floor -1.5)</span> is -2. See also the <span class="Code" oldrole="parameter">ceil</span> and <span class="Code" oldrole="parameter">round</span> template functions.</p>
+        </div>
+        <div>
             <h6 name="template-function-format-cef-extension" oldrole="simplesect"><a name="template-function-format-cef-extension"></a>format-cef-extension</h6>
             <MadCap:keyword term="format-cef-extension()">
             </MadCap:keyword>
@@ -243,7 +259,7 @@
             <p>You can use the Graylog Extended Log Format (GELF) template together with the <span class="Code" oldrole="parameter">graylog2()</span> destination to send syslog messages to <a href="http://docs.graylog.org">Graylog</a>. GELF is the native data format of Graylog.</p>
             <div class="Example">
                 <h6 oldrole="example">Example: Using the format-gelf template function</h6>
-                <p>The following configuration example shows how you can use the <span class="Code" oldrole="parameter">format-gelf</span> template:</p><pre class="Code" oldrole="synopsis">destination graylog2 { 
+                <p>The following configuration example shows how you can use the <span class="Code" oldrole="parameter">format-gelf</span> template:</p><pre class="Code" oldrole="synopsis">destination graylog2 {
     network(
         "127.0.0.1"
         port(12201)
@@ -767,6 +783,21 @@ function to further manipulate the list. The following example returns the first
             <p><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(&lt;operation&gt; "&lt;value1&gt;" "&lt;value2&gt;")</pre>
             </p>
             <p><i oldrole="emphasis" role="bold">Description:</i> These template functions allow you to manipulate numbers, that is, to perform addition (+), substraction (-), multiplication (*), division (/), and modulus (%). All of them require two numeric arguments. The result is <span class="Code" oldrole="userinput">NaN</span> (Not-a-Number) if the parameters are not numbers, cannot be parsed, or if a division by zero would occur. For example, to add the value of two macros, use the following template function:</p><pre class="Code" oldrole="synopsis">$(+ "${&lt;MACRO1&gt;}" "${&lt;MACRO2&gt;}");</pre>
+            <p>Starting with <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="General.ose">3.22</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0.15</MadCap:conditionaltext> and later, the numerical operators support floating-point values. They behave like the operators in the C programming language:</p>
+            <ul>
+                <li>
+                    <p>If both operands are integers, they return an integer.</p>
+                </li>
+                <li>
+                    <p>If any of the operands is a floating-point number, they return a floating-point result.</p>
+                </li>
+            </ul>
+            <p>For example:</p><pre class="Code">$(/ 3 2) # Both operands are integers, so the result is 1
+# One of the operands is a floating point number, so the result is also floating-point
+$(/ 3.0 2) # = 1.500000
+$(/ 3 2.0) # = 1.500000
+$(/ 3.0 2.0) # = 1.500000</pre>
+            <p>To round floating-point numbers, you can use the <span class="Code">ceil</span>, <span class="Code">floor</span>, and <span class="Code">round</span> template functions.</p>
             <MadCap:keyword term="correlating log messages">
             </MadCap:keyword>
             <MadCap:keyword term="message correlation">
@@ -864,6 +895,15 @@ destination d_local {
             </p>
             <p><i oldrole="emphasis" role="bold">Description:</i> Replaces the delimiter character with a new one. For example, the following example replaces the tabulators (<span class="Code" oldrole="userinput">\t</span>) in the message with semicolons (<span class="Code" oldrole="userinput">;</span>):</p><pre class="Code" oldrole="synopsis">$(replace-delimiter "\t" ";" "${MESSAGE}")</pre>
             <p>Available in <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="General.ose">3.5</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0</MadCap:conditionaltext> and later.</p>
+        </div>
+        <div>
+            <h6 name="template-function-round" oldrole="simplesect"><a name="template-function-round"></a>round</h6>
+            <MadCap:keyword term="round">
+            </MadCap:keyword>
+            <p><i oldrole="emphasis" role="bold">Syntax:</i><pre class="Code" oldrole="synopsis">$(round argument)</pre>
+            </p>
+            <p><i oldrole="emphasis" role="bold">Description:</i> Rounds a floating-point number to the nearest integer. For example, <span class="Code">$(round 1.5)</span> is 2. See also the <span class="Code" oldrole="parameter">ceil</span> and <span class="Code" oldrole="parameter">floor</span> template functions.</p>
+            <p>This template function has an optional second argument that sets the precision of rounding. The default is 0 (output a natural number), but values up to 20 are accepted. For example, <span class="Code" oldrole="userinput">$(round 2.123456 4)</span> is 2.1235.</p>
         </div>
         <div>
             <h6 name="template-function-sanitize" oldrole="simplesect"><a name="template-function-sanitize"></a>sanitize</h6>
