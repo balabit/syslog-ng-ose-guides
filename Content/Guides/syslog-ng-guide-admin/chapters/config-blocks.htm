@@ -13,7 +13,8 @@
         <MadCap:keyword term="block">
         </MadCap:keyword>
         <p>To create a reusable configuration snippet and reuse parts of a configuration file, you have to define the block (for example, a source) once, and reference it later. (<a href="https://www.syslog-ng.com/community/b/blog/posts/creating-your-first-block-for-the-syslog-ng-configuration-library-scl">Such reusable blocks are sometimes called a Source Configuration Library, or SCL.</a>) Any syslog-ng object can be a block. Use the following syntax to define a block:</p><pre class="Code" oldrole="synopsis">block type name() {&lt;contents of the block&gt;};</pre>
-        <p>Type must be one of the following: <span class="Code" oldrole="parameter">destination</span>, <span class="Code" oldrole="parameter">filter</span>, <span class="Code" oldrole="parameter">log</span>, <span class="Code" oldrole="parameter">parser</span>, <span class="Code" oldrole="parameter">rewrite</span>, <span class="Code" oldrole="parameter">root</span>, <span class="Code" oldrole="parameter">source</span>. The <span class="Code" oldrole="parameter">root</span> blocks can be used in the "root" context of the configuration file, that is, outside any other statements.</p>
+        <p>Type must be one of the following: <span class="Code" oldrole="parameter">destination</span>, <span class="Code" oldrole="parameter">filter</span>, <span class="Code" oldrole="parameter">log</span>, <span class="Code" oldrole="parameter">options</span>, <span class="Code" oldrole="parameter">parser</span>, <span class="Code" oldrole="parameter">rewrite</span>, <span class="Code" oldrole="parameter">root</span>, <span class="Code" oldrole="parameter">source</span>. The <span class="Code" oldrole="parameter">root</span> blocks can be used in the "root" context of the configuration file, that is, outside any other statements.</p>
+        <p>Note that <span class="Code" oldrole="parameter">options</span> can be used in blocks only in version <MadCap:conditionaltext MadCap:conditions="General.ose">3.22</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0.15</MadCap:conditionaltext> and later.</p>
         <p>Blocks may be nested into each other, so for example a block can be built from other blocks. Blocks are somewhat similar to C++ templates.</p>
         <p>The type and name combination of each block must be unique, that is, two blocks can have the same name if their type is different.</p>
         <p>To use a block in your configuration file, you have to do two things:</p>
@@ -130,6 +131,19 @@ source s_example {
                 <p>The following example is the code of the <a href="source-pacct.htm"><span class="Code" oldrole="parameter">pacct()</span> source driver</a>, which is actually a block that can optionally receive two arguments.</p><pre class="Code" oldrole="synopsis">block source pacct(file("/var/log/account/pacct") follow-freq(1) ...) {
     @module pacctformat
     file("`file`" follow-freq(`follow-freq`) format("pacct") tags(".pacct") `__VARARGS__`);
+};</pre>
+            </div>
+            <div class="Example" MadCap:conditions="General.ose">
+                <h6 condition="ose" oldrole="example">Example: Defining global options in blocks</h6>
+                <p>The following example defines a block called <span class="Code" oldrole="userinput">setup-dns()</span> to set DNS-related settings at a single place.</p><pre class="Code" oldrole="synopsis">block options setup-dns(use-dns()) {
+    keep-hostname(no);
+    use-dns(`use-dns`);
+    use-fqdn(`use-dns`);
+dns-cache(`use-dns`);
+};
+
+options {
+    setup-dns(use-dns(yes));
 };</pre>
             </div>
         </div>
