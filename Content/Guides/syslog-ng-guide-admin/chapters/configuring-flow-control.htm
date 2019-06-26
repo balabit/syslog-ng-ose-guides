@@ -11,13 +11,13 @@
         </MadCap:keyword>
         <MadCap:keyword term="preventing message loss:['flow-control']">
         </MadCap:keyword>
-        <MadCap:keyword term="parameters:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;log-fetch-limit()&lt;/span&gt;]">
+        <MadCap:keyword term="parameters:[log-fetch-limit()]">
         </MadCap:keyword>
-        <MadCap:keyword term="parameters:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;log-fifo-size()&lt;/span&gt;]">
+        <MadCap:keyword term="parameters:[log-fifo-size()]">
         </MadCap:keyword>
-        <MadCap:keyword term="parameters:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;log-iw-size()&lt;/span&gt;]">
+        <MadCap:keyword term="parameters:[log-iw-size()]">
         </MadCap:keyword>
-        <MadCap:keyword term="parameters:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;max-connections()&lt;/span&gt;]">
+        <MadCap:keyword term="parameters:[max-connections()]">
         </MadCap:keyword>
         <MadCap:keyword term="output buffer">
         </MadCap:keyword>
@@ -30,13 +30,14 @@
                 <p>From TCP and unix-stream sources, syslog-ng reads a maximum of <span class="Code" oldrole="parameter">log-fetch-limit()</span> from every connection of the source. The number of connections to the source is set using the <span class="Code" oldrole="parameter">max-connections()</span> parameter.</p>
             </li>
             <li oldrole="listitem">
-                <p>Every destination has an output buffer (<span class="Code" oldrole="parameter">log-fifo-size()</span>).</p>
+                <p>Every destination has an output buffer. The size of this buffer is set automatically for log paths that use flow-control, and can be set using the <span class="Code" oldrole="parameter">log-fifo-size()</span> option for other log paths.</p>
             </li>
             <li oldrole="listitem">
-                <p>Flow-control uses a control window to determine if there is free space in the output buffer for new messages. Every source has its own control window, the <span class="Code" oldrole="parameter">log-iw-size()</span> parameter sets the size of the control window.</p>
+                <p>Flow-control uses a control window to determine if there is free space in the output buffer for new messages. Every source has its own control window, the <span class="Code" oldrole="parameter">log-iw-size()</span> option sets the size of the static control window. Optionally, you can enable a dynamic control window for the source using the <span class="Code" oldrole="parameter">dynamic-window-size()</span> option.</p>
             </li>
             <li oldrole="listitem">
                 <p>When a source accepts multiple connections, the size of the control window is divided by the value of the <span class="Code" oldrole="parameter">max-connections()</span> parameter and this smaller control window is applied to each connection of the source.</p>
+                <p>The dynamic control window is automatically distributed among the active connections of the source.</p>
             </li>
             <li oldrole="listitem">
                 <p>The output buffer must be larger than the control window of every source that logs to the destination.</p>
@@ -45,7 +46,7 @@
                 <p>If the control window is full, syslog-ng stops reading messages from the source until some messages are successfully sent to the destination.</p>
             </li>
             <li oldrole="listitem">
-                <p>If the output buffer becomes full, and <MadCap:conditionaltext MadCap:conditions="General.pe">neither disk-buffering nor flow-control is</MadCap:conditionaltext> <MadCap:conditionaltext MadCap:conditions="General.ose">flow-control is not</MadCap:conditionaltext> used, messages may be lost.</p>
+                <p>If the output buffer becomes full, and neither disk-buffering nor flow-control is used, messages may be lost.</p>
             </li>
         </ul>
         <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" oldrole="warning" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
@@ -61,11 +62,12 @@
                         </p>
                     </td>
                     <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span>
-                        <p>If you modify the <span class="Code" oldrole="parameter">max-connections()</span> or the <span class="Code" oldrole="parameter">log-fetch-limit()</span> parameter, do not forget to adjust the <span class="Code" oldrole="parameter">log-iw-size()</span> and <span class="Code" oldrole="parameter">log-fifo-size()</span> parameters accordingly.</p>
+                        <p>If you modify the <span class="Code" oldrole="parameter">max-connections()</span> or the <span class="Code" oldrole="parameter">log-fetch-limit()</span> parameter, do not forget to adjust the <span class="Code" oldrole="parameter">log-iw-size()</span> and <span class="Code" oldrole="parameter">dynamic-window-size()</span> parameters accordingly.</p>
                     </td>
                 </tr>
             </tbody>
         </table>
+        <!-- FIXME update example, or add a separate one for dynamic flow control -->
         <div class="Example">
             <h6 oldrole="example">Example: Sizing parameters for flow-control</h6>
             <MadCap:keyword term="log paths:['flow-control']">
