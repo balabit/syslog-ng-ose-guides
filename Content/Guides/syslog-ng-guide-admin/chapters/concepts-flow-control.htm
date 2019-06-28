@@ -64,6 +64,7 @@
                 </tbody>
             </table>
             <p>The flow-control of syslog-ng introduces a control window to the source that tracks how many messages can syslog-ng accept from the source. Every message that syslog-ng reads from the source lowers the window size by one, every message that syslog-ng successfully sends from the output buffer increases the window size by one. If the window is full (that is, its size decreases to zero), syslog-ng stops reading messages from the source. The initial size of the control window is by default <span class="Code" oldrole="userinput">100</span>. If a source accepts messages from multiple connections, all messages use the same control window.</p>
+            <p>When using flow-control, syslog-ng automatically sets the size of the output buffer so that it matches the size of the control window of the sources. Note that starting with <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="General.ose">3.22</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0.16</MadCap:conditionaltext>, <span class="Code">log-fifo-size()</span> only affects log paths that are not flow-controlled.</p>
             <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
                 <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
                 </col>
@@ -88,10 +89,9 @@
                 <p>In addition to the static control window set using the <span class="Code" oldrole="parameter">log-iw-size()</span> option, you can also allocate a dynamic window to the source. The syslog-ng application uses this window to dynamically increase the static window of the active connections. The dynamic window is distributed evenly among the active connections of the source. The syslog-ng application periodically checks which connections of the source are active, and redistributes the dynamic window. If only one of the connections is active, it receives the entire dynamic window, while other connections receive only their share of the static window.</p>
                 <p>Using dynamic flow-control on your syslog-ng server is useful when the source has lots of connections, but only a small subset of the active clients send messages at high rate, and the memory of the syslog-ng server is limited. In other cases, it is currently not recommended, because it can result in higher memory usage and fluctuating performance compared to using only the static window.</p>
                 <!-- FIXME figure for dynamic flow-control -->
-                <p>When flow-control is used, every source has its own control window. As a worst-case situation, memory of the host must be greater than the total size of the messages of every control window, plus the size of the dynamic window, that is, the <span class="Code" oldrole="parameter">log-iw-size()</span>+<span class="Code" oldrole="parameter">dynamic-window-size()</span>. This applies to every source that sends logs to the particular destination. Thus if two sources having several connections and heavy traffic send logs to the same destination, the control window of both sources must fit into the memory of the host. Otherwise, syslog-ng does not activate the flow-control, and messages may be lost.</p>
+                <p>When flow-control is used, every source has its own control window. As a worst-case situation, memory of the host must be greater than the total size of the messages of every control window, plus the size of the dynamic window, that is, the <span class="Code" oldrole="parameter">log-iw-size()</span>+<span class="Code" oldrole="parameter">dynamic-window-size()</span>. This applies to every source that sends logs to the particular destination. Thus if two sources having several connections and heavy traffic send logs to the same destination, the control window of both sources must fit into the memory of the host. Otherwise, some messages might not fit in the memory, and messages may be lost.</p>
                 <p>If dynamic flow-control is disabled (which is the default behavior), the value of the <span class="Code" oldrole="parameter">log-iw-size()</span> option cannot be lower than 100. If dynamic flow-control is enabled, you can decrease the value of the <span class="Code" oldrole="parameter">log-iw-size()</span> option (to the minimum of 1).</p>
             </div>
-            <p>When using flow-control, syslog-ng automatically sets the size of the output buffer so that it matches the size of the control window of the sources. As a result, syslog-ng ignores the <span class="Code" oldrole="parameter">log-fifo-size()</span> option for flow-controlled log paths.</p>
             <MadCap:keyword term="flow-control:['soft']">
             </MadCap:keyword>
             <p>In case of soft flow-control there is no message lost if the destination can accept messages. It is possible to lose messages if it cannot accept messages (for example, the file destination is not writable, or the disk becomes full), and all buffers are full. Soft flow-control cannot be configured, it is automatically available for file <MadCap:conditionaltext MadCap:conditions="General.pe"> and logstore </MadCap:conditionaltext>destinations.</p>
@@ -108,7 +108,6 @@ destination d_file {
 destination d_tcp {
     network("127.0.0.1"
         port(2222)
-        log-fifo-size(1000)
     );
 };
 log {
@@ -145,7 +144,6 @@ destination d_file {
 destination d_tcp {
     network("127.0.0.1"
         port(2222)
-        log-fifo-size(1000)
     );
 };
 log {
@@ -173,7 +171,7 @@ log {
                     </MadCap:keyword>
                 </li>
                 <li oldrole="listitem">
-                    <p><i oldrole="emphasis">Overflow queue</i>: If the output queue is full and the disk buffer is disabled or full, syslog-ng puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter specifies the number of messages stored in the overflow queue, unless dynamic flow-control is enabled. When dynamic flow-control is enabled, syslog-ng sets the size of the overflow queue automatically. For details on sizing the <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter, see <MadCap:xref href="configuring-flow-control.htm"><span style="color: #04aada;" class="mcFormatColor">Managing incoming and outgoing messages with flow-control</span></MadCap:xref>.</p>
+                    <p><i oldrole="emphasis">Overflow queue</i>: If the output queue is full and the disk buffer is disabled or full, syslog-ng puts the outgoing messages into the overflow queue of the destination. (The overflow queue is identical to the output buffer used by other destinations.) The <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter specifies the number of messages stored in the overflow queue, unless flow-control is enabled. When dynamic flow-control is enabled, syslog-ng sets the size of the overflow queue automatically. For details on sizing the <span class="Code" oldrole="parameter">log-fifo-size()</span> parameter, see <MadCap:xref href="configuring-flow-control.htm"><span style="color: #04aada;" class="mcFormatColor">Managing incoming and outgoing messages with flow-control</span></MadCap:xref>.</p>
                     <MadCap:keyword term="overflow queue:['output buffer']">
                     </MadCap:keyword>
                 </li>
