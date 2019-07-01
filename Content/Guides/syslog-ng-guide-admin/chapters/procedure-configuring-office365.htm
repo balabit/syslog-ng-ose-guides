@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+    </head>
+    <body name="procedure-configuring-office365" oldrole="procedure">
+        <h1 name="procedure-configuring-office365"><a name="procedure-configuring-office365"></a>Configuring Office 365 to permit fetching logs</h1>
+        <MadCap:keyword term="Office 365">
+        </MadCap:keyword>
+        <MadCap:keyword term="Management Activity API">
+        </MadCap:keyword>
+        <MadCap:keyword term="source:['office365-azure-active-directory']">
+        </MadCap:keyword>
+        <MadCap:keyword term="source:['office365-exchange']">
+        </MadCap:keyword>
+        <MadCap:keyword term="source:['office365-general']">
+        </MadCap:keyword>
+        <MadCap:keyword term="source:['office365-sharepoint']">
+        </MadCap:keyword>
+        <MadCap:keyword term="source:['office365-dlp']">
+        </MadCap:keyword>
+        <MadCap:keyword term="source:['office365']">
+        </MadCap:keyword>
+        <h6 oldrole="formalpara" MadCap:conditions="CommonConditions_DoNotEdit.DoNotPublish">Purpose</h6>
+        <p oldrole="para">This procedure summarizes how to configure Office 365 to permit <MadCap:variable name="General.product"></MadCap:variable> (<MadCap:variable name="General.abbrev"></MadCap:variable>) to fetch log messages using the <a href="https://docs.microsoft.com/en-us/office/office-365-management-api/office-365-management-activity-api-reference">Office 365 Management Activity API</a>.</p>
+        <div>
+            <h6 oldrole="formalpara">Prerequisites</h6>
+            <ul>
+                <li>
+                    <p>A valid Office 365 account (for example: Azure Active Directory Premium P2).</p>
+                </li>
+                <li>
+                    <p>Administrator permissions to the Office 365 account.</p>
+                </li>
+                <li>
+                    <p><a href="https://docs.microsoft.com/en-us/office/office-365-management-api/office-365-management-activity-api-reference#start-a-subscription">Content subscription</a> must be enabled for the content types you want to fetch logs from.</p>
+                </li>
+                <li>
+                    <p><MadCap:variable name="General.product"></MadCap:variable> version 7.0.15 or later.</p>
+                </li>
+            </ul>
+        </div>
+        <div>
+            <h6 oldrole="formalpara" MadCap:conditions="CommonConditions_DoNotEdit.DoNotPublish">Steps</h6>
+            <ol oldrole="procedure">
+                <li oldrole="step">
+                    <p>The <MadCap:variable name="General.abbrev"></MadCap:variable> application communicates with the Management Activity API through a service app registered in Azure. Complete the following steps to register a service app. For details on registering an app, see the <a href="https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal">Office 365 documentation</a>.</p>
+                    <ol>
+                        <li>
+                            <p>Login to <a href="https://portal.azure.com">https://portal.azure.com</a>.</p>
+                        </li>
+                        <li>
+                            <p>Register a new web application (for example, <span class="Code" oldrole="userinput">syslog-service-app</span>).</p>
+                        </li>
+                        <li>
+                            <p>Grant all <b class="UI">application permissions</b> and <b class="UI">delegated permissions</b> to the created app.</p>
+                        </li>
+                        <li>
+                            <p>Create secret (password) for the app. Record the password somewhere, as you will need it later to configure <MadCap:variable name="General.abbrev"></MadCap:variable>. If you set an expiration to the password, make sure to renew the password and update it in your <MadCap:variable name="General.abbrev"></MadCap:variable> configuration file before it expires. Note that special characters (for example <span class=="Code">?/*+</span>) in the client secret must be escaped when starting the content subscription.</p>
+                        </li>
+                        <li>
+                            <p>In the authentication settings of the new app, enable <b class="UI">Access Tokens</b>.</p>
+                        </li>
+                    </ol>
+                </li>
+                <li oldrole="step">
+                    <p>Enabling audit logging in Office 365. Note that your user must have an administrator permissions to enable audit logging. For details on enabling audit logging, see the <a href="https://docs.microsoft.com/en-us/office365/securitycompliance/turn-audit-log-search-on-or-off">Office 365 documentation</a>.</p>
+                </li>
+                <li oldrole="step">
+                    <p>Start content subscriptions for the content types you want to fetch logs from using the following command. The <span class="Code">office365subscriptiontool</span> utility is automatically installed with <MadCap:variable name="General.abbrev"></MadCap:variable> version 7.0.15 and newer.</p><pre class="Code" oldrole="synopsis">bin/office365subscriptiontool start --tenant-id=[your tenant-id] --client-id=[your client-id] --client-secret=[your client-secret in escaped format] --content-type=[content-type-to-fetch-logs-from]</pre>
+                    <p>Note that special characters (for example <span class=="Code">?/*+</span>) in the client secret must be escaped when starting the content subscription.</p>
+                    <p>In your <MadCap:variable name="General.abbrev"></MadCap:variable> configuration, you will have to use the source driver matching the content type of the content subscription. For example, use the <span class="Code" oldrole="parameter">office365-azure-active-directory()</span> driver for the <span class="Code">Audit.AzureActiveDirectory</span> content type.</p>
+                </li>
+            </ol>
+        </div>
+    </body>
+</html>
