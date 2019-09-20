@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- FIXME jumplist -->
 <html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
     <head>
@@ -20,14 +20,14 @@
         <p>The syslog-ng application monitors (polls) the sources defined in its configuration file, periodically checking each source for messages. When a log message is found in one of the sources, syslog-ng polls every source and reads the available messages. These messages are processed and put into the output buffer of syslog-ng (also called fifo). From the output buffer, the operating system sends the messages to the appropriate destinations.</p>
         <p>In large-traffic environments many messages can arrive during a single poll loop, therefore syslog-ng reads only a fixed number of messages from each source. The <span class="Code" oldrole="parameter">log-fetch-limit()</span> option specifies the number of messages read during a poll loop from a single source.</p>
         <p class="CaptionFigure" MadCap:autonum="Figure 1: ">Managing log messages in syslog-ng</p>
-        <img class="Image" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" scale="80" src="../../Resources/Images_Notlocalized/syslog-ng-ose-guide-admin/syslog-ng-io-01.png" style="height: auto; width: auto;" />
+        <img class="Image" MadCap:mediastyle="@media print { width: auto;height: auto; }" oldrole="figure" scale="80" src="../../Resources/Images_Notlocalized/syslog-ng-ose-guide-admin/syslog-ng-io-01.png" style="height: auto; width: auto;" />
         <p>TCP and unix-stream sources can receive the logs from several incoming connections (for example, many different clients or applications). For such sources, syslog-ng reads messages from every connection, thus the <span class="Code" oldrole="parameter">log-fetch-limit()</span> parameter applies individually to every connection of the source.</p>
         <MadCap:keyword term="parameters:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;log-iw-size()&lt;/span&gt;]">
         </MadCap:keyword>
         <MadCap:keyword term="parameters:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;max-connections()&lt;/span&gt;]">
         </MadCap:keyword>
         <p class="CaptionFigure" MadCap:autonum="Figure 2: ">Managing log messages of TCP sources in syslog-ng</p>
-        <img class="Image" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" scale="80" src="../../Resources/Images_Notlocalized/syslog-ng-ose-guide-admin/syslog-ng-io-02.png" style="height: auto; width: auto;" />
+        <img class="Image" MadCap:mediastyle="@media print { width: auto;height: auto; }" oldrole="figure" scale="80" src="../../Resources/Images_Notlocalized/syslog-ng-ose-guide-admin/syslog-ng-io-02.png" style="height: auto; width: auto;" />
         <div>
             <h6>Log paths without flow-control</h6>
             <MadCap:keyword term="output buffer">
@@ -45,44 +45,14 @@
                     <p>Soft flow-control: the log path includes a file<MadCap:conditionaltext MadCap:conditions="General.pe"> or a logstore </MadCap:conditionaltext> destination.</p>
                 </li>
             </ul>
-            <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
-                <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
-                </col>
-                <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
-                </col>
-                <tbody>
-                    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
-                        <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
-                            <p>
-                                <img src="../../../Resources/Images/Common/note.png" />
-                            </p>
-                        </td>
-                        <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
-                            <p>The way flow-control works has changed significantly in version <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="General.ose">3.22</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0.16</MadCap:conditionaltext>. If you are using an older version of <MadCap:variable name="General.abbrev"></MadCap:variable>, consult the documentation of the version you are using for details about flow-control.</p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div cellspacing="0" class="Note" oldrole="note" style="width: 100%;"><span class="AllNoteStyles">NOTE: </span>
+                <p>The way flow-control works has changed significantly in version <MadCap:variable name="General.abbrev"></MadCap:variable><MadCap:conditionaltext MadCap:conditions="General.ose">3.22</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0.16</MadCap:conditionaltext>. If you are using an older version of <MadCap:variable name="General.abbrev"></MadCap:variable>, consult the documentation of the version you are using for details about flow-control.</p>
+            </div>
             <p>The flow-control of syslog-ng introduces a control window to the source that tracks how many messages can syslog-ng accept from the source. Every message that syslog-ng reads from the source lowers the window size by one, every message that syslog-ng successfully sends from the output buffer increases the window size by one. If the window is full (that is, its size decreases to zero), syslog-ng stops reading messages from the source. The initial size of the control window is by default <span class="Code" oldrole="userinput">100</span>. If a source accepts messages from multiple connections, all messages use the same control window.</p>
-            <p>When using flow-control, syslog-ng automatically sets the size of the output buffer so that it matches the size of the control window of the sources. Note that starting with <MadCap:variable name="General.abbrev"></MadCap:variable> <MadCap:conditionaltext MadCap:conditions="General.ose">3.22</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0.16</MadCap:conditionaltext>, <span class="Code">log-fifo-size()</span> only affects log paths that are not flow-controlled.</p>
-            <table cellspacing="0" class="TableStyle-NoteTable_Blue_DoNotEdit" oldrole="note" style="width: 100%;mc-table-style: url('../../../Resources/TableStyles/NoteTable_Blue_DoNotEdit.css');">
-                <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column1" style="width: 0.3in;">
-                </col>
-                <col class="TableStyle-NoteTable_Blue_DoNotEdit-Column-Column2">
-                </col>
-                <tbody>
-                    <tr class="TableStyle-NoteTable_Blue_DoNotEdit-Body-Body1">
-                        <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyB-Column1-Body1">
-                            <p>
-                                <img src="../../../Resources/Images/Common/note.png" />
-                            </p>
-                        </td>
-                        <td class="TableStyle-NoteTable_Blue_DoNotEdit-BodyA-Column2-Body1"><span class="AllNoteStyles">NOTE: </span>
-                            <p>If the source can handle multiple connections (for example, <span class="Code" oldrole="parameter">network()</span> and <span class="Code" oldrole="parameter">syslog()</span>), the size of the control window is divided by the value of the <span class="Code" oldrole="parameter">max-connections()</span> parameter and this smaller control window is applied to each connection of the source.</p>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <p>When using flow-control, syslog-ng automatically sets the size of the output buffer so that it matches the size of the control window of the sources. Note that starting with <MadCap:variable name="General.abbrev"></MadCap:variable><MadCap:conditionaltext MadCap:conditions="General.ose">3.22</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.pe">7.0.16</MadCap:conditionaltext>, <span class="Code">log-fifo-size()</span> only affects log paths that are not flow-controlled.</p>
+            <div cellspacing="0" class="Note" oldrole="note" style="width: 100%;"><span class="AllNoteStyles">NOTE: </span>
+                <p>If the source can handle multiple connections (for example, <span class="Code" oldrole="parameter">network()</span> and <span class="Code" oldrole="parameter">syslog()</span>), the size of the control window is divided by the value of the <span class="Code" oldrole="parameter">max-connections()</span> parameter and this smaller control window is applied to each connection of the source.</p>
+            </div>
             <div>
                 <!-- FIXME move into separate topic/restructure the entire page -->
                 <h6>Dynamic flow-control</h6>
@@ -158,7 +128,7 @@ log {
             <h6>Handling outgoing messages</h6>
             <p>The syslog-ng application handles outgoing messages the following way:</p>
             <p class="CaptionFigure" MadCap:autonum="Figure 3: ">Handling outgoing messages in <MadCap:variable name="General.abbrev"></MadCap:variable></p>
-            <img class="Image" MadCap:mediastyle="@media print { width: auto; height: auto; }" oldrole="figure" scale="60" src="../../Resources/Images_Notlocalized/syslog-ng-ose-guide-admin/syslog-ng-message-output.png" style="height: auto; width: auto;" />
+            <img class="Image" MadCap:mediastyle="@media print { width: auto;height: auto; }" oldrole="figure" scale="60" src="../../Resources/Images_Notlocalized/syslog-ng-ose-guide-admin/syslog-ng-message-output.png" style="height: auto; width: auto;" />
             <ul oldrole="itemizedlist">
                 <li oldrole="listitem">
                     <p><i oldrole="emphasis">Output queue</i>: Messages from the output queue are sent to the target syslog-ng server. The syslog-ng application puts the outgoing messages directly into the output queue, unless the output queue is full. The output queue can hold 64 messages, this is a fixed value and cannot be modified.</p>
