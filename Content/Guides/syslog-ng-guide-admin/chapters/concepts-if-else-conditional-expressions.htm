@@ -8,27 +8,54 @@
         <MadCap:keyword term="log messages, structure">
         </MadCap:keyword>
         <p>You can use <span class="Code" oldrole="userinput">if {}</span>, <span class="Code" oldrole="userinput">elif {}</span>, and <span class="Code" oldrole="userinput">else {}</span> blocks to configure conditional expressions. </p>
-                <p>Conditional expressions have two formats:</p>
-                <ul oldrole="itemizedlist">
-                    <li oldrole="listitem">
-                        <p>Explicit filter expression:</p><pre class="Code" oldrole="synopsis">if (message('foo')) {
+        <h6>Conditional expressions' format</h6>
+        <p>Conditional expressions have two formats:</p>
+        <ul oldrole="itemizedlist">
+            <li oldrole="listitem">
+                <p>Explicit filter expression:</p><pre class="Code" oldrole="synopsis">if (message('foo')) {
     parser { date-parser(); };
 } else {
     ...
 };</pre>
                 <p>This format only uses the filter expression in <span class="Code" oldrole="userinput">if()</span>. If <span class="Code" oldrole="userinput">if</span> does not contain <span class="Code" oldrole="userinput">'foo'</span>, the <span class="Code" oldrole="userinput">else</span> branch is taken.</p>
                 <p>The <span class="Code" oldrole="userinput">else{}</span> branch can be empty, you can use it to send the message to the default branch.</p>
-                    </li>
-                    <li oldrole="listitem">
-                        <p>Condition embedded in the log path:</p><pre class="Code" oldrole="synopsis">if {
+            </li>
+            <li oldrole="listitem">
+                <p>Condition embedded in the log path:</p><pre class="Code" oldrole="synopsis">if {
     filter { message('foo')); };
     parser { date-parser(); };
 } else {
     ...
 };</pre>
-                        <p>This format considers all filters and all parsers as the condition, combined. If the message contains <span class="Code" oldrole="userinput">'foo'</span> and the <span class="Code" oldrole="userinput">date-parser()</span> fails, the <span class="Code" oldrole="userinput">else</span> branch is taken. Similarly, if the message does not contain <span class="Code" oldrole="userinput">'foo'</span>, the <span class="Code" oldrole="userinput">else</span> branch is taken.</p>
-                    </li>
-                </ul>
-                <p>An alternative, less straightforward way to implement conditional evaluation is to use junctions. For details on junctions and channels, see <MadCap:xref href="junctions.htm#junctions"><span style="color: #04aada;" class="mcFormatColor">Junctions and channels</span></MadCap:xref>.</p>
+                <p>This format considers all filters and all parsers as the condition, combined. If the message contains <span class="Code" oldrole="userinput">'foo'</span> and the <span class="Code" oldrole="userinput">date-parser()</span> fails, the <span class="Code" oldrole="userinput">else</span> branch is taken. Similarly, if the message does not contain <span class="Code" oldrole="userinput">'foo'</span>, the <span class="Code" oldrole="userinput">else</span> branch is taken.</p>
+            </li>
+        </ul>
+        <h6>Using the <span class="Code" oldrole="userinput">if {}</span> and <span class="Code" oldrole="userinput">else {}</span> blocks in your configuration </h6>
+        <p>
+            You can copy-paste the following example and use it as a template for using the <span class="Code" oldrole="userinput">if {}</span> and <span class="Code" oldrole="userinput">else {}</span> blocks in your configuration.</p>
+        <div class="Example">
+            <h6>Example for using the <span class="Code" oldrole="userinput">if {}</span> and <span class="Code" oldrole="userinput">else {}</span> blocks in your configuration</h6><pre class="Code">```
+log    {
+        source \{ example-msg-generator(num(1) template("...,STRING-TO-MATCH,..."));
+        };
+        source { example-msg-generator(num(1) template("...,NO-MATCH,..."));
+        };
+ 
+if (message("STRING-TO-MATCH")) {   
+        destination \{ file(/dev/stdout template("matched: $MSG\n") persist-name("1")); }
+        ;}
+else    {
+        destination \{ file(/dev/stdout template("unmatched: $MSG\n") persist-name("2")); };
+        };
+};
+```
+results in
+ 
+```
+matched: ...,STRING-TO-MATCH,...
+unmatched: ...,NO-MATCH,...
+```</pre>
+        </div>
+        <p>An alternative, less straightforward way to implement conditional evaluation is to use junctions. For details on junctions and channels, see <MadCap:xref href="junctions.htm#junctions"><span style="color: #04aada;" class="mcFormatColor">Junctions and channels</span></MadCap:xref>.</p>
     </body>
 </html>
