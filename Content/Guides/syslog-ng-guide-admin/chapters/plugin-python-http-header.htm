@@ -4,9 +4,69 @@
         <meta name="description" content="" />
     </head>
     <body name="plugin-python-http-header" oldrole="chapter">
-        <h1 name="plugin-python-http-header"><a name="plugin-python-http-header"></a>The python-http-header file</h1>
+        <h1 name="plugin-python-http-header"><a name="plugin-python-http-header"></a>The Python HTTP header plugin</h1>
+        <p>This section describes the <MadCap:variable name="General.product" /> (<MadCap:variable name="General.abbrev" />) application's Python HTTP header plugin.</p>
+        <p>For more information about modules in <MadCap:variable name="General.ose" />, see <MadCap:xref href="modules.htm"><span style="color: #04aada;" class="mcFormatColor">Modules in [%=General.product%] ([%=General.abbrev%])</span></MadCap:xref>.</p>
+        <h6>The Python HTTP header plugin</h6>
+        <p>The Python HTTP header plugin is a signal-slot mechanism-based <MadCap:variable name="General.abbrev" /> module that enables users to implement HTTP header plugins using the Python programming language.</p>
+        <h6>The Python interface</h6>
+		<p>You can define the Python interface with the following definition:<pre>def get_headers(self, body, headers):</pre></p>
+		<p>The definition should return a <span class="Code">string list</span>.</p>
+		<p>By default, when the <span>signal_http_header_request</span> is called, the connected slot automatically executes the Python code. If the plugin fails, the HTTP module does not send the HTTP request without the header items by default.</p>
+        <h6>Example configuration</h6>
+		<div class="Example">
+			<h6>The following configuration is an example for using the Python HTTP header plugin</h6>
+			<p>{{@version: 3.25
+
+				python {
+				from syslogng import Logger
+
+				logger = Logger()
+
+				class TestCounter():
+				def _init_(self, options):
+				self.header = options["header"]
+				self.counter = int(options["counter"])
+				logger.debug(f"TestCounter class instantiated; options=
+
+				{options}
+				")
+
+				def get_headers(self, body, headers):
+				logger.debug(f"get_headers() called, received body={body}, headers={headers}")
+
+				response = ["{}: {}".format(self.header, self.counter)]
+				self.counter += 1
+				return response
+
+				def _del_(self):
+				logger.debug("Deleting TestCounter class instance")
+				};
+
+				source s_network {
+				network(port(5555));
+				};
+
+				destination d_http {
+				http(
+				python_http_header(
+				class("TestCounter")
+				options("header", "X-Test-Python-Counter")
+				options("counter", 11)
+				mark-errors-as-critical(no)
+				)
+				url("http://127.0.0.1:8888")
+				);
+				};
+
+				log {
+				source(s_network);
+				destination(d_http);
+				flags(flow-control);
+			};}}|</p>
+		</div>
         <MadCap:keyword term="plugin-python-http-header">
         </MadCap:keyword>
-		<MadCap:miniTocProxy style="mc-toc-depth: 2;" />
+        <MadCap:miniTocProxy style="mc-toc-depth: 2;" />
     </body>
 </html>
