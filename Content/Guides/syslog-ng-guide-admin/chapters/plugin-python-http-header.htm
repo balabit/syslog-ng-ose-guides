@@ -9,22 +9,29 @@
         <p>For more information about modules in <MadCap:variable name="General.ose" />, see <MadCap:xref href="modules.htm"><span style="color: #04aada;" class="mcFormatColor">Modules in [%=General.product%] ([%=General.abbrev%])</span></MadCap:xref>.</p>
         <h6>The Python HTTP header plugin</h6>
         <p>The Python HTTP header plugin is a signal-slot mechanism-based <MadCap:variable name="General.abbrev" /> module that enables users to create custom headers for the HTTP destination using the Python programming language.</p>
-        <h6>The Python interface</h6>
-        <p>You can define the Python interface with the following definition:<pre>def get_headers(self, body, headers):</pre></p>
+        <div class="Note">
+            <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span>Currently, the HTTP module only defines one signal (namely, <span class="Code">signal_http_header_request</span>). The <span class="Code">python-http-header</span> plugin implements a Python binding for this signal.</p>
+        </div>
+        <h6>Defining the Python interface</h6>
+        <p>You can define the Python interface with the following:<pre>def get_headers(self, body, headers):</pre></p>
         <p>The definition should return a <span class="Code">string list</span>.</p>
-        <p>By default, when the <span>signal_http_header_request</span> is called, the connected slot automatically executes the Python code. If the plugin fails, the HTTP module does not send the HTTP request without the header items by default.</p>
+        <p>By default, when the <span>signal_http_header_request</span> is called, the connected slot automatically executes the Python code. </p>
+        <div class="Note">
+            <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span>If the plugin fails, the HTTP module does not send the HTTP request without the header items by default. If you want the HTTP module to try sending the request without the header items, disable the <span class="Code">mark-errors-as-critical</span> function.</p>
+        </div>
         <h6>Example configuration</h6>
         <div class="Example">
             <h6>Example configuration for using the Python HTTP header plugin</h6>
             <p>
             </p><pre class="Example">{{@version: 3.25
+				
 python {
 from syslogng import Logger
 
 logger = Logger()
 
 class TestCounter():
-def _init_(self, options):
+def _<i>init</i>_(self, options):
 self.header = options["header"]
 self.counter = int(options["counter"])
 logger.debug(f"TestCounter class instantiated; options=
@@ -39,7 +46,7 @@ response = ["{}: {}".format(self.header, self.counter)]
 self.counter += 1
 return response
 
-def _del_(self):
+def _<i>del</i>_(self):
 logger.debug("Deleting TestCounter class instance")
 };
 
