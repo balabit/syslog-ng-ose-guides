@@ -17,7 +17,7 @@
         </MadCap:snippetBlock>
         <div class="Example">
             <h6 name="example-csv-parser" oldrole="example"><a name="example-csv-parser"></a>Example: Segmenting hostnames separated with a dash</h6>
-            <p>The following example separates hostnames like <span class="Code" oldrole="userinput">example-1</span> and <span class="Code" oldrole="userinput">example-2</span> into two parts.</p><pre class="Code" oldrole="synopsis">parser p_hostname_segmentation {
+            <p>The following example separates hostnames like <span class="Code" oldrole="userinput">example-1</span> and <span class="Code" oldrole="userinput">example-2</span> into two parts.</p><pre class="Code">parser p_hostname_segmentation {
     csv-parser(columns("HOSTNAME.NAME", "HOSTNAME.ID")
     delimiters("-")
     flags(escape-none)
@@ -34,9 +34,9 @@ log {
         </div>
         <div class="Example">
             <h6 name="example-parser-apache" oldrole="example"><a name="example-parser-apache"></a>Example: Parsing Apache log files</h6>
-            <p>The following parser processes the log of Apache web servers and separates them into different fields. Apache log messages can be formatted like:</p><pre class="Code" oldrole="synopsis">"%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\" %T %v"</pre>
-            <p>Here is a sample message:</p><pre class="Code" oldrole="synopsis">192.168.1.1 - - [31/Dec/2007:00:17:10 +0100] "GET /cgi-bin/example.cgi HTTP/1.1" 200 2708 "-" "curl/7.15.5 (i4 86-pc-linux-gnu) libcurl/7.15.5 OpenSSL/0.9.8c zlib/1.2.3 libidn/0.6.5" 2 example.mycompany</pre>
-            <p>To parse such logs, the delimiter character is set to a single whitespace (<span class="Code" oldrole="userinput">delimiters(" ")</span>). Whitespaces between quotes and brackets are ignored (<span class="Code" oldrole="userinput">quote-pairs('""[]')</span>).</p><pre class="Code" oldrole="synopsis">parser p_apache {
+            <p>The following parser processes the log of Apache web servers and separates them into different fields. Apache log messages can be formatted like:</p><pre class="Code">"%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-Agent}i\" %T %v"</pre>
+            <p>Here is a sample message:</p><pre class="Code">192.168.1.1 - - [31/Dec/2007:00:17:10 +0100] "GET /cgi-bin/example.cgi HTTP/1.1" 200 2708 "-" "curl/7.15.5 (i4 86-pc-linux-gnu) libcurl/7.15.5 OpenSSL/0.9.8c zlib/1.2.3 libidn/0.6.5" 2 example.mycompany</pre>
+            <p>To parse such logs, the delimiter character is set to a single whitespace (<span class="Code" oldrole="userinput">delimiters(" ")</span>). Whitespaces between quotes and brackets are ignored (<span class="Code" oldrole="userinput">quote-pairs('""[]')</span>).</p><pre class="Code">parser p_apache {
     csv-parser(
         columns("APACHE.CLIENT_IP", "APACHE.IDENT_NAME", "APACHE.USER_NAME",
         "APACHE.TIMESTAMP", "APACHE.REQUEST_URL", "APACHE.REQUEST_STATUS",
@@ -47,7 +47,7 @@ log {
         quote-pairs('""[]')
     );
 };</pre>
-            <p>The results can be used for example, to separate log messages into different files based on the APACHE.USER_NAME field. If the field is empty, the <span class="Code" oldrole="userinput">nouser</span> name is assigned.</p><pre class="Code" oldrole="synopsis">log {
+            <p>The results can be used for example, to separate log messages into different files based on the APACHE.USER_NAME field. If the field is empty, the <span class="Code" oldrole="userinput">nouser</span> name is assigned.</p><pre class="Code">log {
     source(s_local);
     parser(p_apache);
     destination(d_file);
@@ -58,7 +58,7 @@ destination d_file {
         </div>
         <div class="Example">
             <h6 name="example-parser-multiple" oldrole="example"><a name="example-parser-multiple"></a>Example: Segmenting a part of a message</h6>
-            <p>Multiple parsers can be used to split a part of an already parsed message into further segments. The following example splits the timestamp of a parsed Apache log message into separate fields.</p><pre class="Code" oldrole="synopsis">parser p_apache_timestamp {
+            <p>Multiple parsers can be used to split a part of an already parsed message into further segments. The following example splits the timestamp of a parsed Apache log message into separate fields.</p><pre class="Code">parser p_apache_timestamp {
     csv-parser(
         columns("APACHE.TIMESTAMP.DAY", "APACHE.TIMESTAMP.MONTH", "APACHE.TIMESTAMP.YEAR", "APACHE.TIMESTAMP.HOUR", "APACHE.TIMESTAMP.MIN", "APACHE.TIMESTAMP.SEC", "APACHE.TIMESTAMP.ZONE")
         delimiters("/: ")

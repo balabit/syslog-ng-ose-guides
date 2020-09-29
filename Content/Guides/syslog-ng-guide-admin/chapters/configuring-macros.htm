@@ -12,15 +12,15 @@
         <div>
             <h6>Declaration:</h6>
             <MadCap:keyword term="templates:['defining']">
-            </MadCap:keyword><pre class="Code" oldrole="synopsis">template &lt;template-name&gt; {
+            </MadCap:keyword><pre class="Code">template &lt;template-name&gt; {
     template("&lt;template-expression&gt;") &lt;template-escape(yes)&gt;;
 };</pre>
         </div>
         <p>Template objects have a single option called <span class="Code" oldrole="parameter">template-escape()</span>, which is disabled by default (<span class="Code" oldrole="userinput">template-escape(no)</span>). This behavior is useful when the messages are passed to an application that cannot handle escaped characters properly. Enabling template escaping (<span class="Code" oldrole="userinput">template-escape(yes)</span>) causes syslog-ng to escape the <span class="Code" oldrole="userinput">'</span>, <span class="Code" oldrole="userinput">"</span>, and backslash characters from the messages.</p>
-        <p>If you do not want to enable the <span class="Code" oldrole="parameter">template-escape()</span> option (which is rarely needed), you can define the template without the enclosing braces.</p><pre class="Code" oldrole="synopsis">template &lt;template-name&gt; "&lt;template-expression&gt;";</pre>
-        <p>You can also refer to an existing template from within a template. The result of the referred template will be pasted into the second template.</p><pre class="Code" oldrole="synopsis">template first-template "sample-text";
+        <p>If you do not want to enable the <span class="Code" oldrole="parameter">template-escape()</span> option (which is rarely needed), you can define the template without the enclosing braces.</p><pre class="Code">template &lt;template-name&gt; "&lt;template-expression&gt;";</pre>
+        <p>You can also refer to an existing template from within a template. The result of the referred template will be pasted into the second template.</p><pre class="Code">template first-template "sample-text";
 template second-template "The result of the first-template is: $(template first-template)";</pre>
-        <p>If you want to use a template only once, you can define the template inline, for example:</p><pre class="Code" oldrole="synopsis">destination d_file {
+        <p>If you want to use a template only once, you can define the template inline, for example:</p><pre class="Code">destination d_file {
     file ("/var/log/messages" template("${ISODATE} ${HOST} ${MESSAGE}\n") );
 };</pre>
         <p>Macros can be included by prefixing the macro name with a <span class="Code" oldrole="userinput">$</span> sign, just like in Bourne compatible shells. Although using braces around macro names is not mandatory, and the <span class="Code" oldrole="userinput">"$MESSAGE"</span> and <span class="Code" oldrole="userinput">"${MESSAGE}"</span> formats are equivalent, using the <span class="Code" oldrole="userinput">"${MESSAGE}"</span> format is recommended for clarity.</p>
@@ -33,29 +33,29 @@ template second-template "The result of the first-template is: $(template first-
         </MadCap:snippetBlock>
         <MadCap:keyword term="macros:['default value']">
         </MadCap:keyword>
-        <p>Default values for macros can also be specified by appending the <span class="Code" oldrole="userinput">:-</span> characters and the default value of the macro. If a message does not contain the field referred to by the macro, or it is empty, the default value will be used when expanding the macro. For example, if a message does not contain a hostname, the following macro can specify a default hostname.</p><pre class="Code" oldrole="synopsis">${HOST:-default_hostname}</pre>
+        <p>Default values for macros can also be specified by appending the <span class="Code" oldrole="userinput">:-</span> characters and the default value of the macro. If a message does not contain the field referred to by the macro, or it is empty, the default value will be used when expanding the macro. For example, if a message does not contain a hostname, the following macro can specify a default hostname.</p><pre class="Code">${HOST:-default_hostname}</pre>
         <p>By default, syslog-ng sends messages using the following template: <span class="Code" oldrole="userinput">${ISODATE} ${HOST} ${MSGHDR}${MESSAGE}\n</span>. (The <span class="Code" oldrole="userinput">${MSGHDR}${MESSAGE}</span> part is written together because the <span class="Code" oldrole="parameter">${MSGHDR}</span> macro includes a trailing whitespace.)</p>
         <div class="Example">
             <h6 oldrole="example">Example: Using templates and macros</h6>
             <MadCap:keyword term="templates:['example']">
             </MadCap:keyword>
-            <p>The following template (<span class="Code" oldrole="userinput">t_demo_filetemplate</span>) adds the date of the message and the name of the host sending the message to the beginning of the message text. The template is then used in a file destination: messages sent to this destination (<span class="Code" oldrole="userinput">d_file</span>) will use the message format defined in the template.</p><pre class="Code" oldrole="synopsis">template t_demo_filetemplate {
+            <p>The following template (<span class="Code" oldrole="userinput">t_demo_filetemplate</span>) adds the date of the message and the name of the host sending the message to the beginning of the message text. The template is then used in a file destination: messages sent to this destination (<span class="Code" oldrole="userinput">d_file</span>) will use the message format defined in the template.</p><pre class="Code">template t_demo_filetemplate {
     template("${ISODATE} ${HOST} ${MESSAGE}\n");
 };
 destination d_file {
     file("/var/log/messages" template(t_demo_filetemplate));
 };</pre>
-            <p>If you do not want to enable the <span class="Code" oldrole="parameter">template-escape()</span> option (which is rarely needed), you can define the template without the enclosing braces. The following two templates are equivalent.</p><pre class="Code" oldrole="synopsis">template t_demo_template-with-braces {
+            <p>If you do not want to enable the <span class="Code" oldrole="parameter">template-escape()</span> option (which is rarely needed), you can define the template without the enclosing braces. The following two templates are equivalent.</p><pre class="Code">template t_demo_template-with-braces {
     template("${ISODATE} ${HOST} ${MESSAGE}\n");
 };
 template t_demo_template-without-braces "${ISODATE} ${HOST} ${MESSAGE}\n";
 </pre>
-            <p>Templates can also be used inline, if they are used only at a single location. The following destination is equivalent with the previous example:</p><pre class="Code" oldrole="synopsis">destination d_file {
+            <p>Templates can also be used inline, if they are used only at a single location. The following destination is equivalent with the previous example:</p><pre class="Code">destination d_file {
     file ("/var/log/messages" template("${ISODATE} ${HOST} ${MESSAGE}\n") );
 };</pre>
             <MadCap:keyword term="macros:['in filenames']">
             </MadCap:keyword>
-            <p>The following file destination uses macros to daily create separate logfiles for every client host.</p><pre class="Code" oldrole="synopsis">destination d_file {
+            <p>The following file destination uses macros to daily create separate logfiles for every client host.</p><pre class="Code">destination d_file {
         file("/var/log/${YEAR}.${MONTH}.${DAY}/${HOST}.log");
 };</pre>
         </div>
