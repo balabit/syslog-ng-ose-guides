@@ -11,7 +11,7 @@
         <p>The <MadCap:variable name="General.abbrev"></MadCap:variable> application can convert the syslog messages sent by Cisco devices to Cisco-specific SNMP traps defined by the CISCO-SYSLOG-MIB (<span class="Code">enterprises.cisco.ciscoMgmt.ciscoCiscoMIB</span>) is also supported (such traps are also referred to as <span class="Code">clogMessageGenerated</span> notifications). That way, the incoming log messages can be forwarded to devices used to process and analyze Cisco-specific SNMP traps. For this to work correctly, the following requirements must be met:</p>
         <ul>
             <li class="listitem">
-                <p>The syslog-ng Source Configuration Library (SCL) must be included in the <MadCap:variable name="General.abbrev"></MadCap:variable> configuration file:</p><pre class="Code">@include "scl.conf"</pre>
+                <p>The syslog-ng Source Configuration Library (SCL) must be included in the <MadCap:variable name="General.abbrev"></MadCap:variable> configuration file:</p><pre>@include "scl.conf"</pre>
             </li>
             <li class="listitem">
                 <p>The pattern database described in <MadCap:xref href="#cisco-snmp-patterndb"><span style="color: #04aada;" class="mcFormatColor">more</span></MadCap:xref> must be used to parse the incoming log messages.</p>
@@ -21,7 +21,7 @@
         <p>For details on the Cisco-specific SNMP trap format, see <a class="link" href="http://tools.cisco.com/ITDIT/MIBS/servlet/index" target="_top">CISCO-SYSLOG-MIB</a> on the Cisco website.</p>
         <div class="section">
             <h6><a name="cisco-snmp-patterndb"></a>Parsing Cisco-specific message fields with patterndb</h6>
-            <p>The <span class="Code" oldrole="parameter">${PROGRAM}</span> part of the syslog messages sent by Cisco devices contain not only the program name, but other important protocol information part as well. The <span class="Code" oldrole="parameter">${PROGRAM}</span> of these messages contains the Facility, Severity, and the Mnemonic (the Cisco name) of the message. The following pattern database parses these values and makes them available as the <span class="Code">.cisco.Facility</span>, <span class="Code">.cisco.Severity</span>, and <span class="Code">.cisco.MsgName</span>, respectively. The actual log message is available as <span class="Code">.cisco.MsgText</span>.</p><pre class="Code">&lt;patterndb version="4" pub_date="2011-05-03"&gt;
+            <p>The <span class="Code" oldrole="parameter">${PROGRAM}</span> part of the syslog messages sent by Cisco devices contain not only the program name, but other important protocol information part as well. The <span class="Code" oldrole="parameter">${PROGRAM}</span> of these messages contains the Facility, Severity, and the Mnemonic (the Cisco name) of the message. The following pattern database parses these values and makes them available as the <span class="Code">.cisco.Facility</span>, <span class="Code">.cisco.Severity</span>, and <span class="Code">.cisco.MsgName</span>, respectively. The actual log message is available as <span class="Code">.cisco.MsgText</span>.</p><pre>&lt;patterndb version="4" pub_date="2011-05-03"&gt;
     &lt;ruleset name="cisco snmp ruleset1" xml:id="480de478-d4a6-4a7f-bea4-0c0245d361e3"&gt;
         &lt;description&gt;Pattern for Cisco messages having BSD timestamps, for example: Jul 01 2010 00:32:59: %SYS-5-CONFIG_I: Configured from console by console&lt;/description&gt;
         &lt;pattern&gt;%@ESTRING:.cisco.Facility:-@@ESTRING:.cisco.Severity:-@@ANYSTRING:.cisco.MsgName@&lt;/pattern&gt;
@@ -55,10 +55,10 @@
             </div>
             <p>The <span class="Code" oldrole="parameter">cisco-snmp()</span> driver has the same requirements and options as the <span class="Code" oldrole="parameter">snmp()</span> destination driver, but automatically fills the clogMessageGenerated-specific fields with the data received from parsing the Cisco-specific syslog messages using the pattern database. For details on the , see the <span class="Code">&lt;INSTALLDIR&gt;/ share/include/scl/snmp/plugin.conf</span> file.</p>
             <p><b>Declaration:</b>
-            </p><pre class="Code">destination d_cisco_snmp {cisco-snmp(host(&lt;hostname&gt;));};</pre>
+            </p><pre>destination d_cisco_snmp {cisco-snmp(host(&lt;hostname&gt;));};</pre>
             <div class="example">
                 <h6>Example: Defining a Cisco-specific SNMP destination</h6>
-                <p>The following example defines an SNMP destination that sends out clogMessageGenerated messages using the SNMPv3 protocol.</p><pre class="Code">destination d_cisco_snmp {cisco-snmp(host("192.168.1.1")
+                <p>The following example defines an SNMP destination that sends out clogMessageGenerated messages using the SNMPv3 protocol.</p><pre>destination d_cisco_snmp {cisco-snmp(host("192.168.1.1")
 version("v3")
 engine-id("'0xdeadbeefde'")
 auth-username('myusername')

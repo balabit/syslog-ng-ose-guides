@@ -17,7 +17,7 @@
         <p>The XML parser processes input in XML format, and adds the parsed data to the message object.</p>
         <p>To create an XML parser, define an <span class="Code" oldrole="parameter">xml_parser</span> that has the <span class="Code" oldrole="parameter">xml()</span> option. By default, the parser will process the <span class="Code" oldrole="userinput">${MESSAGE}</span> part of the log message. To process other parts of a log message using the XML parser, use the <span class="Code" oldrole="parameter">template()</span> option. You can also define the parser inline in the log path.</p>
         <div>
-            <h6>Declaration:</h6><pre class="Code">parser xml_name {
+            <h6>Declaration:</h6><pre>parser xml_name {
     xml(
         template()
         prefix()
@@ -29,7 +29,7 @@
         </div>
         <div class="Example">
             <h6 oldrole="example">Example: Using an XML parser</h6>
-            <p>In the following example, the source is an XML-encoded log message. The destination is a file that uses the <span class="Code" oldrole="parameter">format-json</span> template. The log line connects the source, the destination and the parser.</p><pre class="Code">source s_local {
+            <p>In the following example, the source is an XML-encoded log message. The destination is a file that uses the <span class="Code" oldrole="parameter">format-json</span> template. The log line connects the source, the destination and the parser.</p><pre>source s_local {
     file("/tmp/aaa");
 };
 
@@ -49,21 +49,21 @@ log {
     parser(xml_parser);
     destination(d_local);
 };</pre>
-            <p>You can also define the parser inline in the log path.</p><pre class="Code">log {
+            <p>You can also define the parser inline in the log path.</p><pre>log {
     source(s_file);
     parser { xml(prefix(".SDATA")); };
     destination(d_file);
 };</pre>
         </div>
-        <p>The XML parser inserts an "<span class="Code" oldrole="userinput">.xml</span>" prefix by default before the extracted name-value pairs. Since <span class="Code" oldrole="parameter">format-json</span> replaces a dot with an underscore at the beginning of keys, the "<span class="Code" oldrole="userinput">.xml</span>" prefix becomes "<span class="Code" oldrole="userinput">_xml</span>". Attributes get an <span class="Code" oldrole="userinput">_</span> prefix. For example, from the XML input:</p><pre class="Code">&lt;tags attr='attrval'&gt;part1&lt;tag1&gt;Tag1 Leaf&lt;/tag1&gt;part2&lt;tag2&gt;Tag2 Leaf&lt;/tag2&gt;part3&lt;/tags&gt;</pre>
-        <p>The following output is generated:</p><pre class="Code">{<i role="bold" style="font-style: normal;">"_xml"</i>:{"tags":{"tag2":"Tag2 Leaf","tag1":"Tag1 Leaf","<i role="bold" style="font-style: normal;">_attr</i>":"attrval","tags":"part1part2part3"}}}</pre>
-        <p>When the text is separated by tags on different levels or tags on the same level, the parser simply concatenates the different parts of text. For example, from this input XML:</p><pre class="Code">&lt;tag&gt;
+        <p>The XML parser inserts an "<span class="Code" oldrole="userinput">.xml</span>" prefix by default before the extracted name-value pairs. Since <span class="Code" oldrole="parameter">format-json</span> replaces a dot with an underscore at the beginning of keys, the "<span class="Code" oldrole="userinput">.xml</span>" prefix becomes "<span class="Code" oldrole="userinput">_xml</span>". Attributes get an <span class="Code" oldrole="userinput">_</span> prefix. For example, from the XML input:</p><pre>&lt;tags attr='attrval'&gt;part1&lt;tag1&gt;Tag1 Leaf&lt;/tag1&gt;part2&lt;tag2&gt;Tag2 Leaf&lt;/tag2&gt;part3&lt;/tags&gt;</pre>
+        <p>The following output is generated:</p><pre>{<i role="bold" style="font-style: normal;">"_xml"</i>:{"tags":{"tag2":"Tag2 Leaf","tag1":"Tag1 Leaf","<i role="bold" style="font-style: normal;">_attr</i>":"attrval","tags":"part1part2part3"}}}</pre>
+        <p>When the text is separated by tags on different levels or tags on the same level, the parser simply concatenates the different parts of text. For example, from this input XML:</p><pre>&lt;tag&gt;
  &lt;tag1&gt;text1&lt;/tag1&gt;
  &lt;tag1&gt;text2&lt;/tag1&gt;
 &lt;/tag&gt;</pre>
-        <p>The following output is generated:</p><pre class="Code">.xml.tag.tag1 = text1text2</pre>
-        <p>Whitespaces are kept as they are in the XML input. No collapsing happens on significant whitespaces. For example, from this input XML:</p><pre class="Code">&lt;133&gt;Feb 25 14:09:07 webserver syslogd: &lt;b&gt;|Test\n\n   Test2|&lt;/b&gt;\n</pre>
-        <p>The following output is generated:</p><pre class="Code">[2017-09-04T13:20:27.417266] Setting value; msg='0x7f2fd8002df0', name='.xml.b', value='|Test\x0a\x0a   Test2|'</pre>
+        <p>The following output is generated:</p><pre>.xml.tag.tag1 = text1text2</pre>
+        <p>Whitespaces are kept as they are in the XML input. No collapsing happens on significant whitespaces. For example, from this input XML:</p><pre>&lt;133&gt;Feb 25 14:09:07 webserver syslogd: &lt;b&gt;|Test\n\n   Test2|&lt;/b&gt;\n</pre>
+        <p>The following output is generated:</p><pre>[2017-09-04T13:20:27.417266] Setting value; msg='0x7f2fd8002df0', name='.xml.b', value='|Test\x0a\x0a   Test2|'</pre>
         <p>However, note that users can choose to strip whitespaces using the <a href="xml-parser-options.htm"><span class="Code" oldrole="parameter">strip-whitespaces()</span></a> option.</p>
         <h6>Configuration hints</h6>
         <p>Define a source that correctly detects the end of the message, otherwise the XML parser will consider the input invalid, resulting in a parser error.</p>
@@ -80,7 +80,7 @@ log {
                     </li>
                     <li>
                         <p>In the case of TCP, you can encapsulate and send the document in syslog-protocol format, and use a <span class="Code" oldrole="parameter">syslog()</span> source. Make sure that the message conforms to <a href="https://tools.ietf.org/html/rfc6587#section-3.4.1">the octet counting method described in RFC6587</a>.</p>
-                        <p>For example:</p><pre class="Code">59 &lt;133&gt;Feb 25 14:09:07 webserver syslogd: &lt;book&gt;\nText\n&lt;/book&gt;</pre>
+                        <p>For example:</p><pre>59 &lt;133&gt;Feb 25 14:09:07 webserver syslogd: &lt;book&gt;\nText\n&lt;/book&gt;</pre>
                         <p>Considering the new lines as one character, <span class="Code" oldrole="parameter">59</span> is appended to the original message.</p>
                     </li>
                     <li>
