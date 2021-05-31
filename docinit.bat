@@ -1,3 +1,3 @@
-git -c http.sslVerify=false clone https://git@git.balabit/docs/one-identity-templates.git
+git -c http.sslVerify=false clone https://1id@dev.azure.com/1id/TechComm/_git/FlareTestsAndScripts
 
-one-identity-templates\Scripts\docsetup.bat
+FlareTestsAndScripts\Scripts\docsetup.bat
