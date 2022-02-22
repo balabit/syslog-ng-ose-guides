@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
     <head>
-        <meta name="description" content="" />
+        <link href="../../../Resources/TableStyles/RuledTableWithHeading_VerticallyRuled_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
     </head>
     <body name="log-statistics-description">
-        <h1 name="log-statistics-description">Metrics and counters of <MadCap:variable name="General.OSE"></MadCap:variable></h1>
-        <p>You can list all active metrics on your <MadCap:variable name="General.OSE"></MadCap:variable> host using the following command (this lists the metrics, without their current values): <span class="Code" oldrole="command">syslog-ng-ctl query list "*"</span></p>
+        <h1 name="log-statistics-description">Metrics and counters of <MadCap:variable name="General.abbrev"></MadCap:variable></h1>
+        <p>You can list all active metrics on your <MadCap:variable name="General.abbrev"></MadCap:variable> host using the following command (this lists the metrics, without their current values): <span class="Code" oldrole="command">syslog-ng-ctl query list "*"</span></p>
         <p>To list the metrics and their values, use the following command: <span class="Code" oldrole="command">syslog-ng-ctl query get "*"</span></p>
         <p>The displayed metrics have the following structure.</p>
         <ol>
@@ -31,10 +31,10 @@
                                 <p><span class="Code" oldrole="parameter">host</span>: source host, from <span class="Code" oldrole="userinput">stats-level(2)</span></p>
                             </li>
                             <li>
-                                <p><span class="Code" oldrole="parameter">sender</span>: sender host, from <span class="Code" oldrole="userinput">stats-level(3)</span></p>
+                                <p><span class="Code" oldrole="parameter">program</span>: program, from <span class="Code" oldrole="userinput">stats-level(3)</span></p>
                             </li>
                             <li>
-                                <p><span class="Code" oldrole="parameter">program</span>: program, from <span class="Code" oldrole="userinput">stats-level(3)</span></p>
+                                <p><span class="Code" oldrole="parameter">sender</span>: sender host, from <span class="Code" oldrole="userinput">stats-level(3)</span></p>
                             </li>
                         </ul>
                         <div class="Example">
@@ -52,66 +52,300 @@ src.program;;P-14737;d;stamp;1509121931
 src.host;;localhost;d;processed;4
 src.host;;localhost;d;stamp;1509121934</pre>
                         </div>
-                        <p>To avoid performance issues or even overloading <MadCap:variable name="General.OSE"></MadCap:variable>, you might want to limit the number of registered dynamic counters in the message statistics. To do this, configure the <MadCap:xref href="reference-options.htm#global-option-stats-max-dynamics"><span style="color: #04aada;" class="mcFormatColor">stats-max-dynamics()</span></MadCap:xref> global option.</p>
+                        <p>To avoid performance issues or even overloading <MadCap:variable name="General.abbrev"></MadCap:variable>, you might want to limit the number of registered dynamic counters in the message statistics. To do this, configure the <MadCap:xref href="reference-options.htm#global-option-stats-max-dynamics"><span style="color: #04aada;" class="mcFormatColor">more</span></MadCap:xref> global option.</p>
                     </li>
                     <li>
-                        <p><span class="Code" oldrole="userinput">o</span> - This object was once active, but stopped receiving messages. (for example, a dynamic object may disappear and become orphan.)</p>
-						<div class="Note">
-							<p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> 
-
-							The <MadCap:variable name="General.OSE"></MadCap:variable> application stores the statistics of the objects when <MadCap:variable name="General.OSE"></MadCap:variable> is reloaded. However, if the configuration of <MadCap:variable name="General.OSE"></MadCap:variable> was changed since the last reload, the statistics of orphaned objects are deleted.</p>
+                        <p><span class="Code" oldrole="userinput">o</span> - This object was once active, but stopped receiving messages. (For example, a dynamic object may disappear and become orphan.)</p>
+                        <div class="Note">
+                            <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> 
+							The <MadCap:variable name="General.abbrev"></MadCap:variable> application stores the statistics of the objects when <MadCap:variable name="General.abbrev"></MadCap:variable> is reloaded. However, if the configuration of <MadCap:variable name="General.abbrev"></MadCap:variable> was changed since the last reload, the statistics of orphaned objects are deleted.</p>
                         </div>
                     </li>
                 </ul>
             </li>
             <li>
+                <p>The <span class="Code">connections</span> statistics counter displays the number of connections tracked by <MadCap:variable name="General.abbrev" /> for the selected source driver.</p>
+                <div class="Example">
+                    <h6><a name="connections-stats-counter"></a>Example: sample configuration and statistics output</h6>
+                    <p>The following configuration will display the following <span class="Code">syslog-ng-ctl</span> statistics output:</p>
+                    <p>Configuration:</p><pre>source s_network { 
+  tcp( 
+    port(8001)  
+  ); 
+};</pre>
+                    <p>Statistics output:
+                    </p><pre>src.tcp;s_network#0;tcp,127.0.0.5;a;processed;1
+src.tcp;s_network#0;tcp,127.0.0.1;a;processed;3
+src.tcp;s_network;afsocket_sd.(stream,AF_INET(0.0.0.0:8001));a;connections;2</pre>
+                </div>
+            </li>
+            <li>
                 <p>The type of the statistics:</p>
                 <ul>
                     <li>
-                        <p><span class="Code" oldrole="parameter">processed</span>: The number of messages that successfully reached their destination driver. Note that this does not necessarily mean that the destination driver successfully delivered the messages (for example, written to disk or sent to a remote server).</p>
+                        <p><span class="Code">batch_size_avg</span>: When batching is enabled, then this shows the current average batch size of the given source or destination. </p>
+                        <div class="Note">
+                            <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> In version 7.0.27, <MadCap:variable name="General.abbrev" /> only supports the <span class="Code">batch_size_avg</span> for the <span class="Code">http()</span> destination.</p>
+                        </div>
                     </li>
                     <li>
-                        <p><span class="Code" oldrole="parameter">dropped</span>: The number of dropped messages — <MadCap:variable name="General.OSE"></MadCap:variable> could not send the messages to the destination and the output buffer got full, so messages were dropped by the destination driver, or <MadCap:variable name="General.OSE"></MadCap:variable> dropped the message for some other reason (for example, a parsing error).</p>
-                    </li>
-                    <li>
-                        <p><span class="Code" oldrole="parameter">queued</span>: The number of messages passed to the message queue of the destination driver, waiting to be sent to the destination.</p>
-                    </li>
-                    <li>
-                        <p><span class="Code" oldrole="parameter">suppressed</span>: The number of suppressed messages (if the <span class="Code" oldrole="parameter">suppress()</span> feature is enabled).</p>
-                    </li>
-                    <li>
-                        <p><span class="Code" oldrole="parameter">stamp</span>: The UNIX timestamp of the last message sent to the destination.</p>
+                        <p><span class="Code">batch_size_max</span>: When batching is enabled, the value of <span class="Code">batch_size_max</span> shows the current largest batch size of the given source or destination. </p>
+                        <div class="Note">
+                            <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> In version 7.0.27, <MadCap:variable name="General.abbrev" /> only supports the <span class="Code">batch_size_max</span> for the <span class="Code">http()</span> destination.</p>
+                        </div>
                     </li>
                     <li>
                         <p><span class="Code" oldrole="parameter">discarded</span>: The number of messages discarded by the given parser. These are messages that the parser could not parsed, and are therefore not processed. For example:</p><pre>parser;demo_parser;;a;discarded;20</pre>
                     </li>
                     <li>
-                        <p><span class="Code" oldrole="parameter">memory_usage</span>: The memory used by the messages in the different queue types (in bytes). This includes every queue used by the object, including memory buffers (log-fifo) and disk-based buffers (both reliable and non-reliable). For example:</p><pre>dst.network;d_net#0;tcp,127.0.0.1:9999;a;memory_usage;0</pre>
-                        <p>Note that the memory usage (size) of queues does not equal to the memory usage (size) of the log messages in <MadCap:variable name="General.OSE"></MadCap:variable>. A log message can be in multiple queues, thus its size is added to multiple queue sizes. To check the size of all log messages, use <span class="Code" oldrole="parameter">global.msg_allocated_bytes.value</span> metric.</p>
+                        <p><span class="Code" oldrole="parameter">dropped</span>: The number of dropped messages — <MadCap:variable name="General.abbrev"></MadCap:variable> could not send the messages to the destination and the output buffer got full, so messages were dropped by the destination driver, or <MadCap:variable name="General.abbrev"></MadCap:variable> dropped the message for some other reason (for example, a parsing error).</p>
+                    </li>
+                    <li>
+                        <p><span class="Code">eps_last_1h</span>: The EPS value of the past 1 hour.</p>
+                    </li>
+                    <li>
+                        <p><span class="Code">eps_last_24h</span>: The EPS value of the past 24 hours.</p>
+                    </li>
+                    <li>
+                        <p><span class="Code">eps_since_start</span>: The EPS value since the current <MadCap:variable name="General.abbrev" /> start.</p>
+                        <div class="Note">
+                            <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> When using the <span class="Code">eps_last_1h</span>, the <span class="Code">eps_last_24h</span>, and the <span class="Code">eps_since_start</span> statistics, consider the following:</p>
+                            <ul>
+                                <li>
+                                    <p>EPS stands for "event per second", and in our case, a message received or sent counts as a single event.</p>
+                                </li>
+                                <li>
+                                    <p>The <span class="Code">eps_last_1h</span>, the <span class="Code">eps_last_24h</span>, and the <span class="Code">eps_since_start</span> values are only approximate values.</p>
+                                </li>
+                                <li>
+                                    <p>The <span class="Code">eps_last_1h</span>, the <span class="Code">eps_last_24h</span>, and the <span class="Code">eps_since_start</span> values are automatically updated every <span class="Code">60</span> seconds.</p>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
                     <li>
                         <p><span class="Code" oldrole="parameter">matched</span>: The number of messages that are accepted by a given filter. Available for filters and similar objects (for example, a conditional rewrite rule). For example, if a filter matches a specific hostname, then the <span class="Code" oldrole="parameter">matched</span> counter contains the number of messages that reached the filter from this hosts.</p><pre>filter;demo_filter;;a;matched;28</pre>
                     </li>
                     <li>
-                        <p><span class="Code" oldrole="parameter">not_matched</span>: The number of messages that are filtered out by a given filter. Available for filters and similar objects (for example, a conditional rewrite rule). For example, if a filter matches a specific hostname, then the <span class="Code" oldrole="parameter">not_matched</span> counter contains the number of messages that reached the filter from other hosts, and so the filter discarded them. Note that since the <span class="Code" oldrole="parameter">not_matched</span> metric applies to filters, and filters are expected to discard messages that do not match the filter condition, <span class="Code" oldrole="parameter">not_matched</span> messages are not included in the <span class="Code" oldrole="parameter">dropped</span> metric of other objects.</p><pre>filter;demo_filter;;a;not_matched;0</pre>
+                        <p><span class="Code" oldrole="parameter">memory_usage</span>: The memory used by the messages in the different queue types (in bytes). This includes every queue used by the object, including memory buffers (log-fifo) and disk-based buffers (both reliable and non-reliable). For example:</p><pre>dst.network;d_net#0;tcp,127.0.0.1:9999;a;memory_usage;0</pre>
+                        <div class="Note">
+                            <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> The memory usage (size) of queues is not equal to the memory usage (size) of the log messages in <MadCap:variable name="General.abbrev" />. A log message can be in multiple queues, thus its size is added to multiple queue sizes. To check the size of all log messages, use <span class="Code" oldrole="parameter">global.msg_allocated_bytes.value</span> metric.</p>
+                        </div>
                     </li>
                     <li>
-                        <p><span class="Code" oldrole="parameter">written</span>: The number of messages successfully delivered to the destination. This value is calculated from other counters: <span class="Code" oldrole="userinput">written = processed - queued - dropped</span>. That is, the number of messages <MadCap:variable name="General.OSE"></MadCap:variable> passed to the destination driver (processed) minus the number of messages that are still in the output queue of the destination driver (queued) and the number of messages dropped because of an error (dropped, for example, because <MadCap:variable name="General.OSE"></MadCap:variable> could not deliver the message to the destination and exceeded the number of retries).</p>
-                        <MadCap:snippetBlock src="../../shared/chunk/para-metrics-calculated-reset.htm">
+                        <p><span class="Code">msg_size_max</span>: The current largest message size of the given source or destination.</p>
+                    </li>
+                    <li>
+                        <p><span class="Code">msg_size_avg</span>: The current average message size of the given source or destination.</p>
+                    </li>
+                    <div class="Note">
+                        <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> When using the <span class="Code">msg_size_avg</span> and <span class="Code">msg_size_max</span> statistics, consider that message sizes are calculated as follows:</p>
+                        <ul>
+                            <li>
+                                <p>on the source side: the length of the incoming raw message</p>
+                            </li>
+                            <li>
+                                <p>on the destination side: the length of the outgoing formatted message</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <li>
+                        <p><span class="Code" oldrole="parameter">not_matched</span>: The number of messages that are filtered out by a given filter. Available for filters and similar objects (for example, a conditional rewrite rule). For example, if a filter matches a specific hostname, then the <span class="Code" oldrole="parameter">not_matched</span> counter contains the number of messages that reached the filter from other hosts, and so the filter discarded them. </p>
+                        <div class="Note">
+                            <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> Since the <span class="Code" oldrole="parameter">not_matched</span> metric applies to filters, and filters are expected to discard messages that do not match the filter condition, <span class="Code" oldrole="parameter">not_matched</span> messages are not included in the <span class="Code" oldrole="parameter">dropped</span> metric of other objects.</p><pre>filter;demo_filter;;a;not_matched;0</pre>
+                        </div>
+                    </li>
+                    <li>
+                        <p><span class="Code" oldrole="parameter">processed</span>: The number of messages that successfully reached their destination driver. </p>
+                        <div class="Note">
+                            <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> Consider that a message that has successfully reached its destination driver does not necessarily mean that the destination driver successfully delivered the messages as well. For example, a message can be written to disk or sent to a remote server after reaching the destination driver.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <p><span class="Code" oldrole="parameter">queued</span>: The number of messages passed to the message queue of the destination driver, waiting to be sent to the destination.</p>
+                    </li>
+                    <li>
+                        <p><span class="Code" oldrole="parameter">stamp</span>: The UNIX timestamp of the last message sent to the destination.</p>
+                    </li>
+                    <li>
+                        <p><span class="Code" oldrole="parameter">suppressed</span>: The number of suppressed messages (if the <span class="Code" oldrole="parameter">suppress()</span> feature is enabled).</p>
+                    </li>
+                    <li>
+                        <p><span class="Code" oldrole="parameter">written</span>: The number of messages successfully delivered to the destination. This value is calculated from other counters: <span class="Code" oldrole="userinput">written = processed - queued - dropped</span>. That is, the number of messages <MadCap:variable name="General.abbrev"></MadCap:variable> passed to the destination driver (processed) minus the number of messages that are still in the output queue of the destination driver (queued) and the number of messages dropped because of an error (dropped, for example, because <MadCap:variable name="General.abbrev"></MadCap:variable> could not deliver the message to the destination and exceeded the number of retries).</p>
+                        <MadCap:snippetBlock src="../../shared/chunk/para-metrics-calculated-reset.flsnp">
                         </MadCap:snippetBlock>
                     </li>
                 </ul>
+                <div class="Note">
+                    <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> Consider that for <MadCap:variable name="General.abbrev" /> version 3.36, the following statistics counters are only supported for the <span class="Code">http()</span> destination, or the <span class="Code">http()</span> destination and all <span class="Code">network()</span> sources and destinations, and all <span class="Code">file()</span> sources and destinations, respectively:</p>
+                    <ul>
+                        <li>
+                            <p><span class="Code">msg_size_max</span>
+                            </p>
+                        </li>
+                        <li>
+                            <p><span class="Code">msg_size_avg</span>
+                            </p>
+                        </li>
+                        <li>
+                            <p><span class="Code">batch_size_max</span>
+                            </p>
+                        </li>
+                        <li>
+                            <p><span class="Code">batch_size_avg</span>
+                            </p>
+                        </li>
+                        <li>
+                            <p><span class="Code">eps_last_1h</span>
+                            </p>
+                        </li>
+                        <li>
+                            <p><span class="Code">eps_last_24h</span>
+                            </p>
+                        </li>
+                        <li>
+                            <p><span class="Code">eps_since_start</span>
+                            </p>
+                        </li>
+                    </ul>
+                </div>
             </li>
             <li>
                 <p>The number of such messages.</p>
             </li>
         </ol>
-        <div>
-            <h6>Availability of statistics</h6>
-            <p>Certain statistics are available only if the <a href="reference-options.htm"><span class="Code" oldrole="parameter">stats-level()</span> global option</a> is set to a higher value.</p>
-            <MadCap:snippetBlock src="../../shared/chunk/option-stats-level-description.htm">
-            </MadCap:snippetBlock>
-            <p>When receiving messages with non-standard facility values (that is, higher than 23), these messages will be listed as <span class="Code" oldrole="parameter">other</span> facility instead of their facility number.</p>
-        </div>
+        <h6>Availability of statistics</h6>
+        <p>Certain statistics are available only if the <a href="reference-options.htm"><span class="Code" oldrole="parameter">stats-level()</span> global option</a> is set to a higher value.</p>
+        <MadCap:snippetBlock src="../../shared/chunk/option-stats-level-description.flsnp">
+        </MadCap:snippetBlock>
+        <p>When receiving messages with non-standard facility values (that is, higher than 23), these messages will be listed as <span class="Code" oldrole="parameter">other</span> facility instead of their facility number.</p>
+        <h6>Aggregated statistics</h6>
+        <p>Aggregated statistics are available for different sources and destinations from different levels and upwards:</p>
+        <table class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit" style="mc-table-style: url('../../../Resources/TableStyles/RuledTableWithHeading_VerticallyRuled_DoNotEdit.css');margin-left: 0;margin-right: auto;" cellspacing="0">
+            <col class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Column-Column1" />
+            <col class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Column-Column1" />
+            <col class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Column-Column1" />
+            <col class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Column-Column1" />
+            <col class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Column-Column1" />
+            <col class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Column-Column1" />
+            <col class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Column-Column1" />
+            <col class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Column-Column1" />
+            <thead>
+                <tr class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Head-Header1">
+                    <th class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-HeadE-Column1-Header1">
+                        <p>&#160;</p>
+                    </th>
+                    <th class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-HeadE-Column1-Header1">
+                        <p><span class="Code">msg_size_avg</span>
+                        </p>
+                    </th>
+                    <th class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-HeadE-Column1-Header1">
+                        <p><span class="Code">msg_size_max</span>
+                        </p>
+                    </th>
+                    <th class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-HeadE-Column1-Header1">
+                        <p><span class="Code">batch_size_avg</span>
+                        </p>
+                    </th>
+                    <th class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-HeadE-Column1-Header1">
+                        <p><span class="Code">batch_size_max</span>
+                        </p>
+                    </th>
+                    <th class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-HeadE-Column1-Header1">
+                        <p><span class="Code">eps_last_1h</span>
+                        </p>
+                    </th>
+                    <th class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-HeadE-Column1-Header1">
+                        <p><span class="Code">eps_last_1h</span>
+                        </p>
+                    </th>
+                    <th class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-HeadD-Column1-Header1">
+                        <p><span class="Code">eps_last_1h</span>
+                        </p>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen"><span class="Code">network()</span> source and destination</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">from level 1</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">from level 1</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">counter N/A</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">counter N/A</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">from level 1</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">from level 1</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyD-Column1-Body1">
+                        <p class="TableHyphen">from level 1</p>
+                    </td>
+                </tr>
+                <tr class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen"><span class="Code">file()</span> source and destination</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">from level 1</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">from level 1</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">counter N/A</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">counter N/A</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">from level 1</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyE-Column1-Body1">
+                        <p class="TableHyphen">from level 1</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyD-Column1-Body1">
+                        <p class="TableHyphen">from level 1</p>
+                    </td>
+                </tr>
+                <tr class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyB-Column1-Body1">
+                        <p class="TableHyphen"><span class="Code">http()</span> destination</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyB-Column1-Body1">
+                        <p>from level 0</p>
+                        <p class="TableHyphen">&#160;</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyB-Column1-Body1">
+                        <p class="TableHyphen">from level 0</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyB-Column1-Body1">
+                        <p class="TableHyphen">from level 0</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyB-Column1-Body1">
+                        <p class="TableHyphen">from level 0</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyB-Column1-Body1">
+                        <p class="TableHyphen">from level 0</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyB-Column1-Body1">
+                        <p class="TableHyphen">from level 0</p>
+                    </td>
+                    <td class="TableStyle-RuledTableWithHeading_VerticallyRuled_DoNotEdit-BodyA-Column1-Body1">
+                        <p class="TableHyphen">from level 0</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </body>
 </html>
