@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="destination-redis-batch">
+        <h1 name="destination-redis-batch">Batch mode and load balancing</h1>
+        <p>Starting with version 3.34, you can send multiple log messages with the help of <a href="https://github.com/redis/hiredis#pipelining">Redis's pipelining feature</a>.</p>
+        <div>
+            <h6>Batch size</h6>
+            <p>The <span class="Code">batch-lines()</span>, <span class="Code">batch-lines()</span>, and <span class="Code">batch-timeout()</span> options of the destination determine how many log messages <MadCap:variable name="General.abbrev" /> sends in a batch. The <span class="Code">batch-lines()</span> option determines the maximum number of messages <MadCap:variable name="General.abbrev" /> puts in a batch in. This can be limited based on size and time:</p>
+            <p>syslog-ng OSE sends a batch every <span class="Code">batch-timeout()</span> milliseconds, even if the number of messages in the batch is less than <span class="Code">batch-lines()</span>. That way the destination receives every message in a timely manner even if suddenly there are no more messages.</p>
+            <p>To increase the performance of the destination, increase the number of worker threads for the destination using the <span class="Code">workers()</span> option, or adjust the <span class="Code">batch-lines()</span> and/or <span class="Code">batch-timeout()</span> options.</p>
+            <div>
+                <h6>Example: Redis batch mode</h6>
+				<p>The following destination sends log messages to a Redis server using the pipelining feature. A batch consists of <b class="Code">100</b> messages and is sent every <b class="Code">10</b> seconds (<b class="Code">10000</b> milliseconds) if there is less than <b class="Code">100</b> messages are in the queue.</p>
+					<pre>destination d_redis {
+    redis(
+        host("localhost")
+        port(6379)
+        command("HINCRBY", "hosts", "$HOST", "1")
+        batch-lines(100)
+        batch-timeout(10000)
+        log-fifo-size(100000)
+    );
+};</pre>
+            </div>
+        </div>
+    </body>
+</html>
