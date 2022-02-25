@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="configuring-destinations-smtp">
+        <h1 name="configuring-destinations-smtp">smtp: Generating SMTP messages (email) from logs</h1>
+        <MadCap:keyword term="destination drivers:[&lt;span class=&quot;Code&quot; oldrole=&quot;parameter&quot;&gt;smtp()&lt;/span&gt;, ' driver']">
+        </MadCap:keyword>
+        <p>The destination is aimed at a fully controlled local, or near-local, trusted SMTP server. The goal is to send mail to trusted recipients, through a controlled channel. It hands mails over to an SMTP server, and that is all it does, therefore the resulting solution is as reliable as sending an email in general. For example, <MadCap:variable name="General.abbrev"></MadCap:variable> does not verify whether the recipient exists.</p>
+        <p>The <span class="Code" oldrole="parameter">smtp()</span> driver sends email messages triggered by log messages. The <span class="Code" oldrole="parameter">smtp()</span> driver uses SMTP, without needing external applications. You can customize the main fields of the email, add extra headers, send the email to multiple recipients, and so on.</p>
+        <p>The <span class="Code" oldrole="parameter">subject()</span>, <span class="Code" oldrole="parameter">body()</span>, and <span class="Code" oldrole="parameter">header()</span> fields may include macros which get expanded in the email. For more information on available macros see <MadCap:xref href="reference-macros.htm"><span style="color: #04aada;" class="mcFormatColor">Macros of [%=General.OSE%]</span></MadCap:xref>.</p>
+        <p>The <span class="Code" oldrole="parameter">smtp()</span> driver has the following required parameters: <span class="Code" oldrole="parameter">host()</span>, <span class="Code" oldrole="parameter">port()</span>, <span class="Code" oldrole="parameter">from()</span>, <span class="Code" oldrole="parameter">to()</span>, <span class="Code" oldrole="parameter">subject()</span>, and <span class="Code" oldrole="parameter">body()</span>. For the list of available optional parameters, see <MadCap:xref href="reference-destination-smtp.htm"><span style="color: #04aada;" class="mcFormatColor">smtp() destination options</span></MadCap:xref>.</p>
+        <div class="Note">
+            <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> 
+			The <span class="Code" oldrole="parameter">smtp()</span> destination driver is available only in <MadCap:conditionaltext MadCap:conditions="General.OSE"><MadCap:variable name="General.abbrev"></MadCap:variable> 3.4</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.PE">5 F2</MadCap:conditionaltext> and later.</p>
+        </div>
+        <h6>Declaration:</h6><pre>smtp(host() port() from() to() subject() body() options());</pre>
+        <div class="Example">
+            <h6 name="example-destination-smtp"><a name="example-destination-smtp"></a>Example: Using the smtp() driver</h6>
+            <p>The following example defines an <span class="Code" oldrole="parameter">smtp()</span> destination using only the required parameters.</p><pre>destination d_smtp {
+    smtp(
+        host("localhost")
+        port(25)
+        from("syslog-ng alert service" "noreply@example.com")
+        to("Admin #1" "admin1@example.com")
+        subject("[ALERT] Important log message of $LEVEL condition received from $HOST/$PROGRAM!")
+        body("Hi!\nThe syslog-ng alerting service detected the following important log message:\n $MSG\n-- \nsyslog-ng\n")
+    );
+};</pre>
+            <p>The following example sets some optional parameters as well.</p><pre>destination d_smtp {
+    smtp(
+        host("localhost")
+        port(25)
+        from("syslog-ng alert service" "noreply@example.com")
+        to("Admin #1" "admin1@example.com")
+        to("Admin #2" "admin2@example.com")
+        cc("Admin BOSS" "admin.boss@example.com")
+        bcc("Blind CC" "blindcc@example.com")
+        subject("[ALERT] Important log message of $LEVEL condition received from $HOST/$PROGRAM!")
+        body("Hi!\nThe syslog-ng alerting service detected the following important log message:\n $MSG\n-- \nsyslog-ng\n")
+        header("X-Program", "$PROGRAM")
+        );
+};</pre>
+        </div>
+        <div class="Example"><a name="example-destination-smtp-alerting"></a>
+            <h6 name="example-destination-smtp-alerting">Example: Simple email alerting with the smtp() driver</h6>
+            <p>The following example sends an email alert if the eth0 network interface of the host is down.</p><pre>filter f_linkdown {
+    match("eth0: link down" value("MESSAGE"));
+};
+destination d_alert {
+    smtp(
+        host("localhost") port(25)
+        from("syslog-ng alert service" "syslog@localhost")
+        reply-to("Admins" "root@localhost")
+        to("Ennekem" "me@localhost")
+        subject("[SYSLOG ALERT]: eth0 link down")
+        body("Syslog received an alert:\n$MSG")
+        );
+};
+
+log {
+    source(s_local);
+    filter(f_linkdown);
+    destination(d_alert);
+};</pre>
+        </div>
+    </body>
+</html>

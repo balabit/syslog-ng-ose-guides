@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="linux-audit-parser">
+        <h1 name="linux-audit-parser">Linux audit parser</h1>
+        <MadCap:keyword term="segmenting messages">
+        </MadCap:keyword>
+        <MadCap:keyword term="Linux audit parser">
+        </MadCap:keyword>
+        <MadCap:keyword term="auditd">
+        </MadCap:keyword>
+        <MadCap:keyword term="parsers:['linux-audit-parser']">
+        </MadCap:keyword>
+        <p>The Linux audit parser can parse the log messages of the Linux Audit subsystem (<span class="Code" oldrole="userinput">auditd</span>). The <MadCap:variable name="General.abbrev"></MadCap:variable> application can separate these log messages to name-value pairs. For details on using value-pairs in <MadCap:variable name="General.abbrev"></MadCap:variable> see <MadCap:xref href="concepts-value-pairs.htm"><span style="color: #04aada;" class="mcFormatColor">Structuring macros, metadata, and other value-pairs</span></MadCap:xref>. The following is a sample log message of <span class="Code" oldrole="userinput">auditd</span>:</p><pre>type=SYSCALL msg=audit(1441988805.991:239): arch=c000003e syscall=59 success=yes exit=0 a0=7fe49a6d0e98 a1=7fe49a6d0e40 a2=7fe49a6d0e80 a3=2 items=2 ppid=3652 pid=3660 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=5 comm="dumpe2fs" exe="/sbin/dumpe2fs" key=(null)
+type=EXECVE msg=audit(1441988805.991:239): argc=3 a0="dumpe2fs" a1="-h" a2="/dev/sda1"
+type=CWD msg=audit(1441988805.991:239):  cwd="/"
+type=PATH msg=audit(1441988805.991:239): item=0 name="/sbin/dumpe2fs" inode=137078 dev=08:01 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL
+type=PATH msg=audit(1441988805.991:239): item=1 name="/lib64/ld-linux-x86-64.so.2" inode=5243184 dev=08:01 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL
+type=PROCTITLE msg=audit(1441988805.991:239): proctitle=64756D7065326673002D68002F6465762F73646131</pre>
+        <p>Certain fields of the audit log can be encoded in hexadecimal format, for example, the <span class="Code" oldrole="userinput">arch</span> field, or the <span class="Code" oldrole="userinput">a&lt;number&gt;</span> fields in the previous example. The <MadCap:variable name="General.abbrev"></MadCap:variable> application automatically decodes these fields (for example, the <span class="Code" oldrole="userinput">c000003e</span> value becomes <span class="Code" oldrole="userinput">x86_64</span>).</p>
+        <p>The <MadCap:variable name="General.abbrev"></MadCap:variable> application extracts every field into name-value pairs. It automatically decodes the following fields:</p>
+        <ul>
+            <li>
+                <p><span class="Code" oldrole="userinput">name</span>
+                </p>
+            </li>
+            <li>
+                <p><span class="Code" oldrole="userinput">proctitle</span>
+                </p>
+            </li>
+            <li>
+                <p><span class="Code" oldrole="userinput">path</span>
+                </p>
+            </li>
+            <li>
+                <p><span class="Code" oldrole="userinput">dir</span>
+                </p>
+            </li>
+            <li>
+                <p><span class="Code" oldrole="userinput">comm</span>
+                </p>
+            </li>
+            <li>
+                <p><span class="Code" oldrole="userinput">ocomm</span>
+                </p>
+            </li>
+            <li>
+                <p><span class="Code" oldrole="userinput">data</span>
+                </p>
+            </li>
+            <li>
+                <p><span class="Code" oldrole="userinput">old</span>
+                </p>
+            </li>
+            <li>
+                <p><span class="Code" oldrole="userinput">new</span>
+                </p>
+            </li>
+        </ul>
+        <p>To parse the log messages of the Linux Audit subsystem, define a parser that has the <span class="Code" oldrole="parameter">linux-audit-parser()</span> option. By default, the parser will process the <span class="Code" oldrole="userinput">${MESSAGE}</span> part of the log message. To process other parts of a log message, use the <span class="Code" oldrole="parameter">template()</span> option. You can also define the parser inline in the log path.</p>
+        <div>
+            <h6>Declaration:</h6><pre>parser parser_name {
+    linux-audit-parser(
+        prefix()
+        template()
+    );
+};</pre>
+        </div>
+        <div class="Example">
+            <h6>Example: Using the linux-audit-parser() parser</h6>
+            <p>In the following example, the source is a log file created by auditd. Since the audit log format is not a syslog format, the syslog parser is disabled, so that <MadCap:variable name="General.abbrev"></MadCap:variable> does not parse the message: <span class="Code" oldrole="userinput">flags(no-parse)</span>. The parser inserts "<span class="Code" oldrole="userinput">.auditd.</span>" prefix before all extracted name-value pairs. The destination is a file, that uses the <span class="Code" oldrole="parameter">format-json</span> template function. Every name-value pair that begins with a dot ("<span class="Code" oldrole="userinput">.</span>") character will be written to the file (<span class="Code" oldrole="userinput">dot-nv-pairs</span>). The log line connects the source, the destination, and the parser.</p><pre>source s_auditd {
+    file(/var/log/audit/audit.log flags(no-parse));
+};
+
+destination d_json {
+    file(
+        "/tmp/test.json"
+        template("$(format-json .auditd.*)\n")
+    );
+};
+
+parser p_auditd {
+    linux-audit-parser (prefix(".auditd."));
+};
+
+log {
+    source(s_auditd);
+    parser(p_auditd);
+    destination(d_json);
+};</pre>
+            <p>You can also define the parser inline in the log path.</p><pre>source s_auditd {
+    file(/var/log/audit/audit.log);
+};
+
+destination d_json {
+    file(
+        "/tmp/test.json"
+        template("$(format-json .auditd.*)\n")
+    );
+};
+
+log {
+    source(s_auditd);
+    parser {
+        linux-audit-parser (prefix(".auditd."));
+    };
+    destination(d_json);
+};</pre>
+        </div>
+    </body>
+</html>

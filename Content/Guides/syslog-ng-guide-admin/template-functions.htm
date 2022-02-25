@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="template-functions">
+        <h1 name="template-functions"><a name="template-functions"></a>Using template functions</h1>
+        <MadCap:keyword term="template functions">
+        </MadCap:keyword>
+        <MadCap:keyword term="templates:['template functions']">
+        </MadCap:keyword>
+        <p>A template function is a transformation: it modifies the way macros or name-value pairs are expanded. Template functions can be used in template definitions, or when macros are used in the configuration of <MadCap:variable name="General.abbrev"></MadCap:variable>. Template functions use the following syntax:</p><pre>$(function-name parameter1 parameter2 parameter3 ...)</pre>
+        <p>For example, the <span class="Code" oldrole="parameter">$(echo)</span> template function simply returns the value of the macro it receives as a parameter, thus <span class="Code" oldrole="userinput">$(echo ${HOST})</span> is equivalent to <span class="Code" oldrole="parameter">${HOST}</span>.</p>
+        <p>The parameters of template functions are separated by a whitespace character. A template function can have maximum 64 parameters. If you want to use a longer string or multiple macros as a single parameter, enclose the parameter in double-quotes or apostrophes. For example:</p><pre>$(echo "${HOST} ${PROGRAM} ${PID}")</pre>
+        <p>Template functions can be nested into each other, so the parameter of a template function can be another template function, like:</p><pre>$(echo $(echo ${HOST}))</pre>
+        <p>For details on the available template functions, see the descriptions of the individual template functions in <MadCap:xref href="reference-template-functions.htm#reference-template-functions"><span style="color: #04aada;" class="mcFormatColor">Template functions of [%=General.OSE%]</span></MadCap:xref>.</p>
+        <p>You can define your own template function as a regular configuration object (for example, to reuse the same function in different places in your configuration).</p>
+        <div>
+            <h6>Declaration:</h6><pre>template-function &lt;name-of-the-template-function&gt; "&lt;template-expression-using-strings-macros-template-functions&gt;";</pre>
+        </div>
+        <div class="Example">
+            <h6>Example: Using custom template functions</h6>
+            <p>The following template function can be used to reformat the message. It adds the length of the message to the message template.</p><pre>
+template-function my-template-function "${ISODATE} ${HOST} message-length=$(length "${MSG}") ${MESSAGE}";
+destination d_file {
+    file("/tmp/mylogs.log" template("$(my-template-function)\n"));
+};</pre>
+            <p>You can also refer to existing templates in your template function.</p><pre>
+template my-custom-header-template "${ISODATE} ${HOST_FROM} ${MSGHDR}";
+template-function my-template-function "$(my-custom-header-template) message-length=$(length "${MESSAGE}") ${MESSAGE}";</pre>
+        </div>
+    </body>
+</html>

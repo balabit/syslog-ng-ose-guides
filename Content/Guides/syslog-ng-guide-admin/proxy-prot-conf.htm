@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="proxy-prot-conf">
+        <h1 name="proxy-prot-conf">Proxy Protocol: configuration and output examples</h1>
+        <p>This section provides information about enabling Proxy Protocol support in your <span class="Code">network()</span> source options, and an example configuration and output to illustrate how  the Proxy Protocol method works  in <MadCap:variable name="General.product" /> (<MadCap:variable name="General.abbrev" />).</p>
+        <p>For more information about the working mechanism of the Proxy Protocol, see <MadCap:xref href="proxy-prot-w-mech.htm"><span style="color: #04aada;" class="mcFormatColor">The working mechanism behind the Proxy Protocol</span></MadCap:xref>.</p>
+        <div>
+            <h6>Enabling Proxy Protocol support for your network() source options</h6>
+            <p>Unless you enable Proxy Protocol support for your <span class="Code">network()</span> source, <MadCap:variable name="General.abbrev" /> identifies every connection that is connected to the load balancers identically by default, regardless of the source IP or the source protocol.</p>
+            <p>To enable Proxy Protocol for your <span class="Code">network()</span> source, set <a href="reference-source-network.htm"><span style="color: #04aada;" class="mcFormatColor">the <span class="Code">transport()</span> parameter of your <span class="Code">network()</span> source</span></a> to <span class="Code">proxied-tcp</span> or <span class="Code">proxied-tls-passthrough</span>, depending on your preference and configuration.</p>
+            <p><span class="Code">proxied-tls</span> can be used in complex MITM (man in the middle) configurations, where the proxy header is sent encrypted within the same TLS session as the proxied messages.</p>
+            <p>When you enable Proxy Protocol support  for your <span class="Code">network()</span> source, you can use the following configuration example with your <MadCap:variable name="General.abbrev" /> application.</p>
+        </div>
+        <div>
+            <h6>Configuration</h6>
+            <p>The following code sample illustrates how you can use the Proxy Protocol in your <MadCap:variable name="General.abbrev" /> configuration (using the <span class="Code">transport()</span> parameter set to <span class="Code">proxied-tls-passthrough</span>).</p><pre>@version: 3.35
+
+source s_tcp_pp {
+  network (
+    port(6666)
+    transport("proxied-tls-passthrough")
+    tls(
+        key-file("/certs/certs/server/server.rsa")
+        cert-file("/certs/certs/server/server.crt")
+        ca-dir("/certs/certs/CA")
+        peer-verify("required-trusted")
+    )
+  );
+};
+
+destination d_file {
+  file("/var/log/proxy-proto.log" template("$(format-json --scope nv-pairs)\n"));
+};
+
+log {
+  source(s_tcp_pp);
+  destination(d_file);
+};
+</pre>
+            <p>With this configuration, the Proxy Protocol method will perform injecting the information of the original connection into the forwarded TCP session, based on the working mechanism described in <MadCap:xref href="proxy-prot-w-mech.htm"><span style="color: #04aada;" class="mcFormatColor">The working mechanism behind the Proxy Protocol</span></MadCap:xref>.</p>
+            <p>The following example illustrates how the parsed macros will appear in the output.</p>
+            <div class="Example">
+                <h6>Example: Output for the PROXY TCP4 192.168.1.1 10.10.0.1 1111 2222 input header</h6>
+                <p>With the <span class="Code">PROXY TCP4 192.168.1.1 10.10.0.1 1111 2222</span> input header, the output looks like this:</p><pre>{"SOURCE":"s_tcp_pp","PROXIED_SRCPORT":"1111","PROXIED_SRCIP":"192.168.1.1","PROXIED_IP_VERSION":"4","PROXIED_DSTPORT":"2222","PROXIED_DSTIP":"10.10.0.1","PROGRAM":"TestMsg","MESSAGE":"","LEGACY_MSGHDR":"TestMsg","HOST_FROM":"localhost","HOST":"localhost"}
+</pre>
+                <p>Note that the <a href="proxy-prot-w-mech.htm#proxy-prot-adds-macros"><span style="color: #04aada;" class="mcFormatColor">macros</span></a> that <MadCap:variable name="General.abbrev" /> adds to the message appear in the output.</p>
+            </div>
+        </div>
+    </body>
+</html>
