@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="reference-patterndb-schemes">
+        <h1 name="reference-patterndb-schemes"><a name="reference-patterndb-schemes"></a>The syslog-ng pattern database format</h1>
+        <MadCap:keyword term="pattern database">
+        </MadCap:keyword>
+        <MadCap:keyword term="classifying messages:['creating databases']">
+        </MadCap:keyword>
+        <MadCap:keyword term="message classification">
+        </MadCap:keyword>
+        <MadCap:keyword term="pattern database schema">
+        </MadCap:keyword>
+        <p>Pattern databases are XML files that contain rules describing the message patterns. For sample pattern databases, see <MadCap:xref href="patterndb-download.htm"><span style="color: #04aada;" class="mcFormatColor">Downloading sample pattern databases</span></MadCap:xref>.</p>
+        <p>The following scheme describes the V5 format of the pattern database. This format is backwards-compatible with the earlier formats.</p>
+        <p>For a sample database containing only a single pattern, see <MadCap:xref href="#example-pattern-database"><span style="color: #04aada;" class="mcFormatColor">Example: A pattern database containing a single rule</span></MadCap:xref>.</p>
+        <div class="Note">
+            <p class="Hyphenation"><span class="AllNoteStyles">TIP:</span> Use the <span class="Code" oldrole="command">pdbtool</span> utility that is bundled with syslog-ng to test message patterns and convert existing databases to the latest format. For details, see <MadCap:xref href="../manpages/pdbtool.1.html"><span style="color: #04aada;" class="mcFormatColor">The pdbtool manual page</span></MadCap:xref>.</p>
+            <p>To automatically create an initial pattern database from an existing log file, use the <span class="Code" oldrole="command">pdbtool patternize</span> command. For details, see <MadCap:xref href="../manpages/pdbtool.1.html"><span style="color: #04aada;" class="mcFormatColor">The pdbtool manual page</span></MadCap:xref>.</p>
+        </div>
+        <div class="Example">
+            <h6 name="example-pattern-database"><a name="example-pattern-database"></a>Example: A pattern database containing a single rule</h6>
+            <MadCap:keyword term="pattern database">
+            </MadCap:keyword>
+            <p>The following pattern database contains a single rule that matches a log message of the <span class="Code" oldrole="userinput">ssh</span> application. A sample log message looks like:</p><pre>Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2</pre>
+            <p>The following is a simple pattern database containing a matching rule.</p><pre>&lt;patterndb version='5' pub_date='2010-10-17'&gt;
+    &lt;ruleset name='ssh' id='123456678'&gt;
+        &lt;pattern&gt;ssh&lt;/pattern&gt;
+            &lt;rules&gt;
+                &lt;rule provider='me' id='182437592347598' class='system'&gt;
+                    &lt;patterns&gt;
+                        &lt;pattern&gt;Accepted @QSTRING:SSH.AUTH_METHOD: @ for@QSTRING:SSH_USERNAME: @from\ @QSTRING:SSH_CLIENT_ADDRESS: @port @NUMBER:SSH_PORT_NUMBER:@ ssh2&lt;/pattern&gt;
+                    &lt;/patterns&gt;
+                &lt;/rule&gt;
+            &lt;/rules&gt;
+    &lt;/ruleset&gt;
+&lt;/patterndb&gt;</pre>
+            <p>Note that the rule uses macros that refer to parts of the message, for example, you can use the <span class="Code" oldrole="userinput">${SSH_USERNAME}</span> macro refer to the username used in the connection.</p>
+            <p>The following is the same example, but with a test message and test values for the parsers.</p><pre>&lt;patterndb version='4' pub_date='2010-10-17'&gt;
+    &lt;ruleset name='ssh' id='123456678'&gt;
+        &lt;pattern&gt;ssh&lt;/pattern&gt;
+            &lt;rules&gt;
+                &lt;rule provider='me' id='182437592347598' class='system'&gt;
+                    &lt;patterns&gt;
+                        &lt;pattern&gt;Accepted @QSTRING:SSH.AUTH_METHOD: @ for@QSTRING:SSH_USERNAME: @from\ @QSTRING:SSH_CLIENT_ADDRESS: @port @NUMBER:SSH_PORT_NUMBER:@ ssh2&lt;/pattern&gt;
+                    &lt;/patterns&gt;
+                    &lt;examples&gt;
+                        &lt;example&gt;
+                            &lt;test_message&gt;Accepted password for sampleuser from 10.50.0.247 port 42156 ssh2&lt;/test_message&gt;
+                            &lt;test_values&gt;
+                                &lt;test_value name="SSH.AUTH_METHOD"&gt;password&lt;/test_value&gt;
+                                &lt;test_value name="SSH_USERNAME"&gt;sampleuser&lt;/test_value&gt;
+                                &lt;test_value name="SSH_CLIENT_ADDRESS"&gt;10.50.0.247&lt;/test_value&gt;
+                                &lt;test_value name="SSH_PORT_NUMBER"&gt;42156&lt;/test_value&gt;
+                            &lt;/test_values&gt;
+                       &lt;/example&gt;
+                    &lt;/examples&gt;
+                &lt;/rule&gt;
+            &lt;/rules&gt;
+    &lt;/ruleset&gt;
+&lt;/patterndb&gt;</pre>
+        </div>
+    </body>
+</html>

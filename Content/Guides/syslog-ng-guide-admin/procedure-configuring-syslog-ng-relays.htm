@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="procedure-configuring-syslog-ng-relays">
+        <h1 name="procedure-configuring-syslog-ng-relays">Configuring syslog-ng on relay hosts</h1>
+        <MadCap:keyword term="syslog-ng relays:['configuring']">
+        </MadCap:keyword>
+        <p>To configure syslog-ng on a relay host, complete the following steps:</p>
+        <div>
+            <ol>
+                <li>
+                    <p>Install the syslog-ng application on the host. For details on installing syslog-ng on specific operating systems, see <MadCap:xref href="chapter-install.htm"><span style="color: #04aada;" class="mcFormatColor">Installing syslog-ng</span></MadCap:xref>.</p>
+                </li>
+                <li>
+                    <p>Configure the network sources that collect the log messages sent by the clients.</p>
+                </li>
+                <li>
+                    <p>Create a network destination that points to the syslog-ng server.</p>
+                </li>
+                <li>
+                    <p>Create a log statement connecting the network sources to the syslog-ng server.</p>
+                </li>
+                <li>
+                    <p>Configure the local sources that collect the log messages of the relay host.</p>
+                </li>
+                <li>
+                    <p>Create a log statement connecting the local sources to the syslog-ng server.</p>
+                </li>
+                <li>
+                    <p>Enable the <span class="Code" oldrole="parameter">keep-hostname()</span> and disable the <span class="Code" oldrole="parameter">chain-hostnames()</span> options. (For details on how these options work, see <MadCap:xref href="reference-options.htm#global-options-chain-hostnames"><span style="color: #04aada;" class="mcFormatColor">Global options</span></MadCap:xref>.)</p>
+                    <div class="Note">
+                        <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> 
+
+						It is recommended to use these options on your <MadCap:variable name="General.abbrev"></MadCap:variable> server as well.</p>
+                    </div>
+                </li>
+                <li>
+                    <p>Set filters and options (for example, TLS encryption) as necessary.</p>
+                    <MadCap:snippetBlock src="../shared/wnt/note-relaying-hostname.htm">
+                    </MadCap:snippetBlock>
+                    <div class="Example">
+                        <h6 name="example-relayconfig"><a name="example-relayconfig"></a>Example: A simple configuration for relays</h6>
+                        <p>The following is a simple configuration file that collects local and incoming log messages and forwards them to a logserver using the IETF-syslog protocol.</p><pre>@version: <MadCap:variable name="Version.techversion"></MadCap:variable>
+@include "scl.conf"
+options {
+    time-reap(30);
+    mark-freq(10);
+    keep-hostname(yes);
+    chain-hostnames(no);
+};
+source s_local {
+    system(); internal();
+};
+source s_network {
+    syslog(transport(tcp));
+};
+destination d_syslog_tcp {
+    syslog("192.168.1.5" transport("tcp") port(2010));
+};
+log {
+    source(s_local); source(s_network);
+    destination(d_syslog_tcp);
+};</pre>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </body>
+</html>

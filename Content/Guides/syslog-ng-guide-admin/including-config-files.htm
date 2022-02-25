@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="including-config-files">
+        <h1 name="including-config-files">Including configuration files</h1>
+        <MadCap:keyword term="syslog-ng.conf:['includes']">
+        </MadCap:keyword>
+        <MadCap:keyword term="configuration file:['including other files']">
+        </MadCap:keyword>
+        <MadCap:keyword term="@include">
+        </MadCap:keyword>
+        <p>The syslog-ng application supports including external files in its configuration file, so parts of its configuration can be managed separately. To include the contents of a file in the syslog-ng configuration, use the following syntax:</p><pre>@include "&lt;filename&gt;"</pre>
+        <p>This imports the entire file into the configuration of <MadCap:variable name="General.abbrev"></MadCap:variable>, at the location of the include statement. The &lt;filename&gt; can be one of the following:</p>
+        <ul>
+            <li>
+                <p>A filename, optionally with full path. The filename (not the path) can include UNIX-style wildcard characters (<span class="Code" oldrole="userinput">*</span>, <span class="Code" oldrole="userinput">?</span>). When using wildcard characters, <MadCap:variable name="General.abbrev"></MadCap:variable> will include every matching file. For details on using wildcard characters, see <MadCap:xref href="reference-regexp-types.htm#reference-regexp-glob"><span style="color: #04aada;" class="mcFormatColor">Types and options of regular expressions</span></MadCap:xref>.</p>
+            </li>
+            <li>
+                <p>A directory. When including a directory, <MadCap:variable name="General.abbrev"></MadCap:variable> will try to include every file from the directory, except files beginning with a ~ (tilde) or a . (dot) character. Including a directory is not recursive. The files are included in alphabetic order, first files beginning with uppercase characters, then files beginning with lowercase characters. For example, if the directory contains the <span class="Code" oldrole="userinput">a.conf, B. conf, c.conf, D.conf</span> files, they will be included in the following order: <span class="Code" oldrole="userinput">B.conf, D. conf, a.conf, c.conf</span>.</p>
+            </li>
+        </ul>
+        <p>When including configuration files, consider the following points:</p>
+        <ul>
+            <li>
+                <p>The default path where <MadCap:variable name="General.abbrev"></MadCap:variable> looks for the file depends on where <MadCap:variable name="General.abbrev"></MadCap:variable> is installed. The <span class="Code">syslog-ng --version</span> command displays this path as <span class="Code">Include-Path</span>.</p>
+            </li>
+            <li>
+                <p>Defining an object twice is not allowed, unless you use the <span class="Code" oldrole="parameter">@define allow-config-dups 1</span> definition in the configuration file. If an object is defined twice (for example, the original syslog-ng configuration file and the file imported into this configuration file both define the same option, source, or other object), then the object that is defined later in the configuration file will be effective. For example, if you set a global option at the beginning of the configuration file, and later include a file that defines the same option with a different value, then the option defined in the imported file will be used.</p>
+            </li>
+            <li>
+                <p>Files can be embedded into each other: the included files can contain include statements as well, up to a maximum depth of 15 levels.</p>
+            </li>
+            <li>
+                <p>You cannot include complete configuration files into each other, only configuration snippets can be included. This means that the included file cannot have a <span class="Code" oldrole="parameter">@version</span> statement.</p>
+            </li>
+            <li>
+                <p>Include statements can only be used at top level of the configuration file. For example, the following is correct:</p><pre>@version: <MadCap:variable name="Version.techversion"></MadCap:variable>
+@include "example.conf"</pre>
+                <p>But the following is not:</p><pre>source s_example {
+    @include "example.conf"
+};</pre>
+            </li>
+        </ul>
+        <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
+            <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+            <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2">
+            </col>
+            <tbody>
+                <tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1">
+                        <p>
+                            <img src="../../Resources/Images/Common/caution.png" />
+                        </p>
+                    </td>
+                    <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span>
+                        <p>The syslog-ng application will not start if it cannot find a file that is to be included in its configuration. Always double-check the filenames, paths, and access rights when including configuration files, and use the <span class="Code" oldrole="command">--syntax-only</span> command-line option to check your configuration.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>

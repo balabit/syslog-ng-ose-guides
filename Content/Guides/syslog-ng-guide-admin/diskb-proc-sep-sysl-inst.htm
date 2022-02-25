@@ -1,0 +1,197 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html>
+    <head>
+        <link href="../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" />
+    </head>
+    <body name="diskb-proc-sep-sysl-inst">
+        <h1 name="diskb-proc-sep-sysl-inst">How to process messages from an orphan disk-buffer file using a separate <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance</h1>
+        <h6 MadCap:conditions="CommonConditions_DoNotEdit.DoNotPublish" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">Purpose</h6>
+        <p>This section describes how to read messages from an orphan disk-buffer file by using a separate <MadCap:variable name="General.product" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> (<MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" />) process running parallel to the already running <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance.</p>
+        <h6>Orphan disk-buffer files</h6>
+        <MadCap:snippetBlock src="../shared/chunk/orphan-d-buf-intro.flsnp" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" />
+        <h6>Processing the messages from an orphan disk-buffer file by using a separate <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance</h6>
+        <p>When <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> creates orphan disk-buffer files, you can start a separate <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance parallel to the <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance already running, and use the following resolution process to process the messages in the orphan disk-buffer file. </p>
+        <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
+            <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
+            </col>
+            <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2">
+            </col>
+            <tbody>
+                <tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1">
+                    <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1">
+                        <p>
+                            <img src="../../Resources/Images/Common/caution.png" />
+                        </p>
+                    </td>
+                    <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span>
+                        <MadCap:keyword term="orphan disk-buffer" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+                        </MadCap:keyword>
+                        <MadCap:keyword term="disk-buffer issues" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+                        </MadCap:keyword>
+                        <MadCap:keyword term="hazard of data loss" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+                        </MadCap:keyword>
+                        <p>Before starting a separate <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance to process the messages from the orphan disk-buffer file, consider the following:</p>
+                        <ul>
+                            <li>During the resolution process, a separate <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance will be started with its temporary files beside the <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance already running.</li>
+                            <li>An incorrect startup command and incorrect configurations may cause issues for the <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance already running.</li>
+                            <li>The disk-buffer file stores processed log messages in the format in which they would have been sent out to the destination.</li>
+                            <li>The disk-buffer file doesn't store information about the destination.</li>
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="Procedure">To process the messages from an orphan disk-buffer file using a separate <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance,</p>
+        <ol>
+            <li>
+                <p>Identify the orphan disk-buffer files and make a record of them. For more information, see <MadCap:xref href="get-information-about-disk-buffer-files.htm" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><span style="color: #04aada;" class="mcFormatColor">How to get information about disk-buffer files</span></MadCap:xref>.</p>
+                <p>It is important to know the type of the disk-buffer file. Disk-buffer file types can be normal (<span class="Code">.qf</span>) or reliable (<span class="Code">.rqf</span>).</p>
+                <p>In the examples during this process, the <span class="Code">/opt/syslog-ng/var/syslog-ng-00005.rqf</span> orphan reliable disk-buffer file is used.</p>
+            </li>
+            <li>
+                <p>Determine the destination of the logs. The content of the disk-buffer may help you determine the logs' destination. For more information, see <MadCap:xref href="get-information-about-disk-buffer-files.htm" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><span style="color: #04aada;" class="mcFormatColor">How to get information about disk-buffer files</span></MadCap:xref>.</p>
+                <p>In the examples during this process, the destination <span class="Code">10.21.10.20</span> is used with the standard <span class="Code">network()</span> port <span class="Code">514</span>.</p>
+            </li>
+            <li>
+                <p>Create a directory for the temporary instance. In the examples during this process, the <span class="Code">/tmp/qdisk</span> directory is used.</p><pre>mkdir /tmp/qdisk</pre>
+                <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
+                    <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                    </col>
+                    <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2">
+                    </col>
+                    <tbody>
+                        <tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1">
+                            <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1">
+                                <p>
+                                    <img src="../../Resources/Images/Common/caution.png" />
+                                </p>
+                            </td>
+                            <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span>
+                                <MadCap:keyword term="orphan disk-buffer" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+                                </MadCap:keyword>
+                                <MadCap:keyword term="disk-buffer issues" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+                                </MadCap:keyword>
+                                <MadCap:keyword term="hazard of data loss" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+                                </MadCap:keyword>
+                                <p>Make sure that there is sufficient disk space in the directory. The minimum recommended disk space in the directory is equal to the size of the orphan disk-buffer file.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>If you want to use a different temporary directory (that is, other than <span class="Code">/tmp/qdisk</span>), create a symbolic link between <span class="Code">/tmp/qdisk</span> and the temporary directory you want to use with <span class="Code">ln -s /path/to/tempdir /tmp/qdisk</span>. This will allow you to use the commands in this resolution process.</p>
+                <p>If you will not use a different temporary directory, use the <span class="Code">/tmp/qdisk</span> temporary directory in the example commands and file names.</p>
+            </li>
+            <li>
+                <p>Create the configuration file <span class="Code">/tmp/qdisk/qdisk.conf</span> for the temporary instance with the following content.</p>
+                <div class="Example">
+                    <h6>Example: creating the  /tmp/qdisk/qdisk.conf configuration file for the temporary instance</h6><pre>@version:7.0
+@include "scl.conf"
+
+options {
+  keep-hostname(yes);
+  keep-timestamp(yes);
+};
+
+destination d_destination {
+#    ADD YOUR DESTINATION HERE
+
+};
+
+log {
+  destination(d_destination);
+};</pre>
+                </div>
+            </li>
+            <li>
+                <p>Add your destination statement with <span class="Code">disk-buffer()</span> to the configuration file. You can copy the destination statement from your running <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> configuration.</p>
+                <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
+                    <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                    </col>
+                    <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column2">
+                    </col>
+                    <tbody>
+                        <tr class="TableStyle-NoteTable_Yellow_DoNotEdit-Body-Body1">
+                            <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyB-Column1-Body1">
+                                <p>
+                                    <img src="../../Resources/Images/Common/caution.png" />
+                                </p>
+                            </td>
+                            <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span>
+                                <MadCap:keyword term="orphan disk-buffer" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+                                </MadCap:keyword>
+                                <MadCap:keyword term="disk-buffer issues" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+                                </MadCap:keyword>
+                                <MadCap:keyword term="hazard of data loss" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+                                </MadCap:keyword>
+                                <p>Add the <span class="Code">dir()</span> option and set the disk-buffer file's destination directory to the temporary directory (that is, <span class="Code">/tmp/qdisk</span>) in your destination statement.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="Example">
+                    <h6>Example: adding the destination statement with disk-buffer() to the configuration file</h6><pre>network("10.21.10.20"
+    disk-buffer(
+        disk-buf-size(1048576)
+        reliable(yes)
+        <b>dir(/tmp/qdisk/)</b>
+);</pre>
+                </div>
+            </li>
+            <li>
+                <p><a name="start-temp-instance"></a>Start the temporary <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance in the foreground.</p><pre>syslog-ng -Fe -f /tmp/qdisk/qdisk.conf -R /tmp/qdisk/qdisk.persist -c /tmp/qdisk/qdisk.ctl</pre>
+                <p>The <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> application will log to the console, so you will see any potential error that may occur during startup.</p>
+                <p>The following example output displays that an empty disk-buffer file has been created and the connection to the remote destination has been established.</p>
+                <div class="Example">
+                    <h6>Example: output displaying newly created empty disk-buffer file and connection established to remote destination</h6><pre>Follow-mode file source not found, deferring open; filename='/no_such_file_or.dir'
+<b>Reliable disk-buffer state saved; filename='/tmp/qdisk/syslog-ng-00000.rqf', qdisk_length='0'</b>
+No server license found, running in client mode;
+syslog-ng starting up; version='7.0.20', cfg-fingerprint='eaa03b9efb88b87d7c1b0ce7efd042ed8ac0c013', cfg-nonce-ndx='0', cfg-signature='c0327a7f7e6418ce0399a75089377dfb662bb072'
+FIPS information; FIPS-mode='disabled'
+Syslog connection established; fd='7', server='AF_INET(10.21.10.20:514)', local='AF_INET(0.0.0.0:0)'</pre>
+                </div>
+            </li>
+            <li>
+                <p>To stop <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" />, press <span class="Code">CTRL+C</span>.
+                </p>
+            </li>
+            <li>
+                <p><a name="repeat-steps-from-here"></a>Overwrite the empty disk-buffer file with the orphan disk-buffer file.</p><pre>mv /opt/syslog-ng/var/syslog-ng-00005.rqf /tmp/qdisk/syslog-ng-00000.rqf</pre>
+            </li>
+            <li>
+                <p>Start <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> using the command used in <a href="diskb-proc-sep-sysl-inst.htm#start-temp-instance">Start the temporary <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> instance in the foreground</a> step.</p><pre>syslog-ng -Fe -f /tmp/qdisk/qdisk.conf -R /tmp/qdisk/qdisk.persist -c /tmp/qdisk/qdisk.ctl</pre>
+            </li>
+            <li>
+                <p>Open another terminal and check the progress by using one of the following methods.</p>
+                <ul>
+                    <li>
+                        <p>Checking the number of stored logs in the disk-buffer (that is, the last number from the output).</p><pre>/opt/syslog-ng/sbin/syslog-ng-ctl stats -c /tmp/qdisk/qdisk.ctl | grep 'dst.*queued'</pre>
+                    </li>
+                    <li>
+                        <p>Checking the status of the disk-buffer file.</p><pre><MadCap:conditionalText MadCap:conditions="General.PE" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">/opt/syslog-ng/bin/dqtool</MadCap:conditionalText><MadCap:conditionalText MadCap:conditions="General.OSE" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">dqtool</MadCap:conditionalText> info /tmp/qdisk/syslog-ng-00000.rqf</pre>
+                        <p>An empty disk-buffer file will look similar to this:</p>
+                        <div class="Example">
+                            <h6>Example: empty disk-buffer file status message</h6>
+                            <p>When checking the status of the disk-buffer files, the terminal will display a similar status message for an empty disk-buffer file:</p><pre>Reliable disk-buffer state loaded; filename='/tmp/qdisk/syslog-ng-00000.rqf', queue_length='0', size='0'</pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Press <span class="Code">CTRL+C</span> to stop <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" />.</p>
+            </li>
+            <li>
+                <p>Check the state of the orphan disk-buffer file. For more information, see <MadCap:xref href="get-information-about-disk-buffer-files.htm" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd"><span style="color: #04aada;" class="mcFormatColor">How to get information about disk-buffer files</span></MadCap:xref>.</p>
+            </li>
+            <li>
+                <p>If you have more than one orphan disk-buffer file, repeat <a href="diskb-proc-sep-sysl-inst.htm#repeat-steps-from-here">the steps following the <MadCap:variable name="General.abbrev" xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd" /> stop</a> (that is,  the steps beginning from overwriting the empty disk-buffer file with the orphan disk-buffer file) for each orphan disk-buffer file.</p>
+            </li>
+            <li>
+                <p>Remove the temporary directory.</p>
+                <div class="Example">
+                    <h6>Example: command for removing the temporary directory</h6>
+                    <p>The following command removes the <span class="Code">/mp/qdisk</span> temporary directory:</p><pre>rm -rf /tmp/qdisk</pre>
+                </div>
+            </li>
+        </ol>
+    </body>
+</html>

@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="http-batch-mode">
+        <MadCap:keyword term="batch mode">
+        </MadCap:keyword>
+        <div>
+            <h1 name="http-batch-mode">Batch mode and load balancing</h1>
+            <p>Starting with version <MadCap:conditionaltext MadCap:conditions="General.OSE">3.18</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.PE">7.0.12</MadCap:conditionaltext>, you can send multiple log messages in a single HTTP request if the destination HTTP server supports that.</p>
+            <MadCap:snippetBlock src="../shared/chunk/concept-batch-size.htm">
+            </MadCap:snippetBlock>
+            <div>
+                <h6 name="http-batch-format"><a name="http-batch-format"></a>Formatting the batch</h6>
+                <p>By default, <MadCap:variable name="General.abbrev"></MadCap:variable> separates the log messages of the batch with a newline character. You can specify a different delimiter by using the <span class="Code" oldrole="parameter">delimiter()</span> option.</p>
+                <p>If the target application or server requires a special beginning or ending to recognize batches, use the <span class="Code" oldrole="parameter">body-prefix()</span> and <span class="Code" oldrole="parameter">body-suffix()</span> options to add a beginning and ending to the batch. For example, you can use these options to create JSON-encoded arrays as POST payloads, which is required by a number of REST APIs. The body of a batch HTTP request looks like this:</p><pre>value of body-prefix() option
+log-line-1 (as formatted in the body() option)
+log-line-2 (as formatted in the body() option)
+....
+log-line-n (the number of log lines is batch-lines(), or less if batch-timeout() has elapsed or the batch would be longer than batch-bytes())
+value of body-suffix() option</pre>
+                <div class="Example">
+                    <h6 name="example-http-batch-mode"><a name="example-http-batch-mode"></a>Example: HTTP batch mode</h6>
+                    <p>The following destination sends <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">log messages to an Elasticsearch server using the bulk API</a>. A batch consists of 100 messages, or a maximum of 512 kilobytes, and is sent every 10 seconds (10000 milliseconds).</p><pre>destination d_http {
+    http(url("http://your-elasticsearch-server/_bulk")
+        method("POST")
+        batch-lines(100)
+        batch-bytes(512Kb)
+        batch-timeout(10000)
+        headers("Content-Type: application/x-ndjson")
+        body-suffix("\n")
+        body('{ "index":{} }
+             $(format-json --scope rfc5424 --key ISODATE)')
+    );
+};</pre>
+                </div>
+            </div>
+            <div>
+                <h6 name="http-load-balancing"><a name="http-load-balancing"></a>Load balancing between multiple servers</h6>
+                <MadCap:snippetBlock src="../shared/chunk/destination-load-balancing-url.htm">
+                </MadCap:snippetBlock>
+                <div class="Example">
+                    <h6 name="example-http-load-balancing"><a name="example-http-load-balancing"></a>Example: HTTP load balancing</h6>
+                    <p>The following destination sends <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">log messages to an Elasticsearch server using the bulk API</a>, to 3 different ingest nodes. Each node is assigned a separate worker thread. A batch consists of 100 messages, or a maximum of 512 kilobytes, and is sent every 10 seconds (10000 milliseconds).</p><pre>destination d_http {
+    http(url("http://your-elasticsearch-server/_bulk" "http://your-second-ingest-node/_bulk" "http://your-third-ingest-node/_bulk")
+        method("POST")
+        batch-lines(100)
+        batch-bytes(512Kb)
+        batch-timeout(10000)
+        workers(3)
+        headers("Content-Type: application/x-ndjson")
+        body-suffix("\n")
+        body('{ "index":{} }
+             $(format-json --scope rfc5424 --key ISODATE)')
+        persist-name("d_http-load-balance")
+    );
+};</pre>
+                    <MadCap:snippetBlock src="../shared/chunk/http-load-balance-workers.htm" />
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

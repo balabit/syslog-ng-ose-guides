@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="configuring-pattern-databases">
+        <h1 name="configuring-pattern-databases">Using pattern databases</h1>
+        <MadCap:keyword term="parsers">
+        </MadCap:keyword>
+        <MadCap:keyword term="message parsing">
+        </MadCap:keyword>
+        <MadCap:keyword term="parsing messages">
+        </MadCap:keyword>
+        <MadCap:keyword term="pattern database">
+        </MadCap:keyword>
+        <MadCap:keyword term="classifying messages:['configuration']">
+        </MadCap:keyword>
+        <MadCap:keyword term="message classification">
+        </MadCap:keyword>
+        <p>To classify messages using a pattern database, include a <span class="Code" oldrole="parameter">db-parser()</span> statement in your syslog-ng configuration file using the following syntax:</p>
+        <div>
+            <h6>Declaration:</h6><pre>parser &lt;identifier&gt; {
+    db-parser(file("&lt;database_filename&gt;"));
+};</pre>
+        </div>
+        <p>Note that using the parser in a log statement only performs the classification, but does not automatically do anything with the results of the classification.</p>
+        <div class="Example">
+            <h6>Example: Defining pattern databases</h6>
+            <p>The following statement uses the database located at <span class="Code">/opt/syslog-ng/var/db/patterndb.xml</span>.</p><pre>parser pattern_db {
+    db-parser(
+        file("/opt/syslog-ng/var/db/patterndb.xml")
+    );
+};</pre>
+            <p>To apply the patterns on the incoming messages, include the parser in a log statement:</p><pre>log {
+    source(s_all);
+    parser(pattern_db);
+    destination( di_messages_class);
+};</pre>
+            <p>By default, syslog-ng tries to apply the patterns to the body of the incoming messages, that is, to the value of the $MESSAGE macro. If you want to apply patterns to a specific field, or to an expression created from the log message (for example, using template functions or other parsers), use the <span class="Code">message-template()</span> option. For example:</p><pre>parser pattern_db {
+    db-parser(
+        file("/opt/syslog-ng/var/db/patterndb.xml")
+        message-template("${MY-CUSTOM-FIELD-TO-PROCESS}")
+    );
+};</pre>
+            <p>By default, syslog-ng uses the name of the application (content of the ${PROGRAM} macro) to select which rules to apply to the message. If the content of the ${PROGRAM} macro is not the proper name of the application, you can use the <span class="Code">program-template()</span> option to specify it. For example:</p><pre>parser pattern_db {
+    db-parser(
+        file("/opt/syslog-ng/var/db/patterndb.xml")
+        program-template("${MY-CUSTOM-FIELD-TO-SELECT-RULES}")
+    );
+};</pre>
+            <p>Note that the <span class="Code" oldrole="parameter">program-template()</span> option is available in <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="General.OSE">3.21</MadCap:conditionaltext> and later.</p>
+        </div>
+        <div class="Note">
+            <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> The default location of the pattern database file is <span class="Code">/opt/syslog-ng/var/run/patterndb.xml</span>. The <span class="Code" oldrole="parameter">file</span> option of the <span class="Code" oldrole="parameter">db-parser()</span> statement can be used to specify a different file, thus different db-parser statements can use different pattern databases.</p>
+        </div>
+        <div class="Example">
+            <h6>Example: Using classification results</h6>
+            <p>The following destination separates the log messages into different files based on the class assigned to the pattern that matches the message (for example, Violation and Security type messages are stored in a separate file), and also adds the ID of the matching rule to the message:</p><pre>destination di_messages_class {
+    file(
+        "/var/log/messages-${.classifier.class}"
+        template("${.classifier.rule_id};${S_UNIXTIME};${SOURCEIP};${HOST};${PROGRAM};${PID};${MESSAGE}\n")
+        template-escape(no)
+    );
+};</pre>
+            <p>Note that if you chain pattern databases, that is, use multiple databases in the same log path, the class assigned to the message (the value of <span class="Code" oldrole="parameter">${.classifier.class}</span>) will be the one assigned by the last pattern database. As a result, a message might be classified as unknown even if a previous parser successfully classified it. For example, consider the following configuration:</p><pre>log {
+    ...
+    parser(db_parser1);
+    parser(db_parser2);
+    ...
+};</pre>
+            <p>Even if <span class="Code" oldrole="userinput">db_parser1</span> matches the message, <span class="Code" oldrole="userinput">db_parser2</span> might set <span class="Code" oldrole="parameter">${.classifier.class}</span> to unknown. To avoid this problem, you can use an 'if' statement to apply the second parser only if the first parser could not classify the message:</p><pre>log {
+    ...
+    parser{ db-parser(file("db_parser1.xml")); };
+    if (match("^unknown$" value(".classifier.class"))) {
+        parser { db-parser(file("db_parser2.xml")); };
+    };
+    ...
+};</pre>
+        </div>
+        <p>For details on how to create your own pattern databases see <MadCap:xref href="reference-patterndb-schemes.htm#reference-patterndb-schemes"><span style="color: #04aada;" class="mcFormatColor">The syslog-ng pattern database format</span></MadCap:xref>.</p>
+        <div MadCap:conditions="General.OSE">
+            <h6 name="patterndb-drop-unmatched-messages">Drop unmatched messages</h6>
+            <MadCap:keyword term="pattern database:['discard unmatched messages']" MadCap:conditions="General.OSE">
+            </MadCap:keyword>
+            <p>If you want to automatically drop unmatched messages (that is, discard every message that does not match a pattern in the pattern database), use the <span class="Code" oldrole="parameter">drop-unmatched()</span> option in the definition of the pattern database:</p><pre>parser pattern_db {
+    db-parser(
+        file("/opt/syslog-ng/var/db/patterndb.xml")
+        drop-unmatched(yes)
+    );
+};</pre>
+            <p>Note that the <span class="Code" oldrole="parameter">drop-unmatched()</span> option is available in <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="General.OSE">3.11</MadCap:conditionaltext> and later.</p>
+        </div>
+    </body>
+</html>
