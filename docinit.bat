@@ -10,8 +10,8 @@ REM
 REM For the other available options of docsetup.bat, see
 REM Scripts/docsetup-core.bat in the FlareTestsAndScripts repository.
 REM
-IF "%TECHCOMM_BRANCH%"=="" THEN SET TECHCOMM_BRANCH="master"
-IF "%FLARETESTANDSCRIPTS_BRANCH%"=="" THEN SET FLARETESTANDSCRIPTS_BRANCH="master"
+IF "%TECHCOMM_BRANCH%"=="" SET TECHCOMM_BRANCH="master"
+IF "%FLARETESTANDSCRIPTS_BRANCH%"=="" SET FLARETESTANDSCRIPTS_BRANCH="master"
 
 IF EXIST FlareTestsAndScripts GOTO techcomm_checkout
 git -c http.sslVerify=false clone --branch %FLARETESTANDSCRIPTS_BRANCH% https://1id@dev.azure.com/1id/TechComm/_git/FlareTestsAndScripts
