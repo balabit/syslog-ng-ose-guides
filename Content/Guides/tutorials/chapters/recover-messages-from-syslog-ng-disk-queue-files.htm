@@ -5,6 +5,7 @@
     </head>
     <body name="recover-messages-from-syslog-ng-disk-queue-files">
         <h1 name="recover-messages-from-syslog-ng-disk-queue-files">Recover log messages from orphaned disk queue files</h1>
+		<div>
         <h6>Overview:</h6>
         <ol>
             <li>
@@ -20,6 +21,8 @@
                 </p>
             </li>
         </ol>
+		</div>
+		<div>
         <h6>Steps:</h6>
         <ol>
             <li name="identify-the-active-queue-files">
@@ -86,11 +89,14 @@ log {
                         </informalexample>
                     </li>
                     <li>
+						<div>
                         <h6>Start <MadCap:variable name="General.abbrev"></MadCap:variable> briefly from the command-line to generate a persist file.</h6>
                         <p>Make sure to use the configuration file you created in the previous step using the <b class="Code">--cfgfile</b> option, and to use a non-existing persist file (to avoid overwriting the persist file of your regular <MadCap:variable name="General.abbrev"></MadCap:variable> instance). The following command uses the <span class="Code">/root/syslog/syslog-ng.conf</span> configuration file, and the <span class="Code">/root/syslog/syslog-ng.persist</span> persist file.</p><pre>root@server:~/syslog# /opt/syslog-ng/sbin/syslog-ng --foreground --enable-core --no-caps --cfgfile /root/syslog/syslog-ng.conf --pidfile /root/syslog/syslog-ng.sender.pid --control /root/syslog/syslog-ng.sender.ctl --persist-file /root/syslog/syslog-ng.persist --qdisk-dir /root/syslog/</pre>
                         <p>After <MadCap:variable name="General.abbrev"></MadCap:variable> starts up and generates the persist file, press<span class="Code">CTRL+C</span>to stop <MadCap:variable name="General.abbrev"></MadCap:variable>.</p>
+						</div>
                     </li>
                     <li>
+						<div>
                         <h6>Edit the persist file to include the location of the orphaned disk queue files.</h6>
                         <p>Use the following <b class="Code">/opt/syslog-ng/bin/persist-tool dump /root/syslog/syslog-ng.persist</b> command to display the contents of the persist file generated in the previous step, for example:</p><pre>root@server:~/syslog# /opt/syslog-ng/bin/persist-tool dump /root/syslog/syslog-ng.persist
 afsocket_dd_qfile(stream,127.0.0.1:10641) = { "queue_file": "\/root\/syslog\/\/syslog-ng-00000.rqf" }
@@ -106,8 +112,10 @@ rm syslog-ng.persist
 affile_sd_curpos(/no_such_file_or.dir) = { "version": 1, "big_endian": false, "raw_buffer_leftover_size": 0, "buffer_pos": 0, "pending_buffer_end": 0, "buffer_size": 0, "buffer_cached_eol": 0, "pending_buffer_pos": 0, "raw_stream_pos": 0, "pending_raw_stream_pos": 0, "raw_buffer_size": 0, "pending_raw_buffer_size": 0, "file_size": 0, "file_inode": 0, "run_id": 1 }
 
 afsocket_dd_qfile(stream,127.0.0.1:10641) = { "queue_file": "\/root\/syslog\/\/full.rqf" }</pre>
+					</div>
                     </li>
                     <li>
+						<div>
                         <h6>Rename the queue file to the filename set in the persist file previously.</h6><pre>root@server:~/syslog# ls -l *.rqf
 -rw------- 1 root root  4096 febr  21 23:57 full.rqf
 -rw------- 1 root root 78506 febr  22 20:45 syslog-ng-00000.rqf
@@ -115,8 +123,10 @@ root@server:~/syslog# cp /syslog-ng-00000.rqf full.rqf
 root@server:~/syslog# ls -l *.rqf
 -rw------- 1 root root 78506 febr  22 20:45 full.rqf
 -rw------- 1 root root 78506 febr  22 20:45 syslog-ng-00000.rqf</pre>
+						</div>
                     </li>
                     <li>
+						<div>
                         <h6>Start the new syslog-ng instance</h6>
                         <p>Start the new syslog-ng instance, and let it run until size of the queue file decreases to 4 KB. After that, press<span class="Code">Ctrl+C</span>to stop the syslog-ng instance.</p><pre>/opt/syslog-ng/sbin/syslog-ng --foreground --enable-core --no-caps --cfgfile /root/syslog/syslog-ng.conf --pidfile /root/syslog/syslog-ng.sender.pid --control /root/syslog/syslog-ng.sender.ctl --persist-file /root/syslog/syslog-ng.persist --qdisk-dir /root/syslog/
 ^C
@@ -125,13 +135,17 @@ root@server:~/syslog# ls -l *.rqf
 -rw------- 1 root root 78506 febr  22 20:45 syslog-ng-00000.rqf
 root@server:~/syslog#</pre>
                         <p>If you wish to verify or debug <MadCap:variable name="General.abbrev"></MadCap:variable> sending the queue file contents, use the additional <b class="Code">--verbose --debug --stderr</b> options, for example:</p><pre>/opt/syslog-ng/sbin/syslog-ng --foreground --verbose --debug --stderr --enable-core --no-caps --cfgfile /root/syslog/syslog-ng.conf --pidfile /root/syslog/syslog-ng.sender.pid --control /root/syslog/syslog-ng.sender.ctl --persist-file /root/syslog/syslog-ng.persist --qdisk-dir /root/syslog/</pre>
+						</div>
                     </li>
                     <li>
+						<div>
                         <h6>Repeat these steps for the other left-over queue files</h6>
                         <p>After you have processed all left-over queue files this way, all the missing recoverable logs should have found their way to their intended destinations.</p>
+						</div>
                     </li>
                 </ol>
             </li>
         </ol>
+		</div>
     </body>
 </html>
