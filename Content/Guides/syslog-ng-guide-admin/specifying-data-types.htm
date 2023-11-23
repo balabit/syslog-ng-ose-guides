@@ -1,10 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
     <head>
-        <meta name="description" content="" />
+        <link href="../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
+        <link href="../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
     </head>
     <body name="specifying-data-types">
-        <h1 name="specifying-data-types">Specifying data types in value-pairs</h1>
+        <h1 name="specifying-data-types"><a name="specifying-data-types"></a>Specifying data types in value-pairs</h1>
         <MadCap:keyword term="data types">
         </MadCap:keyword>
         <MadCap:keyword term="type-hinting">
@@ -14,6 +15,7 @@
         <MadCap:keyword term="typecasting{see}['type-casting']">
         </MadCap:keyword>
         <p>By default, <MadCap:variable name="General.abbrev"></MadCap:variable> handles every data as strings. However, certain destinations and data formats (for example, SQL, MongoDB, JSON<MadCap:conditionaltext MadCap:conditions="General.OSE">, AMQP</MadCap:conditionaltext>) support other types of data as well, for example, numbers or dates. The <MadCap:variable name="General.abbrev"></MadCap:variable> application allows you to specify the data type in templates (this is also called type-hinting). If the destination driver supports data types, it converts the incoming data to the specified data type. For example, this allows you to store integer numbers as numbers in MongoDB, instead of strings.</p>
+		<p>From <MadCap:variable name="General.abbrev"></MadCap:variable> version 4.0 onwards, name-value pairs are now triplets (name, type, value). Typing support is available for several other components, for example, <span class="Code">json-parser()</span> and the <span class="Code">$(format-json)</span> template function. For more information, see <MadCap:xref href="specifying-data-types.htm#type-supported-components"><span style="color: #04aada;" class="mcFormatColor">Components supported by data types</span></MadCap:xref>.</p>
         <table cellspacing="0" class="TableStyle-NoteTable_Yellow_DoNotEdit" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css');">
             <col class="TableStyle-NoteTable_Yellow_DoNotEdit-Column-Column1" style="width: 0.3in;">
             </col>
@@ -27,26 +29,27 @@
                         </p>
                     </td>
                     <td class="TableStyle-NoteTable_Yellow_DoNotEdit-BodyA-Column2-Body1"><span class="Yellow">Caution: </span>
-                        <p>Hazard of data loss! If <MadCap:variable name="General.abbrev"></MadCap:variable> cannot convert the data into the specified type, an error occurs, and <MadCap:variable name="General.abbrev"></MadCap:variable> drops the message by default. To change how <MadCap:variable name="General.abbrev"></MadCap:variable> handles data-conversion errors, see <MadCap:xref href="reference-options.htm#global-option-typecasting-on-error"><span style="color: #04aada;" class="mcFormatColor">Global options</span></MadCap:xref>.</p>
+                        <p>Hazard of data loss! If <MadCap:variable name="General.abbrev"></MadCap:variable> cannot convert the data into the specified type, an error occurs, and <MadCap:variable name="General.abbrev"></MadCap:variable> drops the message by default. To change how <MadCap:variable name="General.abbrev"></MadCap:variable> handles data-conversion errors, see <MadCap:xref href="reference-options.htm#global-option-typecasting-on-error"><span style="color: #04aada;" class="mcFormatColor">on-error()</span></MadCap:xref>.</p>
                     </td>
                 </tr>
             </tbody>
         </table>
-        <p>To use type-hinting, enclose the macro or template containing the data with the type: <span class="Code">&lt;datatype&gt;("&lt;macro&gt;")</span>, for example: <span class="Code">int("$PID")</span>.</p>
-        <p>Currently the <span class="Code">mongodb()</span> destination and the <span class="Code">format-json</span> and <span class="Code">format-flat-json()</span> template functions support data types.</p>
+        <p>To use type-hinting, enclose the macro or template containing the data with the type: <b class="Code">&lt;datatype&gt;("&lt;macro&gt;")</b>, for example: <b class="Code">int("$PID")</b>.</p>
+        <p>Currently the <span class="Code">mongodb()</span> destination and the <span class="Code">format-json</span> template function supports data types.</p>
         <div class="Example">
             <h6>Example: Using type-hinting</h6>
             <MadCap:keyword term="mongodb{see}['type-casting']">
             </MadCap:keyword>
             <p>The following example stores the MESSAGE, PID, DATE, and PROGRAM fields of a log message in a MongoDB database. The DATE and PID parts are stored as numbers instead of strings.</p><pre>mongodb(
-    value-pairs(pair("date", datetime("$UNIXTIME"))
+    value-pairs(
+        pair("date", datetime("$UNIXTIME"))
         pair("pid", int64("$PID"))
         pair("program", "$PROGRAM"))
         pair("message", "$MESSAGE"))
     )
 );</pre>
-            <p>The following example formats the same fields into JSON.</p><pre>$(format-json date=datetime($UNIXTIME) pid=int64($PID) program=$PROGRAM message=$MESSAGE)</pre>
-            <p>The following example formats the MESSAGE field as a JSON list.</p><pre>$(format-json message=list($MESSAGE))"</pre>
+            <p>Use the following example to format the same fields into JSON.</p><pre>$(format-json date=datetime("$UNIXTIME") pid=int64("$PID") program="$PROGRAM" message="$MESSAGE")</pre>
+			<p>Use the following example to format the MESSAGE field as a JSON list.</p><pre>$$(format-json message=list($MESSAGE))</pre>
         </div>
         <p>The <MadCap:variable name="General.abbrev"></MadCap:variable> application currently supports the following data-types.</p>
         <ul>
@@ -63,17 +66,403 @@
                 <p><span class="Code">literal</span>: The data as a literal string, without adding any quotes or escape characters.</p>
             </li>
             <li>
-                <p><span class="Code">list</span>: The data as a list. For details, see the list manipulation template functions in <MadCap:xref href="reference-template-functions.htm"><span style="color: #04aada;" class="mcFormatColor">Template functions of [%=General.OSE%]</span></MadCap:xref>.</p>
-            </li>
-            <li>
                 <p><span class="Code">int</span> or <span class="Code">int32</span>: 32-bit integer.</p>
             </li>
             <li>
-                <p><span class="Code" >int64</span>: 64-bit integer.</p>
+                <p><span class="Code">int64</span>: 64-bit integer.</p>
             </li>
             <li>
-                <p><span class="Code">string</span>: The data as a string.</p>
+                <p><span class="Code">string</span>: The data is a string.</p>
+            </li>
+			<li>
+                <p><span class="Code">list</span>: The data is a list of strings.</p>
+            </li>
+			 <li>
+                <p><span class="Code">JSON</span>: The data is a JSON snippet.</p>
+            </li>
+			 <li>
+                <p><span class="Code">null</span>: The type of the data is undefined.</p>
             </li>
         </ul>
+        <div>
+			<h6 name="type-supported-components"><a name="type-supported-components"></a>Components supported by data types</h6>
+			<p>The following components support data types from <MadCap:variable name="General.abbrev"></MadCap:variable> 4.0 and onwards:</p>
+			<div class="Note">
+			<p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span></p>
+			<p>Component types not listed below process data as string.</p>
+			</div>
+			<ul>
+				<li><p>Numeric operators in filter expression comparisons are now type-aware. The exact comparison depends on the types associated with the values compared. For more information, see Comparing macro values in filters.</p></li>
+				<li><p><span class="Code">json-parser()</span> and the <span class="Code">format-json</span> template function:</p>
+					<p>For more information, see <MadCap:xref href="json-parser.htm#"><span style="color: #04aada;" class="mcFormatColor">json-parser()</span></MadCap:xref> and <MadCap:xref href="reference-template-functions.htm#format-json"><span style="color: #04aada;" class="mcFormatColor">format-json</span></MadCap:xref>.</p>
+<p><MadCap:variable name="General.abbrev"></MadCap:variable> converts all elements in a JSON object to name-value pairs, when using <span class="Code">json-parser()</span>. Any type related data present in the original JSON is retained. This data is propagated automatically to any other component that supports type, for example a destination.</p>
+<p>Elements without type data are handled as strings.</p>
+<p>JSON lists (arrays) are converted to <MadCap:variable name="General.abbrev"></MadCap:variable> lists, and can be manipulated using the <MadCap:xref href="reference-template-functions.htm#template-function-list-append"><span style="color: #04aada;" class="mcFormatColor">$(list-*)</span></MadCap:xref>
+ template functions.</p>
+</li>
+<li><p><span class="Code">set()</span> and <span class="Code">groupset()</span> rewrite rules:
+</p>
+<p>The type of the field can be set. Type-casting can be executed using the <span class="Code">set()</span> and <span class="Code">groupset()</span> template functions, to properly promote the type information.</p>
+<p>For more information, see <MadCap:xref href="custom-sdata-fields.htm#"><span style="color: #04aada;" class="mcFormatColor">set()</span></MadCap:xref> and <MadCap:xref href="rewrite-groupset.htm#"><span style="color: #04aada;" class="mcFormatColor">groupset()</span></MadCap:xref>.</p>
+</li>
+<li><p><span class="Code">db-parser()</span>:</p>
+<p><span class="Code">db-parser()</span> rules can pair types with values using the <span class="Code">type</span> attribute.</p>
+ 
+             <div class="Example">
+                <h6>Example: Using the type attribute</h6>
+<p><pre>&lt;value name="foobar" type="integer"&gt;$PID&lt;/value&gt;</pre></p>
+		</div>
+<p>The <span class="Code">integer</span> is a type-cast that couples <span class="Code">$foobar</span> with an integer type. The internal parsers of <span class="Code">db-parser()</span> (for example, <span class="Code">@NUMBER@</span>) automatically couple type information to the parsed name-value pair.</p>
+<p>For more information, see <MadCap:xref href="configuring-pattern-databases.htm#"><span style="color: #04aada;" class="mcFormatColor">db-parser()</span></MadCap:xref>.</p>
+</li>
+<li><p><span class="Code">add-contextual-data()</span>: Name-value pairs that are populated using <span class="Code">add-contextual-data()</span> propagate type information, similarly to <span class="Code">db-parser()</span>.</p>
+</li>
+<li><p><span class="Code">map-value-pairs()</span>:</p>
+<p><span class="Code">map-value-pairs()</span> propagates type information.</p>
+</li>
+<li><p>SQL type support:</p>
+<p>Columns with specific type information are stored with this information kept intact. For more information, see <MadCap:xref href="reference-destination-sql.htm#"><span style="color: #04aada;" class="mcFormatColor">sql(): Storing messages in an SQL database</span></MadCap:xref>.
+</p>
+</li>
+<li><p>Template type support:</p>
+<p>Templates can be cast explicitly to a specific type. Templates also propagate type information from macros, template functions, and values in the template string.</p>
+</li>
+<li><p><span class="Code">python()</span> typing:</p>
+<p>Python components (sources, destinations, parsers, and template functions) support all data types, except for <span class="Code">json()</span>.</p>
+</li>
+<li><p>On-disk serialized formats (that is, disk buffer):</p>
+<p><MadCap:variable name="General.abbrev"></MadCap:variable> Version 4.0 and newer versions are backwards compatible with messages serialized with earlier versions, and the format is compatible for downgrades. Therefore, even if a newer version of <MadCap:variable name="General.abbrev"></MadCap:variable> serialized a message, older versions and associated tools are able to read it, however, in this case the type information is lost.</p>
+</li>
+			</ul>
+			<h6 name="options-value-pairs"><a name="options-value-pairs"></a>value-pairs()</h6>
+            <p>
+                <MadCap:keyword term="value-pairs()">
+                </MadCap:keyword>
+            </p>
+            <table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">parameter list of the <span class="Code">value-pairs()</span> option</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"><pre>empty string</pre>
+                        </td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                </col>
+            </table>
+            <p><i>Description:</i> The <span class="Code">value-pairs()</span> option allows you to select specific information about a message easily using predefined macro groups. The selected information is represented as name-value pairs and can be used formatted to JSON format, or directly used in a <span class="Code">mongodb()</span> destination.</p>
+            <div class="Example">
+                <h6>Example: Using the value-pairs() option</h6>
+                <MadCap:keyword term="value-pairs()">
+                </MadCap:keyword>
+                <p>The following example selects every available information about the log message, except for the date-related macros (<span class="Code">R_*</span> and <span class="Code">S_*</span>), selects the <span class="Code">.SDATA.meta.sequenceId</span> macro, and defines a new value-pair called <span class="Code">MSGHDR</span> that contains the program name and PID of the application that sent the log message.</p><pre>value-pairs(
+    scope(nv_pairs core syslog all_macros selected_macros everything)
+    exclude("R_*")
+    exclude("S_*")
+    key(".SDATA.meta.sequenceId")
+    pair("MSGHDR" "$PROGRAM[$PID]: ")
+)</pre>
+                <p>The following example selects the same information as the previous example, but converts it into JSON format.</p><pre>$(format-json --scope nv_pairs,core,syslog,all_macros,selected_macros,everything \
+  --exclude R_* --exclude S_* --key .SDATA.meta.sequenceId \
+  --pair MSGHDR="$PROGRAM[$PID]: ")</pre>
+            </div>
+            <div class="Note">
+                <p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> 
+				Every macro is included in the selection only once, but redundant information may appear if multiple macros include the same information (for example, including several date-related macros in the selection).</p>
+            </div>
+            <p>The <span class="Code">value-pairs()</span> option has the following parameters. The parameters are evaluated in the following order:</p>
+            <ol>
+                <li>
+                    <p><a href="concepts-value-pairs.htm"><span class="Code">scope()</span></a>
+                    </p>
+                </li>
+                <li>
+                    <p><a href="concepts-value-pairs.htm"><span class="Code">exclude()</span></a>
+                    </p>
+                </li>
+                <li>
+                    <p><a href="concepts-value-pairs.htm"><span class="Code">key()</span></a>
+                    </p>
+                </li>
+                <li>
+                    <p><a href="concepts-value-pairs.htm"><span class="Code">pair()</span></a>
+                    </p>
+                </li>
+            </ol>
+            <table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" name="value-pairs-exclude" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                </col>
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">
+                            <MadCap:keyword term="exclude()">
+                            </MadCap:keyword><i>exclude()</i>
+                        </td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">
+                            <p>&#160;</p>
+                        </td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">Space-separated list of macros to remove from the selection created using the <span class="Code">scope()</span> option.</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Default:
+
+                        </td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">empty string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1" colspan="2">
+                            <p><i>Description:</i> This option removes the specified macros from the selection. Use it to remove unneeded macros selected using the <span class="Code">scope()</span> parameter.</p>
+                            <p>For example, the following example removes the SDATA macros from the selection.</p><pre>value-pairs(
+    scope(rfc5424 selected_macros)
+    exclude(".SDATA*")
+)</pre>
+                            <p>The name of the macro to remove can include wildcards <span class="Code">(*, ?)</span>. Regular expressions are not supported.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" name="value-pairs-key" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1"><i>key()</i>
+                            <MadCap:keyword term="key()">
+                            </MadCap:keyword>
+                        </td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">
+                            <p>&#160;</p>
+                        </td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">Space-separated list of macros to be included in selection</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">empty string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1" colspan="2">
+                            <p><i>Description:</i> This option selects the specified macros. The selected macros will be included as <span class="Code">MACRONAME = MACROVALUE</span>, that is using <span class="Code">key("HOST")</span> will result in <span class="Code">HOST = $HOST</span>. You can use wildcards <span class="Code">(*, ?)</span> to select multiple macros. For example:</p><pre>value-pairs(
+    scope(rfc3164)
+    key("HOST")
+)</pre><pre>value-pairs(
+    scope(rfc3164)
+    key("HOST", "PROGRAM")
+)</pre>
+                        </td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                </col>
+            </table>
+            <table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" name="value-pairs-pair" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1"><i>omit-empty-values()</i>
+                            <MadCap:keyword term="omit-empty-values()">
+                            </MadCap:keyword>
+                        </td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">
+                            <p>&#160;</p>
+                        </td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">flag</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">N/A</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1" colspan="2">
+                            <p><i>Description:</i> If this option is specified, <MadCap:variable name="General.abbrev"></MadCap:variable> does not include value-pairs with empty values in the output. For example: <span class="Code">$(format-json --scope none --omit-empty-values)</span> or</p><pre>value-pairs(
+    scope(rfc3164 selected-macros)
+    omit-empty-values()
+)</pre>
+                            <p>Available in <MadCap:variable name="General.abbrev"></MadCap:variable> version <MadCap:conditionaltext MadCap:conditions="General.PE">7.0.14</MadCap:conditionaltext><MadCap:conditionaltext MadCap:conditions="General.OSE">3.21</MadCap:conditionaltext> and later.</p>
+                        </td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                </col>
+            </table>
+            <table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" name="value-pairs-pair" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1"><i>pair()</i>
+                            <MadCap:keyword term="pair()">
+                            </MadCap:keyword>
+                        </td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">
+                            <p>&#160;</p>
+                        </td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">name value pairs in <span class="Code">"&lt;NAME&gt;" "&lt;VALUE&gt;"</span> format</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">empty string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1" colspan="2">
+                            <p><i>Description:</i> This option defines a new name-value pair to be included in the message. The value part can include macros, templates, and template functions as well. For example:</p>
+                        </td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                </col>
+            </table>
+            <table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" name="value-pairs-rekey" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1"><i>rekey()</i>
+                            <MadCap:keyword term="rekey()">
+                            </MadCap:keyword>
+                        </td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">
+                            <p>&#160;</p>
+                        </td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">&lt;pattern-to-select-names&gt;, &lt;list of transformations&gt;</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">empty string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1" colspan="2">
+                            <p><i>Description:</i> This option allows you to manipulate and modify the name of the value-pairs. You can define transformations, which are are applied to the selected name-value pairs. The first parameter of the <span class="Code">rekey()</span> option is a glob pattern that selects the name-value pairs to modify. If you omit the pattern, the transformations are applied to every key of the scope. For details on globs, see <MadCap:xref href="reference-regexp-types.htm#reference-regexp-glob"><span style="color: #04aada;" class="mcFormatColor">glob</span></MadCap:xref>.</p>
+                            <ul>
+                                <li>
+                                    <p>If <span class="Code">rekey()</span> is used within a <span class="Code">key()</span> option, the name-value pairs specified in the glob of the <span class="Code">key()</span> option are transformed.</p>
+                                </li>
+                                <li>
+                                    <p>If <span class="Code">rekey()</span> is used outside the <span class="Code">key()</span> option, every name-value pair of the <span class="Code">scope()</span> is transformed.</p>
+                                </li>
+                            </ul>
+                            <p>The following transformations are available:</p>
+                            <ul oldrole="variablelist">
+                                <li oldrole="varlistentry"><b class="Code">add-prefix("&lt;my-prefix&gt;")</b>
+                                    <MadCap:keyword term="add-prefix()">
+                                    </MadCap:keyword>
+                                    <li>
+                                        <p>Adds the specified prefix to every name. For example, <b class="Code">rekey( add-prefix("my-prefix."))</b></p>
+                                    </li>
+                                </li>
+                                <li oldrole="varlistentry"><b class="Code">replace-prefix("&lt;prefix-to-replace&gt;", "&lt;new-prefix&gt;")</b>
+                                    <MadCap:keyword term="replace-prefix()">
+                                    </MadCap:keyword>
+                                    <li>
+                                        <p>Replaces a substring at the beginning of the key with another string. Only prefixes can be replaced. For example, <b class="Code">replace-prefix(".class", ",patterndb")</b> changes the beginning tag <span class="Code">.class</span> to <span class="Code">.patterndb</span></p>
+                                    </li>
+                                </li>
+                                <li oldrole="varlistentry"><b class="Code">shift("&lt;number&gt;")</b>
+                                    <MadCap:keyword term="shift()">
+                                    </MadCap:keyword>
+                                    <li>
+                                        <p>Cuts the specified number of characters from the beginning of the name.</p>
+                                    </li>
+                                </li>
+                            </ul>
+                            <div class="Example">
+                                <h6 name="example-value-pairs-rekey"><a name="example-value-pairs-rekey"></a>Example: <caption MadCap:autonum="Table 1: ">Using the rekey() option</caption></h6>
+                                <p>The following sample selects every value-pair that begins with <span class="Code">.cee.</span>, deletes this prefix by cutting 4 characters from the names, and adds a new prefix (<span class="Code">events.</span>).</p><pre>value-pairs(
+    key(".cee.*"
+        rekey(
+            shift(4)
+            add-prefix("events.")
+        )
+    )
+)</pre>
+                                <p>The <span class="Code">rekey()</span> option can be used with the <span class="Code">format-json</span> template-function as well, using the following syntax:</p><pre>$(format-json --rekey .cee.* --add-prefix events.)</pre>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                </col>
+            </table>
+            <table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" name="value-pairs-scope" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1"><i>scope()</i>
+                            <MadCap:keyword term="scope()">
+                            </MadCap:keyword>
+                        </td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">
+                            <p>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">space-separated list of macro groups to include in selection</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">empty string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1" colspan="2">
+                            <p><i>Description:</i> This option selects predefined groups of macros. The following groups are available:</p>
+                            <ul>
+                                <li>
+                                    <p><i>nv-pairs</i>: Every soft macro (name-value pair) associated with the message, except the ones that start with a dot (.) character. Macros starting with a dot character are generated within <MadCap:variable name="General.abbrev"></MadCap:variable> and are not originally part of the message, therefore are not included in this group.</p>
+                                </li>
+                                <li>
+                                    <p><i>dot-nv-pairs</i>: Every soft macro (name-value pair) associated with the message which starts with a dot (.) character. For example, <span class="Code">.classifier.rule_id</span> and <span class="Code">.sdata.*</span>. Macros starting with a dot character are generated within <MadCap:variable name="General.abbrev"></MadCap:variable> and are not originally part of the message.</p>
+                                </li>
+                                <li>
+                                    <p><i>all-nv-pairs</i>: Include every soft macro (name-value pair). Equivalent to using both <span class="Code">nv-pairs</span> and <span class="Code">dot-nv-pairs</span>.</p>
+                                </li>
+                                <li>
+                                    <p><i>rfc3164</i>: The macros that correspond to the RFC3164 (legacy or BSD-syslog) message format: <span class="Code">$FACILITY</span>, <span class="Code">$PRIORITY</span>, <span class="Code">$HOST</span>, <span class="Code">$PROGRAM</span>, <span class="Code">$PID</span>, <span class="Code">$MESSAGE</span>, and <span class="Code">$DATE</span>.</p>
+                                </li>
+                                <li>
+                                    <p><i>rfc5424</i>: The macros that correspond to the RFC5424 (IETF-syslog) message format: <span class="Code">$FACILITY</span>, <span class="Code">$PRIORITY</span>, <span class="Code">$HOST</span>, <span class="Code">$PROGRAM</span>, <span class="Code">$PID</span>, <span class="Code">$MESSAGE</span>, <span class="Code">$MSGID</span>, <span class="Code">$R_DATE</span>, and the metadata from the structured-data (SDATA) part of RFC5424-formatted messages, that is, every macro that starts with <span class="Code">.SDATA.</span>.</p>
+                                    <p>The <span class="Code">rfc5424</span> group also has the following alias: <span class="Code">syslog-proto</span>. Note that the value of <span class="Code">$R_DATE</span> will be listed under the <span class="Code">DATE</span> key.</p>
+                                    <p>The <span class="Code">rfc5424</span> group does not contain any metadata about the message, only information that was present in the original message. To include the most commonly used metadata (for example, the <span class="Code">$SOURCEIP</span> macro), use the <span class="Code">selected-macros</span> group instead.</p>
+                                </li>
+                                <li>
+                                    <p><i>all-macros</i>: Include every hard macro. This group is mainly useful for debugging, as it contains redundant information (for example, the date-related macros include the date-related information several times in various formats).</p>
+                                </li>
+                                <li>
+                                    <p><i>selected-macros</i>: Include the macros of the <span class="Code">rfc3164</span> groups, and the most commonly used metadata about the log message: the <span class="Code">$TAGS</span>, <span class="Code">$SOURCEIP</span>, and <span class="Code">$SEQNUM</span> macros.</p>
+                                </li>
+                                <li>
+                                    <p><i>sdata</i>: The metadata from the structured-data (SDATA) part of RFC5424-formatted messages, that is, every macro that starts with <span class="Code">.SDATA.</span></p>
+                                </li>
+                                <li>
+                                    <p><i>everything</i>: Include every hard and soft macros. This group is mainly useful for debugging, as it contains redundant information (for example, the date-related macros include the date-related information several times in various formats).</p>
+                                </li>
+                            </ul>
+                            <p>For example:</p><pre>value-pairs(
+    scope(rfc3164 selected-macros)
+)</pre>
+                        </td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                </col>
+            </table>
+        </div>
     </body>
 </html>
