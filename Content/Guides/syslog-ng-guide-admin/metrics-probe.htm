@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <link href="../../Resources/TableStyles/RuledTableWithHeading_VerticallyRuled_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
+        <link href="../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
+        <link href="../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
+        <meta name="description" content="" />
+    </head>
+    <body name="metrics-probe">
+        <h1 name="metrics-probe"><a name="metrics-probe"></a>metrics-probe</h1>
+
+	<p>Available in <MadCap:variable name="General.abbrev"></MadCap:variable> 4.1.1 or later versions.</p>
+	<p><span class="Code">metrics-probe()</span> is a special parser that counts the messages passing through the log path, and creates labeled stat-counters based on the fields of these messages.</p>
+	<p>The names of the keys and the labels can be configured. The keys are automatically prefixed with the <span class="Code">syslogng_</span> string. Templates can be used in the values of the labels.</p>
+	<p>The minimal configuration creates counters with the <span class="Code">syslogng_classified_events_total</span> key, labels app, host, program and source.</p>
+	                    <div class="Example">
+                        <h6>Example:</h6>
+                        <p><pre>parser p_metrics_probe {
+  metrics-probe();
+  # Same as:
+  #
+  # metrics-probe(
+  #   key("classified_events_total")
+  #   labels(
+  #     "app" => "${APP}"
+  #     "host" => "${HOST}"
+  #     "program" => "${PROGRAM}"
+  #     "source" => "${SOURCE}"
+  #   )
+  # );
+};</pre>
+						</p>
+                    </div>
+		<p>This configuration results the following counters:</p>	
+                        <p>
+						<pre>syslogng_classified_events_total{app="example-app", host="localhost", program="baz", source="s_local_1"} 3
+syslogng_classified_events_total{app="example-app", host="localhost", program="bar", source="s_local_1"} 1
+syslogng_classified_events_total{app="example-app", host="localhost", program="foo", source="s_local_1"} 1
+						</pre>
+						</p>
+		<p>The metrics can be queried by running the following command:</p>
+		<p>
+		<pre>syslog-ng-ctl stats prometheus</pre>
+		</p>
+		<p>In the following example, the <span class="Code">metrics-probe()</span> parser creates a counter called <span class="Code">syslogng_custom_key</span> that counts messages that have their <span class="Code">custom_label_name_1</span> field set to <span class="Code">foobar</span>, and for these messages it creates separate counters based on the value of the <span class="Code">custom_label_name_2</span> field.</p>
+			                    <div class="Example">
+                        <h6>Example:</h6>
+                        <p><pre>parser p_metrics_probe {
+  metrics-probe(
+	key("custom_key")  # adds "syslogng_" prefix => "syslogng_custom_key"
+	labels(
+	  "custom_label_name_1" => "foobar"
+	  "custom_label_name_2" => "${.custom.field}"
+	)
+  );
+};</pre>
+						</p>
+                    </div>
+				<p>This configuration results the following counters:</p>	
+                        <p>
+						<pre>syslogng_custom_key{custom_label_name_1="foobar", custom_label_name_2="bar"} 1
+syslogng_custom_key{custom_label_name_1="foobar", custom_label_name_2="foo"} 1
+syslogng_custom_key{custom_label_name_1="foobar", custom_label_name_2="baz"} 3</pre>
+						</p>
+		<p>In <MadCap:variable name="General.abbrev"></MadCap:variable> 4.4 and later versions, it is possible to create <MadCap:xref href="metrics-probe-options.htm#dynamic-labels"><span style="color: #04aada;" class="mcFormatColor">dynamic labels</span></MadCap:xref> as well.</p>
+    </body>
+</html>
