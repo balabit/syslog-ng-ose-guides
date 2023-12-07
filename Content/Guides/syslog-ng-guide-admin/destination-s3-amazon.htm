@@ -1,0 +1,439 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="destination-s3-amazon">
+        <h1 name="destination-s3-amazon">s3: Amazon S3</h1>
+		<p>Available in <MadCap:variable name="General.abbrev"></MadCap:variable> version 4.4 and later versions.</p>
+		<p>The <span class="Code">s3()</span> destination sends log messages to the <MadCap:xref href="https://aws.amazon.com/s3/"><span style="color: #04aada;" class="mcFormatColor">Amazon Simple Storage Service (Amazon S3)</span></MadCap:xref> object storage service. Log messages can be sent over TCP, or encrypted with TLS.</p>
+		<div>
+            <h6>Prerequisites:</h6>
+			<ul>
+			<li><p>An already configured S3 bucket for programmatic access, and the related <span class="Code">ACCESS_KEY</span> and <span class="Code">SECRET_KEY</span> belonging to a user capable of accessing it.</p></li>
+			<li><p>If the venv(<span class="Code">/usr/bin/syslog-ng-update-virtualenv</span>) created by <MadCap:variable name="General.abbrev"></MadCap:variable> is not being used, the <span class="Code">boto3</span> and/or <span class="Code">botocore</span> Python dependencies must be installed.</p></li>
+			</ul>
+			<p>To use the s3() driver, the scl.conf file must be included in the <MadCap:variable name="General.abbrev"></MadCap:variable> configuration:</p>
+			<pre>@include "scl.conf"</pre>
+        </div>        
+		<div>
+            <h6>Declaration:</h6><pre>s3(
+    url("http://localhost:9000")
+    bucket("syslog-ng")
+    access-key("my-access-key")
+    secret-key("my-secret-key")
+    object-key("${HOST}/my-logs")
+    template("${MESSAGE}\n")
+);</pre>
+        </div>
+		<div>
+            <h6>Creating objects</h6>
+	<p>Objects can be created based on the following strategies:</p>
+	<ul>
+	<li><p>Based on object size:</p>
+		<p>The max-object-size() option configures <MadCap:variable name="General.abbrev"></MadCap:variable> to complete an object if it reaches a certain size. <MadCap:variable name="General.abbrev"></MadCap:variable> appends a number index suffix ("-1", "-2", …) to the object key, and starts a new object.</p>
+	</li>	
+	<li><p>Based on timestamp:</p>
+		<p>The object-key-timestamp() option can be used to set a datetime-related template, which is appended to the end of the object, for example: "${R_MONTH_ABBREV}${R_DAY}". When a log message arrives with a newer timestamp template resolution, the previous timestamped object gets completed and a new one is initiated with the new timestamp. If an older message arrives, it does not reopen the old object, but starts a new object with the key having an index appended to the old object.</p>
+	</li>
+	<li><p>Based on timeout:</p>
+		<p>The flush-grace-period() option sets the number of minutes to wait for new messages to arrive after the last one. If the timeout expires, <MadCap:variable name="General.abbrev"></MadCap:variable> closes the object, and opens a new object (with an appended index) when a new message arrives.</p>
+	</li>
+	</ul>
+	<p>All of these strategies can be used separately, or together.</p>
+        </div>
+		<div>
+            <h6>Upload options</h6>
+			<p><MadCap:variable name="General.abbrev"></MadCap:variable> uploads objects using the multipart upload API. <MadCap:variable name="General.abbrev"></MadCap:variable> composes chunks locally. When a chunk reaches the size set in chunk-size() (by default 5 MiB), the chunk is uploaded. When an object is finished, the multipart upload is completed and S3 merges the chunks.</p>
+			<p>The upload can be manipulated by the <span class="Code">chunk-size()</span>, <span class="Code">upload-threads()</span>, and the <span class="Code">max-pending-uploads()</span> options.</p>
+        </div>
+		<div>
+            <h6>Options</h6>
+			<p>The following options are specific to the <span class="Code">s3()</span> destination.</p>
+
+        <div>
+            <h6 name="access-key"><a name="access-key"></a>access-key()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"><span class="Code">N/A</span></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The <span class="Code">ACCESS_KEY</span> (used with <span class="Code">secret-key()</span>)of the service account used to access the S3 bucket.</p>
+		</div>
+        <div>
+            <h6 name="bucket"><a name="bucket"></a>bucket()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The name of the S3 bucket, for example, <span class="Code">my-bucket</span>.</p>
+		</div>
+        <div>
+            <h6 name="canned-acl"><a name="canned-acl"></a>canned-acl()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1">empty</td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The ACL assigned to the object, if specified, for example, <span class="Code">bucket-owner-read</span>.</p>
+		<p>The following values are available:</p>
+		<ul>
+		<li><p><span class="Code">authenticated-read</span></p></li>
+		<li><p><span class="Code">aws-exec-read</span></p></li>
+		<li><p><span class="Code">bucket-owner-full-control</span></p></li>
+		<li><p><span class="Code">bucket-owner-read</span></p></li>
+		<li><p><span class="Code">log-delivery-write</span></p></li>
+		<li><p><span class="Code">private</span></p></li>
+		<li><p><span class="Code">public-read</span></p></li>
+		<li><p><span class="Code">public-read-write</span></p></li>
+		</ul>
+		<p>If an invalid value is defined, the default value is used.</p>
+		</div>
+        <div>
+            <h6 name="chunk-size"><a name="chunk-size"></a>chunk-size()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"><span class="Code">5MiB</span></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The size of log messages that <MadCap:variable name="General.abbrev"></MadCap:variable> writes to the S3 object in a batch. If compression is enabled, the <span class="Code">chunk-size()</span> refers to the compressed size.</p>
+		</div>
+        <div>
+            <h6 name="compression"><a name="compression"></a>compression()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">boolean</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"><span class="Code">no</span></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The setting <span class="Code">compression(yes)</span> enables gzip compression, and implicitly adds a .gz suffix to the key of the created object. The level of the compression can be set using the <span class="Code">compresslevel()</span> option (0-9).</p>
+		</div>
+        <div>
+            <h6 name="compresslevel"><a name="compresslevel"></a>compresslevel()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">integer (0-9)</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"><span class="Code">9</span></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> This option only has an effect if the <span class="Code">compression()</span> option is set to <span class="Code">yes</span>. The level of the compression can be set using the <span class="Code">compresslevel()</span> option (0-9).</p>
+		</div>
+        <div>
+            <h6 name="flush-grace-period"><a name="flush-grace-period"></a>flush-grace-period()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">integer [minutes]</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"><span class="Code">60</span></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> After the grace period expires and no new messages are routed to the destination, <MadCap:variable name="General.abbrev"></MadCap:variable> flushes the contents of the buffer to the S3 object even if the volume of the messages in the buffer is lower than <span class="Code">chunk-size()</span>.</p>
+		</div>
+		        <div>
+            <h6 name="log-fifo-size"><a name="log-fifo-size"></a>log-fifo-size()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">number</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1">Use global setting.</td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The number of messages that the output queue can store.</p>
+		</div>
+        <div>
+            <h6 name="max-object-size"><a name="max-object-size"></a>max-object-size()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"><span class="Code">5120GiB</span></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The maximal size of the S3 object. If an object reaches this size, <MadCap:variable name="General.abbrev"></MadCap:variable> appends an index ("-1", “-2”, etc.) to the end of the object key and starts a new object after rotation.</p>
+		</div>
+        <div>
+            <h6 name="max-pending-uploads"><a name="max-pending-uploads"></a>max-pending-uploads()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">integer</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"><span class="Code">32</span></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The <span class="Code">max-pending-uploads()</span> and <span class="Code">upload-threads()</span> options configure the upload of the chunks. Uploading happens in multiple threads to minimize network overhead.</p>
+		<ul>
+		<li>
+		<p><span class="Code">upload-threads()</span> limits the maximum number of parallel uploads.</p>
+		</li>
+		<li>
+		<p><span class="Code">max-pending-uploads()</span> limits the number of chunks that are waiting in the work queue of the upload threads to get uploaded.</p>
+		</li>
+		</ul>
+		</div>
+        <div>
+            <h6 name="object-key"><a name="object-key"></a>object-key()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">template</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1">N/A</td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The object key (or key name), that uniquely identifies the object in an Amazon S3 bucket.</p>
+		</div>
+        <div>
+            <h6 name="object-key-timestamp"><a name="object-key-timestamp"></a>object-key-timestamp()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">template</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The object-key-timestamp() option can be used to set a datetime-related template, which is appended to the end of the object.</p>
+	             <div class="Example">
+                <h6>Example:</h6><pre>"${R_MONTH_ABBREV}${R_DAY}"
+				</pre>
+			</div>
+		<p>When a log message arrives with a newer timestamp template resolution, the previous timestamped object gets completed and a new one is initiated with the new timestamp. If an older message arrives, it does not reopen the old object, but starts a new object with the key having an index appended to the old object.</p>
+		</div>
+        <div>
+            <h6 name="persist-name"><a name="persist-name"></a>persist-name()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1">N/A</td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> If the following error is displayed during the <MadCap:variable name="General.abbrev"></MadCap:variable> startup, set the <span class="Code">persist-name()</span> option of the duplicate drivers.</p>
+		<pre>Error checking the uniqueness of the persist names, please override it with persist-name option. Shutting down.</pre>
+		<p>This error occurs when identical drivers in multiple sources are used, for example,if two file sources are configured to read from the same file. In this case, set the <span class="Code">persist-name()</span> of the drivers to a custom string, for example, <span class="Code">persist-name("example-persist-name1")</span>.</p>
+		</div>
+        <div>
+            <h6 name="region"><a name="region"></a>region()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The regional endpoint where the bucket is stored, for example, <span class="Code">us-east-1</span>.</p>
+		</div>
+        <div>
+            <h6 name="secret-key"><a name="secret-key"></a>secret-key()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1">N/A</td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The <span class="Code">SECRET_KEY</span> of the service account (complementing the <span class="Code">acces-key()</span>) used to access the S3 bucket.</p>
+		</div>
+        <div>
+            <h6 name="storage-class"><a name="storage-class"></a>storage-class()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"><span class="Code">STANDARD</span></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> This option defines the storage class of the object.</p>
+		<p>The following values are available:</p>
+		<ul>
+		<li><p><span class="Code">DEEP_ARCHIVE</span></p></li>
+		<li><p><span class="Code">GLACIER</span></p></li>
+		<li><p><span class="Code">GLACIER_IR</span></p></li>
+		<li><p><span class="Code">INTELLIGENT_TIERING</span></p></li>
+		<li><p><span class="Code">ONEZONE_IA</span></p></li>
+		<li><p><span class="Code">OUTPOSTS</span></p></li>
+		<li><p><span class="Code">REDUCED_REDUNDANCY</span></p></li>
+		<li><p><span class="Code">SNOW</span></p></li>
+		<li><p><span class="Code">STANDARD</span></p></li>
+		<li><p><span class="Code">STANDARD_IA</span></p></li>
+		</ul>
+		<p>If an invalid value is defined, the default value is used.</p>
+		</div>
+        <div>
+            <h6 name="upload-threads"><a name="upload-threads"></a>upload-threads()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">integer</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1">8</td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> This option defines the number of <MadCap:variable name="General.abbrev"></MadCap:variable> threads that are used to upload data to S3 from a certain destination</p>
+		</div>
+        <div>
+            <h6 name="template"><a name="template"></a>template()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">template or template function</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"><span class="Code">${MESSAGE}\n</span></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> This option defines the message as written to the Amazon S3 object. Templates and template functions can be used to format this message.</p>
+		</div>
+        <div>
+            <h6 name="url"><a name="url"></a>url()</h6>
+				<table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Type:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1">string</td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1">N/A</td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.5in;">
+                </col>
+            </table>
+		<p><b>Description:</b> The URL of the S3 bucket, for example, <span class="Code">https://my-bucket.s3.us-west-2.amazonaws.com</span>.</p>
+		</div>
+		</div>
+    </body>
+</html>
