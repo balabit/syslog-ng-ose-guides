@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <link href="../../Resources/TableStyles/RuledTableWithHeading_VerticallyRuled_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
+        <link href="../../Resources/TableStyles/NoteTable_Yellow_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
+        <link href="../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css" rel="stylesheet" MadCap:stylesheetType="table" />
+        <meta name="description" content="" />
+    </head>
+    <body name="splunk-hec-event">
+        <h1 name="splunk-hec-event"><a name="splunk-hec-event"></a>splunk-hec-event: Sending log messages to Splunk HEC</h1>
+		<p>From <MadCap:variable name="General.abbrev"></MadCap:variable> version 4.2, it is possible to send messages to the Splunk HTTP Event Collector(HEC).</p>
+        <h6 name="splunk-hec-prerequisites"><a name="splunk-hec-prerequisites"></a>Prerequisites</h6>
+			<ul>
+				<li><p>HEC must be enabled on the Splunk deployment.</p></li>
+				<li><p>A token must be created for <MadCap:variable name="General.abbrev"></MadCap:variable> to be used in the <span class="Code">token()</span> destination option. Use the syslog source type when creating the token.</p></li>
+			</ul>
+			<p>For more information, see <MadCap:xref href="https://docs.splunk.com/Documentation/Splunk/latest/Data/UsetheHTTPEventCollector"><span style="color: #04aada;" class="mcFormatColor">Set up and use HTTP Event Collector in Splunk Web</span></MadCap:xref>.</p>
+		<h6 name="splunk-hec-events-API"><a name="splunk-hec-events-API"></a>HEC events API</h6>
+			<p>The <span class="Code">splunk-hec-event()</span> destination feeds Splunk through the <MadCap:xref href="https://docs.splunk.com/Documentation/Splunk/9.0.4/RESTREF/RESTinput#services.2Fcollector.2Fevent.2F1.0"><span style="color: #04aada;" class="mcFormatColor">HEC Events API</span></MadCap:xref>.</p>
+			<p>Minimal configuration:</p>
+			<p>
+				<pre>destination d_splunk_hec_event {
+  splunk-hec-event(
+    url("https://localhost:8088")
+    token("70b6ae71-76b3-4c38-9597-0c5b37ad9630")
+  );
+};</pre>
+			</p>
+			<p>Additional options:</p>
+			<p>
+				<pre>event()
+index()
+source()
+sourcetype()
+host()
+time()
+default-index()
+default-source()
+default-sourcetype()
+fields()
+extra-headers()
+extra-queries()
+content-type()</pre>
+			</p>
+			<p><span class="Code">event()</span> accepts a template, that defines the content of the log message sent to Splunk. Default value: <span class="Code">${MSG}</span></p>
+			<p><span class="Code">index()</span>, <span class="Code">source()</span>, <span class="Code">host()</span>, and <span class="Code">time()</span> accept templates, and define the respective fields for each log message based on the set template.</p>
+			<p><span class="Code">default-index()</span>, <span class="Code">default-source()</span>, and <span class="Code">default-sourcetype()</span> accept literal strings, and are used as fallback values if a log message doesn’t set these fields. These values are passed to the URL as query parameters, so they don’t inflate the body of the HTTP request for each message in the batch, which saves bandwidth.</p>
+			<p><span class="Code">fields()</span> accepts a template, that is forwarded as additional indexing metadata to Splunk.</p>
+			<p><span class="Code">extra-headers()</span>, <span class="Code">extra-queries()</span>, and <span class="Code">content-type()</span> are additional HTTP request options.</p>
+		<h6 name="splunk-hec-raw-API"><a name="splunk-hec-raw-API"></a>HEC raw API</h6>
+			<p>The splunk-hec-raw() destination feeds Splunk via the <MadCap:xref href="https://docs.splunk.com/Documentation/Splunk/9.0.4/RESTREF/RESTinput#services.2Fcollector.2Fraw.2F1.0"><span style="color: #04aada;" class="mcFormatColor">HEC raw API</span></MadCap:xref>.</p>
+			<p>Minimal configuration:</p>
+			<p>
+				<pre>destination d_splunk_hec_raw {
+  splunk-hec-raw(
+    url("https://localhost:8088")
+    token("70b6ae71-76b3-4c38-9597-0c5b37ad9630")
+    channel("05ed4617-f186-4ccd-b4e7-08847094c8fd")
+  );
+};</pre>
+			</p>
+			<p>The options of the <span class="Code">splunk-hec-raw()</span> destination are similar to the <span class="Code">splunk-hec-event()</span> destination, however, the <span class="Code">channel()</span> option is mandatory. The <span class="Code">channel()</span> option must be a <MadCap:xref href="https://docs.splunk.com/Documentation/Splunk/9.0.4/Data/FormateventsforHTTPEventCollector#Channel_identifier_header"><span style="color: #04aada;" class="mcFormatColor">globally unique channel identifier (GUID)</span></MadCap:xref>, this ID differentiates the data from different clients. Note that Splunk does not generate this ID, you must create it for yourself. When Splunk sees a new channel identifier, it creates a new channel.</p>
+			<p>Use the <span class="Code">template()</span> option to set the content of the log message sent to Splunk. Avoid using the <span class="Code">event()</span> option, that is used in the <span class="Code">splunk-hec-event()</span> destination.</p>
+	    </body>
+</html>
