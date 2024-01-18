@@ -199,6 +199,79 @@
                 </tbody>
             </table>
         </div>
+		<div>
+            <h6>ocsp-stapling-verify()</h6>
+            <MadCap:keyword term="ocsp-stapling-verify">
+            </MadCap:keyword>
+            <MadCap:keyword term="ocsp-stapling-verify">
+            </MadCap:keyword>
+            <table cellspacing="0" class="TableStyle-RuledTableWithHeading_DoNotEdit" colsep="0" rowsep="0" style="width: 100%;mc-table-style: url('../../Resources/TableStyles/RuledTableWithHeading_DoNotEdit.css');">
+                <tbody>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyE-Column1-Body1">Accepted values:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyD-Column1-Body1"><span class="Code">yes</span>, <span class="Code">no</span></td>
+                    </tr>
+                    <tr class="TableStyle-RuledTableWithHeading_DoNotEdit-Body-Body1">
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyB-Column1-Body1">Default:</td>
+                        <td class="TableStyle-RuledTableWithHeading_DoNotEdit-BodyA-Column1-Body1"><span class="Code">no</span></td>
+                    </tr>
+                </tbody>
+                <col class="TableStyle-RuledTableWithHeading_DoNotEdit-Column-Column1" style="width: 0.3in;">
+                </col>
+            </table>
+			<p>This option is available in <MadCap:variable name="General.abbrev"></MadCap:variable> 4.0 and later versions.</p>
+            <p><i style="font-style: normal;">Description:</i> In case the OCSP stapling verification is enabled <MadCap:variable name="General.abbrev"></MadCap:variable> request the server to return its OCSP status. This status response is verified by <MadCap:variable name="General.abbrev"></MadCap:variable> using the trust store configured by the <span class="Code">ca-file()</span>, <span class="Code">ca-dir()</span>, or the <span class="Code">pkcs12-file()</span> options.</p>
+			<div class="Note">
+				<p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> RFC 6961 multi-stapling and TLS 1.3-provided multiple responses are currently not validated, only the peer certificate is verified.</p>
+			</div>
+			<div class="Example">
+                <h6>Example:</h6>
+				<pre>destination {
+
+    network("example.com" transport(tls)
+        tls(
+            pkcs12-file("/path/to/test.p12")
+            peer-verify(yes)
+            ocsp-stapling-verify(yes)
+        )
+    );
+};
+				</pre>
+			</div>
+        </div>
+		<div>
+            <h6>openssl-conf-cmds()</h6>
+            <MadCap:keyword term="openssl-conf-cmds()">
+            </MadCap:keyword>
+            <MadCap:keyword term="openssl-conf-cmds()">
+            </MadCap:keyword>
+			<p>This option is available in <MadCap:variable name="General.abbrev"></MadCap:variable> 4.0 and later versions.</p>
+			<div class="Note">
+				<p class="Hyphenation"><span class="AllNoteStyles">NOTE:</span> <span class="Code">openssl-conf-cmds()</span> always has the highest priority. It overrides any other option found in the <span class="Code">tls()</span> section.</p>
+			</div>
+			<p>OpenSSL offers an alternative and software-independent configuration mechanism through the SSL_CONF_cmd interface for configuring the various SSL_CTX and SSL options.</p>
+			<p>The order of operations within <span class="Code">openssl-conf-cmds()</span> affects the order of execution. The commands are executed in top-down order. If the same option occurs multiple times, the last executed option takes effect. This is also true for options that can be set multiple ways (for example, cipher suites or protocols).</p>
+			<div class="Example">
+                <h6>Example:</h6>
+				<pre>    tls(
+        ca-dir("/etc/ca.d")
+        key-file("/etc/cert.d/serverkey.pem")
+        cert-file("/etc/cert.d/servercert.pem")
+        peer-verify(yes)
+
+        openssl-conf-cmds(
+            # For system wide available cipher suites use: /usr/bin/openssl ciphers -v
+            # For formatting rules see: https://www.openssl.org/docs/man1.1.1/man3/SSL_CONF_cmd.html
+            "CipherString" => "ECDHE-RSA-AES128-SHA",                                   # TLSv1.2 and bellow
+            "CipherSuites" => "TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",    # TLSv1.3+ (OpenSSl 1.1.1+)
+
+            "Options" => "PrioritizeChaCha",
+            "Protocol" => "-ALL,TLSv1.3",
+        )
+    )
+				</pre>
+			</div>
+        </div>
         <div>
             <h6 name="tls-options-peer-verify"><a name="tls-options-peer-verify"></a>peer-verify()</h6>
             <MadCap:keyword term="peer-verify()">
