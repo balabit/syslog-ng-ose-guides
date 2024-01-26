@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<html xmlns:MadCap="http://www.madcapsoftware.com/Schemas/MadCap.xsd">
+    <head>
+        <meta name="description" content="" />
+    </head>
+    <body name="destination-s3-amazon">
+        <h1 name="destination-opensearch">opensearch: Send messages to OpenSearch</h1>
+		<p>Available in <MadCap:variable name="General.abbrev"></MadCap:variable> version 4.4 and later versions.</p>
+		<p>The <span class="Code">opensearch()</span> destination posts log messages to <MadCap:xref href="https://opensearch.org/"><span style="color: #04aada;" class="mcFormatColor">OpenSearch</span></MadCap:xref> using its HTTP endpoint.</p>
+		<p>HTTPS connection, password- and certificate-based authentication are supported. The content of the events is sent in JSON format.</p>		
+		<div>
+            <h6>Declaration:</h6>
+			<p><pre>d_opensearch {
+    opensearch(
+        index("&lt;opensearch-index-to-store-messages&gt;")
+        url("https://your-opensearch-endpoint:9200/_bulk")
+    );
+};</pre></p>
+        </div>
+	<div>
+		<div class="Example">
+			<h6>Example: Sending log data to OpenSearch</h6>
+			<p>The following example defines an <span class="Code">opensearch()</span> destination, using only the required options.</p>
+			<pre>destination opensearch {
+    opensearch(
+        index("&lt;name-of-the-index&gt;")
+        url("http://my-elastic-server:9200/_bulk")
+    );
+};
+    
+    
+log {
+    source(s_file);
+    destination(d_opensearch_http);
+    flags(flow-control);
+};</pre>
+
+	<p>The following example uses mutually-authenticated HTTPS connection, templated index, and additional options.</p>
+	<p><pre>destination opensearch_https {
+    opensearch(
+        url("https://node01.example.com:9200/_bulk")
+        index("test-${YEAR}${MONTH}${DAY}")
+        time-zone("UTC")
+        workers(4)
+        batch-lines(16)
+        timeout(10)
+        tls(
+            ca-file("ca.pem")
+            cert-file("syslog_ng.crt.pem")
+            key-file("syslog_ng.key.pem")
+            peer-verify(yes)
+        )
+    );
+};
+</pre></p>
+	<p>This driver is a reusable configuration snippet configured to send log messages using the <span class="Code">http()</span> driver with a template. For more information on using or writing such configuration snippets, see <MadCap:xref href="config-blocks.htm"><span style="color: #04aada;" class="mcFormatColor">Reusing configuration blocks</span></MadCap:xref>. For the source of this configuration snippet, see <MadCap:xref href="https://github.com/syslog-ng/syslog-ng/tree/master/scl/opensearch"><span style="color: #04aada;" class="mcFormatColor">GitHub</span></MadCap:xref>.</p>
+		</div>
+	</div>
+    </body>
+</html>
