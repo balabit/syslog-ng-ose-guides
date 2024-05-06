@@ -1,4 +1,6 @@
-# syslog-ng Open Source Edition Guides
+# This repository is retired now, please use https://github.com/syslog-ng/syslog-ng.github.io
+
+##  syslog-ng Open Source Edition Guides
 
 This repository contains the source code of [The syslog-ng Open Source Edition Administration Guide](https://www.syslog-ng.com/technical-documents/list/syslog-ng-open-source-edition/).
 
